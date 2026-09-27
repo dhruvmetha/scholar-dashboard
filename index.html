@@ -1903,7 +1903,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
     </div>
     <div class="nav-tabs">
       <button class="nav-tab active" data-tab="all" onclick="switchTab('all')">Recent Works</button>
-      <button class="nav-tab" data-tab="email" onclick="switchTab('email')">Email Digest</button>
+      <button class="nav-tab" data-tab="email" onclick="switchTab('email')" hidden>Email Digest</button>   <!-- off: SHOW_EMAIL_TAB -->
       <button class="nav-tab" data-tab="venues" onclick="switchTab('venues')">Venues</button>
       <button class="nav-tab" data-tab="library" onclick="switchTab('library')">Library</button>
       <button class="nav-tab" data-tab="interests" onclick="switchTab('interests')">Interests <span class="tab-badge" id="interestsBadge" style="display:none">0</span></button>
@@ -9178,8 +9178,14 @@ let _appliedHash = null;
 window.addEventListener('popstate', () => setTimeout(() => { if (location.hash !== _appliedHash) applyHash(); }, 30));
 
 /* ===== HASH-BASED ROUTING ===== */
-const VALID_TABS = ['all', 'email', 'venues', 'library', 'interests'];
+/* The Email Digest tab (the latest digest, a card per alert, and their list pages) is switched off; its papers
+   still show everywhere else. true brings it back: the nav button, #email, #latest and #alert/<name>. */
+const SHOW_EMAIL_TAB = false;
+const VALID_TABS = ['all', ...(SHOW_EMAIL_TAB ? ['email'] : []), 'venues', 'library', 'interests'];
+if (SHOW_EMAIL_TAB) document.querySelector('.nav-tab[data-tab="email"]').hidden = false;
 function applyHash() {
+  // old links and history entries into the switched-off Email Digest land on Recent Works (without a new Back step)
+  if (!SHOW_EMAIL_TAB && (/^#(email|latest)$/.test(location.hash) || location.hash.startsWith('#alert/'))) history.replaceState(null, '', location.pathname + location.search + '#all');
   syncAddress();
   _appliedHash = location.hash;
   const hash = location.hash.slice(1); // remove '#'
