@@ -378,7 +378,18 @@ a { color: inherit; text-decoration: none; }
 .topics-grid .topic-card::before { content: ''; position: absolute; inset: 0 0 auto 0; z-index: -1; height: 340px; background: var(--gc, transparent); opacity: 0.11; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
 .topics-grid .topic-title { color: var(--text); gap: 8px; }
 /* the article-style cards (topicCardHTML) */
-.topics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; align-items: start; }   /* a card sizes to its own content: one opening on hover doesn't stretch its neighbour */
+.topics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+/* The cards in a row share their row tracks (subgrid: label, featured paper, numbered list), so the lists start on
+   one line and both cards end together. The featured paper's text flows as written and its tags + Read sit at the
+   bottom of its part, so any spare room goes just above them. A paper opening on hover grows its row's list track:
+   the neighbour gains room at its bottom and nothing in it moves. */
+.topics-grid .topic-card { display: grid; grid-row: span 3; grid-template-rows: subgrid; row-gap: 0; }
+.topics-grid .topic-body { grid-row: span 2; display: grid; grid-template-rows: subgrid; row-gap: 0; }
+.topics-grid .tc-feat { display: flex; flex-direction: column; }
+.topics-grid .tc-foot { margin-top: auto; padding-top: 16px; }
+/* the last row fills the rest of the card, so its hover shade reaches the bottom edge */
+.topics-grid .tc-list { display: flex; flex-direction: column; }
+.topics-grid .tc-row:last-child { flex-grow: 1; align-content: start; padding-bottom: 20px; }
 .topics-grid .topic-card { border-radius: 16px; border-color: rgba(255,255,255,0.09); }
 .topics-grid .topic-title { border-bottom: none; padding: 20px 26px 4px; }
 .topics-grid .topic-title .topic-label { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in srgb, var(--gc) 75%, #fff); }
@@ -390,7 +401,11 @@ a { color: inherit; text-decoration: none; }
 .tc-feat:hover .tc-headline { color: #fff; }
 .tc-sum { font-size: 15px; line-height: 1.6; color: var(--text-secondary); margin: 12px 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .tc-feat .why-line { margin-top: 12px; }
-.tc-foot { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+/* the tags keep to one line; if the card is too narrow for tags + actions + Read, the actions and Read move to
+   their own line on the right together instead of the tags breaking apart */
+.tc-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; margin-top: 16px; }
+.tc-foot .tc-tags { flex-wrap: nowrap; white-space: nowrap; }
+.tc-end { margin-left: auto; display: inline-flex; align-items: center; gap: 10px; }
 .tc-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-muted); min-width: 0; }
 .tc-tags .f-venue { max-width: 180px; }
 .tc-must { color: var(--green); display: inline-flex; align-items: center; gap: 6px; }
@@ -398,13 +413,12 @@ a { color: inherit; text-decoration: none; }
 .tc-acts { opacity: 0; transition: opacity 0.2s; }
 .tc-feat:hover .tc-acts, .tc-feat:focus-within .tc-acts, .tc-row:hover .tc-acts, .tc-row:focus-within .tc-acts { opacity: 1; }
 @media (hover: none) { .tc-acts { opacity: 1; } }
-.tc-foot .tc-acts { margin-left: auto; }
 .tc-go { margin-left: 8px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); white-space: nowrap; transition: color 0.2s, gap 0.2s; }
-.tc-foot .tc-go:first-child, .tc-tags + .tc-go { margin-left: auto; }
+.tc-end .tc-go { margin-left: 0; }
 .tc-go::after { content: '\2192'; }
 .tc-feat:hover .tc-go { color: var(--accent); gap: 10px; }
-.tc-list { border-top: 1px solid rgba(255,255,255,0.07); padding: 6px 0 8px; }
-.tc-row { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 12px; padding: 14px 26px; cursor: pointer; transition: background 0.2s; }
+.tc-list { border-top: 1px solid rgba(255,255,255,0.07); }
+.tc-row { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 12px; padding: 16px 26px; cursor: pointer; transition: background 0.2s; }
 .tc-row:hover { background: rgba(255,255,255,0.035); }
 .tc-num { font-family: var(--serif); font-size: 15px; padding-top: 2px; color: color-mix(in srgb, var(--gc) 65%, #888); font-variant-numeric: tabular-nums; }
 .tc-rh { font-family: var(--serif); font-optical-sizing: auto; font-size: 16.5px; font-weight: 500; line-height: 1.35; color: var(--text); margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color 0.2s; }
@@ -3308,7 +3322,7 @@ function topicCardHTML(name, items, shownAbove, o) {
       <h3 class="tc-headline">${esc(f.headline || f.title)}</h3>
       ${hasText(f.summary) ? `<p class="tc-sum">${esc(f.summary)}</p>` : ''}
       ${whyLineHTML(f)}
-      <div class="tc-foot">${cardTagsHTML(f)}${acts(f)}<span class="tc-go">Read</span></div>
+      <div class="tc-foot">${cardTagsHTML(f)}<span class="tc-end">${acts(f)}<span class="tc-go">Read</span></span></div>
     </article>` : '';
   const rows = rest.map((p, i) => `<article class="tc-row" tabindex="0" data-key="${k(p)}" onclick="openPaper('${k(p)}', event)">
       <span class="tc-num">0${i + 2}</span>
