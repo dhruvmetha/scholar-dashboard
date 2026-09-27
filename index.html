@@ -534,7 +534,13 @@ a { color: inherit; text-decoration: none; }
 .pd::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 440px; background: var(--gbg); opacity: 0.09; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
 .pd-article { position: relative; }
 .pd-topicline { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-.pd-topic-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-secondary); background: rgba(255,255,255,0.07); padding: 3px 10px; border-radius: 999px; }
+/* the paper's topics open each topic's list (as on a phone feed card) */
+.pd-topic-chip { position: relative; display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 11.5px; color: var(--text-secondary); background: rgba(255,255,255,0.07); border: none; padding: 3px 10px; border-radius: 999px; cursor: pointer; transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease); }
+.pd-topic-chip::after { content: ''; position: absolute; inset: -6px -3px; }   /* a finger-sized target without a bigger chip */
+.pd-topic-chip:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+.pd-topic-chip:active { background: rgba(255,255,255,0.16); color: var(--text); transform: scale(0.96); }
+html.no-hover .pd-topic-chip:hover:not(:active) { background: rgba(255,255,255,0.07); color: var(--text-secondary); }
+@media (prefers-reduced-motion: reduce) { .pd-topic-chip { transition: none; } .pd-topic-chip:active { transform: none; } }
 .pd-bar { position: sticky; top: 0; z-index: 20; background: rgba(17,17,17,0.84); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid transparent; transition: border-color 0.2s; }
 .pd-bar.stuck { border-bottom-color: var(--border); }
 .pd-bar-inner { max-width: var(--pd-w); margin: 0 auto; padding: 8px 24px; display: flex; align-items: center; gap: 14px; min-height: 56px; }
@@ -8951,7 +8957,7 @@ function renderPaperDetail(p) {
   const dek = hasText(p.headline) && p.headline.trim() !== (p.title||'').trim() ? `<p class="pd-dek">${esc(p.headline)}</p>` : '';
   const glowGroups = groupsOfPaper(p);   // confirmed topics, in order: the glow and its chips
   const head = `<header class="pd-head">
-    ${glowGroups.length ? `<div class="pd-topicline">${glowGroups.map(g => `<span class="pd-topic-chip">${gdot(g)}${esc(g)}</span>`).join('')}</div>` : ''}
+    ${glowGroups.length ? `<div class="pd-topicline">${glowGroups.map(g => `<button class="pd-topic-chip" onclick="openGroup('${escAttr(g)}')" title="All ${escAttr(g)} papers">${gdot(g)}${esc(g)}</button>`).join('')}</div>` : ''}
     <div class="pd-kicker">
       ${hasText(p.venue) ? venueLinkHTML(p, 'pd-venue') : ''}
       ${paperDate(p) ? `<span>${esc(paperDate(p))}</span>` : ''}
