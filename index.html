@@ -144,12 +144,6 @@ a { color: inherit; text-decoration: none; }
 .pill:active { transform: scale(0.97); }
 .pill .pill-count { font-weight: 600; }
 .pill-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
-.pill-read { margin-left: auto; justify-content: center; gap: 8px; }
-/* the Hide read pill is a switch: the knob shows whether read papers are hidden */
-.pill-switch { position: relative; width: 24px; height: 14px; border-radius: 7px; background: rgba(255,255,255,0.22); flex-shrink: 0; transition: background 0.2s; }
-.pill-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--text); transition: transform 0.2s; }
-.pill-read.active .pill-switch { background: var(--accent); }
-.pill-read.active .pill-switch::after { transform: translateX(10px); background: #1a1406; }
 
 /* TOP PAPERS */
 .top-papers { max-width: 1200px; margin: 0 auto; padding: 0 24px 24px; }
@@ -264,7 +258,7 @@ a { color: inherit; text-decoration: none; }
 #sec-papers .filters { justify-content: flex-start; padding-top: 18px; }
 #topicsHeader { display: flex; align-items: center; gap: 12px; }
 .section-header .section-sub { font-size: 14px; font-weight: 400; color: var(--text-muted); margin-left: 2px; }
-#topicsHeader::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+/* the heading's rule is a real element (.sh-rule) so the relevance pills can sit after it */
 
 .top-feature { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
 .top-feature.solo { grid-template-columns: 1fr; }
@@ -286,6 +280,17 @@ a { color: inherit; text-decoration: none; }
 
 .top-side { background: var(--bg-surface); border: 1px solid rgba(255,255,255,0.14); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
 .top-side .feed-item { flex: 1; }
+/* fitted to the window (see fitTopPapers): the lead and the side list share the height exactly */
+.top-feature.fitted { overflow: hidden; }
+.top-feature.fitted .top-lead { min-height: 0; overflow: hidden; }
+.top-feature.fitted .top-side { min-height: 0; }
+.top-feature.fitted .top-side .feed-item { flex: 1 0 auto; }   /* no squeezing: a paper either fits or waits in the list */
+.top-feature.fitted .top-side .feed-item[hidden] { display: none; }
+#sec-papers .top-papers { padding-top: 26px; }   /* room between the date line and Top Papers */
+.home-pulse { max-width: 1200px; margin: 0 auto; padding: 8px 24px 28px; }
+.home-pulse .pulse { margin-top: 0; }
+#topicsHeader .sh-rule { flex: 1; height: 1px; background: var(--border); }
+#topicsHeader .filters { max-width: none; margin: 0; padding: 0; flex-wrap: nowrap; }
 
 /* compact feed item (top side list + topic cards) */
 .feed-body { max-height: none; overflow: visible; padding: 0; }
@@ -303,6 +308,9 @@ a { color: inherit; text-decoration: none; }
 .top-lead .f-meta { margin-top: 0; font-size: 12.5px; }
 .f-venue { color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; max-width: 200px; }
 .f-date { white-space: nowrap; }
+.f-topics { display: inline-flex; gap: 6px; min-width: 0; overflow: hidden; }
+.f-topic { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; font-size: 11.5px; color: var(--text-secondary); background: rgba(255,255,255,0.07); padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.f-topic.more { padding: 2px 8px; letter-spacing: 0.05em; cursor: default; }
 .f-star { color: var(--star); }
 .f-rel { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .f-rel i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
@@ -630,8 +638,6 @@ body.tok-mode .tok-cues { display: block; position: absolute; inset: 0; pointer-
 /* "New since your last visit" marker */
 .f-new { color: var(--accent); font-size: 11px; font-weight: 600; letter-spacing: 0.02em; }
 /* Email Digest: alert-source chips under the weekly bar */
-.alert-sources { margin-top: 18px; }
-.alert-sources .pulse-cap { margin-bottom: 8px; }
 .tl-chip.static { cursor: default; }
 .tl-chip.static:hover { background: rgba(255,255,255,0.055); color: var(--text-secondary); }
 /* Topic chips: stick to the top while scrolling the cards, and jump to one */
@@ -1765,16 +1771,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
     <div>
       <h2 id="briefingTitle">Recent Works</h2>
       <p class="briefing-date"><span id="briefingDate"></span><span id="briefingNote"></span></p>
-      <div class="pulse" id="weekPulse"></div>
-      <div class="alert-sources" id="alertSources"></div>
     </div>
-  </div>
-  <div class="filters" id="filtersBar">
-    <button class="pill active" data-rel="all" onclick="toggleRel('all')">All <span class="pill-count" id="stat-all">0</span></button>
-    <button class="pill" data-rel="definitely" onclick="toggleRel('definitely')">Must Read <span class="pill-count" id="stat-def">0</span></button>
-    <button class="pill" data-rel="probably" onclick="toggleRel('probably')">Interesting <span class="pill-count" id="stat-prob">0</span></button>
-    <button class="pill" data-rel="mildly" onclick="toggleRel('mildly')">Tangential <span class="pill-count" id="stat-mild">0</span></button>
-    <button class="pill pill-read active" data-rel="hideread" onclick="toggleHideRead()" aria-pressed="true" title="Hide papers you've marked read"><span class="pill-switch" aria-hidden="true"></span>Hide read <span class="pill-count" id="stat-read">0</span></button>
   </div>
   <div class="tok-bar" id="tokBar"></div>
   <div class="tok-mini-progress" id="tokMiniProgress"></div>
@@ -1784,7 +1781,15 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   </div>
   <div id="papersContent">
     <div class="top-papers" id="topStories"></div>
-    <div class="section-header" id="topicsHeader" style="max-width:1200px;margin:0 auto;padding:8px 24px 12px;">Your topics</div>
+    <div class="home-pulse"><div class="pulse" id="weekPulse"></div></div>
+    <div class="section-header" id="topicsHeader" style="max-width:1200px;margin:0 auto;padding:8px 24px 12px;"><span id="topicsHeaderLabel">Your topics</span><span class="sh-rule"></span>
+    <div class="filters" id="filtersBar">
+      <button class="pill active" data-rel="all" onclick="toggleRel('all')">All <span class="pill-count" id="stat-all">0</span></button>
+      <button class="pill" data-rel="definitely" onclick="toggleRel('definitely')">Must Read <span class="pill-count" id="stat-def">0</span></button>
+      <button class="pill" data-rel="probably" onclick="toggleRel('probably')">Interesting <span class="pill-count" id="stat-prob">0</span></button>
+      <button class="pill" data-rel="mildly" onclick="toggleRel('mildly')">Tangential <span class="pill-count" id="stat-mild">0</span></button>
+    </div>
+    </div>
     <nav class="topic-jump" id="topicJump" aria-label="Jump to a topic"></nav>
     <div class="topics-grid" id="topicsGrid"></div>
   </div>
@@ -2066,7 +2071,8 @@ function splitHidden() {
   _hiddenPapers = rows.filter(isHiddenRow);
   allPapers = rows.filter(p => !isHiddenRow(p));
 }
-let currentTab = 'all', currentRel = 'all', currentIStatus = 'suggested', currentIGTab = 'groups', hideRead = true;
+let currentTab = 'all', currentRel = 'all', currentIStatus = 'suggested', currentIGTab = 'groups';
+const hideRead = true;   // papers you've read never show in the feeds and lists (Library keeps them)
 let readSet = new Set();
 let starSet = new Set();
 let libraryLists = {};
@@ -2360,7 +2366,7 @@ function revealContent() {
   _dataLoaded = true;
   const skel = document.getElementById('skeleton');
   skel.classList.add('hidden');
-  setTimeout(() => { skel.style.display = 'none'; }, 400);
+  setTimeout(() => { skel.style.display = 'none'; fitTopPapers(); }, 400);   // the loader held the page's place: fit Top Papers now it's gone
 }
 
 /* ===== NEW SINCE LAST VISIT =====
@@ -2848,18 +2854,10 @@ function revealActiveTab() {
 }
 
 /* ===== FILTERS ===== */
+/* The relevance pills filter the topic (or alert) cards below them; Top Papers is always the Must Read set */
 function toggleRel(r) {
   currentRel = r;
-  document.querySelectorAll('#filtersBar .pill[data-rel]').forEach(p => {
-    if (p.dataset.rel !== 'hideread') p.classList.toggle('active', p.dataset.rel === r);
-  });
-  applyFilters();
-}
-function toggleHideRead() {
-  hideRead = !hideRead;
-  const pill = document.querySelector('.pill-read');
-  pill.classList.toggle('active', hideRead);
-  pill.setAttribute('aria-pressed', hideRead ? 'true' : 'false');
+  document.querySelectorAll('#filtersBar .pill[data-rel]').forEach(p => p.classList.toggle('active', p.dataset.rel === r));
   applyFilters();
 }
 
@@ -2871,13 +2869,12 @@ function applyFilters() {
   // Stats (from tab-filtered, before relevance filter)
   let base = allPapers;
   if (currentTab === 'email') base = base.filter(p => (p.source_mode||'').includes('email'));
-  // With "Hide read" on, every count on the page leaves read papers out, like the lists do
-  const counted = hideRead ? base.filter(p => !readSet.has(paperKey(p))) : base;
+  // every count on the page leaves read papers out, like the lists do
+  const counted = base.filter(p => !readSet.has(paperKey(p)));
   document.getElementById('stat-all').textContent = counted.length;
   document.getElementById('stat-def').textContent = counted.filter(p=>dynamicRelevance(p)==='definitely').length;
   document.getElementById('stat-prob').textContent = counted.filter(p=>dynamicRelevance(p)==='probably').length;
   document.getElementById('stat-mild').textContent = counted.filter(p=>dynamicRelevance(p)==='mildly').length;
-  document.getElementById('stat-read').textContent = base.filter(p=>readSet.has(paperKey(p))).length;
 
   const dates = allPapers.map(p=>p.date_found).filter(Boolean).sort();
   document.getElementById('briefingTitle').textContent = currentTab==='email'?'Email Digest':'Recent Works';
@@ -2889,7 +2886,6 @@ function applyFilters() {
   if (sinceVisit) notes.push(`${sinceVisit} new since your last visit`);
   if (newMust) notes.push(`${newMust} new must-read ${newMust === 1 ? 'paper' : 'papers'} this week`);
   document.getElementById('briefingNote').textContent = notes.length ? ' ' + notes.join(', ') + '.' : '';
-  renderAlertSources(currentTab === 'email' ? base : null);
   renderWeekPulse(base.filter(p => p.date_found && new Date(p.date_found + 'T00:00:00') >= weekAgo));
 
   if (phoneFeedOn()) {
@@ -2899,7 +2895,7 @@ function applyFilters() {
     renderTok(sortForFeed(feed.slice()), papers);
     return;
   }
-  renderPapers(papers);
+  renderPapers(papers, counted.slice());
 }
 
 /* ===== PHONE FEED (one paper per screen) ===== */
@@ -2945,7 +2941,6 @@ function renderTok(papers, unfiltered) {
       <select class="tok-pill tok-select ${_tokTopic?'active':''}" aria-label="Topic" onchange="setTokTopic(this.value)"><option value="">All topics</option>${topics.map(g => `<option value="${esc(g)}" ${_tokTopic===g?'selected':''}>${esc(g)} (${tCounts[g]})</option>`).join('')}</select>
       ${[['all','All'],['definitely','Must read'],['probably','Interesting'],['mildly','Tangential']].map(([r,label]) =>
         `<button class="tok-pill ${currentRel===r?'active':''}" onclick="toggleRel('${r}')">${label}</button>`).join('')}
-      <button class="tok-pill ${hideRead?'active':''}" onclick="toggleHideRead()" aria-pressed="${hideRead}">Hide read</button>
     </div>
     <span class="tok-count" id="tokCount"></span>
     <span class="tok-progress" id="tokProgress"></span>`;
@@ -3199,20 +3194,20 @@ document.addEventListener('click', e => {
 }, true);
 
 /* ===== RENDER PAPERS ===== */
-function renderPapers(papers) {
-  document.getElementById('topicsHeader').textContent = currentTab === 'email' ? 'Your alerts' : 'Your topics';
-  if (!papers.length) {
+function renderPapers(papers, topPool) {   // topPool: the tab's unread papers, before the relevance pill
+  document.getElementById('topicsHeaderLabel').textContent = currentTab === 'email' ? 'Your alerts' : 'Your topics';
+  if (!papers.length && !(topPool && topPool.length)) {
     document.getElementById('topStories').innerHTML = '<div class="empty-state">No papers match your filters.</div>';
     document.getElementById('topicsGrid').innerHTML = '';
     document.getElementById('topicJump').innerHTML = '';
     return;
   }
-  if (currentTab === 'email') { renderEmailPapers(papers); return; }
+  if (currentTab === 'email') { renderEmailPapers(papers, topPool); return; }
   sortPapers(papers);
-  const top = orderForLead(selectTopPapers(papers));
-  renderTopPapers(top);
+  const top = orderForLead(selectTopPapers(sortPapers(topPool || papers.slice())));
+  const nTop = renderTopPapers(top);
   // Papers already shown above; topic cards prefer papers the reader hasn't seen yet
-  const shownAbove = new Set(top.slice(0, MAX_TOP_CARDS).map(paperKey));
+  const shownAbove = new Set(top.slice(0, nTop).map(paperKey));
 
   const grouped = {};
   const _confirmedGroups = new Set(allGroups.filter(g => g.status === 'confirmed').map(g => norm(g.group_name)));
@@ -3258,11 +3253,11 @@ function latestDigestOf(papers) {
   return { papers: papers.filter(p => (p.date_found || '') >= cut), date: latest };
 }
 function shortDate(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); } catch (e) { return d; } }
-function renderEmailPapers(papers) {
-  const dig = latestDigestOf(papers);
+function renderEmailPapers(papers, topPool) {
+  const dig = latestDigestOf(topPool || papers);
   const top = orderForLead(byTopScore(dig.papers.slice()));
-  renderTopPapers(top, { title: 'Latest digest', sub: dig.date ? shortDate(dig.date) : '', open: 'openLatestDigest()', tip: 'View every paper from the latest digest' });
-  const shownAbove = new Set(top.slice(0, MAX_TOP_CARDS).map(paperKey));
+  const nTop = renderTopPapers(top, { title: 'Latest digest', sub: dig.date ? shortDate(dig.date) : '', open: 'openLatestDigest()', tip: 'View every paper from the latest digest' });
+  const shownAbove = new Set(top.slice(0, nTop).map(paperKey));
   // one card per alert with 3+ papers (as in the chips above); the rest share an "Other alerts" card
   const byAlert = {};
   papers.forEach(p => alertSourcesOf(p).forEach(a => (byAlert[a] = byAlert[a] || []).push(p)));
@@ -3270,7 +3265,9 @@ function renderEmailPapers(papers) {
   Object.keys(byAlert).forEach(a => { if (byAlert[a].length < 3) { byAlert[OTHER] = (byAlert[OTHER] || []).concat(byAlert[a].filter(p => !(byAlert[OTHER] || []).includes(p))); delete byAlert[a]; } });
   const tail = n => n === OTHER ? 2 : n === 'Keyword alerts' ? 1 : 0;
   const names = Object.keys(byAlert).sort((a, b) => tail(a) - tail(b) || byAlert[b].length - byAlert[a].length || a.localeCompare(b));
-  document.getElementById('topicJump').innerHTML = '';
+  // under the heading, a chip per alert card (as topic chips are under "Your topics"): a tap jumps to the card
+  document.getElementById('topicJump').innerHTML = names.map(name =>
+    `<button class="tl-chip" onclick="jumpToTopic('${escAttr(name)}')">${esc(name)}<span class="n">${byAlert[name].length}</span></button>`).join('');
   document.getElementById('topicsGrid').innerHTML = names.map(name => {
     const items = sortForFeed(byAlert[name].slice());
     // like topic cards: prefer papers not already shown above or in an earlier card
@@ -3301,7 +3298,7 @@ function renderLatestList() {
   const email = allPapers.filter(p => (p.source_mode || '').includes('email'));
   const dig = latestDigestOf(email);
   const inDigest = new Set(dig.papers.map(paperKey));
-  const papers = byTopScore(applyViewFilters(email.filter(p => inDigest.has(paperKey(p)))));
+  const papers = byTopScore(applyViewFilters(email.filter(p => inDigest.has(paperKey(p))), false, true));
   document.getElementById('overlayTitle').textContent = `Latest digest${dig.date ? ', ' + shortDate(dig.date) : ''}`;
   setListProgress(dig.papers);
   document.getElementById('overlayToolbar').innerHTML = '';
@@ -3323,18 +3320,6 @@ function alertSourcesOf(p) {
     .map(x => /^[A-Z][a-z]+( [A-Z][a-z]+)?$/.test(x) ? x.split(' ').pop() : 'Keyword alerts'))];
   _alertCache.set(p, out);
   return out;
-}
-function renderAlertSources(emailPapers) {
-  const el = document.getElementById('alertSources');
-  if (!emailPapers) { el.innerHTML = ''; return; }
-  const counts = {};
-  emailPapers.forEach(p => alertSourcesOf(p).forEach(a => counts[a] = (counts[a] || 0) + 1));
-  const names = Object.keys(counts).sort((a, b) => counts[b] - counts[a] || a.localeCompare(b));
-  const main = names.filter(n => counts[n] >= 3), rest = names.filter(n => counts[n] < 3);
-  if (!main.length) { el.innerHTML = ''; return; }
-  const restN = rest.reduce((n, a) => n + counts[a], 0);
-  el.innerHTML = `<div class="pulse-cap">From your alerts</div>
-    <div class="tl-chips">${main.map(n => `<button class="tl-chip" onclick="openAlert('${escAttr(n)}')">${esc(n)}<span class="n">${counts[n]}</span></button>`).join('')}${restN ? `<span class="tl-chip static">Other alerts<span class="n">${restN}</span></span>` : ''}</div>`;
 }
 const ALERT_KEY = 'alert:';
 function openAlert(name, skipHash) {
@@ -3404,7 +3389,8 @@ function orderForLead(top) {
   return i > 0 ? [top[i], ...top.slice(0, i), ...top.slice(i + 1)] : top;
 }
 
-const MAX_TOP_CARDS = 5;  // lead + 4 in the side list
+const MAX_TOP_CARDS = 5;  // lead + 4 in the side list (the most the side list starts with when it can't be fitted)
+const MAX_TOP_SIDE = 10;  // side-list candidates: as many as fit the window are shown
 /* Top papers = all Must Read papers, best score first; fall back to the full list if fewer than 2 */
 function selectTopPapers(sortedPapers) {
   const top = sortedPapers.filter(p => dynamicRelevance(p) === 'definitely');
@@ -3421,13 +3407,58 @@ function renderTopPapers(top, opts) {
     </div>
     <div class="top-feature ${top.length === 1 ? 'solo' : ''}">
       ${topLeadHTML(top[0])}
-      ${top.length > 1 ? `<div class="top-side">${top.slice(1, MAX_TOP_CARDS).map(feedItemHTML).join('')}</div>` : ''}
+      ${top.length > 1 ? `<div class="top-side">${top.slice(1, 1 + MAX_TOP_SIDE).map(p => feedItemHTML(p, { topics: true })).join('')}</div>` : ''}
     </div>`;
+  return fitTopPapers();
 }
+/* The page's first screen is its title, date and Top Papers, filling the window below the navbar: the lead's
+   summary takes the lines there's room for, and the side list shows as many papers as fit (spread evenly).
+   Returns how many papers are showing. Phones have their own feed; a window too short for this keeps the
+   natural layout. */
+function fitTopPapers() {
+  const ts = document.getElementById('topStories'), feat = ts.querySelector('.top-feature');
+  if (!feat) return 0;
+  const lead = feat.querySelector('.top-lead'), side = feat.querySelector('.top-side'), sum = lead && lead.querySelector('.lead-summary');
+  const items = side ? [...side.children] : [];
+  feat.classList.remove('fitted'); feat.style.height = ''; if (sum) sum.style.webkitLineClamp = '';
+  items.forEach((it, i) => { it.hidden = i >= MAX_TOP_CARDS - 1; });
+  const ms = document.getElementById('mainScroll');
+  if (document.body.classList.contains('tok-mode') || !ts.offsetParent) return 1 + items.filter(it => !it.hidden).length;
+  const top = feat.getBoundingClientRect().top - ms.getBoundingClientRect().top + ms.scrollTop;
+  const h = Math.floor(ms.clientHeight - top - 24);
+  if (h < 380) return 1 + items.filter(it => !it.hidden).length;
+  feat.classList.add('fitted');
+  feat.style.height = h + 'px';
+  const stacked = side && getComputedStyle(feat).gridTemplateColumns.split(' ').length === 1;
+  if (sum) {   // the lead's summary: as many lines as its card has room for (2 to 12)
+    let lines = 12;
+    sum.style.webkitLineClamp = lines;
+    const room = () => stacked ? lead.scrollHeight <= Math.max(260, h * 0.5) : lead.scrollHeight <= lead.clientHeight + 1;
+    while (lines > 2 && !room()) sum.style.webkitLineClamp = --lines;
+  }
+  if (side) {   // then the side list: every candidate, dropping from the end until they fit
+    items.forEach(it => { it.hidden = false; });
+    while (items.filter(it => !it.hidden).length > 1 && side.scrollHeight > side.clientHeight + 1) items.filter(it => !it.hidden).pop().hidden = true;
+  }
+  return 1 + items.filter(it => !it.hidden).length;
+}
+let _fitTopT = 0;
+const refitTop = () => { clearTimeout(_fitTopT); _fitTopT = setTimeout(fitTopPapers, 80); };
+window.addEventListener('resize', refitTop);
+// whatever sits above Top Papers changing height (the date line filling in, the alert chips) refits it
+if (window.ResizeObserver) { const ro = new ResizeObserver(refitTop); document.querySelectorAll('#sec-papers .briefing').forEach(el => ro.observe(el)); }
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitTopPapers());
 
 /* Shared bits for the main-page feed */
 function hasText(v) { return v && v.trim() && v !== 'not specified'; }
-function feedMetaHTML(p, showRel) {
+/* A paper's topics as small chips: the first two, then "…" (its tooltip names the rest) */
+function topicChipsHTML(p) {
+  const gs = groupsOfPaper(p);
+  if (!gs.length) return '';
+  const more = gs.slice(2);
+  return `<span class="f-topics">${gs.slice(0, 2).map(g => `<span class="f-topic">${gdot(g)}${esc(g)}</span>`).join('')}${more.length ? `<span class="f-topic more" title="${escAttr('Also: ' + more.join(', '))}" aria-label="${escAttr('Also: ' + more.join(', '))}">…</span>` : ''}</span>`;
+}
+function feedMetaHTML(p, showRel, withTopics) {
   const rel = dynamicRelevance(p), k = paperKey(p);
   const venue = hasText(p.venue) ? p.venue : '';
   return `<div class="f-meta">
@@ -3436,6 +3467,7 @@ function feedMetaHTML(p, showRel) {
     ${venue ? venueLinkHTML(p, 'f-venue') : ''}
     ${displayDate(p) ? `<span class="f-date">${esc(displayDate(p))}</span>` : ''}
     ${starSet.has(k) ? '<span class="f-star" title="Starred">&#9733;</span>' : ''}
+    ${withTopics ? topicChipsHTML(p) : ''}
   </div>`;
 }
 function feedActionsHTML(p, withSummaryBtn, labelled) {
@@ -3451,7 +3483,7 @@ function topLeadHTML(p) {
   const k = paperKey(p), ir = readSet.has(k);
   const showTitle = hasText(p.headline) && p.headline.trim() !== (p.title||'').trim();
   return `<article class="top-card top-lead ${ir?'is-read':''}" tabindex="0" data-key="${escAttr(k)}" onclick="openPaper('${escAttr(k)}', event)">
-    ${feedMetaHTML(p, false)}
+    ${feedMetaHTML(p, false, true)}
     <h3 class="lead-headline">${esc(p.headline||p.title)}</h3>
     ${showTitle ? `<div class="lead-title">${esc(p.title)}</div>` : ''}
     ${hasText(p.summary) ? `<p class="lead-summary">${esc(p.summary)}</p>` : ''}
@@ -3460,14 +3492,15 @@ function topLeadHTML(p) {
   </article>`;
 }
 
-/* Compact item: top-papers side list and topic cards. Actions reveal on hover. */
-function feedItemHTML(p) {
+/* Compact item: top-papers side list and topic cards. Actions reveal on hover. opts.topics: show its topic chips
+   (Top Papers; a topic card doesn't need them) */
+function feedItemHTML(p, opts) {
   const k = paperKey(p), ir = readSet.has(k);
   const showTitle = hasText(p.headline) && p.headline.trim() !== (p.title||'').trim();
   return `<article class="topic-item feed-item ${ir?'is-read':''}" tabindex="0" data-key="${escAttr(k)}" onclick="openPaper('${escAttr(k)}', event)">
     <div class="f-headline">${esc(p.headline||p.title)}</div>
     ${showTitle ? `<div class="f-title" title="${escAttr(p.title)}">${esc(p.title)}</div>` : ''}
-    ${feedMetaHTML(p, true)}
+    ${feedMetaHTML(p, true, !!(opts && opts.topics))}
     <div class="f-actions"><div>${feedActionsHTML(p, true)}</div></div>
   </article>`;
 }
@@ -3854,10 +3887,11 @@ function renderGroupList(name) {
     ? paperListHTML(papers, { sections: true, hideGroup: name })
     : '<div class="tl-empty">No papers in this group match your current filters.</div>';
 }
-/* Same filters as the main feed (tab, relevance pill, hide-read) */
-function applyViewFilters(papers, ignoreRead) {
+/* Same filters as the main feed (tab, relevance pill, read papers hidden). Views that belong to Top Papers or the
+   latest digest pass ignoreRel: the relevance pill only filters the topic and alert cards. */
+function applyViewFilters(papers, ignoreRead, ignoreRel) {
   if (currentTab === 'email') papers = papers.filter(p => (p.source_mode||'').includes('email'));
-  if (currentRel !== 'all') papers = papers.filter(p => dynamicRelevance(p) === currentRel);
+  if (currentRel !== 'all' && !ignoreRel) papers = papers.filter(p => dynamicRelevance(p) === currentRel);
   if (hideRead && !ignoreRead) papers = papers.filter(p => !readSet.has(paperKey(p)));
   return papers;
 }
@@ -3993,7 +4027,7 @@ function weekBucket(d) {
 }
 function renderTopList() {
   const groupsOf = groupsOfPaper;
-  const base = selectTopPapers(sortPapers(applyViewFilters(allPapers.slice())));
+  const base = selectTopPapers(sortPapers(applyViewFilters(allPapers.slice(), false, true)));
 
   // Chips: only groups that have papers in the current top set
   const counts = {};
@@ -4013,7 +4047,7 @@ function renderTopList() {
     const wk = new Map(papers.map(p => [p, weekBucket(p.date_found).key]));
     papers = papers.map((p, i) => [p, i]).sort((a, b) => wk.get(b[0]).localeCompare(wk.get(a[0])) || a[1] - b[1]).map(x => x[0]);
   }
-  let everyTop = selectTopPapers(sortPapers(applyViewFilters(allPapers.slice(), true)));
+  let everyTop = selectTopPapers(sortPapers(applyViewFilters(allPapers.slice(), true, true)));
   if (_topGroup) everyTop = everyTop.filter(p => groupsOf(p).includes(_topGroup));
   document.getElementById('overlayTitle').textContent = _topGroup ? `Top Papers in ${_topGroup}` : 'Top Papers';
   setListProgress(everyTop);
