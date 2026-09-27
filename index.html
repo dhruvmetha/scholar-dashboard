@@ -1199,6 +1199,8 @@ body.rp-splitting, body.rp-splitting * { user-select: none !important; -webkit-u
 .vault-num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); font-size: 12px; flex-shrink: 0; align-self: center; }
 .vault-why { font-weight: 400; color: var(--text-muted); font-size: 12.5px; }
 .vault-hint { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-top: -4px; }
+.page-in { animation: page-in 0.2s var(--ease); }
+@keyframes page-in { from { opacity: 0; transform: translateY(6px); } }
 /* motion: short and quiet, and off when the system asks for less. Two speeds and one curve for everything:
    --t-fast for a control changing state, --t-slow for a surface (bar, panel, the reader) coming or going */
 :root { --ease: cubic-bezier(0.2, 0.8, 0.2, 1); --t-fast: 0.15s; --t-slow: 0.26s; }
@@ -8648,10 +8650,13 @@ function showPaperDetail(id) {
   document.getElementById('sec-paper').classList.add('active');
   document.body.classList.remove('tok-mode');
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('mainScroll').scrollTop = 0;
+  jumpScroll(document.getElementById('mainScroll'), 0);   // straight to the top (the page's smooth scrolling would glide there from the list's place)
 
   renderPaperDetail(p);
+  pageIn(document.getElementById('sec-paper'));
 }
+/* A view that replaces another arrives with one short fade, already at its place (no scroll animation) */
+function pageIn(el) { if (el && !reduceMotion()) replay(el, 'page-in'); }
 
 function renderPaperDetail(p) {
   const k = paperKey(p), ka = escAttr(k);
@@ -8979,6 +8984,7 @@ function applyHash() {
       ms.style.scrollBehavior = 'auto';
       ms.scrollTop = _savedScrollTop;
       ms.style.scrollBehavior = '';
+      pageIn(document.querySelector('.tab-section.active'));
     });
   }
 
