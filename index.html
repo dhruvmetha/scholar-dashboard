@@ -281,8 +281,7 @@ a { color: inherit; text-decoration: none; }
 .top-side { background: var(--bg-surface); border: 1px solid rgba(255,255,255,0.14); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
 .top-side .feed-item { flex: 1; }
 /* fitted to the window (see fitTopPapers): the lead and the side list share the height exactly */
-.top-feature.fitted { overflow: hidden; }
-.top-feature.fitted .top-lead { min-height: 0; overflow: hidden; }
+.top-feature.fitted .top-lead { min-height: 0; }
 /* Top Papers: a glow in each paper's topic colours, left to right (as on the paper page and the phone cards): across
    the top of the lead, fainter over each side-list paper. It sits under the content (isolation + z-index -1). */
 .top-feature .top-lead, .top-side .feed-item { isolation: isolate; }
@@ -3426,7 +3425,7 @@ function fitTopPapers() {
   if (!feat) return 0;
   const lead = feat.querySelector('.top-lead'), side = feat.querySelector('.top-side'), sum = lead && lead.querySelector('.lead-summary');
   const items = side ? [...side.children] : [];
-  feat.classList.remove('fitted'); feat.style.height = ''; if (sum) sum.style.webkitLineClamp = '';
+  feat.classList.remove('fitted'); feat.style.height = feat.style.minHeight = ''; if (sum) sum.style.webkitLineClamp = '';
   items.forEach((it, i) => { it.hidden = i >= MAX_TOP_CARDS - 1; });
   const ms = document.getElementById('mainScroll');
   if (document.body.classList.contains('tok-mode') || !ts.offsetParent) return 1 + items.filter(it => !it.hidden).length;
@@ -3446,6 +3445,9 @@ function fitTopPapers() {
     items.forEach(it => { it.hidden = false; });
     while (items.filter(it => !it.hidden).length > 1 && side.scrollHeight > side.clientHeight + 1) items.filter(it => !it.hidden).pop().hidden = true;
   }
+  // measured at exactly the window's height; kept as a minimum, so a paper opening its buttons on hover (or its
+  // abstract) grows the block for as long as it's open instead of being cut off
+  feat.style.height = ''; feat.style.minHeight = h + 'px';
   return 1 + items.filter(it => !it.hidden).length;
 }
 let _fitTopT = 0;
