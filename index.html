@@ -8023,8 +8023,8 @@ function renderChatPanel(force) {
   const body = ready
     ? `<div class="chat-scroll" id="chatScroll"></div>
        <div class="chat-compose"><div class="chat-attach" id="chatAttach"></div>
-         <div class="chat-box"><textarea id="chatInput" rows="1" placeholder="Ask about this paper…   @ adds another paper" oninput="chatInputChanged(this)" onkeydown="chatKey(event)"></textarea>
-           <div class="chat-box-row"><button class="rp-icon-btn sm" onclick="startFigureSelect()" title="Ask about a figure: drag a box on the page" aria-label="Ask about a figure">${ICON_FIGURE}</button><button class="rp-icon-btn sm" onmousedown="event.preventDefault()" onclick="chatAddPaper()" title="Bring in another paper (or just describe it in your message)" aria-label="Bring in another paper">${ICON_PAPER}</button><span class="grow"></span>${chatSelectsHTML()}<button class="chat-send" id="chatSend" onclick="chatSendOrStop()" aria-label="Send">${ICON_SEND}</button></div></div></div>`
+         <div class="chat-box"><textarea id="chatInput" rows="1" placeholder="Ask about this paper…" oninput="chatInputChanged(this)" onkeydown="chatKey(event)"></textarea>
+           <div class="chat-box-row"><button class="rp-icon-btn sm" onclick="startFigureSelect()" title="Ask about a figure: drag a box on the page" aria-label="Ask about a figure">${ICON_FIGURE}</button><button class="rp-icon-btn sm" onmousedown="event.preventDefault()" onclick="chatAddPaper()" title="Bring in another paper (or type @ and its name in your message)" aria-label="Bring in another paper">${ICON_PAPER}</button><span class="grow"></span>${chatSelectsHTML()}<button class="chat-send" id="chatSend" onclick="chatSendOrStop()" aria-label="Send">${ICON_SEND}</button></div></div></div>`
     : `<div class="chat-setup">${setup[Chat.status] || setup.setup}</div>`;
   panel.innerHTML = head + `<div class="chat-root" id="chatRoot" data-paper="${escAttr(pid)}" data-status="${Chat.status}">${body}</div>`;
   if (ready) {
