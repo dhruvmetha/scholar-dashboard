@@ -266,9 +266,11 @@ a { color: inherit; text-decoration: none; }
 .top-feature .top-lead:hover { transform: none; background: #181818; border-color: rgba(255,255,255,0.26); box-shadow: none; }
 .lead-headline { font-size: 25px; font-weight: 500; line-height: 1.25; letter-spacing: -0.01em; color: var(--text); margin-top: 14px; text-wrap: pretty; transition: color 0.15s; }
 .top-lead:hover .lead-headline { color: #fff; }
-.lead-title { font-size: 15px; color: var(--text-muted); margin-top: 10px; line-height: 1.4; }
-.lead-summary { font-size: 15px; color: var(--text-secondary); line-height: 1.65; margin-top: 16px; max-width: 64ch; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
-.lead-authors { font-size: 13px; color: var(--text-muted); margin-top: 16px; }
+.lead-title { font-size: 15px; color: var(--text-muted); margin-top: auto; padding-top: 10px; line-height: 1.4; }
+.lead-summary { font-size: 15px; color: var(--text-secondary); line-height: 1.65; margin-top: auto; padding-top: 16px; max-width: 64ch; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+.lead-authors { font-size: 13px; color: var(--text-muted); margin-top: auto; padding-top: 16px; }
+/* the lead's spare height is shared out above its title, summary, authors and buttons (margin-top: auto), so a tall
+   card spreads its parts evenly; the paddings keep their usual gaps when there's none to share */
 .lead-actions { margin-top: auto; padding-top: 20px; }
 .top-lead .f-venue { max-width: none; }
 .lead-acts { gap: 6px; align-items: center; }
