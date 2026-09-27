@@ -1377,6 +1377,7 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 .lp-bar { transition: background-color var(--t-slow) var(--ease), border-color 0.2s; }
 .lp-bar:not(.stuck) { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
 .lp-bar .pd-bar-title { font-size: 18px; top: 2px; }
+.lp-search-btn, .lp-search-cancel { display: none; }
 /* the sidebar sits against the window's left edge and the list takes the rest of the width (up to a readable 1200px):
    no centred column with empty margins beside a sidebar. Sidebar text lines up with the Back arrow above it. */
 .lp-wrap { padding: 0 32px 96px 12px; display: grid; grid-template-columns: 252px minmax(0, 1200px); column-gap: 40px; }
@@ -1461,6 +1462,15 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 @media (max-width: 600px) {
   .lp-bar .pd-bar-title { display: block; }   /* (a paper page's phone bar has no room for it; this one does) */
   .lp-bar .pd-bar-inner { padding: 8px 16px; }
+  /* the filter: a search icon in the bar; tapped, the bar becomes the field and Cancel */
+  .lp-search-btn { display: inline-flex; margin-left: auto; flex-shrink: 0; }
+  .lp-search-btn svg { width: 19px; height: 19px; fill: currentColor; }
+  .lp-bar .lp-filter { display: none; flex: 1 1 auto; margin: 0; }
+  .lp.searching .lp-bar .lp-filter { display: flex; animation: ui-fade var(--t-slow) var(--ease); }
+  .lp.searching .lp-bar .pd-back, .lp.searching .lp-bar .pd-bar-title, .lp.searching .lp-search-btn { display: none; }
+  .lp-search-cancel { background: none; border: none; color: var(--text-secondary); font: inherit; font-size: 15px; padding: 8px 2px 8px 6px; cursor: pointer; flex-shrink: 0; }
+  .lp.searching .lp-search-cancel { display: inline-flex; animation: ui-fade var(--t-slow) var(--ease); }
+  .lp.searching .lp-bar { background: rgba(17,17,17,0.84); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
   .lp-wrap { padding: 0 16px 72px; }
   .lp-chiprow { margin: 0 -16px; padding: 12px 16px 2px; }
   .lp-head { padding-top: 20px; }
@@ -1473,7 +1483,7 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
   .lp-h { font-size: 17.5px; }
   .lp-also { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .lp-more, .lp-row, .lp-h, .lp-rail-item { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .lp-more, .lp-row, .lp-h, .lp-rail-item { transition: none; } .lp-bar .lp-filter, .lp-search-cancel { animation: none !important; } }
 
 .tl-chips { display: flex; flex-wrap: wrap; gap: 6px 5px; }
 .tl-chip { flex-shrink: 0; background: rgba(255,255,255,0.055); border: 1px solid transparent; color: var(--text-secondary); font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 999px; cursor: pointer; white-space: nowrap; transition: background 0.15s, color 0.15s, border-color 0.15s; }
@@ -2017,6 +2027,8 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
     <div class="pd-bar lp-bar" id="lpBar"><div class="pd-bar-inner">
       <button class="pd-back" onclick="listBack()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg><span id="lpBack">Back</span></button>
       <div class="pd-bar-title" id="lpBarTitle" aria-hidden="true"></div>
+      <button class="pd-act lp-search-btn" id="lpSearchBtn" onclick="openListSearch()" aria-label="Filter this list" title="Filter this list"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>
+      <button class="lp-search-cancel" id="lpSearchCancel" onclick="closeListSearch()">Cancel</button>
     </div></div>
     <div class="lp-wrap">
       <nav class="lp-rail" id="lpRail" aria-label="Other lists"></nav>
@@ -2024,7 +2036,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
         <nav class="lp-chiprow fade-x" id="lpChips" aria-label="Other lists"></nav>
         <header class="lp-head">
           <div class="lp-head-text"><div class="lp-eyebrow" id="lpEyebrow"></div><h1 class="lp-title" id="lpTitle"></h1><p class="lp-sub" id="lpSub" hidden></p><p class="lp-stats" id="lpStats"></p></div>
-          <label class="lp-filter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="search" id="lpFilter" aria-label="Filter this list" autocomplete="off" oninput="setListQuery(this.value)" onkeydown="if (event.key === 'Escape' &amp;&amp; this.value) { event.stopPropagation(); setListQuery('', true); }"></label>
+          <label class="lp-filter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="search" id="lpFilter" aria-label="Filter this list" autocomplete="off" oninput="setListQuery(this.value)" onkeydown="if (event.key === 'Escape' &amp;&amp; (this.value || _listSearching())) { event.stopPropagation(); closeListSearch(); }" onblur="listFilterBlur(this)"></label>
         </header>
         <div class="lp-tools" id="lpTools"></div>
         <div class="lp-body" id="lpBody"></div>
@@ -4120,7 +4132,7 @@ function showList(key) {
     _listBackLabel = _leftPaper ? 'Back' : _searchActive ? 'Search results' : (TAB_NAMES[currentTab] || 'Back');
   }
   const changed = _listKey !== key;
-  if (changed && !returning) { _listQuery = ''; _listShowLow = false; }
+  if (changed && !returning) { _listQuery = ''; _listShowLow = false; document.getElementById('lp').classList.remove('searching'); }
   _listKey = key;
   _listViewActive = true;
   ['sec-papers', 'sec-library', 'sec-venues', 'sec-interests', 'sec-search', 'sec-paper'].forEach(id => document.getElementById(id).classList.remove('active'));
@@ -4284,6 +4296,34 @@ function setListQuery(v, now) {
   clearTimeout(_listQueryTimer);
   if (now) { const f = document.getElementById('lpFilter'); if (f && f.value !== v) f.value = v; renderListBody(); return; }
   _listQueryTimer = setTimeout(renderListBody, 120);
+}
+/* On a phone the filter lives in the bar behind a search icon (the page's header stays short, and the bar is
+   always at hand); on wider screens it sits beside the heading. One field either way, moved between the two. */
+const LP_PHONE = matchMedia('(max-width: 600px)');
+function placeListFilter() {
+  const f = document.querySelector('#lp .lp-filter'), bar = document.querySelector('#lpBar .pd-bar-inner'), head = document.querySelector('#lp .lp-head');
+  if (!f) return;
+  if (LP_PHONE.matches) { if (f.parentElement !== bar) bar.insertBefore(f, document.getElementById('lpSearchCancel')); }
+  else { if (f.parentElement !== head) head.appendChild(f); document.getElementById('lp').classList.remove('searching'); }
+  if (LP_PHONE.matches && _listQuery) document.getElementById('lp').classList.add('searching');
+}
+LP_PHONE.addEventListener('change', placeListFilter);
+document.addEventListener('DOMContentLoaded', placeListFilter);
+function _listSearching() { return document.getElementById('lp').classList.contains('searching'); }
+function openListSearch() {
+  document.getElementById('lp').classList.add('searching');
+  document.getElementById('lpFilter').focus();   // inside the tap, so the phone's keyboard comes up
+}
+/* Cancel (or Esc) clears the filter and gives the bar back its Back and title */
+function closeListSearch() {
+  document.getElementById('lp').classList.remove('searching');
+  if (_listQuery) setListQuery('', true);
+  document.getElementById('lpFilter').blur();
+}
+/* Leaving an empty field closes it; with a filter typed it stays, showing what the list is filtered by */
+function listFilterBlur(el) {
+  if (!LP_PHONE.matches) return;
+  setTimeout(() => { if (!el.value && document.activeElement !== el) document.getElementById('lp').classList.remove('searching'); }, 0);
 }
 function edgeFade(el) {
   const over = el.scrollWidth > el.clientWidth + 2;
