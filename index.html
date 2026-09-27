@@ -358,7 +358,10 @@ a { color: inherit; text-decoration: none; }
 .tr-group { display: inline-flex; align-items: center; gap: 6px; }
 .tr-group .gdot { width: 6px; height: 6px; }
 .tl-chip .gdot { width: 7px; height: 7px; margin-right: 7px; vertical-align: 1px; }
-.topics-grid .topic-card { border-top: 2px solid var(--gc, rgba(255,255,255,0.14)); }
+/* a topic card: a faint glow in its topic's colour across the top (as on the papers above it), instead of a coloured
+   top edge; the colour names the topic, so the title needs no dot */
+.topics-grid .topic-card { position: relative; isolation: isolate; }
+.topics-grid .topic-card::before { content: ''; position: absolute; inset: 0 0 auto 0; z-index: -1; height: 220px; background: var(--gc, transparent); opacity: 0.09; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
 .topics-grid .topic-title { color: var(--text); gap: 8px; }
 .topics-grid .topic-title svg { color: var(--text-muted); transition: transform 0.2s, color 0.2s; }
 .topics-grid .topic-title:hover svg { color: var(--text); transform: translateX(2px); }
@@ -3242,7 +3245,7 @@ function renderPapers(papers, topPool) {   // topPool: the tab's unread papers, 
     shown.forEach(p => shownAbove.add(paperKey(p)));
     const extra = items.length - shown.length;
     return `<div class="topic-card" data-topic="${escAttr(name)}" style="--gc:${groupColor(name)}">
-      <div class="topic-title" role="button" tabindex="0" onclick="openGroup('${escAttr(name)}')">${gdot(name)}<span class="topic-label">${esc(name)}</span>
+      <div class="topic-title" role="button" tabindex="0" onclick="openGroup('${escAttr(name)}')"><span class="topic-label">${esc(name)}</span>
         <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
         <span class="topic-extra">${extra > 0 ? `View all ${items.length}` : `${items.length} ${items.length === 1 ? 'paper' : 'papers'}`}</span>
       </div>
