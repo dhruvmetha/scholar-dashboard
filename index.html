@@ -94,7 +94,9 @@ a { color: inherit; text-decoration: none; }
 /* NAV */
 .navbar { background: #000000ee; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; z-index: 100; box-shadow: 0 0.2rem 0.8rem rgba(255,255,255,0.03); }
 .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; height: 56px; gap: 24px; }
-.nav-portfolio-link { font-size: 18px; font-weight: 500; color: white; text-decoration: none; flex-shrink: 0; margin-right: 4px; transition: color 0.3s ease-in-out; white-space: nowrap; }
+/* the name in the portfolio's serif, so the two sites read as one; it opens the portfolio in this tab, as the portfolio opens this.
+   top: the serif's capitals sit ~2px higher in their line than the sans "Scholar" beside it (measured); this levels them */
+.nav-portfolio-link { position: relative; top: 2px; font-family: var(--serif); font-optical-sizing: auto; font-size: 20px; font-weight: 500; letter-spacing: -0.01em; color: #f2f2f4; text-decoration: none; flex-shrink: 0; margin-right: 4px; transition: color 0.3s ease-in-out; white-space: nowrap; }
 .nav-portfolio-link:hover { color: var(--accent); }
 .nav-brand { font-size: 20px; font-weight: 500; display: flex; align-items: center; gap: 8px; flex-shrink: 0; transition: color 0.15s; }
 .nav-brand:hover { color: var(--accent); }
@@ -1901,7 +1903,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
 
 <nav class="navbar">
   <div class="nav-inner">
-    <a href="https://sumanthtangirala.com" target="_blank" class="nav-portfolio-link">Sumanth Tangirala</a>
+    <a href="https://sumanthtangirala.com" class="nav-portfolio-link">Sumanth Tangirala</a>
     <div class="nav-brand-sep"></div>
     <div class="nav-brand" role="link" tabindex="0" aria-label="Scholar home" onclick="switchTab('all')" style="cursor:pointer">
       <svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg>
