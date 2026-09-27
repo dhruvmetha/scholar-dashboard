@@ -443,15 +443,18 @@ a { color: inherit; text-decoration: none; }
 .pulse { width: 100%; margin-top: 20px; }
 .pulse-cap { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
 .pulse-cap b { color: var(--text-secondary); font-weight: 500; }
-.pulse-bar { display: flex; align-items: center; gap: 2px; height: 14px; width: 100%; }
+.pulse-bar { display: flex; align-items: center; gap: 3px; height: 12px; width: 100%; }
 /* the hovered segment grows in height, not via transform, so its tooltip (::after) isn't stretched */
-.pulse-seg { position: relative; height: 10px; background: var(--gc, var(--g-other)); min-width: 4px; cursor: pointer; transition: opacity 0.15s, height 0.15s; }
-.pulse-seg:first-child { border-radius: 4px 0 0 4px; }
-.pulse-seg:last-child { border-radius: 0 4px 4px 0; }
-.pulse-seg:only-child { border-radius: 4px; }
-.pulse-bar:hover .pulse-seg { opacity: 0.45; }
-.pulse-bar:hover .pulse-seg:hover, .pulse.hl .pulse-seg.on { opacity: 1; height: 14px; }
-.pulse.hl .pulse-seg:not(.on) { opacity: 0.35; }
+/* topic colours mixed toward the page, in the same quiet register as the card glows; the topic you point at
+   (its segment or its legend entry) brightens and grows a little */
+.pulse { --pulse-mix: 55%; --pulse-on: 82%; }
+.pulse-seg { position: relative; height: 8px; background: color-mix(in srgb, var(--gc, var(--g-other)) var(--pulse-mix), #1b1b1d); min-width: 4px; cursor: pointer; transition: background-color var(--t-fast) var(--ease), height var(--t-fast) var(--ease); }
+.pulse-seg:first-child { border-radius: 3px 0 0 3px; }
+.pulse-seg:last-child { border-radius: 0 3px 3px 0; }
+.pulse-seg:only-child { border-radius: 3px; }
+.pulse-bar .pulse-seg:hover, .pulse.hl .pulse-seg.on { background: color-mix(in srgb, var(--gc, var(--g-other)) var(--pulse-on), #1b1b1d); height: 12px; }
+.pulse .gdot { width: 7px; height: 7px; background: color-mix(in srgb, var(--gc, var(--g-other)) 70%, #1b1b1d); transition: background-color var(--t-fast) var(--ease); }
+.pulse-key:hover .gdot { background: color-mix(in srgb, var(--gc, var(--g-other)) var(--pulse-on), #1b1b1d); }
 .pulse-seg::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%); background: var(--bg-card); border: 1px solid var(--border); color: var(--text); font-size: 12px; padding: 4px 9px; border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.12s; z-index: 5; }
 .pulse-seg:hover::after { opacity: 1; }
 .pulse-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 12px; }
@@ -503,7 +506,7 @@ a { color: inherit; text-decoration: none; }
   .v-years { grid-column: 1 / -1; }
   .venues-wrap { padding-left: 16px; padding-right: 16px; }
 }
-@media (prefers-reduced-motion: reduce) { .pulse-seg, .pulse-seg::after { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .pulse-seg, .pulse-seg::after, .pulse .gdot { transition: none; } }
 
 /* NAV on narrow screens: brand on the first line, tabs on a full-width second row
    that scrolls sideways instead of pushing the page wider than the screen */
@@ -3438,7 +3441,7 @@ function renderWeekPulse(weekPapers) {
   const counts = {};
   weekPapers.forEach(p => groupsOfPaper(p).forEach(g => counts[g] = (counts[g] || 0) + 1));
   const ordered = GROUP_ORDER.filter(g => counts[g]);
-  const items = ordered.map(g => ({ g, n: counts[g] }));
+  const items = ordered.map(g => ({ g, n: counts[g] })).sort((a, b) => b.n - a.n);   // biggest first, in the bar and the legend alike
   if (!items.length) { el.innerHTML = ''; return; }
   const tagTotal = items.reduce((n, it) => n + it.n, 0);
   const go = currentTab === 'email' ? 'openGroup' : 'jumpToTopic';
