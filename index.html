@@ -3143,8 +3143,36 @@ function tokMenuAct(what) {
   };
   toast(apply(), () => apply());
 }
-document.addEventListener('click', () => closeTokMenu());
 document.addEventListener('scroll', () => closeTokMenu(), true);
+/* ===== MENUS AND PICKERS: a tap outside only closes them =====
+   While one is open, a tap anywhere else closes it and does nothing more: it never also opens the paper, presses
+   the button or starts the swipe underneath (as on iOS). Scrolling outside still closes it and scrolls. Short-lived
+   hints (the venue tooltip) don't count. */
+const POPOVERS = '#tokMenu.open, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup, #chatHist';
+let _dismissTap = null;
+function closePopovers() {
+  closeTokMenu(); toggleReaderMenu(false); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeAbsPopup(); closeRelevancePopup();
+  const h = document.getElementById('chatHist'); if (h) h.remove();
+}
+document.addEventListener('pointerdown', e => {
+  const open = [...document.querySelectorAll(POPOVERS)];
+  if (!open.length || open.some(el => el.contains(e.target))) { _dismissTap = null; return; }
+  _dismissTap = { id: e.pointerId, t: e.timeStamp };
+  e.stopPropagation();   // nothing underneath sees the start of this tap (no swipe, hold or hover begins)
+}, true);
+document.addEventListener('pointercancel', () => { if (_dismissTap) { _dismissTap = null; closePopovers(); } }, true);   // it became a scroll
+// the rest of that gesture is the menu's too: its moves and its lift reach nothing underneath, and a drag that
+// isn't a scroll closes it as well (the click that may follow is still swallowed)
+document.addEventListener('pointermove', e => { if (_dismissTap && e.pointerId === _dismissTap.id) e.stopPropagation(); }, true);
+document.addEventListener('pointerup', e => { if (_dismissTap && e.pointerId === _dismissTap.id) { e.stopPropagation(); closePopovers(); } }, true);
+document.addEventListener('click', e => {
+  const d = _dismissTap;
+  if (!d) return;
+  _dismissTap = null;
+  if (e.timeStamp - d.t > 1000) return;
+  e.preventDefault(); e.stopPropagation();
+  closePopovers();
+}, true);
 
 /* ===== RENDER PAPERS ===== */
 function renderPapers(papers) {
@@ -5540,7 +5568,6 @@ function toggleReaderMenu(force) {
   if (open) popIn(m); else fadeAway(m);
   b.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
-document.addEventListener('pointerdown', e => { if (!e.target.closest('.rt-more-wrap')) toggleReaderMenu(false); }, true);
 async function toggleReaderDark() {
   const on = !readerDark(), body = document.getElementById('readerBody');
   try { localStorage.setItem(READER_DARK_KEY, on ? 'true' : 'false'); } catch (e) {}
