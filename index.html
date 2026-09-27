@@ -283,6 +283,12 @@ a { color: inherit; text-decoration: none; }
 /* fitted to the window (see fitTopPapers): the lead and the side list share the height exactly */
 .top-feature.fitted { overflow: hidden; }
 .top-feature.fitted .top-lead { min-height: 0; overflow: hidden; }
+/* Top Papers: a glow in each paper's topic colours, left to right (as on the paper page and the phone cards): across
+   the top of the lead, fainter over each side-list paper. It sits under the content (isolation + z-index -1). */
+.top-feature .top-lead, .top-side .feed-item { isolation: isolate; }
+.top-feature .top-lead::before { content: ''; position: absolute; inset: 0 0 auto 0; z-index: -1; height: 60%; border-radius: 12px 12px 0 0; background: var(--gbg, transparent); opacity: 0.09; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
+.top-feature .top-lead { position: relative; }
+.top-side .feed-item::after { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--gbg, transparent); opacity: 0.06; pointer-events: none; -webkit-mask-image: linear-gradient(#000 20%, transparent); mask-image: linear-gradient(#000 20%, transparent); }
 .top-feature.fitted .top-side { min-height: 0; }
 .top-feature.fitted .top-side .feed-item { flex: 1 0 auto; }   /* no squeezing: a paper either fits or waits in the list */
 .top-feature.fitted .top-side .feed-item[hidden] { display: none; }
@@ -3482,7 +3488,8 @@ function feedActionsHTML(p, withSummaryBtn, labelled) {
 function topLeadHTML(p) {
   const k = paperKey(p), ir = readSet.has(k);
   const showTitle = hasText(p.headline) && p.headline.trim() !== (p.title||'').trim();
-  return `<article class="top-card top-lead ${ir?'is-read':''}" tabindex="0" data-key="${escAttr(k)}" onclick="openPaper('${escAttr(k)}', event)">
+  const gs = groupsOfPaper(p);
+  return `<article class="top-card top-lead ${ir?'is-read':''}" tabindex="0" data-key="${escAttr(k)}" onclick="openPaper('${escAttr(k)}', event)"${gs.length ? ` style="--gbg:${topicGlow(gs)}"` : ''}>
     ${feedMetaHTML(p, false, true)}
     <h3 class="lead-headline">${esc(p.headline||p.title)}</h3>
     ${showTitle ? `<div class="lead-title">${esc(p.title)}</div>` : ''}
@@ -3497,7 +3504,8 @@ function topLeadHTML(p) {
 function feedItemHTML(p, opts) {
   const k = paperKey(p), ir = readSet.has(k);
   const showTitle = hasText(p.headline) && p.headline.trim() !== (p.title||'').trim();
-  return `<article class="topic-item feed-item ${ir?'is-read':''}" tabindex="0" data-key="${escAttr(k)}" onclick="openPaper('${escAttr(k)}', event)">
+  const gs = opts && opts.topics ? groupsOfPaper(p) : [];
+  return `<article class="topic-item feed-item ${ir?'is-read':''}" tabindex="0" data-key="${escAttr(k)}" onclick="openPaper('${escAttr(k)}', event)"${gs.length ? ` style="--gbg:${topicGlow(gs)}"` : ''}>
     <div class="f-headline">${esc(p.headline||p.title)}</div>
     ${showTitle ? `<div class="f-title" title="${escAttr(p.title)}">${esc(p.title)}</div>` : ''}
     ${feedMetaHTML(p, true, !!(opts && opts.topics))}
