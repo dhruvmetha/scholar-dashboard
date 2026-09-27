@@ -294,8 +294,22 @@ a { color: inherit; text-decoration: none; }
 .top-feature.fitted .top-side .feed-item { flex: 1 0 auto; }   /* no squeezing: a paper either fits or waits in the list */
 .top-feature.fitted .top-side .feed-item[hidden] { display: none; }
 #sec-papers .top-papers { padding-top: 26px; }   /* room between the date line and Top Papers */
-.home-pulse { max-width: 1200px; margin: 0 auto; padding: 8px 24px 28px; }
+.home-pulse { max-width: 1200px; margin: 0 auto; padding: 48px 24px 8px; }
 .home-pulse .pulse { margin-top: 0; }
+.home-pulse:has(.pulse:empty) { display: none; }
+.home-sh { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.home-sh .sh-rule { flex: 1; height: 1px; background: var(--border); }
+#filtersBar .pill:not(.active) .pill-count { display: none; }   /* the selected pill says how many; the others just name a filter */
+/* Why a paper is in your feed (the digest's note): on Top Papers and the featured paper of each topic card */
+.why-line { display: flex; gap: 8px; font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+.why-line b { flex-shrink: 0; padding-top: 2px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: color-mix(in srgb, var(--gc, var(--accent)) 70%, #fff); }
+.why-line.one { margin-top: 6px; min-width: 0; }
+.why-line.one span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top-lead .lead-why { margin-top: auto; padding-top: 14px; --gc: var(--accent); }
+.top-side .why-line.one { --gc: var(--accent); }
+/* every paper on the page is unread (read ones are hidden), so the side list needs no unread dots */
+.top-side .feed-item::before { display: none; }
+.top-side .topic-item.feed-item { padding-left: 20px; }
 #topicsHeader .sh-rule { flex: 1; height: 1px; background: var(--border); }
 #topicsHeader .filters { max-width: none; margin: 0; padding: 0; flex-wrap: nowrap; }
 
@@ -361,8 +375,48 @@ a { color: inherit; text-decoration: none; }
 /* a topic card: a faint glow in its topic's colour across the top (as on the papers above it), instead of a coloured
    top edge; the colour names the topic, so the title needs no dot */
 .topics-grid .topic-card { position: relative; isolation: isolate; }
-.topics-grid .topic-card::before { content: ''; position: absolute; inset: 0 0 auto 0; z-index: -1; height: 300px; background: var(--gc, transparent); opacity: 0.09; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
+.topics-grid .topic-card::before { content: ''; position: absolute; inset: 0 0 auto 0; z-index: -1; height: 340px; background: var(--gc, transparent); opacity: 0.11; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
 .topics-grid .topic-title { color: var(--text); gap: 8px; }
+/* the article-style cards (topicCardHTML) */
+.topics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; align-items: start; }   /* a card sizes to its own content: one opening on hover doesn't stretch its neighbour */
+.topics-grid .topic-card { border-radius: 16px; border-color: rgba(255,255,255,0.09); }
+.topics-grid .topic-title { border-bottom: none; padding: 20px 26px 4px; }
+.topics-grid .topic-title .topic-label { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in srgb, var(--gc) 75%, #fff); }
+.topics-grid .topic-title:hover .topic-label { text-decoration: none; }
+.topics-grid .topic-title:not([role]) { cursor: default; }
+.topics-grid .topic-body { max-height: none; overflow: visible; padding: 0; }
+.tc-feat { display: block; padding: 10px 26px 22px; cursor: pointer; }
+.tc-headline { font-family: var(--serif); font-optical-sizing: auto; font-size: 24px; font-weight: 500; line-height: 1.24; color: #f2f2f4; margin: 0; text-wrap: pretty; transition: color 0.2s; }
+.tc-feat:hover .tc-headline { color: #fff; }
+.tc-sum { font-size: 15px; line-height: 1.6; color: var(--text-secondary); margin: 12px 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tc-feat .why-line { margin-top: 12px; }
+.tc-foot { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+.tc-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-muted); min-width: 0; }
+.tc-tags .f-venue { max-width: 180px; }
+.tc-must { color: var(--green); display: inline-flex; align-items: center; gap: 6px; }
+.tc-must::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.tc-acts { opacity: 0; transition: opacity 0.2s; }
+.tc-feat:hover .tc-acts, .tc-feat:focus-within .tc-acts, .tc-row:hover .tc-acts, .tc-row:focus-within .tc-acts { opacity: 1; }
+@media (hover: none) { .tc-acts { opacity: 1; } }
+.tc-foot .tc-acts { margin-left: auto; }
+.tc-go { margin-left: 8px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); white-space: nowrap; transition: color 0.2s, gap 0.2s; }
+.tc-foot .tc-go:first-child, .tc-tags + .tc-go { margin-left: auto; }
+.tc-go::after { content: '\2192'; }
+.tc-feat:hover .tc-go { color: var(--accent); gap: 10px; }
+.tc-list { border-top: 1px solid rgba(255,255,255,0.07); padding: 6px 0 8px; }
+.tc-row { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 12px; padding: 14px 26px; cursor: pointer; transition: background 0.2s; }
+.tc-row:hover { background: rgba(255,255,255,0.035); }
+.tc-num { font-family: var(--serif); font-size: 15px; padding-top: 2px; color: color-mix(in srgb, var(--gc) 65%, #888); font-variant-numeric: tabular-nums; }
+.tc-rh { font-family: var(--serif); font-optical-sizing: auto; font-size: 16.5px; font-weight: 500; line-height: 1.35; color: var(--text); margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color 0.2s; }
+.tc-row:hover .tc-rh { color: #fff; }
+.tc-row .tc-tags { margin-top: 7px; }
+/* hovering (or focusing) a listed paper slides its takeaway open */
+.tc-more { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--t-slow) var(--ease), opacity var(--t-slow) var(--ease); }
+.tc-more > div { overflow: hidden; }
+.tc-more p { margin: 8px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.tc-more .tc-acts { display: inline-flex; margin-top: 8px; }
+.tc-row:hover .tc-more, .tc-row:focus-within .tc-more { grid-template-rows: 1fr; opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .tc-more, .tc-acts, .tc-go { transition: none; } }
 .topics-grid .topic-title svg { color: var(--text-muted); transition: transform 0.2s, color 0.2s; }
 .topics-grid .topic-title:hover svg { color: var(--text); transform: translateX(2px); }
 
@@ -1791,8 +1845,8 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   </div>
   <div id="papersContent">
     <div class="top-papers" id="topStories"></div>
-    <div class="home-pulse"><div class="pulse" id="weekPulse"></div></div>
-    <div class="section-header" id="topicsHeader" style="max-width:1200px;margin:0 auto;padding:8px 24px 12px;"><span id="topicsHeaderLabel">Your topics</span><span class="sh-rule"></span>
+    <div class="home-pulse"><div class="section-header home-sh"><span>This week</span><span class="sh-rule"></span></div><div class="pulse" id="weekPulse"></div></div>
+    <div class="section-header" id="topicsHeader" style="max-width:1200px;margin:44px auto 0;padding:0 24px 22px;"><span id="topicsHeaderLabel">Your topics</span><span class="sh-rule"></span>
     <div class="filters" id="filtersBar">
       <button class="pill active" data-rel="all" onclick="toggleRel('all')">All <span class="pill-count" id="stat-all">0</span></button>
       <button class="pill" data-rel="definitely" onclick="toggleRel('definitely')">Must Read <span class="pill-count" id="stat-def">0</span></button>
@@ -2066,7 +2120,6 @@ function byTopScore(arr) {
   const sc = new Map(arr.map(p => [p, topScore(p)]));
   return arr.sort((a, b) => sc.get(b) - sc.get(a) || (b.date_found || '').localeCompare(a.date_found || ''));
 }
-const MAX_TOPIC_ITEMS = 3;
 
 /* ===== STATE ===== */
 const TOUCH = matchMedia('(pointer: coarse)').matches;   // copy says "tap" and offers files, not drag-and-drop
@@ -3228,30 +3281,45 @@ function renderPapers(papers, topPool) {   // topPool: the tab's unread papers, 
     return (ia===-1?999:ia)-(ib===-1?999:ib);
   });
 
-  document.getElementById('topicJump').innerHTML = sorted.map(name =>
-    `<button class="tl-chip" onclick="jumpToTopic('${escAttr(name)}')">${gdot(name)}${esc(name)}<span class="n">${grouped[name].length}</span></button>`).join('');
-  document.getElementById('topicsGrid').innerHTML = sorted.map(name => {
-    const items = grouped[name];
-    // Fill each card with papers not shown above or in an earlier card; fall back to
-    // repeats only when a group has nothing else left, so cards are never empty.
-    const fresh = items.filter(p => !shownAbove.has(paperKey(p)));
-    const shown = fresh.slice(0, MAX_TOPIC_ITEMS);
-    if (shown.length < MAX_TOPIC_ITEMS) {
-      for (const p of items) {
-        if (shown.length >= MAX_TOPIC_ITEMS) break;
-        if (!shown.includes(p)) shown.push(p);
-      }
-    }
-    shown.forEach(p => shownAbove.add(paperKey(p)));
-    const extra = items.length - shown.length;
-    return `<div class="topic-card" data-topic="${escAttr(name)}" style="--gc:${groupColor(name)}">
-      <div class="topic-title" role="button" tabindex="0" onclick="openGroup('${escAttr(name)}')"><span class="topic-label">${esc(name)}</span>
-        <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-        <span class="topic-extra">${extra > 0 ? `View all ${items.length}` : `${items.length} ${items.length === 1 ? 'paper' : 'papers'}`}</span>
-      </div>
-      <div class="topic-body feed-body">${shown.map(feedItemHTML).join('')}</div>
-    </div>`;
-  }).join('');
+  document.getElementById('topicJump').innerHTML = '';   // the "This week" legend above jumps to the cards
+  document.getElementById('topicsGrid').innerHTML = sorted.map(name => topicCardHTML(name, grouped[name], shownAbove, { color: groupColor(name), open: `openGroup('${escAttr(name)}')` })).join('');
+}
+
+/* A topic (or alert) card, like an article page: the topic as a small coloured label, its best paper as a short
+   article (headline, takeaway, why it's in your feed, Read), then the next two as a numbered list whose takeaway slides
+   open on hover. Papers are ranked as Top Papers are, within the card, and skip papers already shown higher up. */
+const TOPIC_CARD_PAPERS = 3;
+function whyLineHTML(p, cls) {
+  const w = parseWhy(p);
+  return w ? `<div class="why-line${cls ? ' ' + cls : ''}"><b>Why</b><span>${esc(w.reason)}</span></div>` : '';
+}
+function cardTagsHTML(p) {
+  return `<div class="tc-tags">${isNewSinceVisit(p) ? '<span class="f-new">New</span>' : ''}${dynamicRelevance(p) === 'definitely' ? '<span class="tc-must">Must read</span>' : ''}${hasText(p.venue) ? venueLinkHTML(p, 'f-venue') : ''}${displayDate(p) ? `<span>${esc(displayDate(p))}</span>` : ''}</div>`;
+}
+function topicCardHTML(name, items, shownAbove, o) {
+  const ranked = byTopScore(items.slice());
+  const shown = ranked.filter(p => !shownAbove.has(paperKey(p))).slice(0, TOPIC_CARD_PAPERS);
+  for (const p of ranked) { if (shown.length >= TOPIC_CARD_PAPERS) break; if (!shown.includes(p)) shown.push(p); }   // never an empty card
+  shown.forEach(p => shownAbove.add(paperKey(p)));
+  const [f, ...rest] = shown, k = p => escAttr(paperKey(p));
+  const newN = items.filter(isNewSinceVisit).length;
+  const acts = p => `<span class="p-actions has-active tc-acts">${starBtn(p)} ${readBtn(p)} ${saveBtn(p)}</span>`;
+  const feat = f ? `<article class="tc-feat" tabindex="0" data-key="${k(f)}" onclick="openPaper('${k(f)}', event)">
+      <h3 class="tc-headline">${esc(f.headline || f.title)}</h3>
+      ${hasText(f.summary) ? `<p class="tc-sum">${esc(f.summary)}</p>` : ''}
+      ${whyLineHTML(f)}
+      <div class="tc-foot">${cardTagsHTML(f)}${acts(f)}<span class="tc-go">Read</span></div>
+    </article>` : '';
+  const rows = rest.map((p, i) => `<article class="tc-row" tabindex="0" data-key="${k(p)}" onclick="openPaper('${k(p)}', event)">
+      <span class="tc-num">0${i + 2}</span>
+      <div class="tc-row-main"><h4 class="tc-rh">${esc(p.headline || p.title)}</h4>${cardTagsHTML(p)}
+        <div class="tc-more"><div>${hasText(p.summary) ? `<p>${esc(p.summary)}</p>` : ''}${acts(p)}</div></div></div>
+    </article>`).join('');
+  const count = `${newN ? `${newN} new \u00b7 ` : ''}${items.length > shown.length ? `View all ${items.length}` : `${items.length} ${items.length === 1 ? 'paper' : 'papers'}`}`;
+  return `<div class="topic-card" data-topic="${escAttr(name)}" style="--gc:${o.color}">
+    <div class="topic-title" ${o.open ? `role="button" tabindex="0" onclick="${o.open}"` : ''}><span class="topic-label">${esc(o.label || name)}</span><span class="topic-extra">${count}</span></div>
+    <div class="topic-body">${feat}${rows ? `<div class="tc-list">${rows}</div>` : ''}</div>
+  </div>`;
 }
 
 /* ----- Email Digest: the latest digest up top, then one card per alert ----- */
@@ -3278,22 +3346,8 @@ function renderEmailPapers(papers, topPool) {
   // under the heading, a chip per alert card (as topic chips are under "Your topics"): a tap jumps to the card
   document.getElementById('topicJump').innerHTML = names.map(name =>
     `<button class="tl-chip" onclick="jumpToTopic('${escAttr(name)}')">${esc(name)}<span class="n">${byAlert[name].length}</span></button>`).join('');
-  document.getElementById('topicsGrid').innerHTML = names.map(name => {
-    const items = sortForFeed(byAlert[name].slice());
-    // like topic cards: prefer papers not already shown above or in an earlier card
-    const shown = items.filter(p => !shownAbove.has(paperKey(p))).slice(0, MAX_TOPIC_ITEMS);
-    for (const p of items) { if (shown.length >= MAX_TOPIC_ITEMS) break; if (!shown.includes(p)) shown.push(p); }
-    shown.forEach(p => shownAbove.add(paperKey(p)));
-    const extra = items.length - shown.length;
-    const newest = items[0] && items[0].date_found ? `latest ${shortDate(items[0].date_found)}` : '';
-    return `<div class="topic-card alert-card" data-topic="${escAttr(name)}" style="--gc:var(--accent)">
-      <div class="topic-title" ${name === OTHER ? '' : `role="button" tabindex="0" onclick="openAlert('${escAttr(name)}')"`}><span class="topic-label">${esc(name === 'Keyword alerts' || name === OTHER ? name : name + ' alert')}</span>
-        ${name === OTHER ? '' : '<svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>'}
-        <span class="topic-extra">${extra > 0 && name !== OTHER ? `View all ${items.length}` : `${items.length} ${items.length === 1 ? 'paper' : 'papers'}`}${newest ? ` \u00b7 ${newest}` : ''}</span>
-      </div>
-      <div class="topic-body feed-body">${shown.map(feedItemHTML).join('')}</div>
-    </div>`;
-  }).join('');
+  document.getElementById('topicsGrid').innerHTML = names.map(name => topicCardHTML(name, byAlert[name], shownAbove, {
+    color: 'var(--accent)', label: name === 'Keyword alerts' || name === OTHER ? name : name + ' alert', open: name === OTHER ? '' : `openAlert('${escAttr(name)}')` })).join('');
 }
 const LATEST_KEY = '#latest-digest';
 function openLatestDigest(skipHash) {
@@ -3373,9 +3427,10 @@ function renderWeekPulse(weekPapers) {
   const items = ordered.map(g => ({ g, n: counts[g] }));
   if (!items.length) { el.innerHTML = ''; return; }
   const tagTotal = items.reduce((n, it) => n + it.n, 0);
-  const seg = it => `<div class="pulse-seg" style="flex-grow:${it.n};--gc:${it.g ? groupColor(it.g) : 'var(--g-other)'}" data-g="${escAttr(it.g || '')}" data-tip="${escAttr((it.g || 'Other topics') + ': ' + it.n)}" ${it.g ? `onclick="openGroup('${escAttr(it.g)}')"` : ''}></div>`;
+  const go = currentTab === 'email' ? 'openGroup' : 'jumpToTopic';
+  const seg = it => `<div class="pulse-seg" style="flex-grow:${it.n};--gc:${it.g ? groupColor(it.g) : 'var(--g-other)'}" data-g="${escAttr(it.g || '')}" data-tip="${escAttr((it.g || 'Other topics') + ': ' + it.n)}" ${it.g ? `onclick="${go}('${escAttr(it.g)}')"` : ''}></div>`;
   const key = it => it.g
-    ? `<button class="pulse-key" onclick="openGroup('${escAttr(it.g)}')" onmouseenter="pulseHL('${escAttr(it.g)}')" onmouseleave="pulseHL(null)">${gdot(it.g)}${esc(it.g)} <span class="n">${it.n}</span></button>`
+    ? `<button class="pulse-key" onclick="${go}('${escAttr(it.g)}')" onmouseenter="pulseHL('${escAttr(it.g)}')" onmouseleave="pulseHL(null)">${gdot(it.g)}${esc(it.g)} <span class="n">${it.n}</span></button>`
     : `<span class="pulse-key static">${gdot('')}Other <span class="n">${it.n}</span></span>`;
   el.innerHTML = `
     <div class="pulse-cap"><b>${weekPapers.length} ${weekPapers.length === 1 ? 'paper' : 'papers'}</b> arrived this week${tagTotal > weekPapers.length ? `, tagged ${tagTotal} times across ${ordered.length} topics (a paper can have more than one)` : ', by topic'}</div>
@@ -3501,6 +3556,7 @@ function topLeadHTML(p) {
     <h3 class="lead-headline">${esc(p.headline||p.title)}</h3>
     ${showTitle ? `<div class="lead-title">${esc(p.title)}</div>` : ''}
     ${hasText(p.summary) ? `<p class="lead-summary">${esc(p.summary)}</p>` : ''}
+    ${whyLineHTML(p, 'lead-why')}
     ${hasText(p.authors) ? `<div class="lead-authors">${esc(p.authors)}</div>` : ''}
     <div class="lead-actions">${feedActionsHTML(p, false, true)}</div>
   </article>`;
@@ -3515,6 +3571,7 @@ function feedItemHTML(p, opts) {
   return `<article class="topic-item feed-item ${ir?'is-read':''}" tabindex="0" data-key="${escAttr(k)}" onclick="openPaper('${escAttr(k)}', event)"${gs.length ? ` style="--gbg:${topicGlow(gs)}"` : ''}>
     <div class="f-headline">${esc(p.headline||p.title)}</div>
     ${showTitle ? `<div class="f-title" title="${escAttr(p.title)}">${esc(p.title)}</div>` : ''}
+    ${opts && opts.topics ? whyLineHTML(p, 'one') : ''}
     ${feedMetaHTML(p, true, !!(opts && opts.topics))}
     <div class="f-actions"><div>${feedActionsHTML(p, true)}</div></div>
   </article>`;
