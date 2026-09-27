@@ -579,7 +579,7 @@ body.tok-mode .tok { display: block; flex: 1; min-height: 0; overflow-y: auto; s
 .tok-count { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; padding-left: 4px; }
 .tok-progress { position: absolute; left: 0; bottom: -1px; height: 2px; background: var(--accent); width: 0; transition: width 0.2s ease; }
 
-.tok-card { touch-action: pan-y; position: relative; z-index: 2; background: var(--bg); height: 100%; scroll-snap-align: start; scroll-snap-stop: always; display: flex; flex-direction: column; padding: 20px 72px 34px 20px; overflow: hidden; }
+.tok-card { touch-action: pan-y; position: relative; z-index: 2; background: var(--bg); height: 100%; scroll-snap-align: start; scroll-snap-stop: always; display: flex; flex-direction: column; padding: 20px 20px 34px 20px; overflow: hidden; }
 /* a dark band at the foot of each card keeps neighbouring papers apart while swiping */
 .tok-card::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 14px; background: #000; border-top: 1px solid rgba(255,255,255,0.07); pointer-events: none; }
 .tok-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 45%; background: var(--gc, var(--accent)); opacity: 0.07; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
@@ -591,13 +591,18 @@ body.tok-mode .tok { display: block; flex: 1; min-height: 0; overflow-y: auto; s
 .tok-summary { font-family: var(--serif); font-size: 17px; line-height: 1.55; color: #cfd0d5; margin-top: 16px; flex: 1; min-height: 0; overflow: hidden; -webkit-mask-image: linear-gradient(#000 78%, transparent); mask-image: linear-gradient(#000 78%, transparent); }
 .tok-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); margin-top: 14px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 .tok-open { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; align-self: flex-start; padding: 9px 16px; border-radius: 999px; background: rgba(255,255,255,0.08); color: var(--text); font-size: 13.5px; font-weight: 500; border: none; font-family: inherit; flex-shrink: 0; }
-.tok-rail { position: absolute; right: 8px; bottom: 110px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
-.tok-act { width: 48px; height: 48px; border-radius: 50%; border: none; background: rgba(255,255,255,0.07); color: var(--text-secondary); font-size: 19px; display: flex; align-items: center; justify-content: center; text-decoration: none; }
-.tok-act span { font-size: 9px; margin-top: -2px; }
-.tok-act.on-star { color: var(--star); background: rgba(201,163,86,0.16); }
-.tok-act.on-read { color: var(--green); background: rgba(129,201,149,0.16); }
-.tok-act.on-list { color: var(--list); background: rgba(91,155,245,0.16); }
-.tok-act svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tok-more { margin: -6px -10px -6px auto; width: 40px; height: 36px; border: none; border-radius: 10px; background: none; color: var(--text-secondary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.tok-more svg { width: 20px; height: 20px; fill: currentColor; }
+.tok-more[aria-expanded="true"], .tok-more:active { background: rgba(255,255,255,0.08); color: var(--text); }
+/* the card's actions, in a menu from the topic row (the text keeps the card's full width) */
+.tok-menu { position: fixed; z-index: 60; display: none; flex-direction: column; min-width: 210px; padding: 4px; background: #1d1d20; border: 1px solid rgba(255,255,255,0.14); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.55); transform-origin: 100% 0; }
+.tok-menu.open { display: flex; animation: ui-pop 0.14s ease-out; }
+.tok-menu.leaving { display: flex; pointer-events: none; animation: ui-out 0.12s ease-in forwards; }
+.tok-menu > * { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 14px; border: none; border-radius: 8px; background: none; color: var(--text); font: inherit; font-size: 15px; text-align: left; text-decoration: none; cursor: pointer; }
+.tok-menu > *:active { background: rgba(255,255,255,0.08); }
+.tok-menu i { width: 20px; font-style: normal; text-align: center; color: var(--text-secondary); }
+.tok-menu i svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; }
+.tok-menu .on-star i { color: var(--star); } .tok-menu .on-read i { color: var(--green); } .tok-menu .on-list i { color: var(--list); }
 .tok-card.has-hint { padding-bottom: 62px; }
 .tok-hint { position: absolute; left: 0; right: 0; bottom: 28px; text-align: center; font-size: 12px; color: var(--text-muted); animation: tok-bob 1.8s ease-in-out infinite; pointer-events: none; }
 @keyframes tok-bob { 0%, 100% { transform: translateY(0); opacity: 0.75; } 50% { transform: translateY(-5px); opacity: 1; } }
@@ -1636,7 +1641,6 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
   body:has(.save-bar.visible) .toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
   body:has(.save-bar.visible) .toast:not(.show) { transform: translateX(-50%) translateY(calc(100% + 92px + env(safe-area-inset-bottom, 0px))); }   /* hidden fully off-screen when lifted */
   body.tok-mode:has(.save-bar.visible) .tok-card { padding-bottom: 98px; }
-  body.tok-mode:has(.save-bar.visible) .tok-rail { bottom: 170px; }
 }
 .save-bar-btns .btn-save-csv { white-space: nowrap; }
 .btn-save-csv { padding: 5px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18); border-radius: 6px; color: var(--text); font-size: 12px; font-weight: 500; cursor: pointer; transition: background 0.15s; flex: 1; text-align: center; margin: 0 2px; }
@@ -2978,7 +2982,7 @@ function tokCardHTML(p, idx) {
   const showTitle = hasText(p.headline) && p.headline.trim() !== (p.title||'').trim();
   const hint = idx === 0 && !_tokHinted;
   return `<article class="tok-card ${hint?'has-hint':''} ${ir?'is-read':''}" data-key="${ka}" style="--gc:${groups.length ? groupColor(groups[0]) : 'var(--accent)'}">
-    <div class="tok-topics">${groups.slice(0, 2).map(g => `<span class="tok-topic">${gdot(g)}${esc(g)}</span>`).join('')}</div>
+    <div class="tok-topics">${groups.slice(0, 2).map(g => `<span class="tok-topic">${gdot(g)}${esc(g)}</span>`).join('')}<button class="tok-more" onclick="tokMenu(event, this, '${ka}')" aria-label="Actions" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div>
     <h2 class="tok-head" onclick="openPaper('${ka}', event)">${esc(p.headline || p.title)}</h2>
     ${showTitle ? `<div class="tok-title">${esc(p.title)}</div>` : ''}
     ${hasText(p.authors) ? `<div class="tok-authors">${esc(p.authors)}</div>` : ''}
@@ -2990,12 +2994,6 @@ function tokCardHTML(p, idx) {
       ${displayDate(p) ? `<span>${esc(displayDate(p))}</span>` : ''}
     </div>
     <button class="tok-open" onclick="${pdfSourceOf(p) ? `openReader('${ka}')` : `openPaper('${ka}', event)`}">Read full paper</button>
-    <div class="tok-rail">
-      <button class="tok-act ${starSet.has(k)?'on-star':''}" onclick="tokAct(event,this,'star','${ka}')" aria-label="Star">&#9733;</button>
-      <button class="tok-act ${ir?'on-read':''}" onclick="tokAct(event,this,'read','${ka}')" aria-label="${ir?'Mark unread':'Mark read'}">&#10003;</button>
-      <button class="tok-act ${paperInAnyList(k)?'on-list':''}" onclick="tokAct(event,this,'list','${ka}')" aria-label="Save to list">&#9776;</button>
-      ${p.url ? `<a class="tok-act" href="${esc(p.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="Open paper"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}
-    </div>
     ${hint ? '<div class="tok-hint">Swipe up for next &middot; right to star &middot; left to mark read</div>' : ''}
   </article>`;
 }
@@ -3033,7 +3031,7 @@ function tokDown(e) {
       tokReset(g.card);
       // the click that ends the hold would hit the document handler that closes the picker
       document.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); }, { capture: true, once: true });
-      openSaveDD(g.card.querySelector('.tok-act'), g.card.dataset.key);
+      openSaveDD(g.card.querySelector('.tok-more'), g.card.dataset.key);
       if (navigator.vibrate) navigator.vibrate(12);
     }, TOK_HOLD_MS)
   };
@@ -3083,16 +3081,12 @@ function tokCommit(card, action) {
     if (action === 'star') {
       toggleStar(k, null);
       const on = starSet.has(k);
-      const btn = card.querySelector('.tok-act');
-      if (btn) btn.classList.toggle('on-star', on);
       _tokLock = false;
       return on ? 'Starred' : 'Unstarred';
     }
     toggleRead(k, null);
     const on = readSet.has(k);
     card.classList.toggle('is-read', on);
-    const btn = card.querySelectorAll('.tok-act')[1];
-    if (btn) { btn.classList.toggle('on-read', on); btn.setAttribute('aria-label', on ? 'Mark unread' : 'Mark read'); }
     _tokLock = false;
     return on ? 'Marked read' : 'Marked unread';
   };
@@ -3112,14 +3106,45 @@ function tokNext() {
 }
 
 /* Act on a card without re-rendering the feed, which would lose the reader's place */
-function tokAct(ev, btn, what, k) {
+/* The card's actions: star, read, save to a list, open the paper's page */
+function tokMenu(ev, btn, k) {
   ev.stopPropagation();
-  _tokLock = true;
-  if (what === 'star') { toggleStar(k, btn); btn.classList.toggle('on-star', starSet.has(k)); }
-  else if (what === 'read') { toggleRead(k, btn); btn.classList.toggle('on-read', readSet.has(k)); btn.setAttribute('aria-label', readSet.has(k) ? 'Mark unread' : 'Mark read'); }
-  else { openSaveDD(btn, k); }
-  _tokLock = false;
+  let m = document.getElementById('tokMenu');
+  if (m && m.classList.contains('open') && m.dataset.key === k) { closeTokMenu(); return; }
+  if (!m) { m = document.createElement('div'); m.id = 'tokMenu'; m.className = 'tok-menu'; m.setAttribute('role', 'menu'); m.onclick = e => e.stopPropagation(); document.body.appendChild(m); }
+  closeTokMenu();
+  const p = allPapers.find(x => paperKey(x) === k), st = starSet.has(k), rd = readSet.has(k), ka = escAttr(k);
+  m.dataset.key = k;
+  m.innerHTML = `<button role="menuitem" class="${st ? 'on-star' : ''}" onclick="tokMenuAct('star')"><i>&#9733;</i>${st ? 'Unstar' : 'Star'}</button>`
+    + `<button role="menuitem" class="${rd ? 'on-read' : ''}" onclick="tokMenuAct('read')"><i>&#10003;</i>${rd ? 'Mark unread' : 'Mark read'}</button>`
+    + `<button role="menuitem" class="${paperInAnyList(k) ? 'on-list' : ''}" onclick="tokMenuAct('list')"><i>&#9776;</i>Save to a list…</button>`
+    + (p && p.url ? `<a role="menuitem" href="${esc(p.url)}" target="_blank" rel="noopener" onclick="closeTokMenu()"><i><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></i>Open the paper's page</a>` : '');
+  const r = btn.getBoundingClientRect();
+  m.style.top = (r.bottom + 6) + 'px'; m.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
+  m._btn = btn; btn.setAttribute('aria-expanded', 'true');
+  popIn(m);
 }
+function closeTokMenu() {
+  const m = document.getElementById('tokMenu');
+  if (!m) return;
+  if (m._btn) m._btn.setAttribute('aria-expanded', 'false');
+  fadeAway(m);
+}
+function tokMenuAct(what) {
+  const m = document.getElementById('tokMenu'), k = m.dataset.key, btn = m._btn;
+  closeTokMenu();
+  if (what === 'list') { openSaveDD(btn, k); return; }
+  const card = btn && btn.closest('.tok-card');
+  const apply = () => {   // the same as a swipe, with the same Undo
+    _tokLock = true;
+    if (what === 'star') toggleStar(k, null); else { toggleRead(k, null); if (card) card.classList.toggle('is-read', readSet.has(k)); }
+    _tokLock = false;
+    return what === 'star' ? (starSet.has(k) ? 'Starred' : 'Unstarred') : (readSet.has(k) ? 'Marked read' : 'Marked unread');
+  };
+  toast(apply(), () => apply());
+}
+document.addEventListener('click', () => closeTokMenu());
+document.addEventListener('scroll', () => closeTokMenu(), true);
 
 /* ===== RENDER PAPERS ===== */
 function renderPapers(papers) {
