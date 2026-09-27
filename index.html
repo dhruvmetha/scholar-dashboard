@@ -542,7 +542,8 @@ a { color: inherit; text-decoration: none; }
 .pd-back:hover { color: var(--accent); }
 .pd-back svg { width: 16px; height: 16px; fill: currentColor; transition: transform 0.15s; }
 .pd-back:hover svg { transform: translateX(-2px); }
-.pd-bar-title { flex: 1; min-width: 0; font-family: var(--serif); font-size: 16px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transform: translateY(4px); transition: opacity var(--t-slow) var(--ease), transform var(--t-slow) var(--ease); pointer-events: none; }
+/* position/top: the serif's capitals sit higher in its line than the sans Back label's; this levels them (measured) */
+.pd-bar-title { position: relative; top: 1.5px; flex: 1; min-width: 0; font-family: var(--serif); font-size: 16px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transform: translateY(4px); transition: opacity var(--t-slow) var(--ease), transform var(--t-slow) var(--ease); pointer-events: none; }
 .pd-bar.stuck .pd-bar-title { opacity: 1; transform: none; }
 .pd-actions { display: flex; align-items: center; gap: 2px; margin-left: auto; flex-shrink: 0; }
 .pd-act-label { display: none; }
@@ -1368,25 +1369,33 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 /* ===== LIST PAGES: every "View all" list (Top Papers, a topic, an alert, the latest digest, a venue, an interest)
    is a page of its own: a sticky bar with Back, a sidebar of the sibling lists (a row of chips below 1000px), a
    heading, one set of controls, and rows that say why each paper is here. ===== */
-.lp { --lp-w: 1200px; --lp-bar-h: 56px; position: relative; isolation: isolate; min-height: 100%; }
+.lp { --lp-bar-h: 56px; position: relative; isolation: isolate; min-height: 100%; }
 /* the topic's colour, faint, across the top (as on its card and on a paper page) */
 .lp::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 420px; z-index: -1; background: var(--gbg, none); opacity: 0.1; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
-.lp-bar .pd-bar-inner { max-width: var(--lp-w); }
+.lp-bar .pd-bar-inner { max-width: none; padding: 8px 32px 8px 24px; }
 /* the bar is clear over the page's glow until the heading scrolls under it */
 .lp-bar { transition: background-color var(--t-slow) var(--ease), border-color 0.2s; }
 .lp-bar:not(.stuck) { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
-.lp-wrap { max-width: var(--lp-w); margin: 0 auto; padding: 0 24px 96px; display: grid; grid-template-columns: 220px minmax(0, 1fr); column-gap: 48px; }
+.lp-bar .pd-bar-title { font-size: 18px; top: 2px; }
+/* the sidebar sits against the window's left edge and the list takes the rest of the width (up to a readable 1200px):
+   no centred column with empty margins beside a sidebar. Sidebar text lines up with the Back arrow above it. */
+.lp-wrap { padding: 0 32px 96px 12px; display: grid; grid-template-columns: 252px minmax(0, 1200px); column-gap: 40px; }
 .lp-main { min-width: 0; }
-.lp-rail { position: sticky; top: var(--lp-bar-h); align-self: start; max-height: calc(100vh - 150px); overflow-y: auto; padding: 22px 0 24px; scrollbar-width: none; }
+.lp-rail { position: sticky; top: var(--lp-bar-h); align-self: start; max-height: calc(100vh - 150px); overflow-y: auto; padding: 18px 0 24px; scrollbar-width: none; }
 .lp-rail::-webkit-scrollbar { display: none; }
-.lp-rail h2 { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 22px 0 6px; }
-.lp-rail-item { display: flex; align-items: center; gap: 9px; padding: 6px 10px; margin: 0 -10px; border-radius: 8px; font-size: 13.5px; line-height: 1.35; color: var(--text-secondary); transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+.lp-rail h2 { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 22px 0 6px; padding: 0 12px; }   /* on the line of the Back arrow and the dots */
+.lp-rail-item { display: flex; align-items: center; gap: 10px; padding: 7px 12px; margin: 1px 0; border-radius: 8px; font-size: 13.5px; line-height: 1.35; color: var(--text-secondary); transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
 .lp-rail-item:hover { background: rgba(255,255,255,0.045); color: var(--text); }
 .lp-rail-item.on { background: rgba(255,255,255,0.08); color: var(--text); }
 .lp-rail-item .l { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lp-rail-item .n { margin-left: auto; padding-left: 8px; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .lp-rail .gdot { width: 7px; height: 7px; background: color-mix(in srgb, var(--gc, var(--g-other)) 70%, #1b1b1d); }
+.lp-rail .gdot.none { background: none; }   /* no colour, same place: every label lines up */
 .lp-chiprow { display: none; }
+/* a row that scrolls sideways fades out at an edge with more past it (as the tab bar does), never a hard cut */
+.fade-x.more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent); }
+.fade-x.more-left { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 44px), transparent); }
+.fade-x.more-left.more-right { -webkit-mask-image: linear-gradient(to right, transparent, #000 44px, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(to right, transparent, #000 44px, #000 calc(100% - 44px), transparent); }
 .lp-head { display: flex; align-items: flex-end; gap: 16px 32px; padding: 26px 0 18px; }
 .lp-head-text { flex: 1; min-width: 0; }
 .lp-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in srgb, var(--gc) 75%, #fff); }
@@ -1396,10 +1405,11 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 .lp-stats b { color: var(--text-secondary); font-weight: 500; }
 .lp-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 10px; padding-bottom: 6px; }
 .lp-controls { display: flex; align-items: center; gap: 10px; }
-.lp-controls .tl-sort { margin-right: 4px; }
+.lp-controls .tl-sort { height: 32px; padding: 2px; margin-right: 4px; border-radius: 999px; border-color: rgba(255,255,255,0.2); }
+.lp-controls .tl-sort button { height: 100%; min-height: 0; padding: 0 13px; border-radius: 999px; white-space: nowrap; }
 .lp-pills { display: flex; gap: 8px; }
-.lp-pills .pill { padding: 5px 13px; font-size: 12.5px; white-space: nowrap; flex-shrink: 0; }
-.lp-filter { flex: 0 0 240px; margin-bottom: 1px; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; color: var(--text-muted); cursor: text; transition: border-color var(--t-fast) var(--ease); }
+.lp-pills .pill { height: 32px; min-height: 0; padding: 0 13px; font-size: 12.5px; white-space: nowrap; flex-shrink: 0; }
+.lp-filter { flex: 0 0 240px; margin-bottom: 1px; display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 13px; border: 1px solid rgba(255,255,255,0.2); border-radius: 999px; color: var(--text-muted); cursor: text; transition: border-color var(--t-fast) var(--ease); }
 .lp-filter:focus-within { border-color: rgba(255,255,255,0.35); }
 .lp-filter svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
 .lp-filter input { flex: 1; min-width: 0; background: none; border: none; outline: none; color: var(--text); font: inherit; font-size: 13px; }
@@ -1408,7 +1418,7 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 .lp-years { flex-basis: 100%; }
 .lp-sec-h.stuck::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 14px; background: linear-gradient(var(--bg), transparent); pointer-events: none; }   /* rows fade as they pass under it */
 .lp-sec { margin-top: 22px; }
-.lp-sec-h { position: sticky; top: var(--lp-bar-h); z-index: 2; display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.lp-sec-h { position: sticky; top: var(--lp-bar-h); z-index: 2; display: flex; align-items: center; gap: 10px; padding: 8px 18px; margin: 0 -18px; }
 .lp-sec-h.stuck { background: var(--bg); }   /* clear over the page's glow until it sticks under the bar */
 .lp-sec-h h2 { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); white-space: nowrap; }
 .lp-sec-h .n { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
@@ -1440,7 +1450,8 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 .lp-empty { padding: 56px 0; text-align: center; color: var(--text-secondary); line-height: 2.2; }
 .lp-empty .lp-fold { margin: 0; }
 @media (max-width: 1000px) {
-  .lp-wrap { display: block; }
+  .lp-bar .pd-bar-inner { padding: 8px 24px; }
+  .lp-wrap { display: block; padding: 0 24px 96px; }
   .lp-rail { display: none; }
   .lp-chiprow { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -24px; padding: 16px 24px 2px; }
   .lp-chiprow::-webkit-scrollbar { display: none; }
@@ -1449,6 +1460,7 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 }
 @media (max-width: 600px) {
   .lp-bar .pd-bar-title { display: block; }   /* (a paper page's phone bar has no room for it; this one does) */
+  .lp-bar .pd-bar-inner { padding: 8px 16px; }
   .lp-wrap { padding: 0 16px 72px; }
   .lp-chiprow { margin: 0 -16px; padding: 12px 16px 2px; }
   .lp-head { padding-top: 20px; }
@@ -1814,6 +1826,7 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
   .lp-more, .lp-row:hover .lp-more, .lp-row:focus-within .lp-more { grid-template-rows: 0fr; opacity: 0; }
   .lp-row:hover { background: none; }
   .lp-row:hover .lp-h { color: #ececef; }
+  .lp-rail-item:hover:not(.on) { background: none; color: var(--text-secondary); }
   .badge-group-edit .group-remove, .badge-group-edit:hover .group-remove { max-width: 30px; width: 26px; height: 26px; opacity: 0.7; margin: 0 -6px 0 2px; }   /* removing a topic needs no hover */
 }
 /* Safari keeps :hover on the last thing tapped, so a tapped Undo (or zoom, or tool) looked switched on. Keyed to the
@@ -1823,12 +1836,19 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 html.no-hover .sel-icon:not(.on):hover, html.no-hover .ink-bar .ink-size:not(.on):hover, html.no-hover .reader-btn:hover, html.no-hover .rp-icon-btn:hover, html.no-hover .rp-text-btn:hover { background: none; }
 html.no-hover .sel-icon:not(.on):hover, html.no-hover .pencil-mode button[aria-pressed="false"]:hover, html.no-hover .reader-btn:hover, html.no-hover .rp-icon-btn:hover, html.no-hover .rp-text-btn:hover { color: var(--text-secondary); }
 html.no-hover .sel-dot:not(.on):hover { transform: none; border-color: transparent; }
+/* a tapped list row doesn't open its actions or stay lit (it opens the paper; Back finds it as it was) */
+html.no-hover .lp-row:hover, html.no-hover .lp-row:focus-within { background: none; }
+html.no-hover .lp-row:hover .lp-h { color: #ececef; }
+html.no-hover .lp-row .lp-more:not(:has(.p-detail-panel.open)) { grid-template-rows: 0fr; opacity: 0; }
+html.no-hover .lp-rail-item:hover:not(.on) { background: none; color: var(--text-secondary); }
 html.no-hover .sel-icon:active, html.no-hover .sel-dot:active, html.no-hover .ink-bar .ink-size:active, html.no-hover .pencil-mode button:active, html.no-hover .reader-btn:active, html.no-hover .rp-icon-btn:active, html.no-hover .rp-text-btn:active { transform: scale(0.88); transition-duration: 0.06s; }
 html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.on):active, html.no-hover .reader-btn:active, html.no-hover .rp-icon-btn:active, html.no-hover .rp-text-btn:active { background: rgba(255,255,255,0.08); }
 @media (pointer: coarse) {
   /* fingers need ~36px: chips, toggles and small action buttons grow on touch screens only (desktop keeps its density) */
   .pill, .ig-toggle-btn, .tl-chip, .tl-sort button, .lib-hint-btn, .library-actions button, .btn-abs, .btn-link, .p-actions .btn-icon, .btn-quiet-remove, .ui-btn, .rp-chip, .rp-seg button { min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
   .p-actions .btn-icon:not(.btn-labelled) { min-width: 36px; }
+  .lp-rail-item { min-height: 40px; }
+  .lp-controls .tl-sort, .lp-pills .pill, .lp-filter { height: 38px; }
   .tok-pill { min-height: 32px; }
   .anno-mark { width: 26px; height: 26px; margin-top: -13px; border-radius: 7px; }
   .anno-mark svg { width: 15px; height: 15px; }
@@ -2001,7 +2021,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
     <div class="lp-wrap">
       <nav class="lp-rail" id="lpRail" aria-label="Other lists"></nav>
       <div class="lp-main">
-        <nav class="lp-chiprow" id="lpChips" aria-label="Other lists"></nav>
+        <nav class="lp-chiprow fade-x" id="lpChips" aria-label="Other lists"></nav>
         <header class="lp-head">
           <div class="lp-head-text"><div class="lp-eyebrow" id="lpEyebrow"></div><h1 class="lp-title" id="lpTitle"></h1><p class="lp-sub" id="lpSub" hidden></p><p class="lp-stats" id="lpStats"></p></div>
           <label class="lp-filter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="search" id="lpFilter" aria-label="Filter this list" autocomplete="off" oninput="setListQuery(this.value)" onkeydown="if (event.key === 'Escape' &amp;&amp; this.value) { event.stopPropagation(); setListQuery('', true); }"></label>
@@ -4001,12 +4021,12 @@ let _paperFromList = null;     // the list a paper page was opened from, so Back
 let _leftPaper = false;        // set by the router while it handles a route that leaves a paper page
 let _listQuery = '', _listShowLow = false, _listQueryTimer = null;
 let _listOrder = (() => { try { return localStorage.getItem('scholar_list_order') || 'best'; } catch (e) { return 'best'; } })();
-const LIST_ORDERS = [['best', 'Best first', 'Must read, then Interesting, then Tangential; the best score first within each'],
+const LIST_ORDERS = [['best', 'Best', 'Must read, then Interesting, then Tangential; the best score first within each'],
   ['added', 'Recently added', 'Newest to the dashboard first'], ['published', 'Newest published', 'By publication date']];
 const TAB_NAMES = { all: 'Recent Works', email: 'Email Digest', venues: 'Venues', library: 'Library', interests: 'Interests' };
 function openTopList(skipHash) { if (!skipHash) location.hash = '#top'; else showList(TOP_LIST_KEY); }
 
-/* Best first: Must read, then Interesting, then Tangential; within each, the Top Papers score (relevance, fading by
+/* Best: Must read, then Interesting, then Tangential; within each, the Top Papers score (relevance, fading by
    half every 90 days since added). Topic cards rank the same way (skipping papers already shown higher on the page). */
 const TIER_RANK = { definitely: 0, probably: 1, mildly: 2 };
 function byBest(arr) {
@@ -4146,12 +4166,17 @@ function renderListRail(newList) {
   const link = (it, cls) => `<a href="${escAttr(it.hash)}" class="${cls}${it.k === key ? ' on active' : ''}"${it.k === key ? ' aria-current="page"' : ''} onclick="return goList(event, '${escAttr(it.hash)}')">`;
   const rail = document.getElementById('lpRail'), chips = document.getElementById('lpChips');
   rail.innerHTML = fam.map(s => `${s.title ? `<h2>${esc(s.title)}</h2>` : ''}${s.items.map(it =>
-    `${link(it, 'lp-rail-item')}${it.color ? `<i class="gdot" style="--gc:${it.color}" aria-hidden="true"></i>` : ''}<span class="l">${esc(it.label)}</span><span class="n">${it.n}</span></a>`).join('')}`).join('');
+    `${link(it, 'lp-rail-item')}${it.color ? `<i class="gdot" style="--gc:${it.color}" aria-hidden="true"></i>` : '<i class="gdot none" aria-hidden="true"></i>'}<span class="l">${esc(it.label)}</span><span class="n">${it.n}</span></a>`).join('')}`).join('');
   chips.innerHTML = fam.flatMap(s => s.items).map(it => `${link(it, 'tl-chip')}${esc(it.label)}<span class="n">${it.n}</span></a>`).join('');
   if (!newList) return;
   requestAnimationFrame(() => {   // the current list in view, without moving the page
     const c = chips.querySelector('.active'), r = rail.querySelector('.on');
-    if (c && (c.offsetLeft < chips.scrollLeft || c.offsetLeft + c.offsetWidth > chips.scrollLeft + chips.clientWidth)) chips.scrollLeft = c.offsetLeft - (chips.clientWidth - c.offsetWidth) / 2;
+    if (c) {   // the current list's chip clear of the edge fades (the browser stops at either end of the row)
+      const edge = 48, cr = c.getBoundingClientRect(), rr = chips.getBoundingClientRect();
+      if (cr.left < rr.left + edge) chips.scrollLeft += cr.left - rr.left - edge;
+      else if (cr.right > rr.right - edge) chips.scrollLeft += cr.right - rr.right + edge;
+    }
+    edgeFade(chips);
     if (r && (r.offsetTop < rail.scrollTop || r.offsetTop + r.offsetHeight > rail.scrollTop + rail.clientHeight)) rail.scrollTop = r.offsetTop - rail.clientHeight / 3;
   });
 }
@@ -4164,7 +4189,8 @@ function renderListTools(m) {
     .filter(Boolean).join(' &middot; ');
   const order = `<div class="tl-sort" role="group" aria-label="Order">${LIST_ORDERS.map(([v, label, tip]) =>
     `<button class="${_listOrder === v ? 'active' : ''}" aria-pressed="${_listOrder === v}" onclick="setListOrder('${v}')" title="${escAttr(tip)}">${label}</button>`).join('')}</div>`;
-  const pill = (r, label, c) => `<button class="pill${currentRel === r ? ' active' : ''}" aria-pressed="${currentRel === r}" onclick="setListRel('${r}')">${label} <span class="pill-count">${c}</span></button>`;
+  const pill = (r, label, c) => !c && r !== 'all' && currentRel !== r ? ''   // only kinds this list has
+    : `<button class="pill${currentRel === r ? ' active' : ''}" aria-pressed="${currentRel === r}" onclick="setListRel('${r}')">${label} <span class="pill-count">${c}</span></button>`;
   const pills = m.noRel ? '' : `<div class="lp-pills" role="group" aria-label="Relevance">${pill('all', 'All', unread.length)}${pill('definitely', 'Must read', must)}${pill('probably', 'Interesting', n('probably'))}${pill('mildly', 'Tangential', n('mildly'))}</div>`;
   const years = m.years ? Object.keys(m.years).sort((a, b) => b - a).map(Number) : [];
   const ychip = (y, label, c) => `<button class="tl-chip${_venueYear === y ? ' active' : ''}" onclick="setVenueYear(${y === null ? 'null' : y})">${label}<span class="n">${c}</span></button>`;
@@ -4172,7 +4198,8 @@ function renderListTools(m) {
   const f = document.getElementById('lpFilter');
   f.placeholder = `Filter ${unread.length} ${unread.length === 1 ? 'paper' : 'papers'}`;
   if (f.value !== _listQuery) f.value = _listQuery;
-  document.getElementById('lpTools').innerHTML = `<div class="lp-controls">${order}${pills}</div>${yearRow}`;
+  document.getElementById('lpTools').innerHTML = `<div class="lp-controls fade-x">${order}${pills}</div>${yearRow}`;
+  requestAnimationFrame(() => document.querySelectorAll('#sec-list .fade-x').forEach(edgeFade));
 }
 function renderListBody(m) {
   m = m || listModel(_listKey);
@@ -4258,6 +4285,13 @@ function setListQuery(v, now) {
   if (now) { const f = document.getElementById('lpFilter'); if (f && f.value !== v) f.value = v; renderListBody(); return; }
   _listQueryTimer = setTimeout(renderListBody, 120);
 }
+function edgeFade(el) {
+  const over = el.scrollWidth > el.clientWidth + 2;
+  el.classList.toggle('more-left', over && el.scrollLeft > 2);
+  el.classList.toggle('more-right', over && el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+}
+document.addEventListener('scroll', e => { if (e.target.classList && e.target.classList.contains('fade-x')) edgeFade(e.target); }, { capture: true, passive: true });
+window.addEventListener('resize', () => document.querySelectorAll('.fade-x').forEach(edgeFade), { passive: true });
 /* The list's title slides into the bar once the heading has scrolled under it */
 function updateListBar() {
   if (!_listViewActive) return;
@@ -8919,7 +8953,7 @@ function renderPaperDetail(p) {
   let related = '';
   if (rel6.length) related += `<div class="pd-rel-group"><div class="pd-rel-grid">${rel6.map(feedItemHTML).join('')}</div></div>`;
   const topicLinks = [...new Set(groups.map(norm))].map(g => {
-    const n = allPapers.filter(pp => (pp.theme_groups||'').split('|').map(norm).includes(g)).length;
+    const n = allPapers.filter(pp => !readSet.has(paperKey(pp)) && (pp.theme_groups||'').split('|').map(norm).includes(g)).length;   // to read, as its list page counts
     return `<button class="pd-rel-topic" onclick="openGroup('${escAttr(g)}')">${gdot(g)}${esc(g)}<span class="n">${n}</span></button>`;
   }).join('');
   if (topicLinks) related += `<div class="pd-rel-more"><span>More in</span>${topicLinks}</div>`;
