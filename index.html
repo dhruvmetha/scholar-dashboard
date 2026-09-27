@@ -63,19 +63,15 @@ body { font-family: 'Google Sans', Roboto, -apple-system, BlinkMacSystemFont, sa
 a { color: inherit; text-decoration: none; }
 
 /* [3] Custom dark scrollbars — only for inner scrollable containers, not the page */
-.overlay-body::-webkit-scrollbar,
 .save-dd-list::-webkit-scrollbar,
 .topic-body::-webkit-scrollbar,
 .interest-group-body::-webkit-scrollbar,
-.overlay-body::-webkit-scrollbar-track,
 .save-dd-list::-webkit-scrollbar-track,
 .topic-body::-webkit-scrollbar-track,
 .interest-group-body::-webkit-scrollbar-track,
-.overlay-body::-webkit-scrollbar-thumb,
 .save-dd-list::-webkit-scrollbar-thumb,
 .topic-body::-webkit-scrollbar-thumb,
 .interest-group-body::-webkit-scrollbar-thumb,
-.overlay-body::-webkit-scrollbar-thumb:hover,
 .save-dd-list::-webkit-scrollbar-thumb:hover,
 .topic-body::-webkit-scrollbar-thumb:hover,
 .interest-group-body::-webkit-scrollbar-thumb:hover,
@@ -738,7 +734,7 @@ body.tok-mode .tok-cues { display: block; position: absolute; inset: 0; pointer-
 .v-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
 
 /* keyboard triage selection */
-.top-row.kb-sel, .feed-item.kb-sel, .top-lead.kb-sel { outline: 2px solid var(--accent); outline-offset: -2px; }
+.top-row.kb-sel, .feed-item.kb-sel, .top-lead.kb-sel, .lp-row.kb-sel { outline: 2px solid var(--accent); outline-offset: -2px; }
 .top-row.kb-sel { border-radius: 10px; }
 
 /* paper page: previous / next within the list it was opened from */
@@ -1369,38 +1365,104 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 .search-list { background: var(--bg-surface); border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.45); }
 .search-list .topic-item { padding: 14px 20px; }
 
-/* [1] EXPANDED GROUP VIEW (overlay) — animated */
-.overlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: stretch; justify-content: center; visibility: hidden; pointer-events: none; }
-.overlay-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0); transition: background 0.2s ease; }
-.overlay.open { visibility: visible; pointer-events: auto; }
-.overlay.open .overlay-backdrop { background: rgba(0,0,0,0.6); }
-.overlay-content { max-width: 800px; width: 100%; margin: 40px auto; background: #000000ee; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; display: flex; flex-direction: column; max-height: calc(100vh - 80px); position: relative; z-index: 1; opacity: 0; transform: translateY(24px); transition: opacity 0.25s cubic-bezier(0.32, 0.72, 0, 1), transform 0.25s cubic-bezier(0.32, 0.72, 0, 1); }
-.overlay.open .overlay-content { opacity: 1; transform: translateY(0); }
-.overlay.closing .overlay-backdrop { background: rgba(0,0,0,0); }
-.overlay.closing .overlay-content { opacity: 0; transform: translateY(24px); }
-.overlay-header { padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.overlay-header h3 { font-size: 18px; font-weight: 500; color: var(--accent); }
-.overlay-close { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background 0.15s, color 0.15s; }
-.overlay-close:hover { background: var(--bg-hover); color: var(--text); }
-.overlay-body { overflow-y: auto; flex: 1; }
-.overlay-body .topic-item { padding: 14px 24px; }
+/* ===== LIST PAGES: every "View all" list (Top Papers, a topic, an alert, the latest digest, a venue, an interest)
+   is a page of its own: a sticky bar with Back, a sidebar of the sibling lists (a row of chips below 1000px), a
+   heading, one set of controls, and rows that say why each paper is here. ===== */
+.lp { --lp-w: 1200px; --lp-bar-h: 56px; position: relative; isolation: isolate; min-height: 100%; }
+/* the topic's colour, faint, across the top (as on its card and on a paper page) */
+.lp::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 420px; z-index: -1; background: var(--gbg, none); opacity: 0.1; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
+.lp-bar .pd-bar-inner { max-width: var(--lp-w); }
+/* the bar is clear over the page's glow until the heading scrolls under it */
+.lp-bar { transition: background-color var(--t-slow) var(--ease), border-color 0.2s; }
+.lp-bar:not(.stuck) { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.lp-wrap { max-width: var(--lp-w); margin: 0 auto; padding: 0 24px 96px; display: grid; grid-template-columns: 220px minmax(0, 1fr); column-gap: 48px; }
+.lp-main { min-width: 0; }
+.lp-rail { position: sticky; top: var(--lp-bar-h); align-self: start; max-height: calc(100vh - 150px); overflow-y: auto; padding: 22px 0 24px; scrollbar-width: none; }
+.lp-rail::-webkit-scrollbar { display: none; }
+.lp-rail h2 { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 22px 0 6px; }
+.lp-rail-item { display: flex; align-items: center; gap: 9px; padding: 6px 10px; margin: 0 -10px; border-radius: 8px; font-size: 13.5px; line-height: 1.35; color: var(--text-secondary); transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+.lp-rail-item:hover { background: rgba(255,255,255,0.045); color: var(--text); }
+.lp-rail-item.on { background: rgba(255,255,255,0.08); color: var(--text); }
+.lp-rail-item .l { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lp-rail-item .n { margin-left: auto; padding-left: 8px; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.lp-rail .gdot { width: 7px; height: 7px; background: color-mix(in srgb, var(--gc, var(--g-other)) 70%, #1b1b1d); }
+.lp-chiprow { display: none; }
+.lp-head { display: flex; align-items: flex-end; gap: 16px 32px; padding: 26px 0 18px; }
+.lp-head-text { flex: 1; min-width: 0; }
+.lp-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in srgb, var(--gc) 75%, #fff); }
+.lp-title { font-family: var(--serif); font-optical-sizing: auto; font-size: 42px; font-weight: 500; line-height: 1.15; letter-spacing: -0.01em; color: #f2f2f4; margin: 8px 0 0; text-wrap: balance; }
+.lp-sub { font-size: 14px; color: var(--text-secondary); margin: 6px 0 0; }
+.lp-stats { margin: 10px 0 0; font-size: 14px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.lp-stats b { color: var(--text-secondary); font-weight: 500; }
+.lp-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 10px; padding-bottom: 6px; }
+.lp-controls { display: flex; align-items: center; gap: 10px; }
+.lp-controls .tl-sort { margin-right: 4px; }
+.lp-pills { display: flex; gap: 8px; }
+.lp-pills .pill { padding: 5px 13px; font-size: 12.5px; white-space: nowrap; flex-shrink: 0; }
+.lp-filter { flex: 0 0 240px; margin-bottom: 1px; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; color: var(--text-muted); cursor: text; transition: border-color var(--t-fast) var(--ease); }
+.lp-filter:focus-within { border-color: rgba(255,255,255,0.35); }
+.lp-filter svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
+.lp-filter input { flex: 1; min-width: 0; background: none; border: none; outline: none; color: var(--text); font: inherit; font-size: 13px; }
+.lp-filter input::-webkit-search-cancel-button { filter: invert(1) opacity(0.5); }
+.lp-filter input::placeholder { color: var(--text-muted); }
+.lp-years { flex-basis: 100%; }
+.lp-sec-h.stuck::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 14px; background: linear-gradient(var(--bg), transparent); pointer-events: none; }   /* rows fade as they pass under it */
+.lp-sec { margin-top: 22px; }
+.lp-sec-h { position: sticky; top: var(--lp-bar-h); z-index: 2; display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.lp-sec-h.stuck { background: var(--bg); }   /* clear over the page's glow until it sticks under the bar */
+.lp-sec-h h2 { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); white-space: nowrap; }
+.lp-sec-h .n { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.lp-sec-h .rule { flex: 1; height: 1px; background: var(--border); }
+/* a row: the headline, why it's here, then its tags; hovering opens the paper's own title and actions */
+.lp-row { display: grid; grid-template-columns: minmax(0, 1fr); padding: 12px 18px; margin: 0 -18px; border-radius: 12px; cursor: pointer; transition: background-color var(--t-fast) var(--ease); }
+.lp-body.ranked .lp-row { grid-template-columns: 30px minmax(0, 1fr); column-gap: 14px; }
+.lp-row:hover { background: rgba(255,255,255,0.035); }
+.lp-num { font-family: var(--serif); font-size: 15px; padding-top: 3px; color: color-mix(in srgb, var(--gc) 65%, #888); font-variant-numeric: tabular-nums; }
+.lp-row-main { min-width: 0; }
+.lp-h { font-family: var(--serif); font-optical-sizing: auto; font-size: 19px; font-weight: 500; line-height: 1.3; color: #ececef; text-wrap: pretty; transition: color var(--t-fast) var(--ease); }
+.lp-row:hover .lp-h { color: #fff; }
+.lp-row .why-line { margin-top: 4px; }
+.lp-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px; font-size: 12px; color: var(--text-muted); min-width: 0; }
+.lp-meta .tc-tags { flex-wrap: nowrap; min-width: 0; }
+.lp-star { color: var(--star); }
+.lp-auth { min-width: 0; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lp-also { display: inline-flex; align-items: center; gap: 12px; }
+.lp-also span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.lp-also .gdot { width: 6px; height: 6px; background: color-mix(in srgb, var(--gc) 70%, #1b1b1d); }
+.lp-more { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--t-slow) var(--ease), opacity var(--t-slow) var(--ease); }
+.lp-more > div { overflow: hidden; min-height: 0; }
+.lp-row:hover .lp-more, .lp-row:focus-within .lp-more, .lp-more:has(.p-detail-panel.open) { grid-template-rows: 1fr; opacity: 1; }
+.lp-orig { margin: 10px 0 0; font-size: 13.5px; color: var(--text-secondary); }
+.lp-orig i { font-style: normal; margin-right: 6px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.lp-more .p-action-row { margin-top: 10px; }
+.lp-fold { display: inline-flex; margin: 6px 0 0 -12px; padding: 8px 12px; background: none; border: none; border-radius: 8px; color: var(--text-muted); font: inherit; font-size: 13px; cursor: pointer; transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease); }
+.lp-fold:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+.lp-empty { padding: 56px 0; text-align: center; color: var(--text-secondary); line-height: 2.2; }
+.lp-empty .lp-fold { margin: 0; }
+@media (max-width: 1000px) {
+  .lp-wrap { display: block; }
+  .lp-rail { display: none; }
+  .lp-chiprow { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -24px; padding: 16px 24px 2px; }
+  .lp-chiprow::-webkit-scrollbar { display: none; }
+  .lp-head { flex-wrap: wrap; }
+  .lp-filter { flex: 1 1 100%; }
+}
+@media (max-width: 600px) {
+  .lp-bar .pd-bar-title { display: block; }   /* (a paper page's phone bar has no room for it; this one does) */
+  .lp-wrap { padding: 0 16px 72px; }
+  .lp-chiprow { margin: 0 -16px; padding: 12px 16px 2px; }
+  .lp-head { padding-top: 20px; }
+  .lp-title { font-size: 32px; }
+  .lp-controls { overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px; flex: 1 1 100%; min-width: 0; }
+  .lp-controls::-webkit-scrollbar { display: none; }
+  .lp-controls .tl-sort button { white-space: nowrap; }
+  .lp-row { padding: 12px 16px; margin: 0 -16px; }
+  .lp-body.ranked .lp-row { grid-template-columns: 24px minmax(0, 1fr); column-gap: 10px; }
+  .lp-h { font-size: 17.5px; }
+  .lp-also { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .lp-more, .lp-row, .lp-h, .lp-rail-item { transition: none; } }
 
-/* TOP PAPERS LIST — wide overlay: header with read progress, wrapping group chips, sticky time sections, reading rail */
-.overlay-content.top-mode { max-width: 1040px; }
-.overlay-heading { flex: 1; min-width: 0; }
-.overlay-header-tools:empty { display: none; }
-.overlay-header-tools { margin-right: 12px; }
-.overlay-content.top-mode .overlay-header { align-items: flex-start; padding: 22px 24px 16px; border-bottom: none; }
-.overlay-content.top-mode .overlay-header h3 { font-size: 22px; line-height: 1.25; }
-.overlay-content.top-mode .overlay-close { margin-top: -4px; }
-.overlay-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
-.overlay-sub:empty { display: none; }
-.tl-progress { display: none; width: 220px; max-width: 100%; height: 3px; margin-top: 10px; border-radius: 3px; background: rgba(251,177,60,0.16); overflow: hidden; }
-.overlay-content.top-mode .tl-progress { display: block; }
-.tl-progress span { display: block; height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.4s ease; }
-
-.overlay-toolbar { display: none; padding: 0 24px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.overlay-content.top-mode .overlay-toolbar { display: block; }
 .tl-chips { display: flex; flex-wrap: wrap; gap: 6px 5px; }
 .tl-chip { flex-shrink: 0; background: rgba(255,255,255,0.055); border: 1px solid transparent; color: var(--text-secondary); font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 999px; cursor: pointer; white-space: nowrap; transition: background 0.15s, color 0.15s, border-color 0.15s; }
 .tl-chip:hover { background: rgba(255,255,255,0.1); color: var(--text); }
@@ -1413,7 +1475,6 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 .tl-sort button.active { background: rgba(255,255,255,0.1); color: var(--text); }
 
 .paper-list { --list-bg: var(--bg); }
-.overlay-body .paper-list { --list-bg: #000; padding-bottom: 28px; }
 .tl-section { position: relative; }
 /* the reading rail: a hairline down the left of each section; each row puts a node on it */
 .tl-section::before { content: ''; position: absolute; left: 36px; top: 52px; bottom: 26px; width: 1px; background: rgba(251,177,60,0.25); }
@@ -1452,11 +1513,6 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 .tl-empty { text-align: center; padding: 64px 24px; color: var(--text-secondary); line-height: 2.4; }
 
 @media (max-width: 700px) {
-  .overlay-content { margin: 0; max-height: 100vh; border-radius: 0; border: none; }
-  .overlay-header, .overlay-toolbar, .overlay-content.top-mode .overlay-header { padding-left: 16px; padding-right: 16px; }
-  .overlay-content.top-mode .overlay-header { flex-wrap: wrap; }
-  .overlay-header-tools { order: 3; flex-basis: 100%; margin: 14px 0 0; }
-  .overlay-header-tools .tl-sort { display: inline-flex; }
   .tl-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
   .tl-chips::-webkit-scrollbar { display: none; }
   .tl-section-head { padding-left: 16px; padding-right: 16px; }
@@ -1468,7 +1524,7 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
   .tr-venue-line:empty { display: none; }   /* inside a venue's own list there's no venue to show: no stray gap */
 }
 @media (prefers-reduced-motion: reduce) {
-  .top-row::before, .top-row .tr-actions, .tl-progress span { transition: none; }
+  .top-row::before, .top-row .tr-actions { transition: none; }
 }
 
 /* [13] BADGES */
@@ -1627,7 +1683,6 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 .reader { padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px); }
 .rp-foot, .chat-compose { padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
 .toast { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
-#overlay { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .toast.error { border-left-color: #e57373; }
 .toast-msg { flex: 1; }
 .toast-undo { background: none; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
@@ -1756,6 +1811,9 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
   .f-actions, .feed-item:hover .f-actions, .feed-item:focus-within .f-actions,
   .top-row .tr-actions, .top-row:hover .tr-actions, .top-row:focus-within .tr-actions { grid-template-rows: 0fr; opacity: 0; margin-top: 0; }
   .top-row[data-upload] .tr-actions, .top-row[data-upload]:hover .tr-actions { grid-template-rows: 1fr; opacity: 1; margin-top: 10px; }   /* uploads open the reader: Rename/Remove live here */
+  .lp-more, .lp-row:hover .lp-more, .lp-row:focus-within .lp-more { grid-template-rows: 0fr; opacity: 0; }
+  .lp-row:hover { background: none; }
+  .lp-row:hover .lp-h { color: #ececef; }
   .badge-group-edit .group-remove, .badge-group-edit:hover .group-remove { max-width: 30px; width: 26px; height: 26px; opacity: 0.7; margin: 0 -6px 0 2px; }   /* removing a topic needs no hover */
 }
 /* Safari keeps :hover on the last thing tapped, so a tapped Undo (or zoom, or tool) looked switched on. Keyed to the
@@ -1933,6 +1991,28 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   <div class="paper-detail" id="paperDetail"></div>
 </div>
 
+<!-- LIST PAGE: every "View all" list (renderListPage) -->
+<div class="tab-section" id="sec-list">
+  <div class="lp" id="lp">
+    <div class="pd-bar lp-bar" id="lpBar"><div class="pd-bar-inner">
+      <button class="pd-back" onclick="listBack()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg><span id="lpBack">Back</span></button>
+      <div class="pd-bar-title" id="lpBarTitle" aria-hidden="true"></div>
+    </div></div>
+    <div class="lp-wrap">
+      <nav class="lp-rail" id="lpRail" aria-label="Other lists"></nav>
+      <div class="lp-main">
+        <nav class="lp-chiprow" id="lpChips" aria-label="Other lists"></nav>
+        <header class="lp-head">
+          <div class="lp-head-text"><div class="lp-eyebrow" id="lpEyebrow"></div><h1 class="lp-title" id="lpTitle"></h1><p class="lp-sub" id="lpSub" hidden></p><p class="lp-stats" id="lpStats"></p></div>
+          <label class="lp-filter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="search" id="lpFilter" aria-label="Filter this list" autocomplete="off" oninput="setListQuery(this.value)" onkeydown="if (event.key === 'Escape' &amp;&amp; this.value) { event.stopPropagation(); setListQuery('', true); }"></label>
+        </header>
+        <div class="lp-tools" id="lpTools"></div>
+        <div class="lp-body" id="lpBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div><!-- /.main-scroll -->
 
 <!-- GENERIC PROMPT / CONFIRM MODAL -->
@@ -2040,20 +2120,6 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
     </div>
     <div class="auth-error" id="genericError"></div>
     <div id="genericBtns"></div>
-  </div>
-</div>
-
-<!-- [1] GROUP OVERLAY — with backdrop element -->
-<div class="overlay" id="overlay">
-  <div class="overlay-backdrop" onclick="closeOverlay()"></div>
-  <div class="overlay-content" role="dialog" aria-modal="true" aria-labelledby="overlayTitle">
-    <div class="overlay-header">
-      <div class="overlay-heading"><h3 id="overlayTitle"></h3><div class="overlay-sub" id="overlaySub"></div><div class="tl-progress" id="overlayProgress" role="progressbar" aria-label="Read progress"><span></span></div></div>
-      <div class="overlay-header-tools" id="overlayHeaderTools"></div>
-      <button class="overlay-close" onclick="closeOverlay()" aria-label="Close">&times;</button>
-    </div>
-    <div class="overlay-toolbar" id="overlayToolbar"></div>
-    <div class="overlay-body" id="overlayBody"></div>
   </div>
 </div>
 
@@ -2340,7 +2406,7 @@ function applyPapers(rows, text) {
 }
 /* Swapping data under someone mid-scroll or mid-read is jarring; only do it quietly at the top */
 function quietSwapOK() {
-  if (_paperViewActive || _searchActive || document.getElementById('overlay').classList.contains('open')) return false;
+  if (_paperViewActive || _searchActive || _listViewActive) return false;
   if (document.getElementById('mainScroll').scrollTop > 40) return false;
   const feed = document.getElementById('tokFeed');
   return !(document.body.classList.contains('tok-mode') && feed && feed.scrollTop > 40);
@@ -2398,7 +2464,7 @@ function rerenderForMetadata() {
     if (p) renderPaperDetail(p);
     return;
   }
-  if (document.getElementById('overlay').classList.contains('open')) { renderOpenList(true); return; }
+  if (_listViewActive) { renderListPage(); return; }
   if (['all','email'].includes(currentTab)) {
     const feed = document.getElementById('tokFeed');
     if (document.body.classList.contains('tok-mode') && feed && feed.scrollTop > 40) return;   // don't move a phone reader
@@ -2881,7 +2947,8 @@ const _tabScroll = {};
 function switchTab(tab, fromHash) {
   const ms = document.getElementById('mainScroll');
   const prevTab = currentTab, fromSearch = _searchActive, moved = prevTab !== tab || fromSearch;
-  if (prevTab !== tab && !fromSearch && !_paperViewActive) _tabScroll[prevTab] = ms.scrollTop;
+  if (prevTab !== tab && !fromSearch && !_paperViewActive && !_listViewActive) _tabScroll[prevTab] = ms.scrollTop;
+  const fromList = leaveListView();
   // Clear search when switching tabs
   if (_searchActive) {
     _searchActive = false;
@@ -2905,7 +2972,7 @@ function switchTab(tab, fromHash) {
   if (tab === 'library') renderLibrary();
   else if (tab === 'venues') renderVenues();
   else if (tab === 'interests') renderInterests();
-  if (moved) jumpScroll(ms, _tabScroll[tab] || 0);
+  if (moved || fromList) jumpScroll(ms, _tabScroll[tab] || 0);
 }
 function jumpScroll(el, y) { el.style.scrollBehavior = 'auto'; el.scrollTop = y; el.style.scrollBehavior = ''; }
 
@@ -2991,7 +3058,7 @@ let _tokTopic = '', _tokNewOnly = false;
 function setTokTopic(v) { _tokTopic = v; applyFilters(); }
 function toggleTokNew() { _tokNewOnly = !_tokNewOnly; applyFilters(); }
 function phoneFeedOn() {
-  const on = window.matchMedia('(max-width: 700px)').matches && ['all','email'].includes(currentTab) && !_paperViewActive && !_searchActive;
+  const on = window.matchMedia('(max-width: 700px)').matches && ['all','email'].includes(currentTab) && !_paperViewActive && !_searchActive && !_listViewActive;
   document.body.classList.toggle('tok-mode', on);
   if (!on) document.body.classList.remove('tok-immersive');
   return on;
@@ -3310,11 +3377,11 @@ function whyLineHTML(p, cls) {
   const w = parseWhy(p);
   return w ? `<div class="why-line${cls ? ' ' + cls : ''}"><b>Why</b><span>${esc(w.reason)}</span></div>` : '';
 }
-function cardTagsHTML(p) {
-  return `<div class="tc-tags">${isNewSinceVisit(p) ? '<span class="f-new">New</span>' : ''}${dynamicRelevance(p) === 'definitely' ? '<span class="tc-must">Must read</span>' : ''}${hasText(p.venue) ? venueLinkHTML(p, 'f-venue') : ''}${displayDate(p) ? `<span>${esc(displayDate(p))}</span>` : ''}</div>`;
+function cardTagsHTML(p, noVenue) {
+  return `<div class="tc-tags">${isNewSinceVisit(p) ? '<span class="f-new">New</span>' : ''}${dynamicRelevance(p) === 'definitely' ? '<span class="tc-must">Must read</span>' : ''}${hasText(p.venue) && !noVenue ? venueLinkHTML(p, 'f-venue') : ''}${displayDate(p) ? `<span>${esc(displayDate(p))}</span>` : ''}</div>`;
 }
 function topicCardHTML(name, items, shownAbove, o) {
-  const ranked = byTopScore(items.slice());
+  const ranked = byBest(items);
   const shown = ranked.filter(p => !shownAbove.has(paperKey(p))).slice(0, TOPIC_CARD_PAPERS);
   for (const p of ranked) { if (shown.length >= TOPIC_CARD_PAPERS) break; if (!shown.includes(p)) shown.push(p); }   // never an empty card
   shown.forEach(p => shownAbove.add(paperKey(p)));
@@ -3350,7 +3417,7 @@ function latestDigestOf(papers) {
 function shortDate(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); } catch (e) { return d; } }
 function renderEmailPapers(papers, topPool) {
   const dig = latestDigestOf(topPool || papers);
-  const top = orderForLead(byTopScore(dig.papers.slice()));
+  const top = orderForLead(byBest(dig.papers));
   const nTop = renderTopPapers(top, { title: 'Latest digest', sub: dig.date ? shortDate(dig.date) : '', open: 'openLatestDigest()', tip: 'View every paper from the latest digest' });
   const shownAbove = new Set(top.slice(0, nTop).map(paperKey));
   // one card per alert with 3+ papers (as in the chips above); the rest share an "Other alerts" card
@@ -3367,27 +3434,7 @@ function renderEmailPapers(papers, topPool) {
     color: 'var(--accent)', label: name === 'Keyword alerts' || name === OTHER ? name : name + ' alert', open: name === OTHER ? '' : `openAlert('${escAttr(name)}')` })).join('');
 }
 const LATEST_KEY = '#latest-digest';
-function openLatestDigest(skipHash) {
-  _overlayGroupName = LATEST_KEY;
-  setOverlayTopMode(true);
-  renderLatestList();
-  document.getElementById('overlayBody').scrollTop = 0;
-  if (!skipHash) location.hash = '#latest';
-  openOverlay();
-}
-function renderLatestList() {
-  const email = allPapers.filter(p => (p.source_mode || '').includes('email'));
-  const dig = latestDigestOf(email);
-  const inDigest = new Set(dig.papers.map(paperKey));
-  const papers = byTopScore(applyViewFilters(email.filter(p => inDigest.has(paperKey(p))), false, true));
-  document.getElementById('overlayTitle').textContent = `Latest digest${dig.date ? ', ' + shortDate(dig.date) : ''}`;
-  setListProgress(dig.papers);
-  document.getElementById('overlayToolbar').innerHTML = '';
-  document.getElementById('overlayHeaderTools').innerHTML = '';
-  document.getElementById('overlayBody').innerHTML = papers.length
-    ? paperListHTML(papers)
-    : '<div class="tl-empty">Nothing from the latest digest matches your current filters.</div>';
-}
+function openLatestDigest(skipHash) { if (!skipHash) location.hash = '#latest'; else showList(LATEST_KEY); }
 
 /* ----- Email Digest by alert source ("Alert: Bajcsy/Lindemann." in the triage note) ----- */
 const _alertCache = new WeakMap();
@@ -3403,26 +3450,7 @@ function alertSourcesOf(p) {
   return out;
 }
 const ALERT_KEY = 'alert:';
-function openAlert(name, skipHash) {
-  _overlayGroupName = ALERT_KEY + name;
-  setOverlayTopMode(true);
-  renderAlertList();
-  document.getElementById('overlayBody').scrollTop = 0;
-  if (!skipHash) location.hash = '#alert/' + encodeURIComponent(name);
-  openOverlay();
-}
-function renderAlertList() {
-  const name = _overlayGroupName.slice(ALERT_KEY.length);
-  const inAlert = p => (p.source_mode || '').includes('email') && alertSourcesOf(p).includes(name);
-  const papers = sortForList(applyViewFilters(allPapers.filter(inAlert)));
-  document.getElementById('overlayTitle').textContent = name === 'Keyword alerts' ? name : `${name} alert`;
-  setListProgress(applyViewFilters(allPapers.filter(inAlert), true));
-  document.getElementById('overlayToolbar').innerHTML = '';
-  document.getElementById('overlayHeaderTools').innerHTML = sortToolsHTML();
-  document.getElementById('overlayBody').innerHTML = papers.length
-    ? paperListHTML(papers, { sections: true })
-    : '<div class="tl-empty">No papers from this alert match your current filters.</div>';
-}
+function openAlert(name, skipHash) { if (!skipHash) location.hash = '#alert/' + encodeURIComponent(name); else showList(ALERT_KEY + name); }
 
 /* Scroll a topic card into view below the sticky chip row, and flash its edge so the eye lands on it */
 function jumpToTopic(name) {
@@ -3637,7 +3665,7 @@ function absBtn(p) {
   return `<button class="btn-abs" data-detail="abstract" onclick="event.stopPropagation();toggleDetail(this,'abstract')" title="Show abstract">Abstract</button>`;
 }
 function toggleDetail(btn, type) {
-  const card = btn.closest('.top-card, .topic-item');
+  const card = btn.closest('.top-card, .topic-item, .lp-row');
   if (!card) return;
   const panel = card.querySelector('.p-detail-panel');
   if (!panel) return;
@@ -3831,8 +3859,8 @@ function unhidePaper(k) {
 }
 
 function refresh() {
-  // Keep an open overlay list live (read rail, stars) without losing scroll position
-  if (document.getElementById('overlay').classList.contains('open')) renderOpenList(true);
+  // A list page stays live (a paper marked read leaves it, stars show); the page underneath redraws on the way back
+  if (_listViewActive) { renderListPage(); return; }
   if (_tokLock) return;  // a phone-feed action already updated its own card
   if (['all','email'].includes(currentTab)) applyFilters();
   else if (currentTab === 'library') renderLibrary();
@@ -3854,17 +3882,9 @@ function updateInterestsBadge() {
   if (bg) { if (ng > 0) { bg.textContent = ng; bg.style.display = ''; } else { bg.style.display = 'none'; } }
 }
 
-/* [1] GROUP OVERLAY — animated open/close */
-let _overlayGroupName = null;
 function openGroup(name, skipHash) {
   name = norm(name);   // old links may use a legacy spelling
-  if (_overlayGroupName === name && document.getElementById('overlay').classList.contains('open')) return;
-  _overlayGroupName = name;
-  setOverlayTopMode(true);
-  renderGroupList(name);
-  document.getElementById('overlayBody').scrollTop = 0;
-  if (!skipHash) location.hash = '#group/' + encodeURIComponent(name);
-  openOverlay();
+  if (!skipHash) location.hash = '#group/' + encodeURIComponent(name); else showList(name);
 }
 /* ----- Venues tab ----- */
 const V_KINDS = [['conference', 'Conferences'], ['journal', 'Journals'], ['workshop', 'Workshops'], ['preprint', 'Preprints'], ['other', 'Theses and other']];
@@ -3920,101 +3940,20 @@ function renderVenues() {
   }).join('');
 }
 
-/* ----- Venue overlay: one venue, all years or a single year ----- */
+/* ----- Venue page: one venue, all years or a single year ----- */
 const VENUE_KEY = 'venue:';
 let _venueYear = null;
 function openVenue(name, year, skipHash) {
-  const key = VENUE_KEY + name;
-  if (_overlayGroupName === key && _venueYear === (year || null) && document.getElementById('overlay').classList.contains('open')) return;
-  _overlayGroupName = key;
+  if (!skipHash) { location.hash = venueHash(name, year || null); return; }
   _venueYear = year || null;
-  setOverlayTopMode(true);
-  renderVenueList();
-  document.getElementById('overlayBody').scrollTop = 0;
-  if (!skipHash) location.hash = venueHash(name, _venueYear);
-  openOverlay();
+  showList(VENUE_KEY + name);
 }
 function venueHash(name, year) { return '#venue/' + encodeURIComponent(name) + (year ? '/' + year : ''); }
 function setVenueYear(y) {
   _venueYear = y;
-  renderVenueList();
-  document.getElementById('overlayBody').scrollTop = 0;
-  history.replaceState(null, '', venueHash(_overlayGroupName.slice(VENUE_KEY.length), y));
+  history.replaceState(null, '', venueHash(_listKey.slice(VENUE_KEY.length), y));
+  renderListPage();
 }
-function renderVenueList() {
-  const name = _overlayGroupName.slice(VENUE_KEY.length);
-  const all = allPapers.filter(p => venueOf(p).name === name);
-  const visible = hideRead ? all.filter(p => !readSet.has(paperKey(p))) : all;
-  const counts = {};
-  visible.forEach(p => { const y = venueOf(p).year; if (y) counts[y] = (counts[y] || 0) + 1; });
-  const years = Object.keys(counts).sort((a, b) => b - a).map(Number);
-  if (_venueYear && !counts[_venueYear]) _venueYear = null;
-  const inYear = p => !_venueYear || venueOf(p).year === _venueYear;
-  const papers = sortForList(visible.filter(inYear));
-  const full = all.length ? venueOf(all[0]).full : '';
-  document.getElementById('overlayTitle').textContent = `${name}${_venueYear ? ' ' + _venueYear : ''}`;
-  setListProgress(all.filter(inYear));
-  if (full) document.getElementById('overlaySub').textContent = `${full}. ` + document.getElementById('overlaySub').textContent;
-  const chip = (y, label, n) => `<button class="tl-chip ${_venueYear === y ? 'active' : ''}" onclick="setVenueYear(${y === null ? 'null' : y})">${label}<span class="n">${n}</span></button>`;
-  document.getElementById('overlayToolbar').innerHTML = years.length > 1
-    ? `<div class="tl-chips" role="toolbar" aria-label="Filter by year">${chip(null, 'All years', visible.length)}${years.map(y => chip(y, y, counts[y])).join('')}</div>`
-    : '';
-  document.getElementById('overlayHeaderTools').innerHTML = sortToolsHTML();
-  document.getElementById('overlayBody').innerHTML = papers.length
-    ? paperListHTML(papers, { sections: true, hideVenue: true })
-    : '<div class="tl-empty">No papers from this venue match your current filters.</div>';
-}
-
-function renderGroupList(name) {
-  const inGroup = p => (p.theme_groups||'').split('|').map(norm).includes(name);
-  const papers = sortForList(applyViewFilters(allPapers.filter(inGroup)));
-  document.getElementById('overlayTitle').textContent = name;
-  setListProgress(applyViewFilters(allPapers.filter(inGroup), true));
-  document.getElementById('overlayToolbar').innerHTML = '';
-  document.getElementById('overlayHeaderTools').innerHTML = sortToolsHTML();
-  document.getElementById('overlayBody').innerHTML = papers.length
-    ? paperListHTML(papers, { sections: true, hideGroup: name })
-    : '<div class="tl-empty">No papers in this group match your current filters.</div>';
-}
-/* Same filters as the main feed (tab, relevance pill, read papers hidden). Views that belong to Top Papers or the
-   latest digest pass ignoreRel: the relevance pill only filters the topic and alert cards. */
-function applyViewFilters(papers, ignoreRead, ignoreRel) {
-  if (currentTab === 'email') papers = papers.filter(p => (p.source_mode||'').includes('email'));
-  if (currentRel !== 'all' && !ignoreRel) papers = papers.filter(p => dynamicRelevance(p) === currentRel);
-  if (hideRead && !ignoreRead) papers = papers.filter(p => !readSet.has(paperKey(p)));
-  return papers;
-}
-const TOP_LIST_KEY = '#top-list';  // sentinel for _overlayGroupName; can't collide with a group name
-let _topSort = 'added';   // 'added' | 'published'
-let _topGroup = null;     // normalized group name, or null for all
-function setOverlayTopMode(on) {
-  document.querySelector('#overlay .overlay-content').classList.toggle('top-mode', on);
-  if (!on) { document.getElementById('overlaySub').textContent = ''; document.getElementById('overlayToolbar').innerHTML = ''; document.getElementById('overlayHeaderTools').innerHTML = ''; }
-}
-function openTopList(skipHash) {
-  if (_overlayGroupName === TOP_LIST_KEY && document.getElementById('overlay').classList.contains('open')) return;
-  _overlayGroupName = TOP_LIST_KEY;
-  setOverlayTopMode(true);
-  renderTopList();
-  document.getElementById('overlayBody').scrollTop = 0;
-  if (!skipHash) location.hash = '#top';
-  openOverlay();
-}
-function setTopSort(v) { _topSort = v; renderOpenList(); document.getElementById('overlayBody').scrollTop = 0; }
-/* Re-render whichever overlay list is open (top papers or a category) */
-function renderOpenList(keepScroll) {
-  if (!_overlayGroupName) return false;
-  const body = document.getElementById('overlayBody'), st = body.scrollTop;
-  if (_overlayGroupName === TOP_LIST_KEY) renderTopList();
-  else if (_overlayGroupName.startsWith(VENUE_KEY)) renderVenueList();
-  else if (_overlayGroupName.startsWith(ALERT_KEY)) renderAlertList();
-  else if (_overlayGroupName === LATEST_KEY) renderLatestList();
-  else if (_overlayGroupName.startsWith(INTEREST_KEY)) renderInterestList();
-  else renderGroupList(_overlayGroupName);
-  if (keepScroll) body.scrollTop = st;
-  return true;
-}
-function setTopGroup(g) { _topGroup = g; renderTopList(); document.getElementById('overlayBody').scrollTop = 0; }
 
 const _MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
 /* "Mar 2026" -> 202603, "2026" -> 202600 */
@@ -4045,107 +3984,290 @@ function groupsOfPaper(p) {
   return (p.theme_groups||'').split('|').map(norm).filter(g => g && (!confirmed.size || confirmed.has(g)));
 }
 
-/* Rows with the reading rail, optionally split into date sections. Shared by the
-   Top Papers list, category overlays, Library and search. */
-function paperListHTML(papers, opts) {
-  const o = opts || {};
-  const row = p => topRowHTML(p, groupsOfPaper(p).filter(g => g !== o.hideGroup), o);
-  if (!o.sections) {
-    requestAnimationFrame(markTruncatedVenues);
-    return `<div class="paper-list flat"><section class="tl-section">${papers.map(row).join('')}</section></div>`;
+/* Rows with the reading rail, used by Library and search */
+function paperListHTML(papers) {
+  return `<div class="paper-list flat"><section class="tl-section">${papers.map(p => topRowHTML(p, groupsOfPaper(p))).join('')}</section></div>`;
+}
+
+/* ===== LIST PAGES =====
+   Every "View all" list is a page of its own: Top Papers (#top), a topic (#group/<name>), an alert (#alert/<name>),
+   the latest digest (#latest), a venue (#venue/<name>[/<year>]) and an interest (#interest/<name>). Back returns to
+   where it was opened from, and a paper opened from it comes back to the same place. A sidebar (a row of chips on
+   narrower screens) lists the sibling lists, so moving between topics needs no trip back. */
+const TOP_LIST_KEY = '#top-list';   // list keys: this, LATEST_KEY, a topic's name, or ALERT_KEY / VENUE_KEY / INTEREST_KEY + a name
+let _listKey = null, _listViewActive = false;
+let _listBackLabel = 'Back';   // where Back goes: the tab (or search) it was opened from, or "Back" to a paper page
+let _paperFromList = null;     // the list a paper page was opened from, so Back to it lands where you were
+let _leftPaper = false;        // set by the router while it handles a route that leaves a paper page
+let _listQuery = '', _listShowLow = false, _listQueryTimer = null;
+let _listOrder = (() => { try { return localStorage.getItem('scholar_list_order') || 'best'; } catch (e) { return 'best'; } })();
+const LIST_ORDERS = [['best', 'Best first', 'Must read, then Interesting, then Tangential; the best score first within each'],
+  ['added', 'Recently added', 'Newest to the dashboard first'], ['published', 'Newest published', 'By publication date']];
+const TAB_NAMES = { all: 'Recent Works', email: 'Email Digest', venues: 'Venues', library: 'Library', interests: 'Interests' };
+function openTopList(skipHash) { if (!skipHash) location.hash = '#top'; else showList(TOP_LIST_KEY); }
+
+/* Best first: Must read, then Interesting, then Tangential; within each, the Top Papers score (relevance, fading by
+   half every 90 days since added). Topic cards rank the same way (skipping papers already shown higher on the page). */
+const TIER_RANK = { definitely: 0, probably: 1, mildly: 2 };
+function byBest(arr) {
+  const tier = new Map(arr.map(p => [p, TIER_RANK[dynamicRelevance(p)] ?? 3]));
+  return byTopScore(arr.slice()).map((p, i) => [p, i]).sort((a, b) => tier.get(a[0]) - tier.get(b[0]) || a[1] - b[1]).map(x => x[0]);
+}
+function sortForList(papers, order) {
+  if (order === 'added') return papers.sort((a,b) => (b.date_found||'').localeCompare(a.date_found||'') || pubKey(b) - pubKey(a));
+  return papers.sort((a,b) => pubKey(b) - pubKey(a) || (b.date_found||'').localeCompare(a.date_found||''));
+}
+function shortAuthors(p) {
+  const a = (p.authors || '').split(',').map(x => x.trim()).filter(Boolean);
+  if (!a.length || /^not specified$/i.test(a[0])) return '';
+  return a.length === 1 ? a[0] : a.length === 2 ? `${a[0]} and ${a[1]}` : `${a[0]} et al.`;
+}
+const isEmailPaper = p => (p.source_mode || '').includes('email');
+
+/* What a list holds and how its page introduces it. `all` is every member (read ones too; the page leaves them out) */
+function listModel(key) {
+  const inTab = arr => currentTab === 'email' ? arr.filter(isEmailPaper) : arr;
+  const quiet = '#8a8f98';
+  if (key === TOP_LIST_KEY) return { kind: 'top', eyebrow: TAB_NAMES[currentTab === 'email' ? 'email' : 'all'], title: 'Top Papers', color: 'var(--accent)', noRel: true,
+    all: inTab(allPapers).filter(p => dynamicRelevance(p) === 'definitely') };
+  if (key === LATEST_KEY) {
+    const dig = latestDigestOf(allPapers.filter(isEmailPaper));
+    const from = dig.date ? shortDate(new Date(new Date(dig.date + 'T00:00:00') - 6 * 86400000).toISOString().slice(0, 10)) : '';
+    return { kind: 'latest', eyebrow: 'Email Digest', title: 'Latest digest', sub: dig.date ? `Papers added ${from} – ${shortDate(dig.date)}` : '', color: 'var(--accent)', all: dig.papers };
   }
-  const sections = [];
-  papers.forEach(p => {
-    const b = o.bucket ? o.bucket(p) : _topSort === 'added' ? addedBucket(p.date_found) : publishedBucket(p);
-    const last = sections[sections.length - 1];
-    if (last && last.key === b.key) last.items.push(p); else sections.push({ ...b, items: [p] });
-  });
-  return `<div class="paper-list">${sections.map(s => `
-    <section class="tl-section">
-      <div class="tl-section-head"><h4>${esc(s.label)}</h4><span class="count">${s.items.length}</span><span class="rule"></span></div>
-      ${s.items.map(row).join('')}
-    </section>`).join('')}</div>`;
-}
-
-/* Read progress in the overlay header; counts read papers even when they are filtered out */
-function setListProgress(everyPaper) {
-  const total = everyPaper.length, read = everyPaper.filter(p => readSet.has(paperKey(p))).length;
-  document.getElementById('overlaySub').textContent = total
-    ? `${read} of ${total} read${hideRead && read ? ', read papers hidden' : ''}` : '';
-  const prog = document.getElementById('overlayProgress');
-  prog.firstElementChild.style.width = total ? `${Math.max(read / total * 100, read ? 1 : 0)}%` : '0';
-  prog.setAttribute('aria-valuenow', read); prog.setAttribute('aria-valuemax', total);
-}
-function sortToolsHTML() {
-  return `<div class="tl-sort" role="group" aria-label="Sort">
-      <button class="${_topSort==='added'?'active':''}" onclick="setTopSort('added')">Recently added</button>
-      <button class="${_topSort==='published'?'active':''}" onclick="setTopSort('published')">Newest published</button>
-    </div>`;
-}
-function sortForList(papers) {
-  if (_topSort === 'added') papers.sort((a,b) => (b.date_found||'').localeCompare(a.date_found||'') || pubKey(b) - pubKey(a));
-  else papers.sort((a,b) => pubKey(b) - pubKey(a) || (b.date_found||'').localeCompare(a.date_found||''));
-  return papers;
-}
-
-let _topView = (() => { try { return localStorage.getItem('scholar_top_view') || 'ranked'; } catch (e) { return 'ranked'; } })();
-function setTopView(v) {
-  _topView = v;
-  try { localStorage.setItem('scholar_top_view', v); } catch (e) {}
-  renderTopList(); document.getElementById('overlayBody').scrollTop = 0;
-}
-function topViewToolsHTML() {
-  return `<div class="tl-sort" role="group" aria-label="Order">
-      <button class="${_topView==='ranked'?'active':''}" onclick="setTopView('ranked')" title="Best score first: relevance, fading by half every 90 days since added">Ranked</button>
-      <button class="${_topView==='week'?'active':''}" onclick="setTopView('week')" title="Newest week first, best score first within each week">By week</button>
-    </div>`;
-}
-/* Week a paper was added, Monday-based: "This week", "Last week", then "Sep 7 – 13" */
-function weekBucket(d) {
-  if (!d) return { key: '0', label: 'Date unknown' };
-  const day = new Date(d + 'T00:00:00'), mon = new Date(day);
-  mon.setDate(day.getDate() - ((day.getDay() + 6) % 7));
-  const now = new Date(), thisMon = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7));
-  const weeks = Math.round((thisMon - mon) / (7 * 86400000));
-  const key = mon.toISOString().slice(0, 10);
-  if (weeks <= 0) return { key, label: 'This week' };
-  if (weeks === 1) return { key, label: 'Last week' };
-  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-  const md = x => x.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  return { key, label: mon.getMonth() === sun.getMonth() ? `${md(mon)} \u2013 ${sun.getDate()}` : `${md(mon)} \u2013 ${md(sun)}` };
-}
-function renderTopList() {
-  const groupsOf = groupsOfPaper;
-  const base = selectTopPapers(sortPapers(applyViewFilters(allPapers.slice(), false, true)));
-
-  // Chips: only groups that have papers in the current top set
-  const counts = {};
-  base.forEach(p => groupsOf(p).forEach(g => counts[g] = (counts[g]||0) + 1));
-  if (_topGroup && !counts[_topGroup]) _topGroup = null;
-  const chipNames = Object.keys(counts).sort((a,b) => {
-    const ia = GROUP_ORDER.indexOf(a), ib = GROUP_ORDER.indexOf(b);
-    return (ia===-1?999:ia) - (ib===-1?999:ib);
-  });
-  const chip = (g, label, n) => `<button class="tl-chip ${_topGroup===g?'active':''}" onclick="setTopGroup(${g===null?'null':`'${escAttr(g)}'`})">${g ? gdot(g) : ''}${esc(label)}<span class="n">${n}</span></button>`;
-  document.getElementById('overlayToolbar').innerHTML =
-    `<div class="tl-chips" role="toolbar" aria-label="Filter by group">${chip(null, 'All groups', base.length)}${chipNames.map(g => chip(g, g, counts[g])).join('')}</div>`;
-  document.getElementById('overlayHeaderTools').innerHTML = topViewToolsHTML();
-
-  let papers = byTopScore(_topGroup ? base.filter(p => groupsOf(p).includes(_topGroup)) : base.slice());
-  if (_topView === 'week') {
-    const wk = new Map(papers.map(p => [p, weekBucket(p.date_found).key]));
-    papers = papers.map((p, i) => [p, i]).sort((a, b) => wk.get(b[0]).localeCompare(wk.get(a[0])) || a[1] - b[1]).map(x => x[0]);
+  if (key.startsWith(ALERT_KEY)) {
+    const name = key.slice(ALERT_KEY.length);
+    return { kind: 'alert', eyebrow: name === 'Keyword alerts' ? 'Email Digest' : 'Alert', title: name, color: 'var(--accent)',
+      all: allPapers.filter(p => isEmailPaper(p) && alertSourcesOf(p).includes(name)) };
   }
-  let everyTop = selectTopPapers(sortPapers(applyViewFilters(allPapers.slice(), true, true)));
-  if (_topGroup) everyTop = everyTop.filter(p => groupsOf(p).includes(_topGroup));
-  document.getElementById('overlayTitle').textContent = _topGroup ? `Top Papers in ${_topGroup}` : 'Top Papers';
-  setListProgress(everyTop);
-
-  const body = document.getElementById('overlayBody');
-  body.innerHTML = papers.length
-    ? paperListHTML(papers, _topView === 'week' ? { sections: true, bucket: p => weekBucket(p.date_found), hideGroup: _topGroup } : { hideGroup: _topGroup })
-    : `<div class="tl-empty">No top papers match your current filters.${_topGroup ? `<br><button class="tl-chip" onclick="setTopGroup(null)">Show all groups</button>` : ''}</div>`;
+  if (key.startsWith(VENUE_KEY)) {
+    const name = key.slice(VENUE_KEY.length), every = allPapers.filter(p => venueOf(p).name === name);
+    const years = {};
+    every.filter(p => !readSet.has(paperKey(p))).forEach(p => { const y = venueOf(p).year; if (y) years[y] = (years[y] || 0) + 1; });
+    if (_venueYear && !years[_venueYear]) _venueYear = null;
+    return { kind: 'venue', eyebrow: 'Venue', title: name + (_venueYear ? ' ' + _venueYear : ''), sub: every.length ? venueOf(every[0]).full : '', color: quiet, venue: name, years,
+      all: _venueYear ? every.filter(p => venueOf(p).year === _venueYear) : every, everyN: every.filter(p => !readSet.has(paperKey(p))).length };
+  }
+  if (key.startsWith(INTEREST_KEY)) {
+    const name = key.slice(INTEREST_KEY.length), i = allInterests.find(x => x.interest_name === name);
+    return { kind: 'interest', eyebrow: 'Interest', title: name, sub: i ? `A ${relLabel(i.relevance_mapping || 'mildly')} interest` : '', color: quiet,
+      all: inTab(allPapers).filter(p => matchesOf(p).includes(name)) };
+  }
+  return { kind: 'topic', eyebrow: currentTab === 'email' ? 'Topic in your email alerts' : 'Topic', title: key, topic: key, color: groupColor(key), glow: topicGlow([key]),
+    all: inTab(allPapers).filter(p => (p.theme_groups || '').split('|').map(norm).includes(key)) };
 }
+
+/* The lists beside this one: Top Papers and the topics (Recent Works); the latest digest, alerts and topics (Email
+   Digest); the bigger venues; or the interests */
+function listFamily(key) {
+  const unread = p => !readSet.has(paperKey(p));
+  const item = (k, hash, label, n, color) => ({ k, hash, label, n, color });
+  if (key.startsWith(VENUE_KEY)) {
+    const by = {};
+    allPapers.forEach(p => { const v = venueOf(p); const e = by[v.name] || (by[v.name] = { name: v.name, kind: v.kind, n: 0 }); if (unread(p)) e.n++; });
+    const cur = key.slice(VENUE_KEY.length);
+    return V_KINDS.map(([kind, label]) => ({ title: label, items: Object.values(by).filter(v => v.kind === kind && (v.n >= V_MIN_SHOWN || v.name === cur))
+      .sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)).map(v => item(VENUE_KEY + v.name, venueHash(v.name), v.name, v.n)) })).filter(s => s.items.length);
+  }
+  if (key.startsWith(INTEREST_KEY)) {
+    const conf = allInterests.filter(i => i.status === 'confirmed');
+    const n = name => allPapers.filter(p => unread(p) && matchesOf(p).includes(name)).length;
+    return [['application', 'Application areas'], ['method', 'Methods']].map(([cat, title]) => ({ title,
+      items: conf.filter(i => (i.category || '').toLowerCase() === cat).map(i => item(INTEREST_KEY + i.interest_name, '#interest/' + encodeURIComponent(i.interest_name), i.interest_name, n(i.interest_name))) })).filter(s => s.items.length);
+  }
+  const email = currentTab === 'email' || key === LATEST_KEY || key.startsWith(ALERT_KEY);
+  const pool = allPapers.filter(p => unread(p) && (!email || isEmailPaper(p)));
+  const topics = { title: 'Topics', items: GROUP_ORDER.map(g => item(g, '#group/' + encodeURIComponent(g), g, pool.filter(p => (p.theme_groups || '').split('|').map(norm).includes(g)).length, groupColor(g))).filter(x => x.n || x.k === key) };
+  if (!email) return [{ title: '', items: [item(TOP_LIST_KEY, '#top', 'Top Papers', pool.filter(p => dynamicRelevance(p) === 'definitely').length)] }, topics];
+  const byAlert = {};
+  pool.forEach(p => alertSourcesOf(p).forEach(a => byAlert[a] = (byAlert[a] || 0) + 1));
+  const tail = a => a === 'Keyword alerts' ? 1 : 0;
+  const alerts = Object.keys(byAlert).filter(a => byAlert[a] >= 3 || ALERT_KEY + a === key).sort((a, b) => tail(a) - tail(b) || byAlert[b] - byAlert[a] || a.localeCompare(b));
+  const dig = latestDigestOf(allPapers.filter(isEmailPaper));
+  return [{ title: '', items: [item(LATEST_KEY, '#latest', 'Latest digest', dig.papers.filter(unread).length)] },
+    { title: 'Alerts', items: alerts.map(a => item(ALERT_KEY + a, '#alert/' + encodeURIComponent(a), a, byAlert[a])) }, topics];
+}
+
+/* A list opened from a tab, search, a paper page, or another list's sidebar */
+function showList(key) {
+  const ms = document.getElementById('mainScroll');
+  const entering = !_listViewActive, returning = entering && _leftPaper && _paperFromList === key;
+  if (entering && !returning) {
+    if (!_leftPaper) {   // from a tab or search: remember its place for Back
+      if (!_searchActive) _tabScroll[currentTab] = ms.scrollTop;
+      if (document.body.classList.contains('tok-mode')) _tokScrollTop = document.getElementById('tokFeed').scrollTop;
+    }
+    _listBackLabel = _leftPaper ? 'Back' : _searchActive ? 'Search results' : (TAB_NAMES[currentTab] || 'Back');
+  }
+  const changed = _listKey !== key;
+  if (changed && !returning) { _listQuery = ''; _listShowLow = false; }
+  _listKey = key;
+  _listViewActive = true;
+  ['sec-papers', 'sec-library', 'sec-venues', 'sec-interests', 'sec-search', 'sec-paper'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById('sec-list').classList.add('active');
+  document.body.classList.remove('tok-mode', 'tok-immersive');
+  renderListPage(changed || entering);
+  if (!returning) { jumpScroll(ms, 0); requestAnimationFrame(() => jumpScroll(ms, 0)); }   // after the router's restore for the paper page it left
+  if (!_leftPaper && (entering || changed)) pageIn(document.getElementById('sec-list'));   // (leaving a paper page, the router fades it in)
+  updateListBar();
+}
+function leaveListView() {
+  if (!_listViewActive) return false;
+  _listViewActive = false;
+  document.getElementById('sec-list').classList.remove('active');
+  return true;
+}
+function listBack() { if (history.length > 1) history.back(); else location.hash = '#' + currentTab; }
+/* A sidebar link swaps the list in place: Back still returns to where the first one was opened from */
+function goList(e, hash) {
+  if (e && (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1)) return true;   // a new tab or window: let the link open it
+  if (e) e.preventDefault();
+  if (location.hash !== hash) location.replace(location.pathname + location.search + hash);
+  return false;
+}
+
+function renderListPage(newList) {
+  if (!_listKey) return;
+  const m = listModel(_listKey), lp = document.getElementById('lp');
+  lp.style.setProperty('--gc', m.color);
+  lp.style.setProperty('--gbg', m.glow || 'none');
+  document.getElementById('lpEyebrow').textContent = m.eyebrow;
+  document.getElementById('lpTitle').textContent = m.title;
+  document.getElementById('lpBarTitle').textContent = m.title;
+  const sub = document.getElementById('lpSub');
+  sub.textContent = m.sub || ''; sub.hidden = !m.sub;
+  document.getElementById('lpBack').textContent = _listBackLabel;
+  renderListRail(newList);
+  renderListTools(m);
+  renderListBody(m);
+}
+function renderListRail(newList) {
+  const key = _listKey, fam = listFamily(key);
+  const link = (it, cls) => `<a href="${escAttr(it.hash)}" class="${cls}${it.k === key ? ' on active' : ''}"${it.k === key ? ' aria-current="page"' : ''} onclick="return goList(event, '${escAttr(it.hash)}')">`;
+  const rail = document.getElementById('lpRail'), chips = document.getElementById('lpChips');
+  rail.innerHTML = fam.map(s => `${s.title ? `<h2>${esc(s.title)}</h2>` : ''}${s.items.map(it =>
+    `${link(it, 'lp-rail-item')}${it.color ? `<i class="gdot" style="--gc:${it.color}" aria-hidden="true"></i>` : ''}<span class="l">${esc(it.label)}</span><span class="n">${it.n}</span></a>`).join('')}`).join('');
+  chips.innerHTML = fam.flatMap(s => s.items).map(it => `${link(it, 'tl-chip')}${esc(it.label)}<span class="n">${it.n}</span></a>`).join('');
+  if (!newList) return;
+  requestAnimationFrame(() => {   // the current list in view, without moving the page
+    const c = chips.querySelector('.active'), r = rail.querySelector('.on');
+    if (c && (c.offsetLeft < chips.scrollLeft || c.offsetLeft + c.offsetWidth > chips.scrollLeft + chips.clientWidth)) chips.scrollLeft = c.offsetLeft - (chips.clientWidth - c.offsetWidth) / 2;
+    if (r && (r.offsetTop < rail.scrollTop || r.offsetTop + r.offsetHeight > rail.scrollTop + rail.clientHeight)) rail.scrollTop = r.offsetTop - rail.clientHeight / 3;
+  });
+}
+function listUnread(m) { return m.all.filter(p => !readSet.has(paperKey(p))); }
+function renderListTools(m) {
+  m = m || listModel(_listKey);
+  const unread = listUnread(m), n = r => unread.filter(p => dynamicRelevance(p) === r).length;
+  const must = n('definitely'), week = unread.filter(p => addedBucket(p.date_found).key === 'w0').length;
+  document.getElementById('lpStats').innerHTML = [`<b>${unread.length}</b> to read`, m.noRel || !must ? '' : `<b>${must}</b> must read`, week && week < unread.length ? `<b>${week}</b> new this week` : '']
+    .filter(Boolean).join(' &middot; ');
+  const order = `<div class="tl-sort" role="group" aria-label="Order">${LIST_ORDERS.map(([v, label, tip]) =>
+    `<button class="${_listOrder === v ? 'active' : ''}" aria-pressed="${_listOrder === v}" onclick="setListOrder('${v}')" title="${escAttr(tip)}">${label}</button>`).join('')}</div>`;
+  const pill = (r, label, c) => `<button class="pill${currentRel === r ? ' active' : ''}" aria-pressed="${currentRel === r}" onclick="setListRel('${r}')">${label} <span class="pill-count">${c}</span></button>`;
+  const pills = m.noRel ? '' : `<div class="lp-pills" role="group" aria-label="Relevance">${pill('all', 'All', unread.length)}${pill('definitely', 'Must read', must)}${pill('probably', 'Interesting', n('probably'))}${pill('mildly', 'Tangential', n('mildly'))}</div>`;
+  const years = m.years ? Object.keys(m.years).sort((a, b) => b - a).map(Number) : [];
+  const ychip = (y, label, c) => `<button class="tl-chip${_venueYear === y ? ' active' : ''}" onclick="setVenueYear(${y === null ? 'null' : y})">${label}<span class="n">${c}</span></button>`;
+  const yearRow = years.length > 1 ? `<div class="tl-chips lp-years" role="group" aria-label="Year">${ychip(null, 'All years', m.everyN)}${years.map(y => ychip(y, y, m.years[y])).join('')}</div>` : '';
+  const f = document.getElementById('lpFilter');
+  f.placeholder = `Filter ${unread.length} ${unread.length === 1 ? 'paper' : 'papers'}`;
+  if (f.value !== _listQuery) f.value = _listQuery;
+  document.getElementById('lpTools').innerHTML = `<div class="lp-controls">${order}${pills}</div>${yearRow}`;
+}
+function renderListBody(m) {
+  m = m || listModel(_listKey);
+  const body = document.getElementById('lpBody');
+  const unread = listUnread(m);
+  let papers = m.noRel || currentRel === 'all' ? unread : unread.filter(p => dynamicRelevance(p) === currentRel);
+  const q = _listQuery.trim().toLowerCase();
+  if (q) {
+    const words = q.split(/\s+/);
+    papers = papers.filter(p => { const hay = [p.headline, p.title, p.authors, p.venue].join(' ').toLowerCase(); return words.every(w => hay.includes(w)); });
+  }
+  body.classList.toggle('ranked', _listOrder === 'best');
+  if (!papers.length) {
+    body.innerHTML = `<div class="lp-empty">${q ? `No papers here match “${esc(_listQuery.trim())}”.<br><button class="lp-fold" onclick="setListQuery('', true)">Clear the filter</button>`
+      : unread.length ? `No ${relLabel(currentRel)} papers here.<br><button class="lp-fold" onclick="setListRel('all')">Show all ${unread.length}</button>`
+      : 'You’ve read everything here. Read papers are in Library.'}</div>`;
+    return;
+  }
+  const head = (label, n) => `<div class="lp-sec-h"><h2>${esc(label)}</h2><span class="n">${n}</span><span class="rule"></span></div>`;
+  let html = '';
+  if (_listOrder === 'best') {
+    const ranked = byBest(papers);
+    const tiers = [['definitely', 'Must read'], ['probably', 'Interesting'], ['mildly', 'Tangential']]
+      .map(([r, label]) => ({ r, label, items: ranked.filter(p => dynamicRelevance(p) === r) })).filter(t => t.items.length);
+    let n = 0;
+    html = tiers.map(t => {
+      const fold = t.r === 'mildly' && tiers.length > 1 && !_listShowLow && !q;
+      return `<section class="lp-sec">${tiers.length > 1 ? head(t.label, t.items.length) : ''}${fold
+        ? `<button class="lp-fold" onclick="_listShowLow = true; renderListBody()">Show ${t.items.length} tangential ${t.items.length === 1 ? 'paper' : 'papers'}</button>`
+        : t.items.map(p => listRowHTML(p, ++n, m)).join('')}</section>`;
+    }).join('');
+  } else {
+    const sections = [];
+    sortForList(papers.slice(), _listOrder).forEach(p => {
+      const b = _listOrder === 'added' ? addedBucket(p.date_found) : publishedBucket(p), last = sections[sections.length - 1];
+      if (last && last.key === b.key) last.items.push(p); else sections.push({ ...b, items: [p] });
+    });
+    html = sections.map(sec => `<section class="lp-sec">${head(sec.label, sec.items.length)}${sec.items.map(p => listRowHTML(p, 0, m)).join('')}</section>`).join('');
+  }
+  body.innerHTML = html;
+  updateListBar();
+}
+function listRowHTML(p, n, m) {
+  const k = paperKey(p), ka = escAttr(k), w = parseWhy(p);
+  const why = w && w.reason ? w.reason.replace(/\s*\(abstract:[^)]*\)/i, '') : '';
+  const others = groupsOfPaper(p).filter(g => g !== m.topic);
+  const authors = shortAuthors(p);
+  const differs = hasText(p.title) && p.title.trim() !== (p.headline || '').trim();
+  return `<article class="lp-row" tabindex="0" data-key="${ka}" onclick="openPaper('${ka}', event)">
+    ${n ? `<span class="lp-num">${String(n).padStart(2, '0')}</span>` : ''}
+    <div class="lp-row-main">
+      <h3 class="lp-h">${esc(p.headline || p.title)}</h3>
+      ${why ? `<div class="why-line one"><b>Why</b><span title="${escAttr(why)}">${esc(why)}</span></div>` : ''}
+      <div class="lp-meta">${starSet.has(k) ? '<span class="lp-star" title="Starred">&#9733;</span>' : ''}${cardTagsHTML(p, m.kind === 'venue')}${authors ? `<span class="lp-auth" title="${escAttr(p.authors)}">${esc(authors)}</span>` : ''}${others.length ? `<span class="lp-also">${others.map(g => `<span>${gdot(g)}${esc(g)}</span>`).join('')}</span>` : ''}</div>
+      <div class="lp-more"><div>
+        ${differs ? `<p class="lp-orig"><i>Paper</i>${esc(p.title)}</p>` : ''}
+        <div class="p-action-row">${summaryBtn(p)} ${absBtn(p)} ${linkBtn(p)} <span class="p-actions has-active">${starBtn(p)} ${readBtn(p)} ${saveBtn(p)} ${deleteBtn(p)}</span></div>
+        <div class="p-detail-panel" data-summary="${hasText(p.summary) ? dataAttr(p.summary) : ''}" data-abstract="${hasText(p.abstract) ? dataAttr(p.abstract) : ''}"></div>
+      </div></div>
+    </div>
+  </article>`;
+}
+/* Changing the order or the relevance keeps the controls in view: the list restarts just below them */
+function listToTools() {
+  const ms = document.getElementById('mainScroll'), tools = document.getElementById('lpTools'), bar = document.getElementById('lpBar');
+  const over = tools.getBoundingClientRect().top - bar.getBoundingClientRect().bottom;
+  if (over < 0) jumpScroll(ms, ms.scrollTop + over - 8);
+}
+function setListOrder(v) {
+  _listOrder = v;
+  try { localStorage.setItem('scholar_list_order', v); } catch (e) {}
+  renderListTools(); renderListBody(); listToTools();
+}
+/* One relevance choice for the whole app: the list's pills and the home page's show the same one */
+function setListRel(r) {
+  currentRel = r;
+  document.querySelectorAll('#filtersBar .pill[data-rel]').forEach(x => x.classList.toggle('active', x.dataset.rel === r));
+  renderListTools(); renderListBody(); listToTools();
+}
+function setListQuery(v, now) {
+  _listQuery = v;
+  clearTimeout(_listQueryTimer);
+  if (now) { const f = document.getElementById('lpFilter'); if (f && f.value !== v) f.value = v; renderListBody(); return; }
+  _listQueryTimer = setTimeout(renderListBody, 120);
+}
+/* The list's title slides into the bar once the heading has scrolled under it */
+function updateListBar() {
+  if (!_listViewActive) return;
+  const bar = document.getElementById('lpBar'), h = document.getElementById('lpTitle');
+  const edge = bar.getBoundingClientRect().bottom;
+  bar.classList.toggle('stuck', h.getBoundingClientRect().bottom < edge);
+  document.getElementById('lp').style.setProperty('--lp-bar-h', bar.offsetHeight + 'px');
+  document.querySelectorAll('#lpBody .lp-sec-h').forEach(x => x.classList.toggle('stuck', x.getBoundingClientRect().top <= edge + 1));
+}
+document.addEventListener('DOMContentLoaded', () => document.getElementById('mainScroll').addEventListener('scroll', updateListBar, { passive: true }));
 
 function topRowHTML(p, groups, o) {
   o = o || {};
@@ -4173,34 +4295,18 @@ function topRowHTML(p, groups, o) {
     </div></div>
   </article>`;
 }
-let _overlayReturnFocus = null;
-let _overlayReturn = null;   // the list a paper was opened from, and how far down it was
-function openOverlay() {
-  const ol = document.getElementById('overlay');
-  const ret = _overlayReturn; _overlayReturn = null;
-  if (ret && ret.title === document.getElementById('overlayTitle').textContent) {   // back from that paper: same place in the list
-    const body = document.getElementById('overlayBody');
-    body.style.scrollBehavior = 'auto'; body.scrollTop = ret.top;
-    requestAnimationFrame(() => { body.scrollTop = ret.top; body.style.scrollBehavior = ''; });
-  }
-  if (!ol.classList.contains('open')) _overlayReturnFocus = document.activeElement;
-  ol.classList.remove('closing');
-  ol.classList.add('open');
-  document.getElementById('mainScroll').style.overflow = 'hidden';
-  setTimeout(() => { if (ol.classList.contains('open') && !ol.contains(document.activeElement)) ol.querySelector('.overlay-close').focus({ preventScroll: true }); }, 30);
-}
 /* ===== KEYBOARD TRIAGE: j/k move, o or Enter open, x mark read and move on, s star =====
-   Works in the open pop-up list, search results, Library and the desktop home page; on a paper
+   Works on a list page, search results, Library and the desktop home page; on a paper
    page j/k step to the next/previous paper of the list it was opened from. */
 let _kbKey = null, _kbHinted = false;
 function kbRows() {
   let scope = null;
-  if (document.getElementById('overlay').classList.contains('open')) scope = document.getElementById('overlayBody');
+  if (_listViewActive) scope = document.getElementById('lpBody');
   else if (_searchActive) scope = document.getElementById('sec-search');
   else if (currentTab === 'library') scope = document.getElementById('sec-library');
   else if (['all', 'email'].includes(currentTab) && !document.body.classList.contains('tok-mode')) scope = document.getElementById('papersContent');
   if (!scope) return [];
-  return [...scope.querySelectorAll('.top-row[data-key], .feed-item[data-key], .top-lead[data-key]')].filter(e => e.offsetParent !== null);
+  return [...scope.querySelectorAll('.top-row[data-key], .feed-item[data-key], .top-lead[data-key], .lp-row[data-key]')].filter(e => e.offsetParent !== null);
 }
 function kbSelect(el) {
   document.querySelectorAll('.kb-sel').forEach(e => e.classList.remove('kb-sel'));
@@ -4278,48 +4384,7 @@ document.addEventListener('keydown', e => {
   t.click();
 });
 
-/* Tab stays inside the open pop-up */
-document.addEventListener('keydown', e => {
-  const ol = document.getElementById('overlay');
-  if (e.key !== 'Tab' || !ol.classList.contains('open')) return;
-  const f = [...ol.querySelectorAll('.overlay-content button, .overlay-content a[href], .overlay-content [tabindex]:not([tabindex="-1"])')].filter(x => x.offsetParent !== null && !x.disabled);
-  if (!f.length) return;
-  const first = f[0], last = f[f.length - 1];
-  if (!ol.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
-  else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-});
-function closeOverlay(skipHistory) {
-  const ol = document.getElementById('overlay');
-  if (!ol.classList.contains('open')) return;
-  _overlayGroupName = null;
-  // Give focus back to what opened the pop-up; closing often re-renders the view underneath,
-  // so fall back to the replacement element with the same class and text.
-  const back = _overlayReturnFocus; _overlayReturnFocus = null;
-  if (back && back !== document.body) {
-    const cls = back.className, txt = back.textContent;
-    setTimeout(() => {
-      if (_paperViewActive) return;
-      const el = document.contains(back) ? back
-        : [...document.querySelectorAll(back.tagName)].find(e => e.className === cls && e.textContent === txt && e.offsetParent !== null);
-      if (el) el.focus({ preventScroll: true });
-    }, 120);
-  }
-  ol.classList.add('closing');
-  const onEnd = () => {
-    ol.classList.remove('open', 'closing');
-    document.getElementById('mainScroll').style.overflow = '';
-    ol.removeEventListener('transitionend', onEnd);
-  };
-  ol.addEventListener('transitionend', onEnd);
-  /* fallback if transition doesn't fire */
-  setTimeout(() => { ol.classList.remove('open', 'closing'); document.body.style.overflow = ''; }, 350);
-  /* Navigate back to the tab if the user closed the overlay directly (not via hash change) */
-  if (!skipHistory && (location.hash.startsWith('#group/') || location.hash.startsWith('#venue/') || location.hash.startsWith('#alert/') || location.hash === '#top')) {
-    history.back();
-  }
-}
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeRelevancePopup(); closeOverlay(); closeAbsPopup(); closeSaveDD(); _resolveGeneric(null); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeRelevancePopup(); closeAbsPopup(); closeSaveDD(); _resolveGeneric(null); } });
 
 /* ===== LIBRARY ===== */
 let _collapsedLibGroups = new Set(['all', 'read']);
@@ -4673,30 +4738,9 @@ function interestPaperCount(name) {
   }
   return _interestCounts[name] || 0;
 }
-/* Papers matching one interest, as an overlay list (from Interests and the paper page) */
+/* Papers matching one interest, as a list page (from Interests and the paper page) */
 const INTEREST_KEY = 'interest:';
-function openInterest(name, skipHash) {
-  _overlayGroupName = INTEREST_KEY + name;
-  setOverlayTopMode(true);
-  renderInterestList();
-  document.getElementById('overlayBody').scrollTop = 0;
-  if (!skipHash) location.hash = '#interest/' + encodeURIComponent(name);
-  openOverlay();
-}
-function renderInterestList() {
-  const name = _overlayGroupName.slice(INTEREST_KEY.length);
-  const inI = p => matchesOf(p).includes(name);
-  const papers = sortForList(applyViewFilters(allPapers.filter(inI)));
-  const i = allInterests.find(x => x.interest_name === name);
-  document.getElementById('overlayTitle').textContent = name;
-  setListProgress(applyViewFilters(allPapers.filter(inI), true));
-  if (i) document.getElementById('overlaySub').textContent = `${relLabel(i.relevance_mapping || 'mildly')} interest. ` + document.getElementById('overlaySub').textContent;
-  document.getElementById('overlayToolbar').innerHTML = '';
-  document.getElementById('overlayHeaderTools').innerHTML = sortToolsHTML();
-  document.getElementById('overlayBody').innerHTML = papers.length
-    ? paperListHTML(papers, { sections: true })
-    : '<div class="tl-empty">No papers matching this interest fit your current filters.</div>';
-}
+function openInterest(name, skipHash) { if (!skipHash) location.hash = '#interest/' + encodeURIComponent(name); else showList(INTEREST_KEY + name); }
 function updateI(name, status) {
   const i = allInterests.find(x=>x.interest_name===name);
   if (!i) return;
@@ -8728,11 +8772,11 @@ let _paperViewActive = false;
 /* Previous/next on the paper page follow the list the paper was opened from */
 let _navList = null;   // { keys: [...], label }
 function captureNavList(fromEl) {
-  const scope = fromEl && fromEl.closest && fromEl.closest('.paper-list, #papersContent, .pd-rel-grid, .tok');
+  const scope = fromEl && fromEl.closest && fromEl.closest('.paper-list, #papersContent, .pd-rel-grid, .tok, #lpBody');
   if (!scope) return;
   const keys = [...new Set([...scope.querySelectorAll('[data-key]')].map(e => e.dataset.key))];
   let label;
-  if (fromEl.closest('#overlay')) label = document.getElementById('overlayTitle').textContent;
+  if (fromEl.closest('#sec-list')) label = document.getElementById('lpTitle').textContent;
   else if (fromEl.closest('#sec-search')) label = 'search results';
   else if (fromEl.closest('#sec-library')) label = 'your Library';
   else if (fromEl.closest('.pd-rel-grid')) label = 'related papers';
@@ -8756,15 +8800,12 @@ let _savedScrollTop = 0;
 function showPaperDetail(id) {
   const p = allPapers.find(pp => pp.id === id) || _hiddenPapers.find(pp => pp.id === id);
   if (!p) { applyHash(); return; }
-  // Save the list's scroll position, but not when stepping from one paper to the next
-  if (!_paperViewActive) _savedScrollTop = document.getElementById('mainScroll').scrollTop;
+  // Save the list's scroll position, but not when stepping from one paper to the next; opened from a list page,
+  // Back returns to that page at the same place
+  if (!_paperViewActive) { _savedScrollTop = document.getElementById('mainScroll').scrollTop; _paperFromList = _listViewActive ? _listKey : null; }
   _paperViewActive = true;
   if (document.body.classList.contains('tok-mode')) _tokScrollTop = document.getElementById('tokFeed').scrollTop;
-
-  // Close group overlay if open (visually only, don't touch history); Back reopens it where you were
-  const ol = document.getElementById('overlay');
-  if (ol.classList.contains('open')) _overlayReturn = { title: document.getElementById('overlayTitle').textContent, top: document.getElementById('overlayBody').scrollTop };
-  closeOverlay(true);
+  leaveListView();
 
   // Hide all other sections
   document.getElementById('sec-papers').classList.remove('active');
@@ -8902,7 +8943,7 @@ function renderPaperDetail(p) {
 /* Show the title in the sticky bar once the page heading has scrolled under it */
 function updatePaperBar() {
   if (!_paperViewActive) return;
-  const bar = document.querySelector('.pd-bar'), h = document.querySelector('.pd-title');
+  const bar = document.querySelector('#paperDetail .pd-bar'), h = document.querySelector('#paperDetail .pd-title');
   if (bar && h) bar.classList.toggle('stuck', h.getBoundingClientRect().bottom < bar.getBoundingClientRect().bottom);
 }
 
@@ -8995,7 +9036,7 @@ function placeDropdown(dd, btn) {
   const bar = document.querySelector('.save-bar.visible'), vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   const floor = Math.min(vh, bar ? bar.getBoundingClientRect().top : vh) - 8, b = btn.getBoundingClientRect(), r = dd.getBoundingClientRect();
   if (r.bottom <= floor) return;
-  const ceil = Math.max(8, ...[...document.querySelectorAll('.navbar, .pd-bar, .overlay-header')].map(e => e.getBoundingClientRect()).filter(q => q.height && q.bottom < vh / 2).map(q => q.bottom)) + 8;   // below the header bars
+  const ceil = Math.max(8, ...[...document.querySelectorAll('.navbar, .pd-bar')].map(e => e.getBoundingClientRect()).filter(q => q.height && q.bottom < vh / 2).map(q => q.bottom)) + 8;   // below the header bars
   const below = floor - b.bottom - 4, above = b.top - ceil - 4;
   if (above > below) Object.assign(dd.style, { top: 'auto', bottom: '100%', marginBottom: '4px' });
   const room = Math.max(120, above > below ? above : below);
@@ -9101,6 +9142,7 @@ function applyHash() {
 
   // Clear paper view state if navigating away; restore scroll position
   const wasInPaper = _paperViewActive;
+  _leftPaper = wasInPaper;
   _paperViewActive = false;
   document.getElementById('sec-paper').classList.remove('active');
   if (wasInPaper) {
@@ -9113,81 +9155,63 @@ function applyHash() {
     });
   }
 
-  // Group overlay route — restore underlying tab first so feed is visible behind overlay
+  // List pages: #group/<topic>, #alert/<name>, #venue/<name>[/<year>], #interest/<name>, #latest, #top.
+  // The tab they belong to stays marked in the nav.
+  const markTab = () => document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === currentTab));
   if (hash.startsWith('group/')) {
     const groupName = decodeURIComponent(hash.slice(6));
     if (groupName) {
-      const paperTabs = ['all','email'];
-      if (paperTabs.includes(currentTab)) {
-        document.getElementById('sec-papers').classList.add('active');
-        document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === currentTab));
-      }
+      markTab();
       openGroup(groupName, true);
       return;
     }
   }
 
-  // Alert-source overlay route: #alert/<name> (opened from the Email Digest)
   if (hash.startsWith('alert/')) {
     const name = decodeURIComponent(hash.slice(6));
     if (name) {
-      if (!['all','email'].includes(currentTab)) currentTab = 'email';
-      document.getElementById('sec-papers').classList.add('active');
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === currentTab));
+      if (!_listViewActive && !_leftPaper) currentTab = 'email';   // an alert belongs to the Email Digest
+      markTab();
       openAlert(name, true);
       return;
     }
   }
 
-  // Venue overlay route: #venue/<name> or #venue/<name>/<year>
   if (hash.startsWith('venue/')) {
     const parts = hash.slice(6).split('/');
     const year = /^\d{4}$/.test(parts[parts.length - 1]) && parts.length > 1 ? parseInt(parts.pop()) : null;
     const name = decodeURIComponent(parts.join('/'));
     if (name) {
-      const sec = ['all','email'].includes(currentTab) ? 'sec-papers' : 'sec-' + currentTab;
-      const secEl = document.getElementById(sec);
-      if (secEl) secEl.classList.add('active');
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === currentTab));
+      markTab();
       openVenue(name, year, true);
       return;
     }
   }
 
-  // Interest overlay route: #interest/<name> (opened from Interests or a paper's Matches)
   if (hash.startsWith('interest/')) {
     const name = decodeURIComponent(hash.slice(9));
     if (name) {
-      const sec = ['all','email'].includes(currentTab) ? 'sec-papers' : 'sec-' + currentTab;
-      const secEl = document.getElementById(sec);
-      if (secEl) secEl.classList.add('active');
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === currentTab));
+      markTab();
       openInterest(name, true);
       return;
     }
   }
 
-  // Latest email digest overlay route
   if (hash === 'latest') {
     currentTab = 'email';
-    document.getElementById('sec-papers').classList.add('active');
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === currentTab));
+    markTab();
     openLatestDigest(true);
     return;
   }
 
-  // Top papers list overlay route
   if (hash === 'top') {
-    if (['all','email'].includes(currentTab)) {
-      document.getElementById('sec-papers').classList.add('active');
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === currentTab));
-    }
+    markTab();
     openTopList(true);
     return;
   }
 
-  // Close overlay if navigating away from a group route
-  closeOverlay(true);
+  // Leaving a list page: the view it was opened from comes back where it was
+  const wasInList = leaveListView();
 
   if (hash.startsWith('search?q=')) {
     const q = decodeURIComponent(hash.slice(9));
@@ -9202,10 +9226,16 @@ function applyHash() {
     const sub = hash.slice(10);
     switchTab('interests', true);
     if (sub === 'groups' || sub === 'interests') switchIGTab(sub, true);
+    if (wasInList) backFromList();
     return;
   }
   const tab = VALID_TABS.includes(hash) ? hash : 'all';
   switchTab(tab, true);
+  if (wasInList) backFromList();
+}
+function backFromList() {
+  jumpScroll(document.getElementById('mainScroll'), _tabScroll[currentTab] || 0);
+  pageIn(document.querySelector('.tab-section.active'));
 }
 window.addEventListener('hashchange', applyHash);
 
