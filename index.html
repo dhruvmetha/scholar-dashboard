@@ -457,15 +457,17 @@ a { color: inherit; text-decoration: none; }
 .pd-back:hover { color: var(--accent); }
 .pd-back svg { width: 16px; height: 16px; fill: currentColor; transition: transform 0.15s; }
 .pd-back:hover svg { transform: translateX(-2px); }
-.pd-bar-title { flex: 1; min-width: 0; font-family: var(--serif); font-size: 16px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transform: translateY(4px); transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
+.pd-bar-title { flex: 1; min-width: 0; font-family: var(--serif); font-size: 16px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transform: translateY(4px); transition: opacity var(--t-slow) var(--ease), transform var(--t-slow) var(--ease); pointer-events: none; }
 .pd-bar.stuck .pd-bar-title { opacity: 1; transform: none; }
 .pd-actions { display: flex; align-items: center; gap: 2px; margin-left: auto; flex-shrink: 0; }
 .pd-act-label { display: none; }
 @media (min-width: 1000px) {
-  .pd-act { width: auto !important; padding: 0 10px; gap: 6px; }
-  .pd-act-label { display: inline; font-size: 13px; }
-  .pd-bar.stuck .pd-act-label { display: none; }
-  .pd-bar.stuck .pd-act { width: 36px !important; padding: 0; }
+  /* the labels fold away (and come back) with the title's slide, instead of vanishing: each button narrows to
+     its icon as the title takes the room */
+  .pd-act { width: auto !important; min-width: 36px; padding: 0 10px; gap: 0; }
+  .pd-act-label { display: inline-grid; grid-template-columns: 1fr; margin-left: 6px; font-size: 13px; transition: grid-template-columns var(--t-slow) var(--ease), margin-left var(--t-slow) var(--ease), opacity var(--t-slow) var(--ease); }
+  .pd-act-label > span { min-width: 0; overflow: hidden; white-space: nowrap; }   /* folds as a share of its own width, so every label moves in step */
+  .pd-bar.stuck .pd-act-label { grid-template-columns: 0fr; margin-left: 0; opacity: 0; }
 }
 .pd-act { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; background: none; border: none; border-radius: 8px; color: var(--text-muted); font-size: 16px; cursor: pointer; transition: background 0.15s, color 0.15s; }
 .pd-act:hover { background: rgba(255,255,255,0.08); color: var(--text); }
@@ -553,7 +555,7 @@ a { color: inherit; text-decoration: none; }
   .pd-dek { font-size: 18px; }
   .pd-prose { font-size: 17.5px; }
 }
-@media (prefers-reduced-motion: reduce) { .pd-bar-title, .pd-open, .pd-back svg { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .pd-bar-title, .pd-act-label, .pd-open, .pd-back svg { transition: none; } }
 
 /* PHONE FEED — one paper per screen, swipe up for the next */
 .tok, .tok-bar { display: none; }
@@ -8693,10 +8695,10 @@ function renderPaperDetail(p) {
     <div class="pd-bar-title" aria-hidden="true">${esc(p.title)}</div>
     <div class="pd-actions">
       ${navHTML}
-      <button class="pd-act ${isStar?'on-star':''}" onclick="toggleStar('${ka}',this);${again}" title="${isStar?'Unstar':'Star'}" aria-label="${isStar?'Unstar':'Star'}">&#9733;<span class="pd-act-label">${isStar?'Starred':'Star'}</span></button>
-      <button class="pd-act ${ir?'on-read':''}" onclick="toggleRead('${ka}',this);${again}" title="${ir?'Mark unread':'Mark as read'}" aria-label="${ir?'Mark unread':'Mark as read'}">&#10003;<span class="pd-act-label">${ir?'Read':'Mark read'}</span></button>
-      <span class="save-anchor"><button class="pd-act ${inAny?'on-list':''}" onclick="event.stopPropagation();openSaveDD(this,'${ka}')" title="Add to list" aria-label="Add to list">&#9776;<span class="pd-act-label">${inAny?'In a list':'Save'}</span></button></span>
-      <button class="pd-act" onclick="${isHiddenRow(p) ? 'unhidePaper' : 'hidePaper'}('${ka}');${again}" title="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper (restore it from Library)'}" aria-label="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper'}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${isHiddenRow(p) ? '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg><span class="pd-act-label">${isHiddenRow(p) ? 'Restore' : 'Hide'}</span></button>
+      <button class="pd-act ${isStar?'on-star':''}" onclick="toggleStar('${ka}',this);${again}" title="${isStar?'Unstar':'Star'}" aria-label="${isStar?'Unstar':'Star'}">&#9733;<span class="pd-act-label"><span>${isStar?'Starred':'Star'}</span></span></button>
+      <button class="pd-act ${ir?'on-read':''}" onclick="toggleRead('${ka}',this);${again}" title="${ir?'Mark unread':'Mark as read'}" aria-label="${ir?'Mark unread':'Mark as read'}">&#10003;<span class="pd-act-label"><span>${ir?'Read':'Mark read'}</span></span></button>
+      <span class="save-anchor"><button class="pd-act ${inAny?'on-list':''}" onclick="event.stopPropagation();openSaveDD(this,'${ka}')" title="Add to list" aria-label="Add to list">&#9776;<span class="pd-act-label"><span>${inAny?'In a list':'Save'}</span></span></button></span>
+      <button class="pd-act" onclick="${isHiddenRow(p) ? 'unhidePaper' : 'hidePaper'}('${ka}');${again}" title="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper (restore it from Library)'}" aria-label="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper'}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${isHiddenRow(p) ? '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg><span class="pd-act-label"><span>${isHiddenRow(p) ? 'Restore' : 'Hide'}</span></span></button>
       <button class="pd-read" onclick="openReader('${ka}')" title="${pdfSourceOf(p) ? 'Read the PDF here' : 'Add a PDF to read it here'}"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Read</button>
       ${p.url ? `<a class="pd-open" href="${esc(p.url)}" target="_blank" rel="noopener" title="Open the paper's page" aria-label="Open paper"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}
     </div>
