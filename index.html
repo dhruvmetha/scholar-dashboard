@@ -582,8 +582,9 @@ body.tok-mode .tok { display: block; flex: 1; min-height: 0; overflow-y: auto; s
 .tok-card { touch-action: pan-y; position: relative; z-index: 2; background: var(--bg); height: 100%; scroll-snap-align: start; scroll-snap-stop: always; display: flex; flex-direction: column; padding: 20px 20px 34px 20px; overflow: hidden; }
 /* a dark band at the foot of each card keeps neighbouring papers apart while swiping */
 .tok-card::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 14px; background: #000; border-top: 1px solid rgba(255,255,255,0.07); pointer-events: none; }
-.tok-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 45%; background: var(--gc, var(--accent)); opacity: 0.07; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
-.tok-topics { display: flex; flex-wrap: wrap; gap: 6px; position: relative; }
+.tok-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 45%; background: var(--gbg, var(--gc, var(--accent))); opacity: 0.07; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
+.tok-topics { display: flex; align-items: flex-start; gap: 6px; position: relative; }
+.tok-chips { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; min-width: 0; }   /* the chips wrap; the menu stays top right */
 .tok-topic { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-secondary); background: rgba(255,255,255,0.07); padding: 3px 10px; border-radius: 999px; }
 .tok-head { font-family: var(--serif); font-optical-sizing: auto; font-size: 27px; line-height: 1.22; font-weight: 500; color: #f2f2f4; margin-top: 16px; text-wrap: pretty; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; position: relative; }
 .tok-title { font-size: 13.5px; line-height: 1.4; color: var(--text-muted); margin-top: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -2974,6 +2975,14 @@ function tokOnScroll() {
   if (i > 0 && !_tokHinted) { _tokHinted = true; document.querySelectorAll('.tok-hint').forEach(h => h.remove()); document.querySelectorAll('.tok-card.has-hint').forEach(c => c.classList.remove('has-hint')); }
   if (_tokShown < total && i >= _tokShown - 4) tokAppend();
 }
+/* The glow at the top of a card spans all of the paper's topics, left to right in order: each colour holds the
+   middle of its share of the width and blends into the next (two topics meet in the centre) */
+function topicGlow(groups) {
+  const cs = groups.map(groupColor);
+  if (cs.length < 2) return cs[0] || 'var(--accent)';
+  const n = cs.length;
+  return `linear-gradient(to right, ${cs.map((c, i) => `${c} ${((i + 0.5) / n * 100).toFixed(1)}%`).join(', ')})`;
+}
 function tokCardHTML(p, idx) {
   const k = paperKey(p), ka = escAttr(k), ir = readSet.has(k);
   const groups = groupsOfPaper(p);
@@ -2981,8 +2990,8 @@ function tokCardHTML(p, idx) {
   const body = hasText(p.summary) ? p.summary : (hasText(p.abstract) ? p.abstract : '');
   const showTitle = hasText(p.headline) && p.headline.trim() !== (p.title||'').trim();
   const hint = idx === 0 && !_tokHinted;
-  return `<article class="tok-card ${hint?'has-hint':''} ${ir?'is-read':''}" data-key="${ka}" style="--gc:${groups.length ? groupColor(groups[0]) : 'var(--accent)'}">
-    <div class="tok-topics">${groups.slice(0, 2).map(g => `<span class="tok-topic">${gdot(g)}${esc(g)}</span>`).join('')}<button class="tok-more" onclick="tokMenu(event, this, '${ka}')" aria-label="Actions" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div>
+  return `<article class="tok-card ${hint?'has-hint':''} ${ir?'is-read':''}" data-key="${ka}" style="--gc:${groups.length ? groupColor(groups[0]) : 'var(--accent)'};--gbg:${topicGlow(groups)}">
+    <div class="tok-topics"><div class="tok-chips">${groups.map(g => `<span class="tok-topic">${gdot(g)}${esc(g)}</span>`).join('')}</div><button class="tok-more" onclick="tokMenu(event, this, '${ka}')" aria-label="Actions" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div>
     <h2 class="tok-head" onclick="openPaper('${ka}', event)">${esc(p.headline || p.title)}</h2>
     ${showTitle ? `<div class="tok-title">${esc(p.title)}</div>` : ''}
     ${hasText(p.authors) ? `<div class="tok-authors">${esc(p.authors)}</div>` : ''}
