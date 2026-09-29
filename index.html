@@ -3155,6 +3155,15 @@ function tokMeasureBars() {
   document.body.style.setProperty('--nav-h', nav + 'px');
   document.body.style.setProperty('--tok-top', (nav + bar) + 'px');
 }
+/* The cards start below the bars whatever changes their height (the Continue reading strip arriving or leaving,
+   fonts loading, the phone turning, iOS's safe area): measured whenever either bar resizes, not only at the moments
+   that were remembered to call it */
+if (window.ResizeObserver) document.addEventListener('DOMContentLoaded', () => {
+  const ro = new ResizeObserver(() => tokMeasureBars());
+  ['.navbar', '#tokBar'].forEach(sel => { const el = document.querySelector(sel); if (el) ro.observe(el); });
+});
+window.addEventListener('pageshow', () => requestAnimationFrame(tokMeasureBars));
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => tokMeasureBars());
 /* Swiping forward tucks the bars away; swiping back (or reaching the first card) brings them back */
 let _tokLastTop = 0;
 function tokImmersive(on) { document.body.classList.toggle('tok-immersive', on); }
