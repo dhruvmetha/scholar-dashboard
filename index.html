@@ -5019,8 +5019,8 @@ function toggleGenericVis() {
   }
 }
 
-function showPrompt(title, sub, placeholder, defaultValue) {
-  return _openGeneric({ title, sub, inputPlaceholder: placeholder, defaultValue, showInput: true, submitLabel: 'OK' });
+function showPrompt(title, sub, placeholder, defaultValue, isPassword) {
+  return _openGeneric({ title, sub, inputPlaceholder: placeholder, defaultValue, showInput: true, submitLabel: 'OK', isPassword });
 }
 function showConfirm(title, sub, confirmLabel = 'Confirm', danger = false) {
   return _openGeneric({ title, sub, showInput: false, submitLabel: confirmLabel, cancelLabel: 'Cancel', danger });
@@ -5125,7 +5125,7 @@ function updateSyncStatus() {
   }
 }
 async function connectGitHub() {
-  const pat = await showPrompt('Connect GitHub', 'Paste a fine-grained PAT with Contents read+write access to the scholar-dashboard repo. It is stored in this browser and only sent to api.github.com. From then on, changes save by themselves.', 'Paste PAT here');
+  const pat = await showPrompt('Connect GitHub', 'Paste a fine-grained PAT with Contents read+write access to the scholar-dashboard repo. It is stored in this browser and only sent to api.github.com. From then on, changes save by themselves.', 'Paste PAT here', '', true);
   if (!pat) return;
   localStorage.setItem('gh_pat', pat.trim());
   toast('Connected. Changes now save to GitHub automatically.');
@@ -5230,7 +5230,7 @@ async function pushToGitHub(auto) {
     pat = await showPrompt(
       'GitHub Personal Access Token',
       'Fine-grained PAT with Contents read+write access. Stored in your browser — only sent to api.github.com. From then on, changes save by themselves.',
-      'Paste PAT here'
+      'Paste PAT here', '', true   // masked like a password (the eye shows it)
     );
     if (!pat) return;
     localStorage.setItem('gh_pat', pat);
