@@ -264,6 +264,7 @@ a { color: inherit; text-decoration: none; }
 .top-feature .top-lead:hover { transform: none; background: #181818; border-color: rgba(255,255,255,0.26); box-shadow: none; }
 .lead-headline { font-size: 25px; font-weight: 500; line-height: 1.25; letter-spacing: -0.01em; color: var(--text); margin-top: 14px; text-wrap: pretty; transition: color 0.15s; }
 .top-lead:hover .lead-headline { color: #fff; }
+.lead-headline.clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }   /* a very short first screen (fitTopPapers) */
 .lead-title { font-size: 15px; color: var(--text-muted); margin-top: auto; padding-top: 10px; line-height: 1.4; }
 .lead-summary { font-size: 15px; color: var(--text-secondary); line-height: 1.65; margin-top: auto; padding-top: 16px; max-width: 64ch; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
 .lead-authors { font-size: 13px; color: var(--text-muted); margin-top: auto; padding-top: 16px; }
@@ -767,6 +768,7 @@ body.tok-mode .tok-cues { display: block; position: absolute; inset: 0; pointer-
   .pd-bar-title { display: none; }          /* item 21: no room for it next to the actions */
   .pd-nav-pos, .pd-nav-sep { display: none; }
   .pd-back-label, .pd-open-full { display: none; }   /* room for previous/next on a phone-width bar */
+  .pd-read-full { display: none; } .pd-read-short { display: inline; }   /* "Continue · p. 5" becomes "p. 5" */
   /* Open is icon-only on a phone (the arrow says it; Read stays the one labelled action), so the row always fits */
   .pd-actions .pd-open { width: 36px; height: 36px; padding: 0; justify-content: center; margin-left: 4px; flex-shrink: 0; }
   .pd-actions .pd-read { margin-left: 2px; flex-shrink: 0; }
@@ -1406,6 +1408,39 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 .lp-rail .gdot { width: 7px; height: 7px; background: color-mix(in srgb, var(--gc, var(--g-other)) 70%, #1b1b1d); }
 .lp-rail .gdot.none { background: none; }   /* no colour, same place: every label lines up */
 .lp-chiprow { display: none; }
+/* ===== CONTINUE READING: the papers you're partway through, from any of your devices (above Top Papers; a strip
+   at the top of the phone feed) ===== */
+.cr-strip { max-width: 1200px; margin: 0 auto; padding: 16px 24px 0; }
+.cr-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.cr-head h2 { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); }
+.cr-all { margin-left: auto; background: none; border: none; font: inherit; font-size: 13px; color: var(--text-muted); cursor: pointer; padding: 4px 0; transition: color var(--t-fast) var(--ease); }
+.cr-all:hover { color: var(--accent); }
+.cr-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.cr-card { position: relative; isolation: isolate; overflow: hidden; border: 1px solid rgba(255,255,255,0.09); border-radius: 14px; background: var(--bg-surface); padding: 13px 16px 15px; cursor: pointer; transition: border-color var(--t-fast) var(--ease); }
+.cr-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 90px; z-index: -1; background: var(--gbg, none); opacity: 0.12; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
+.cr-card:hover { border-color: rgba(255,255,255,0.2); }
+.cr-h { font-family: var(--serif); font-optical-sizing: auto; font-size: 16px; font-weight: 500; line-height: 1.3; color: #ececef; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; padding-right: 22px; transition: color var(--t-fast) var(--ease); }
+.cr-card:hover .cr-h { color: #fff; }
+.cr-m { display: flex; justify-content: space-between; gap: 10px; margin-top: 8px; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cr-m b { color: var(--accent); font-weight: 500; }
+.cr-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,0.06); }
+.cr-bar i { display: block; height: 100%; background: var(--accent); }
+.cr-x { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: none; color: var(--text-muted); font-size: 18px; line-height: 1; cursor: pointer; opacity: 0; transition: opacity var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+.cr-card:hover .cr-x, .cr-card:focus-within .cr-x { opacity: 1; }
+.cr-x:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+html.no-hover .cr-x { opacity: 0.7; }
+body.tok-mode .cr-strip { display: none; }
+body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
+.cr-phone { flex-basis: 100%; position: relative; display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; background: rgba(255,255,255,0.05); overflow: hidden; }
+.cr-phone-go { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 9px 4px 9px 12px; background: none; border: none; font: inherit; color: var(--text-secondary); text-align: left; cursor: pointer; transition: background-color var(--t-fast) var(--ease); }
+.cr-phone-go:active { background: rgba(255,255,255,0.06); }
+.cr-phone-go svg, .cr-strip svg { width: 16px; height: 16px; fill: none; stroke: var(--accent); stroke-width: 2; flex-shrink: 0; }
+.cr-phone .t { flex: 1; min-width: 0; font-family: var(--serif); font-size: 15px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cr-phone .p { font-size: 12.5px; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cr-phone .cr-x { position: static; flex-shrink: 0; width: 36px; height: 36px; opacity: 0.7; }
+.cr-phone .cr-bar { height: 2px; }
+@media (prefers-reduced-motion: reduce) { .cr-card, .cr-h, .cr-x, .cr-all, .cr-phone-go { transition: none; } }
+.pd-read-short { display: none; }
 /* a row that scrolls sideways fades out at an edge with more past it (as the tab bar does), never a hard cut */
 .fade-x.more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent); }
 .fade-x.more-left { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 44px), transparent); }
@@ -1955,6 +1990,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
       <p class="briefing-date"><span id="briefingDate"></span><span id="briefingNote"></span></p>
     </div>
   </div>
+  <section class="cr-strip" id="crStrip" aria-label="Continue reading" hidden></section>
   <div class="tok-bar" id="tokBar"></div>
   <div class="tok-mini-progress" id="tokMiniProgress"></div>
   <div class="tok-wrap" id="tokWrap">
@@ -3070,6 +3106,7 @@ function applyFilters() {
 
   const dates = allPapers.map(p=>p.date_found).filter(Boolean).sort();
   document.getElementById('briefingTitle').textContent = currentTab==='email'?'Email Digest':'Recent Works';
+  renderContinueReading();
   document.getElementById('briefingDate').textContent = dates.length ? `Updated ${formatDate(dates[dates.length-1])}.` : '';
   const weekAgo = Date.now() - 7 * 86400000;
   const newMust = base.filter(p => p.date_found && new Date(p.date_found + 'T00:00:00') >= weekAgo && dynamicRelevance(p) === 'definitely').length;
@@ -3135,7 +3172,7 @@ function renderTok(papers, unfiltered) {
         `<button class="tok-pill ${currentRel===r?'active':''}" onclick="toggleRel('${r}')">${label}</button>`).join('')}
     </div>
     <span class="tok-count" id="tokCount"></span>
-    <span class="tok-progress" id="tokProgress"></span>`;
+    <span class="tok-progress" id="tokProgress"></span>${crPhoneHTML()}`;
   feed.innerHTML = papers.length ? '' : '<div class="tok-empty">No papers match your filters. Try another filter above.</div>';
   if (!papers.length) { document.getElementById('tokCount').textContent = ''; return; }
   tokAppend();
@@ -3576,21 +3613,31 @@ function fitTopPapers() {
   const lead = feat.querySelector('.top-lead'), side = feat.querySelector('.top-side'), sum = lead && lead.querySelector('.lead-summary');
   const items = side ? [...side.children] : [];
   feat.classList.remove('fitted'); feat.style.height = feat.style.minHeight = ''; if (sum) sum.style.webkitLineClamp = '';
+  if (lead) { lead.querySelectorAll('.lead-authors, .lead-title, .lead-summary, .lead-why').forEach(el => { el.hidden = false; }); const hl = lead.querySelector('.lead-headline'); if (hl) hl.classList.remove('clamp2'); }
   items.forEach((it, i) => { it.hidden = i >= MAX_TOP_CARDS - 1; });
   const ms = document.getElementById('mainScroll');
   if (document.body.classList.contains('tok-mode') || !ts.offsetParent) return 1 + items.filter(it => !it.hidden).length;
   const top = feat.getBoundingClientRect().top - ms.getBoundingClientRect().top + ms.scrollTop;
   const h = Math.floor(ms.clientHeight - top - 24);
-  if (h < 380) return 1 + items.filter(it => !it.hidden).length;
+  if (h < 300) return 1 + items.filter(it => !it.hidden).length;
   feat.classList.add('fitted');
-  feat.style.height = h + 'px';
   const stacked = side && getComputedStyle(feat).gridTemplateColumns.split(' ').length === 1;
-  if (sum) {   // the lead's summary: as many lines as its card has room for (2 to 12)
-    let lines = 12;
-    sum.style.webkitLineClamp = lines;
-    const room = () => stacked ? lead.scrollHeight <= Math.max(260, h * 0.5) : lead.scrollHeight <= lead.clientHeight + 1;
-    while (lines > 2 && !room()) sum.style.webkitLineClamp = --lines;
+  // The lead, measured at its natural height (held to a fixed one, its summary would be squeezed and cut instead):
+  // as many summary lines as there's room for (12 down to 2); then, if still too tall (a short window, or Continue
+  // reading above), it drops its author line, the paper's own title, its summary and its why line, and last keeps
+  // its headline to two lines
+  if (lead) {
+    const target = stacked ? Math.max(260, h * 0.5) : h;
+    const need = () => { lead.style.alignSelf = 'start'; const v = lead.offsetHeight; lead.style.alignSelf = ''; return v; };
+    if (sum) { let lines = 12; sum.style.webkitLineClamp = lines; while (lines > 2 && need() > target) sum.style.webkitLineClamp = --lines; }
+    for (const el of [lead.querySelector('.lead-authors'), lead.querySelector('.lead-title'), sum, lead.querySelector('.lead-why')]) {
+      if (need() <= target) break;
+      if (el) el.hidden = true;
+    }
+    const hl = lead.querySelector('.lead-headline');
+    if (hl && need() > target) hl.classList.add('clamp2');
   }
+  feat.style.height = h + 'px';
   if (side) {   // then the side list: every candidate, dropping from the end until they fit
     items.forEach(it => { it.hidden = false; });
     while (items.filter(it => !it.hidden).length > 1 && side.scrollHeight > side.clientHeight + 1) items.filter(it => !it.hidden).pop().hidden = true;
@@ -3604,7 +3651,7 @@ let _fitTopT = 0;
 const refitTop = () => { clearTimeout(_fitTopT); _fitTopT = setTimeout(fitTopPapers, 80); };
 window.addEventListener('resize', refitTop);
 // whatever sits above Top Papers changing height (the date line filling in, the alert chips) refits it
-if (window.ResizeObserver) { const ro = new ResizeObserver(refitTop); document.querySelectorAll('#sec-papers .briefing').forEach(el => ro.observe(el)); }
+if (window.ResizeObserver) { const ro = new ResizeObserver(refitTop); document.querySelectorAll('#sec-papers .briefing, #crStrip').forEach(el => ro.observe(el)); }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitTopPapers());
 
 /* Shared bits for the main-page feed */
@@ -4509,7 +4556,7 @@ function libGroupHTML(key, icon, label, papers, extra) {
   _libPapers[key] = papers;
   const collapsed = _collapsedLibGroups.has(key) ? ' collapsed' : '';
   const body = collapsed ? '' : libBodyHTML(papers, key);
-  return `<div class="interest-group${collapsed}"><div class="interest-group-inner"><div class="interest-group-header" onclick="toggleLibGroup(this,'${escAttr(key)}')"><span class="lib-icon" aria-hidden="true">${icon}</span>${esc(label)} <span class="interest-group-count">${papers.length}</span>${extra||''}<svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="interest-group-body">${body}</div></div></div>`;
+  return `<div class="interest-group${collapsed}" data-lib="${escAttr(key)}"><div class="interest-group-inner"><div class="interest-group-header" onclick="toggleLibGroup(this,'${escAttr(key)}')"><span class="lib-icon" aria-hidden="true">${icon}</span>${esc(label)} <span class="interest-group-count">${papers.length}</span>${extra||''}<svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="interest-group-body">${body}</div></div></div>`;
 }
 function renderLibrary() {
   _libPapers = {};
@@ -4528,6 +4575,8 @@ function renderLibrary() {
   if (!allPapers.length) {
     html += '<div class="library-empty">No papers in the database yet.</div>';
   } else {
+    const reading = continueReadingList(true).map(x => x.p);
+    if (reading.length) html += libGroupHTML('progress', '&#9656;', 'In progress', reading);
     if (starred.length) html += libGroupHTML('starred', '&#9733;', 'Starred', starred);
     if (noted.length) html += libGroupHTML('noted', '&#9998;', 'Notes & highlights', noted);
     else if (!Vault.key && vaultSupported() && Vault.meta) html += `<div class="lib-hint"><strong>Notes &amp; highlights</strong> are encrypted. <button class="lib-hint-btn" onclick="vaultReady().then(ok => ok && renderLibrary())">Unlock notes</button> to list the papers you annotated.</div>`;
@@ -5464,6 +5513,7 @@ function hideReader() {
   if (!wasOpen && _reader.leaveClear) return;   // already on its way out
   el.classList.remove('open');
   document.body.style.overflow = '';
+  flushReading(); setTimeout(refreshContinueReading, 0);
   if (_reader.obs) _reader.obs.disconnect();
   if (_reader.far) _reader.far.disconnect();
   _reader.token++;
@@ -5713,7 +5763,153 @@ function currentReaderPage() {
   body.querySelectorAll('.reader-page').forEach(d => { if (d.offsetTop <= mid) n = +d.dataset.page; });
   return n;
 }
-function savedReaderPage(id) { try { return (JSON.parse(localStorage.getItem(READER_POS_KEY) || '{}')[id]) || 1; } catch (e) { return 1; } }
+/* ===== CONTINUE READING =====
+   Your place in each paper you've opened: { pos: 5.4 (page 5, 40% down it), pages: 12, at: when, dev: 'iPad' },
+   done: true once you remove it from Continue reading. Kept on this device as you read, and (when notes are
+   unlocked) in the encrypted notes index, Vault.index.reading, so every device shares it: for each paper the
+   newest place wins. Sent to GitHub when you close the paper or leave the app, not on every scroll. */
+const READING_KEY = 'scholar_reading_v1', CR_MAX = 3;
+let _readingDirty = false;
+function deviceName() {
+  const ua = navigator.userAgent;
+  if (/iPhone/.test(ua)) return 'iPhone';
+  if (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'iPad';
+  if (/Android/.test(ua)) return 'Android';
+  if (/Macintosh/.test(ua)) return 'Mac';
+  if (/Windows/.test(ua)) return 'PC';
+  return '';
+}
+function mergeReading(a, b) {
+  const out = { ...(a || {}) };
+  Object.entries(b || {}).forEach(([id, e]) => { if (e && (!out[id] || (e.at || '') > (out[id].at || ''))) out[id] = e; });
+  return out;
+}
+function readingLocal() { try { return JSON.parse(localStorage.getItem(READING_KEY) || '{}'); } catch (e) { return {}; } }
+/* Once: places this device saved before they synced (page only), dated by when each paper was last opened */
+(function migrateReading() {
+  try {
+    if (localStorage.getItem(READING_KEY)) return;
+    const old = JSON.parse(localStorage.getItem(READER_POS_KEY) || '{}'), opened = new Map(recentReads().map(r => [r.id, r.t])), all = {};
+    Object.entries(old).forEach(([id, pos]) => { if (pos) all[id] = { pos, pages: 0, at: new Date(opened.get(id) || 0).toISOString(), dev: deviceName() }; });
+    localStorage.setItem(READING_KEY, JSON.stringify(all));
+    if (Object.keys(all).length) _readingDirty = true;
+  } catch (e) {}
+})();
+function readingAll() { return mergeReading(readingLocal(), Vault.index && Vault.index.reading); }
+function noteReading(id, entry) {
+  const all = readingLocal();
+  all[id] = { ...entry, at: new Date().toISOString(), dev: deviceName() };
+  try { localStorage.setItem(READING_KEY, JSON.stringify(all)); } catch (e) {}
+  _readingDirty = true;
+}
+/* What this device read since the last sync goes into the notes index (one commit with any notes). now = the app
+   is going away: anything still waiting for its quiet spell (a place, a removal, a note) is sent at once */
+function flushReading(now) {
+  let saved = Promise.resolve();
+  if (_readingDirty && Vault.key && Vault.index) {
+    _readingDirty = false;
+    const merged = mergeReading(Vault.index.reading, readingLocal());
+    if (JSON.stringify(merged) !== JSON.stringify(Vault.index.reading || {})) { Vault.index.reading = merged; saved = nfSave('_index.json', Vault.index); }
+  }
+  if (now && hasPAT() && Vault.key) saved.then(() => { if (Vault.pushTimer) { clearTimeout(Vault.pushTimer); Vault.pushTimer = null; pushNotes(); } }).catch(() => {});
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushReading(true); else refreshNotesIndex(); });
+/* Back in the app (the tab stayed open): another device may have read on since; take its newer notes index */
+let _ixCheckedAt = 0;
+function refreshNotesIndex() {
+  if (!Vault.key || !Vault.index || Date.now() - _ixCheckedAt < 60000) return;
+  _ixCheckedAt = Date.now();
+  nfGet('_index.json').then(rec => rec && !rec.dirty && nfLoad('_index.json').then(async fresh => {
+    if (fresh && !fresh.dirty && fresh.env.updated !== rec.env.updated && Vault.key) { Vault.index = await vaultDecrypt(fresh.env); syncUploadsWithIndex(); refreshContinueReading(); }
+  })).catch(() => {});
+}
+function savedReaderPage(id) {
+  const e = readingAll()[id];
+  if (e && e.pos) return e.pos;
+  try { return (JSON.parse(localStorage.getItem(READER_POS_KEY) || '{}')[id]) || 1; } catch (err) { return 1; }   // places saved before syncing
+}
+/* Papers you're partway through: opened in the reader and past the first page, not read, hidden or removed;
+   the most recent first */
+function continueReadingList(dbOnly) {
+  const out = [];
+  Object.entries(readingAll()).forEach(([id, e]) => {
+    if (!e || e.done || !(e.pos >= 2)) return;
+    const p = findPaper(id);
+    if (!p || (p.uploaded ? dbOnly : readSet.has(paperKey(p)) || isHiddenRow(p))) return;
+    out.push({ p, e });
+  });
+  return out.sort((a, b) => (b.e.at || '').localeCompare(a.e.at || ''));
+}
+function agoLabel(iso) {
+  const t = Date.parse(iso);
+  if (!t) return '';
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return m + ' min ago';
+  const h = Math.round(m / 60);
+  if (h < 24) return h + ' h ago';
+  const d = Math.round(h / 24);
+  if (d === 1) return 'yesterday';
+  if (d < 7) return d + ' days ago';
+  return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+function readingBits({ p, e }) {
+  const page = Math.floor(e.pos), pct = e.pages ? Math.max(2, Math.min(100, Math.round((e.pos - 1) / e.pages * 100))) : 0;
+  const where = [e.dev && e.dev !== deviceName() ? e.dev : '', agoLabel(e.at)].filter(Boolean).join(' \u00b7 ');   // the device only when it's another one
+  return { id: escAttr(p.id), page, pct, where, title: p.headline || p.title || '' };
+}
+function renderContinueReading() {
+  const el = document.getElementById('crStrip');
+  if (!el) return;
+  const list = currentTab === 'all' ? continueReadingList() : [];
+  el.hidden = !list.length;
+  if (!list.length) { el.innerHTML = ''; return; }
+  const card = x => { const b = readingBits(x);
+    return `<article class="cr-card" tabindex="0" data-key="${b.id}" onclick="openReader('${b.id}')" style="--gbg:${x.p.uploaded ? 'none' : topicGlow(groupsOfPaper(x.p))}" title="Continue at page ${b.page}">
+      <h3 class="cr-h">${esc(b.title)}</h3>
+      <div class="cr-m"><span><b>p. ${b.page}</b>${x.e.pages ? ` of ${x.e.pages}` : ''}</span><span>${esc(b.where)}</span></div>
+      <span class="cr-bar"><i style="width:${b.pct}%"></i></span>
+      <button class="cr-x" onclick="event.stopPropagation(); dismissReading('${b.id}')" aria-label="Remove from Continue reading" title="Remove from Continue reading">&times;</button>
+    </article>`; };
+  el.innerHTML = `<div class="cr-head"><h2>Continue reading</h2>${list.length > CR_MAX ? `<button class="cr-all" onclick="showInProgress()">All ${list.length}</button>` : ''}</div>
+    <div class="cr-cards">${list.slice(0, CR_MAX).map(card).join('')}</div>`;
+}
+function crPhoneHTML() {
+  const [x] = currentTab === 'all' ? continueReadingList() : [];
+  if (!x) return '';
+  const b = readingBits(x);
+  return `<div class="cr-phone" id="crPhone"><button class="cr-phone-go" onclick="openReader('${b.id}')" aria-label="Continue reading ${escAttr(b.title)}, page ${b.page}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg><span class="t">${esc(b.title)}</span><span class="p">p. ${b.page}${x.e.pages ? '/' + x.e.pages : ''}</span></button><button class="cr-x" onclick="dismissReading('${b.id}')" aria-label="Remove from Continue reading" title="Remove from Continue reading">&times;</button><span class="cr-bar"><i style="width:${b.pct}%"></i></span></div>`;
+}
+/* The Read button on a paper's page says where you'd pick up */
+function readLabelHTML(p) {
+  const e = readingAll()[p.id];
+  if (!e || e.done || !(e.pos >= 2) || readSet.has(paperKey(p))) return 'Read';
+  const page = Math.floor(e.pos);
+  return `<span class="pd-read-full">Continue \u00b7 p. ${page}</span><span class="pd-read-short">p. ${page}</span>`;
+}
+function dismissReading(id) {
+  const e = readingAll()[id];
+  if (!e) return;
+  noteReading(id, { pos: e.pos, pages: e.pages, done: true });
+  flushReading(); refreshContinueReading();
+  toast('Removed from Continue reading', () => { noteReading(id, { pos: e.pos, pages: e.pages }); flushReading(); refreshContinueReading(); });
+}
+/* Wherever Continue reading shows, draw it again (a paper closed, removed, or read on another device) */
+function refreshContinueReading() {
+  if (currentTab === 'all' && !_paperViewActive && !_listViewActive && !_searchActive) {
+    if (document.body.classList.contains('tok-mode')) {
+      const old = document.getElementById('crPhone'), html = crPhoneHTML(), bar = document.getElementById('tokBar');
+      if (old) old.outerHTML = html; else if (html && bar) bar.insertAdjacentHTML('beforeend', html);
+      tokMeasureBars();
+    } else { renderContinueReading(); fitTopPapers(); }
+  }
+  if (currentTab === 'library' && !_paperViewActive && !_listViewActive && !_searchActive) renderLibrary();
+}
+function showInProgress() {
+  _collapsedLibGroups.delete('progress');
+  switchTab('library');
+  requestAnimationFrame(() => { const g = document.querySelector('#libraryContent [data-lib="progress"]'); if (g) g.scrollIntoView({ block: 'start', behavior: reduceMotion() ? 'auto' : 'smooth' }); });
+}
 let _readerSaveTimer = null;
 function updateReaderPageNo() {
   if (!_reader.doc) return;
@@ -5725,7 +5921,7 @@ function updateReaderPageNo() {
     const body = document.getElementById('readerBody'), pages = [...body.querySelectorAll('.reader-page')];
     const cur = pages.filter(d => d.offsetTop <= body.scrollTop + 1).pop();
     const pos = cur ? +(+cur.dataset.page + Math.min(0.999, Math.max(0, (body.scrollTop - cur.offsetTop) / cur.offsetHeight))).toFixed(4) : n;
-    try { const all = JSON.parse(localStorage.getItem(READER_POS_KEY) || '{}'); all[_reader.paper.id] = pos; localStorage.setItem(READER_POS_KEY, JSON.stringify(all)); } catch (e) {}
+    noteReading(_reader.paper.id, { pos, pages: _reader.doc ? _reader.doc.numPages : 0 });
   }, 400);
 }
 document.getElementById('readerBody').addEventListener('scroll', updateReaderPageNo, { passive: true });
@@ -6123,7 +6319,7 @@ function mergeIndex(a, b) {
   const papers = { ...(a.papers || {}) };
   Object.entries(b.papers || {}).forEach(([id, e]) => { if (!papers[id] || (e.updated || '') > (papers[id].updated || '')) papers[id] = e; });
   const newerColors = (a.colorsUpdated || '') >= (b.colorsUpdated || '') ? a : b;
-  return { v: 1, papers, colors: newerColors.colors || {}, colorsUpdated: newerColors.colorsUpdated || '', uploads: mergeUploads(a.uploads, b.uploads) };
+  return { v: 1, papers, colors: newerColors.colors || {}, colorsUpdated: newerColors.colorsUpdated || '', uploads: mergeUploads(a.uploads, b.uploads), reading: mergeReading(a.reading, b.reading) };
 }
 
 /* ---- pushing: every dirty file, merged with GitHub's copy when that changed meanwhile ---- */
@@ -6165,7 +6361,7 @@ async function pushNotes() {
           const mine = await vaultDecrypt(rec.env), theirs = await vaultDecrypt(remote.env);
           const merged = name === '_index.json' ? mergeIndex(theirs, mine) : mergePaperNotes(theirs, mine);
           env = await vaultEncrypt(merged);
-          if (name === '_index.json') { Vault.index = mergeIndex(merged, Vault.index || {}); syncUploadsWithIndex(); }
+          if (name === '_index.json') { Vault.index = mergeIndex(merged, Vault.index || {}); syncUploadsWithIndex(); refreshContinueReading(); }
           else {
             const pid = name.replace(/\.json$/, '');
             if (Vault.cache.has(pid)) Vault.cache.set(pid, merged);
@@ -6337,11 +6533,14 @@ async function resetLocalVault(newMeta) {
 async function afterUnlock() {
   const rec = (await nfGet('_index.json')) || await nfLoad('_index.json').catch(() => null);
   if (rec && !rec.dirty) nfLoad('_index.json').then(async fresh => {   // newer index from another device, in the background
-    if (fresh && !fresh.dirty && fresh.env.updated !== rec.env.updated && Vault.key) { try { Vault.index = await vaultDecrypt(fresh.env); syncUploadsWithIndex(); if (currentTab === 'library') renderLibrary(); } catch (e) {} }
+    if (fresh && !fresh.dirty && fresh.env.updated !== rec.env.updated && Vault.key) { try { Vault.index = await vaultDecrypt(fresh.env); syncUploadsWithIndex(); refreshContinueReading(); if (currentTab === 'library') renderLibrary(); } catch (e) {} }
   }).catch(() => {});
   try { Vault.index = rec ? await vaultDecrypt(rec.env) : { v: 1, papers: {}, colors: {}, colorsUpdated: '' }; }
   catch (e) { Vault.index = { v: 1, papers: {}, colors: {}, colorsUpdated: '' }; }
   syncUploadsWithIndex();
+  _ixCheckedAt = Date.now();
+  _readingDirty = true; flushReading();   // places read here while notes were locked join the synced ones
+  refreshContinueReading();
   scheduleNotesPush(500);   // anything left unpushed from an earlier session
   if (currentTab === 'library') renderLibrary();
   if (_paperViewActive) { const p = allPapers.find(x => location.hash === '#paper/' + encodeURIComponent(x.id)); if (p) renderPaperDetail(p); }
@@ -8950,7 +9149,7 @@ function renderPaperDetail(p) {
       <button class="pd-act ${ir?'on-read':''}" onclick="toggleRead('${ka}',this);${again}" title="${ir?'Mark unread':'Mark as read'}" aria-label="${ir?'Mark unread':'Mark as read'}">&#10003;<span class="pd-act-label"><span>${ir?'Read':'Mark read'}</span></span></button>
       <span class="save-anchor"><button class="pd-act ${inAny?'on-list':''}" onclick="event.stopPropagation();openSaveDD(this,'${ka}')" title="Add to list" aria-label="Add to list">&#9776;<span class="pd-act-label"><span>${inAny?'In a list':'Save'}</span></span></button></span>
       <button class="pd-act" onclick="${isHiddenRow(p) ? 'unhidePaper' : 'hidePaper'}('${ka}');${again}" title="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper (restore it from Library)'}" aria-label="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper'}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${isHiddenRow(p) ? '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg><span class="pd-act-label"><span>${isHiddenRow(p) ? 'Restore' : 'Hide'}</span></span></button>
-      <button class="pd-read" onclick="openReader('${ka}')" title="${pdfSourceOf(p) ? 'Read the PDF here' : 'Add a PDF to read it here'}"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Read</button>
+      <button class="pd-read" onclick="openReader('${ka}')" title="${pdfSourceOf(p) ? 'Read the PDF here' : 'Add a PDF to read it here'}"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>${readLabelHTML(p)}</button>
       ${p.url ? `<a class="pd-open" href="${esc(p.url)}" target="_blank" rel="noopener" title="Open the paper's page" aria-label="Open paper"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}
     </div>
   </div></div>`;
