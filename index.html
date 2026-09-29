@@ -1416,7 +1416,9 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 .cr-all { margin-left: auto; background: none; border: none; font: inherit; font-size: 13px; color: var(--text-muted); cursor: pointer; padding: 4px 0; transition: color var(--t-fast) var(--ease); }
 .cr-all:hover { color: var(--accent); }
 .cr-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.cr-card { position: relative; isolation: isolate; overflow: hidden; border: 1px solid rgba(255,255,255,0.09); border-radius: 14px; background: var(--bg-surface); padding: 13px 16px 15px; cursor: pointer; transition: border-color var(--t-fast) var(--ease); }
+.cr-card { position: relative; isolation: isolate; overflow: hidden; border: 1px solid rgba(255,255,255,0.09); border-radius: 14px; background: var(--bg-surface); padding: 13px 16px 15px; cursor: pointer; transition: border-color var(--t-fast) var(--ease), opacity 0.2s var(--ease), transform 0.2s var(--ease); }
+.cr-leaving { opacity: 0 !important; transform: scale(0.96); pointer-events: none; }   /* removed: it visibly goes */
+.cr-enter { animation: ui-rise var(--t-slow) var(--ease); }   /* the next one arrives in its place */
 .cr-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 90px; z-index: -1; background: var(--gbg, none); opacity: 0.12; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
 .cr-card:hover { border-color: rgba(255,255,255,0.2); }
 .cr-h { font-family: var(--serif); font-optical-sizing: auto; font-size: 16px; font-weight: 500; line-height: 1.3; color: #ececef; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; padding-right: 22px; transition: color var(--t-fast) var(--ease); }
@@ -1431,7 +1433,7 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 html.no-hover .cr-x { opacity: 0.7; }
 body.tok-mode .cr-strip { display: none; }
 body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
-.cr-phone { flex-basis: 100%; position: relative; display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; background: rgba(255,255,255,0.05); overflow: hidden; }
+.cr-phone { flex-basis: 100%; position: relative; display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; background: rgba(255,255,255,0.05); overflow: hidden; transition: opacity 0.2s var(--ease), transform 0.2s var(--ease); }
 .cr-phone-go { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 9px 4px 9px 12px; background: none; border: none; font: inherit; color: var(--text-secondary); text-align: left; cursor: pointer; transition: background-color var(--t-fast) var(--ease); }
 .cr-phone-go:active { background: rgba(255,255,255,0.06); }
 .cr-phone-go svg, .cr-strip svg { width: 16px; height: 16px; fill: none; stroke: var(--accent); stroke-width: 2; flex-shrink: 0; }
@@ -1439,7 +1441,7 @@ body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
 .cr-phone .p { font-size: 12.5px; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .cr-phone .cr-x { position: static; flex-shrink: 0; width: 36px; height: 36px; opacity: 0.7; }
 .cr-phone .cr-bar { height: 2px; }
-@media (prefers-reduced-motion: reduce) { .cr-card, .cr-h, .cr-x, .cr-all, .cr-phone-go { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .cr-card, .cr-h, .cr-x, .cr-all, .cr-phone-go, .cr-phone { transition: none; } .cr-enter { animation: none; } }
 .pd-read-short { display: none; }
 /* a row that scrolls sideways fades out at an edge with more past it (as the tab bar does), never a hard cut */
 .fade-x.more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent); }
@@ -3173,6 +3175,7 @@ function renderTok(papers, unfiltered) {
     </div>
     <span class="tok-count" id="tokCount"></span>
     <span class="tok-progress" id="tokProgress"></span>${crPhoneHTML()}`;
+  if (document.getElementById('crPhone')) markNewcomers([document.getElementById('crPhone')]);
   feed.innerHTML = papers.length ? '' : '<div class="tok-empty">No papers match your filters. Try another filter above.</div>';
   if (!papers.length) { document.getElementById('tokCount').textContent = ''; return; }
   tokAppend();
@@ -4575,7 +4578,7 @@ function renderLibrary() {
   if (!allPapers.length) {
     html += '<div class="library-empty">No papers in the database yet.</div>';
   } else {
-    const reading = continueReadingList(true).map(x => x.p);
+    const reading = continueReadingList(true, true).map(x => x.p);
     if (reading.length) html += libGroupHTML('progress', '&#9656;', 'In progress', reading);
     if (starred.length) html += libGroupHTML('starred', '&#9733;', 'Starred', starred);
     if (noted.length) html += libGroupHTML('noted', '&#9998;', 'Notes & highlights', noted);
@@ -5768,7 +5771,7 @@ function currentReaderPage() {
    done: true once you remove it from Continue reading. Kept on this device as you read, and (when notes are
    unlocked) in the encrypted notes index, Vault.index.reading, so every device shares it: for each paper the
    newest place wins. Sent to GitHub when you close the paper or leave the app, not on every scroll. */
-const READING_KEY = 'scholar_reading_v1', CR_MAX = 3;
+const READING_KEY = 'scholar_reading_v1', CR_MAX = 3, CR_DAYS = 30;   // the home row and phone strip: papers read in the last 30 days
 let _readingDirty = false;
 function deviceName() {
   const ua = navigator.userAgent;
@@ -5828,12 +5831,13 @@ function savedReaderPage(id) {
   if (e && e.pos) return e.pos;
   try { return (JSON.parse(localStorage.getItem(READER_POS_KEY) || '{}')[id]) || 1; } catch (err) { return 1; }   // places saved before syncing
 }
-/* Papers you're partway through: opened in the reader and past the first page, not read, hidden or removed;
-   the most recent first */
-function continueReadingList(dbOnly) {
-  const out = [];
+/* Papers you're partway through: opened in the reader and past the first page, not read, hidden or removed; the
+   most recent first. The home row and phone strip only take the last CR_DAYS days (older ones stay in Library) */
+function continueReadingList(dbOnly, everything) {
+  const out = [], since = Date.now() - CR_DAYS * 86400000;
   Object.entries(readingAll()).forEach(([id, e]) => {
     if (!e || e.done || !(e.pos >= 2)) return;
+    if (!everything && !(Date.parse(e.at || '') >= since)) return;
     const p = findPaper(id);
     if (!p || (p.uploaded ? dbOnly : readSet.has(paperKey(p)) || isHiddenRow(p))) return;
     out.push({ p, e });
@@ -5873,12 +5877,18 @@ function renderContinueReading() {
     </article>`; };
   el.innerHTML = `<div class="cr-head"><h2>Continue reading</h2>${list.length > CR_MAX ? `<button class="cr-all" onclick="showInProgress()">All ${list.length}</button>` : ''}</div>
     <div class="cr-cards">${list.slice(0, CR_MAX).map(card).join('')}</div>`;
+  markNewcomers(el.querySelectorAll('.cr-card'));
+}
+function markNewcomers(els) {
+  const ids = [...els].map(x => x.dataset.key);
+  if (_crShown && !reduceMotion()) els.forEach(x => { if (!_crShown.has(x.dataset.key)) x.classList.add('cr-enter'); });
+  _crShown = new Set(ids);   // (compared with the last drawing only, so a paper brought back by Undo fades in too)
 }
 function crPhoneHTML() {
   const [x] = currentTab === 'all' ? continueReadingList() : [];
   if (!x) return '';
   const b = readingBits(x);
-  return `<div class="cr-phone" id="crPhone"><button class="cr-phone-go" onclick="openReader('${b.id}')" aria-label="Continue reading ${escAttr(b.title)}, page ${b.page}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg><span class="t">${esc(b.title)}</span><span class="p">p. ${b.page}${x.e.pages ? '/' + x.e.pages : ''}</span></button><button class="cr-x" onclick="dismissReading('${b.id}')" aria-label="Remove from Continue reading" title="Remove from Continue reading">&times;</button><span class="cr-bar"><i style="width:${b.pct}%"></i></span></div>`;
+  return `<div class="cr-phone" id="crPhone" data-key="${b.id}"><button class="cr-phone-go" onclick="openReader('${b.id}')" aria-label="Continue reading ${escAttr(b.title)}, page ${b.page}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg><span class="t">${esc(b.title)}</span><span class="p">p. ${b.page}${x.e.pages ? '/' + x.e.pages : ''}</span></button><button class="cr-x" onclick="dismissReading('${b.id}')" aria-label="Remove from Continue reading" title="Remove from Continue reading">&times;</button><span class="cr-bar"><i style="width:${b.pct}%"></i></span></div>`;
 }
 /* The Read button on a paper's page says where you'd pick up */
 function readLabelHTML(p) {
@@ -5890,16 +5900,24 @@ function readLabelHTML(p) {
 function dismissReading(id) {
   const e = readingAll()[id];
   if (!e) return;
-  noteReading(id, { pos: e.pos, pages: e.pages, done: true });
-  flushReading(); refreshContinueReading();
-  toast('Removed from Continue reading', () => { noteReading(id, { pos: e.pos, pages: e.pages }); flushReading(); refreshContinueReading(); });
+  const apply = () => {
+    noteReading(id, { pos: e.pos, pages: e.pages, done: true });
+    flushReading(); refreshContinueReading();
+    toast('Removed from Continue reading', () => { noteReading(id, { pos: e.pos, pages: e.pages }); flushReading(); refreshContinueReading(); });
+  };
+  const going = [...document.querySelectorAll('.cr-card[data-key], .cr-phone[data-key]')].filter(el => el.dataset.key === id);
+  if (!going.length || reduceMotion()) return apply();
+  going.forEach(el => el.classList.add('cr-leaving'));   // it visibly goes; whatever takes its place arrives
+  setTimeout(apply, 200);
 }
+let _crShown = null;   // the papers the row and strip showed last, so a newcomer can fade in
 /* Wherever Continue reading shows, draw it again (a paper closed, removed, or read on another device) */
 function refreshContinueReading() {
   if (currentTab === 'all' && !_paperViewActive && !_listViewActive && !_searchActive) {
     if (document.body.classList.contains('tok-mode')) {
       const old = document.getElementById('crPhone'), html = crPhoneHTML(), bar = document.getElementById('tokBar');
       if (old) old.outerHTML = html; else if (html && bar) bar.insertAdjacentHTML('beforeend', html);
+      const now = document.getElementById('crPhone'); if (now) markNewcomers([now]);
       tokMeasureBars();
     } else { renderContinueReading(); fitTopPapers(); }
   }
