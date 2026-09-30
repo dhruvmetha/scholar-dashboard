@@ -217,7 +217,7 @@ def research(text, cb=None, model='opus', on_proc=None):
     try: ans = json.loads(m.group(1))
     except Exception: raise Stop('Claude’s answer could not be read; nothing was added.')
     if ans.get('stop'):
-        msg = ans.get('message') or {'private': 'This paper has no public version, so it was not added. Upload it under Library, To review, where it stays private.', 'not found': 'The paper could not be found.'}.get(ans['stop'], 'Nothing was added.')
+        msg = ans.get('message') or {'private': 'This paper has no public version, so it was not added. Use Library, Upload PDF instead, where it stays private.', 'not found': 'The paper could not be found.'}.get(ans['stop'], 'Nothing was added.')
         if ans.get('candidates'): msg += ' Did you mean: ' + '; '.join(ans['candidates'][:5]) + '?'
         raise Stop(msg)
     papers = ans.get('papers') or []

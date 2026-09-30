@@ -1728,9 +1728,10 @@ body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
 .lib-head-actions button { font-size: 14px; padding: 8px 16px; }
 @media (max-width: 600px) {
   .lib-head { padding: 24px 16px 0; } .library-wrap { padding: 16px; }
-  /* phone: the title and + New list share a row, the sync status sits under them (was four stacked rows) */
+  /* phone: the title, then the three buttons sharing one row, then the sync status */
   .lib-head-actions { display: contents; }
-  .lib-head .btn-new-list { order: 1; margin-left: auto; font-size: 13.5px; padding: 7px 14px; }
+  .lib-head h2 { flex-basis: 100%; }
+  .lib-head .btn-new-list { order: 1; flex: 1 1 0; min-width: 0; white-space: nowrap; font-size: 13.5px; padding: 8px 6px; }
   .lib-head .sync-status { order: 2; flex-basis: 100%; }
 }
 .library-section { margin-bottom: 24px; }
@@ -1752,6 +1753,10 @@ body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
 .lib-add-wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 .lib-add { margin-top: 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg-surface); padding: 16px 18px; animation: ui-rise var(--t-slow) var(--ease); }
 .lib-add[hidden] { display: none; }
+.lib-add { background: none; border-style: dashed; }   /* one look for both boxes: the upload one's */
+.lib-add.la-swap { animation: ui-rise var(--t-slow) var(--ease); }
+.la-lead { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--text-secondary); }
+.la-lead strong { color: var(--text); }
 .la-row { display: flex; gap: 8px; align-items: center; }
 .la-input { flex: 1; min-width: 0; height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; font-size: 15px; transition: border-color var(--t-fast) var(--ease); }
 .la-input:focus { outline: none; border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
@@ -2108,7 +2113,8 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
     <h2>Library</h2>
     <div class="lib-head-actions">
       <span class="sync-status" id="syncStatus"></span>
-      <button class="btn-new-list" id="libAddBtn" onclick="toggleAddPaper()" aria-expanded="false" aria-controls="libAdd">+ Add paper</button>
+      <button class="btn-new-list" id="libAddBtn" onclick="toggleLibPanel('add')" aria-expanded="false" aria-controls="libAdd">+ Add paper</button>
+      <button class="btn-new-list" id="libUploadBtn" onclick="toggleLibPanel('upload')" aria-expanded="false" aria-controls="libAdd">Upload PDF</button>
       <button class="btn-new-list" onclick="createNewList()">+ New list</button>
     </div>
   </div>
@@ -4698,12 +4704,24 @@ function libGroupHTML(key, icon, label, papers, extra) {
    paper and describes it for your interests (read-only), and bridge/add_paper.py checks it, adds the row and
    publishes it. The page follows the job (it keeps going if you leave Library) and shows the paper once it's in. */
 const AddPaper = { open: false, job: null, poll: 0, text: '', star: false };
-function toggleAddPaper(force) {
-  AddPaper.open = typeof force === 'boolean' ? force : !AddPaper.open;
-  document.getElementById('libAddBtn').setAttribute('aria-expanded', AddPaper.open);
+/* Library's two header boxes share one place under the header: + Add paper (public, into the database) and Upload
+   PDF (private, To review). A button opens its box, or closes it when it's already the one showing. */
+let _libPanel = null;
+function toggleLibPanel(which) {
+  _libPanel = _libPanel === which ? null : which;
+  AddPaper.open = _libPanel === 'add';
+  document.getElementById('libAddBtn').setAttribute('aria-expanded', _libPanel === 'add');
+  document.getElementById('libUploadBtn').setAttribute('aria-expanded', _libPanel === 'upload');
   const box = document.getElementById('libAdd');
-  box.hidden = !AddPaper.open;
+  box.hidden = !_libPanel;
+  if (_libPanel === 'upload') {
+    box.innerHTML = `<p class="la-lead"><strong>Reviewing a paper?</strong> Upload its PDF to read, annotate and chat about it with the same notes and Claude. It stays private: kept in this browser, never added to your database.</p>
+      <div class="la-row" style="margin-top:12px"><button class="la-go" onclick="pickUploadPdf()">Choose PDF</button></div>`;
+    replay(box, 'la-swap');
+    return;
+  }
   if (!AddPaper.open) return;
+  replay(box, 'la-swap');
   renderAddPaper();
   addPaperSync().then(() => { const i = document.getElementById('laInput'); if (i && !i.disabled) i.focus(); });
 }
@@ -4723,7 +4741,7 @@ function addPaperResultHTML(j) {
 }
 function renderAddPaper() {
   const box = document.getElementById('libAdd');
-  if (!box || box.hidden) return;
+  if (!box || box.hidden || _libPanel !== 'add') return;
   const j = AddPaper.job, running = j && j.state === 'running';
   let body;
   if (Chat.status === 'unknown' || Chat.status === 'checking') body = `<div class="la-status"><span class="la-spin"></span>Connecting to Claude Code on your laptop…</div>`;
@@ -4735,7 +4753,7 @@ function renderAddPaper() {
     </form>
     ${running ? `<div class="la-status"><span class="la-spin"></span>${esc(j.stage || 'Working…')}</div>`
       : `<label class="la-star"><input type="checkbox" ${AddPaper.star ? 'checked' : ''} onchange="AddPaper.star=this.checked"> Star it</label>
-         <p class="la-note">Claude Code on your laptop finds the paper, reads its abstract, matches it to your interests and adds it (about a minute). A paper with no public version isn’t added: upload it under To review instead, where it stays private.</p>`}
+         <p class="la-note">Claude Code on your laptop finds the paper, reads its abstract, matches it to your interests and adds it (about a minute). A paper with no public version isn’t added: use Upload PDF instead, where it stays private.</p>`}
     ${j && j.state !== 'running' ? addPaperResultHTML(j) : ''}`;
   box.innerHTML = body;
 }
@@ -4770,7 +4788,7 @@ function addPaperFinished(j) {
   });
   if (rows.length) { _relIndexKey = null; AddPaper.text = ''; refresh(); if (currentTab === 'library') renderLibrary(); }
   const first = (j.added || [])[0] || (j.existing && j.existing[0] ? { id: j.existing[0] } : null);
-  if (currentTab !== 'library' || !AddPaper.open) {
+  if (currentTab !== 'library' || _libPanel !== 'add') {
     if (j.state === 'done' && first) toast(j.added && j.added.length ? 'Added to your library' : 'Already in your library', () => openPaper(first.id), { actionLabel: 'Open', duration: 8000 });
     else if (j.state !== 'done') toastError('Paper not added: ' + (j.message || 'something went wrong'));
   }
@@ -4788,7 +4806,7 @@ function renderLibrary() {
   const uploads = uploadedPapers();
   let html = uploads.length
     ? libGroupHTML('review', '&#9873;', 'To review', uploads, '<span class="library-actions" onclick="event.stopPropagation()"><button onclick="pickUploadPdf()">Upload PDF</button></span>')
-    : `<div class="lib-hint"><strong>Reviewing a paper?</strong> Upload its PDF to read, annotate and chat about it with the same notes and Claude. It stays private: kept in this browser, never added to your database. <button class="lib-hint-btn" onclick="pickUploadPdf()">Upload PDF</button></div>`;
+    : '';
   if (!allPapers.length) {
     html += '<div class="library-empty">No papers in the database yet.</div>';
   } else {
