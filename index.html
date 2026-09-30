@@ -857,7 +857,15 @@ body.tok-mode .tok-cues { display: block; position: absolute; inset: 0; pointer-
 .ink-bar.open { display: flex; }
 /* full screen: the reader bar goes; the strip above the paper is the one toolbar */
 .reader-bar.folded { display: none; }   /* full screen: folded away */
-.ink-bar.open { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.ink-bar.open { display: grid; grid-template-columns: minmax(max-content, 1fr) minmax(0, max-content) minmax(max-content, 1fr); align-items: center; gap: 8px; }
+/* A narrow paper column (a wide panel): the Pencil switch and the right-hand buttons keep their size; only the
+   tools between them give way, scrolling sideways with a fade at the edge that has more */
+.ink-bar .ink-tools { min-width: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x; }
+.ink-bar .ink-tools::-webkit-scrollbar { display: none; }
+.ink-bar .ink-tools > * { flex-shrink: 0; }
+.ink-bar .ink-tools.more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+.ink-bar .ink-tools.more-left { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); }
+.ink-bar .ink-tools.more-left.more-right { -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
 .ink-bar > *, .reader-bar > * { opacity: var(--slide-o, 1); }
 .ink-bar.bar-swap > * { animation: tools-swap var(--t-fast) var(--ease); }
 .ink-bar .zb-side, .ink-bar .zb-mid { display: flex; align-items: center; gap: 4px; }
@@ -7455,6 +7463,8 @@ function renderInkBar() {
   if (!morphInto(mid, tools) && was && was !== Pencil.mode && bar.classList.contains('open')) {   // Highlight <-> Write: the tools cross-fade
     mid.classList.remove('swap'); void mid.offsetWidth; mid.classList.add('swap');
   }
+  mid.classList.add('fade-x'); edgeFade(mid); requestAnimationFrame(() => edgeFade(mid));   // at once (a redraw resets its classes) and once laid out
+  if (!mid._ro && window.ResizeObserver) { mid._ro = new ResizeObserver(() => edgeFade(mid)); mid._ro.observe(mid); }
   if (!shellKept && barShown(bar)) replay(bar, 'bar-swap');   // into or out of full screen with the strip open: its contents cross-fade
   if (!barShown(bar)) slideBar(bar, true, () => bar.classList.add('open'));
 }
@@ -8427,7 +8437,7 @@ function quoteReplacer(slot) {
 }
 /* Update a live element from freshly rendered HTML, touching only what changed: while Claude writes, the finished
    paragraphs (and the citation pills in them) stay the same elements, so they don't flicker and can be tapped. */
-function morphInto(el, html) {
+function morphChat(el, html) {
   const next = document.createElement(el.tagName); next.innerHTML = html;
   const sameAttrs = (a, b) => a.attributes.length === b.attributes.length && [...a.attributes].every(x => b.getAttribute(x.name) === x.value);
   const walk = (a, b) => {
@@ -8475,7 +8485,7 @@ async function renderChatMarkdown(el, text, msgIdx) {
   const tmp = document.createElement('div'); tmp.innerHTML = html; mdTables(tmp);
   const blocks = chatBlocks(text);
   tmp.querySelectorAll('[data-card-note]').forEach(n => { const b = blocks[+n.dataset.cardNote]; n.dataset.cardSrc = b ? b.body.length + ':' + b.body.slice(-40) : ''; });
-  morphInto(el, tmp.innerHTML);
+  morphChat(el, tmp.innerHTML);
   el.querySelectorAll('[data-card-note]').forEach(n => { const b = blocks[+n.dataset.cardNote]; if (b && n.dataset.done !== n.dataset.cardSrc) { n.dataset.done = n.dataset.cardSrc; renderNotesMarkdown(n, b.body, _rn); } });
   el.querySelectorAll('a[href]').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
 }
