@@ -1138,6 +1138,9 @@ body.tok-mode .tok-cues { display: block; position: absolute; inset: 0; pointer-
 .cite-pill { user-select: all; -webkit-user-select: all; }
 .cite-pill.sel { background: color-mix(in srgb, var(--hc) 34%, transparent); border-color: var(--hc); }
 .cite-chip.gone { opacity: 0.6; cursor: default; }
+#chatRefreshBtn.spinning svg { animation: chat-spin 0.7s linear infinite; }
+@keyframes chat-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { #chatRefreshBtn.spinning svg { animation: none; opacity: 0.5; } }
 .cite-chip.page-only { gap: 0; padding-left: 6px; padding-right: 6px; }   /* the words are in the sentence; the pill is the footnote */
 .rp-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; }
 .rp-filters .sel-dot { width: 18px; height: 18px; opacity: 0.45; }
@@ -8226,6 +8229,19 @@ function setPanelTab(t, focus) {
   else if (changed && panelMode() === 'tabs') { renderReaderPanel(); replay(document.getElementById('readerPanel'), 'tab-swap'); }
   if (t === 'chat') chatOpen(focus);
 }
+const ICON_REFRESH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>';
+/* Reload: the chat as the laptop has it now (and the connection checked again), keeping what you're typing */
+async function chatRefresh() {
+  if (Chat.refreshing) return;
+  Chat.refreshing = true;
+  const b = document.getElementById('chatRefreshBtn'); if (b) { b.classList.add('spinning'); b.disabled = true; }
+  if (Chat.status === 'ready') Chat.loadedFor = null; else Chat.status = 'unknown';
+  try { await Promise.all([chatOpen(), new Promise(r => setTimeout(r, 450))]); }   // spins long enough to see it happened
+  finally {
+    Chat.refreshing = false;
+    const n = document.getElementById('chatRefreshBtn'); if (n) { n.classList.remove('spinning'); n.disabled = false; }
+  }
+}
 async function chatOpen(focus) {
   if (Chat.status === 'elsewhere') return renderChatPanel(true);
   if (Chat.status === 'unknown' || Chat.status === 'offline') { await bridgeCheck(); }
@@ -8275,7 +8291,7 @@ function renderChatPanel(force) {
   const input = document.getElementById('chatInput'); if (input) Chat.draftText = input.value;
   const ready = Chat.status === 'ready';
   if (ready && pid && Chat.loadedFor !== pid) { chatOpen(); return; }   // another paper: load its chat first
-  const head = `<div class="rp-head">${paneHeadStart('chat')}<span class="grow"></span>${ready && (Chat.history || []).some(c => c.id !== 'current') ? `<button class="rp-icon-btn" id="chatHistBtn" onclick="toggleChatHistory(event)" title="Earlier chats about this paper" aria-label="Earlier chats" aria-haspopup="true">${ICON_HISTORY}</button>` : ''}${ready ? `<button class="rp-text-btn" onclick="chatNew()" title="Start a fresh conversation about this paper (this one is kept)">${ICON_PLUS}New chat</button>` : ''}${paneClose('chat')}</div>`;
+  const head = `<div class="rp-head">${paneHeadStart('chat')}<span class="grow"></span><button class="rp-icon-btn ${Chat.refreshing ? 'spinning' : ''}" id="chatRefreshBtn" onclick="chatRefresh()" title="Reload this chat" aria-label="Reload chat"${Chat.refreshing ? ' disabled' : ''}>${ICON_REFRESH}</button>${ready && (Chat.history || []).some(c => c.id !== 'current') ? `<button class="rp-icon-btn" id="chatHistBtn" onclick="toggleChatHistory(event)" title="Earlier chats about this paper" aria-label="Earlier chats" aria-haspopup="true">${ICON_HISTORY}</button>` : ''}${ready ? `<button class="rp-text-btn" onclick="chatNew()" title="Start a fresh conversation about this paper (this one is kept)">${ICON_PLUS}New chat</button>` : ''}${paneClose('chat')}</div>`;
   const setup = {
     setup: `<p>Chat with Claude about this paper, with your highlights and notes in view. It runs through Claude Code on your laptop.</p><button class="ui-btn ui-btn-primary" onclick="chatConnect()">Connect to Claude Code</button>`,
     unknown: `<p class="chat-dim">Connecting to Claude Code…</p>`,
