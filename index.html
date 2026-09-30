@@ -1758,6 +1758,9 @@ body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
 .lib-add[hidden] { display: none; }
 .lib-add { background: none; border-style: dashed; }   /* one look for both boxes: the upload one's */
 .lib-add.la-swap { animation: ui-rise var(--t-slow) var(--ease); }
+.tt-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 12.5px; color: var(--text-muted); }
+.tt-line.done { color: #7fcf9a; }
+.tt-line.warn { color: var(--accent); }
 .la-lead { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--text-secondary); }
 .la-lead strong { color: var(--text); }
 .la-row { display: flex; gap: 8px; align-items: center; }
@@ -5042,7 +5045,57 @@ function groupCardHTML(g) {
   else if (g.status === 'confirmed') actions = `<div class="interest-actions"><button class="btn-quiet-remove" onclick="event.stopPropagation();updateG('${escAttr(g.group_name)}','rejected')" title="Hide this topic (you can restore it from Rejected)">Remove</button></div>`;
   else if (g.status === 'rejected') actions = `<div class="interest-actions"><button class="btn-approve" onclick="event.stopPropagation();updateG('${escAttr(g.group_name)}','confirmed')">Restore</button></div>`;
   const handle = `<div class="group-drag-handle" title="Drag to reorder"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div>`;
-  return `<div class="interest-card" draggable="true" data-group="${dataAttr(g.group_name)}" ondragstart="gDragStart(event)" ondragover="gDragOver(event)" ondragenter="gDragEnter(event)" ondragleave="gDragLeave(event)" ondrop="gDrop(event)" ondragend="gDragEnd(event)">${handle}<div class="interest-info"><div class="interest-name">${g.status === 'confirmed' ? gdot(norm(g.group_name)) : ''}${esc(g.group_name)}</div><div class="interest-detail">${esc(g.description||'')}</div>${notes}<div class="interest-meta">${statusBadge}<span class="badge badge-venue">${paperCount} paper${paperCount!==1?'s':''}${readCount ? `, ${readCount} read` : ''}</span></div></div>${actions}</div>`;
+  return `<div class="interest-card" draggable="true" data-group="${dataAttr(g.group_name)}" ondragstart="gDragStart(event)" ondragover="gDragOver(event)" ondragenter="gDragEnter(event)" ondragleave="gDragLeave(event)" ondrop="gDrop(event)" ondragend="gDragEnd(event)">${handle}<div class="interest-info"><div class="interest-name">${g.status === 'confirmed' ? gdot(norm(g.group_name)) : ''}${esc(g.group_name)}</div><div class="interest-detail">${esc(g.description||'')}</div>${notes}<div class="interest-meta">${statusBadge}<span class="badge badge-venue">${paperCount} paper${paperCount!==1?'s':''}${readCount ? `, ${readCount} read` : ''}</span></div>${topicTagLineHTML(g, paperCount)}</div>${actions}</div>`;
+}
+/* ===== A NEW TOPIC'S EXISTING PAPERS =====
+   Approving a topic (or restoring one that has no papers) tags the papers already in the database: through the
+   bridge on the laptop (bridge/add_topic.py: Claude decides, read-only; the script applies and publishes), or, when
+   the laptop can't be reached, at the next weekly run. A topic's card says which is happening. */
+const TopicTag = { job: null, poll: 0 };
+function topicTagLineHTML(g, n) {
+  const j = TopicTag.job;
+  if (j && j.topic === g.group_name) {
+    if (j.state === 'running') return `<div class="tt-line"><span class="la-spin"></span>${esc(j.stage || 'Tagging existing papers\u2026')}</div>`;
+    if (j.state === 'done') return `<div class="tt-line done">Tagged ${(j.tagged || []).length} existing paper${(j.tagged || []).length === 1 ? '' : 's'}</div>`;
+    return `<div class="tt-line warn">${esc(j.message || 'Tagging failed')} <button class="lib-hint-btn" onclick="startTopicTag('${escAttr(g.group_name)}')">Try again</button></div>`;
+  }
+  if (g.status !== 'confirmed' || n || /Existing papers tagged/.test(g.notes || '')) return '';
+  const can = Chat.status === 'ready' && Chat.bridgeVersion >= 3;
+  return `<div class="tt-line">Its existing papers get tagged at the next weekly run.${can ? ` <button class="lib-hint-btn" onclick="startTopicTag('${escAttr(g.group_name)}')">Tag now</button>` : ''}</div>`;
+}
+async function startTopicTag(name, quiet) {
+  if (Chat.status !== 'ready' || !Chat.bridgeVersion) await bridgeCheck();
+  if (Chat.status !== 'ready' || Chat.bridgeVersion < 3) { if (!quiet) toast('Tagging runs on your laptop; it isn\u2019t reachable now, so the next weekly run will do it'); renderInterests(); return false; }
+  try {
+    const r = await bridgeFetch('/topic/tag', { method: 'POST', body: JSON.stringify({ topic: name }) });
+    const j = await r.json();
+    if (j.job) setTopicJob(j.job);
+    return true;
+  } catch (e) { return false; }
+}
+function setTopicJob(j) {
+  const was = TopicTag.job;
+  TopicTag.job = j;
+  if (j.state === 'running') {
+    clearTimeout(TopicTag.poll);
+    TopicTag.poll = setTimeout(async () => { try { setTopicJob((await (await bridgeFetch('/topic/tag')).json()).job); } catch (e) { TopicTag.poll = setTimeout(() => setTopicJob(TopicTag.job), 4000); } }, 2000);
+  } else if (was && was.state === 'running' && was.id === j.id && j.state === 'done') topicTagged(j);
+  if (currentTab === 'interests') renderInterests();
+}
+/* On GitHub now: the same here, so the page shows it at once and never saves over it */
+function topicTagged(j) {
+  const name = j.group && j.group.group_name || j.topic;
+  (j.tagged || []).forEach(id => {
+    const p = findPaper(id);
+    if (!p) return;
+    const gs = (p.theme_groups || '').split('|').filter(Boolean);
+    if (!gs.includes(name)) p.theme_groups = gs.concat(name).join('|');
+    const base = _loadedPaperFields.get(id); if (base) base.theme_groups = p.theme_groups;
+  });
+  const g = allGroups.find(x => x.group_name === name);
+  if (g && j.group) { g.status = 'confirmed'; g.notes = j.group.notes; }
+  _colorKey = null; buildGroupOrder(); refresh();
+  toast(`\u201c${name}\u201d: tagged ${(j.tagged || []).length} existing papers`, () => { location.hash = '#group/' + encodeURIComponent(name); }, { actionLabel: 'Show', duration: 8000 });
 }
 /* ===== GROUP DRAG & DROP ===== */
 let _draggedGroup = null;
@@ -5153,7 +5206,9 @@ function updateG(name, status) {
   _groupsDirty = true;
   showSaveBar();
   refresh();
-  toast(`Topic "${name}" ${status === 'confirmed' ? 'approved, papers now visible' : prev === 'suggested' ? 'dismissed' : 'removed'}`, () => updateG(name, prev));
+  toast(`Topic "${name}" ${status === 'confirmed' ? 'approved' : prev === 'suggested' ? 'dismissed' : 'removed'}`, () => updateG(name, prev));
+  // approved (or restored) and no paper has it yet: tag the existing ones
+  if (status === 'confirmed' && prev !== 'confirmed' && !allPapers.some(p => groupsOfPaper(p).includes(name)) && !/Existing papers tagged/.test(g.notes || '')) startTopicTag(name, true);
 }
 
 /* ===== INTEREST INLINE DROPDOWNS ===== */

@@ -10,6 +10,7 @@ Safety:
     macOS dialog on this laptop;
   * Claude runs with no shell, no connectors or plugins, and may read only files in this bridge's work folder
     (the paper PDFs and figures the dashboard sends); it may search and fetch from the web.
+  * Tagging existing papers with a topic you approved (/topic/tag): the same, with add_topic.py.
   * Adding a paper (the dashboard's Add paper box, /paper/add): Claude only researches it, read-only, in the bridge's
     own copy of the repository (~/.scholar-bridge/repo); add_paper.py checks what it returns and commits and pushes
     just that row (and its link-preview page) from that copy. Your working copy is never touched.
@@ -20,7 +21,7 @@ are ordinary ones: `cd ~/.scholar-bridge/work && claude --resume` lists them.
 """
 import base64, json, os, re, secrets, shutil, subprocess, sys, threading, time, urllib.request, uuid
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import add_paper
+import add_paper, add_topic
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 PORT = int(os.environ.get('SCHOLAR_BRIDGE_PORT', '7823'))
@@ -33,7 +34,7 @@ SESSIONS_FILE = os.path.join(HOME, 'sessions.json')
 NO_MCP = os.path.join(HOME, 'no-mcp.json')
 MODELS = {'opus': 'opus', 'sonnet': 'sonnet', 'haiku': 'haiku'}
 EFFORTS = {'low', 'medium', 'high', 'xhigh', 'max'}   # anything else: Claude Code's default
-VERSION = 2   # 2: /paper/add
+VERSION = 3   # 2: /paper/add; 3: /topic/tag
 
 for d in (HOME, WORK, CHATS, os.path.join(WORK, 'papers'), os.path.join(WORK, 'attachments')):
     os.makedirs(d, exist_ok=True)
@@ -43,6 +44,26 @@ if not os.path.exists(NO_MCP):
 _lock = threading.Lock()
 _running = {}   # paper id -> subprocess.Popen
 _add = {'job': None, 'proc': None}   # the paper being added (one at a time); the page polls GET /paper/add
+_topic = {'job': None, 'proc': None}   # the topic whose existing papers are being tagged; GET /topic/tag
+
+
+def start_topic(name):
+    job = {'id': uuid.uuid4().hex[:12], 'state': 'running', 'stage': 'Starting…', 'topic': name[:200], 'started': time.time()}
+    _topic['job'] = job
+
+    def stage(s): job['stage'] = s
+    def run():
+        try:
+            out = add_topic.tag(name, cb=stage, on_proc=lambda p: _topic.__setitem__('proc', p))
+            job.update(state='done', tagged=out['tagged'], group=out['group'])
+        except add_paper.Stop as e:
+            job.update(state='stopped', message=str(e))
+        except Exception as e:
+            job.update(state='error', message=(str(e) or 'failed')[-400:])
+        finally:
+            _topic['proc'] = None; job['ended'] = time.time()
+    threading.Thread(target=run, daemon=True).start()
+    return job
 
 
 def start_add(text, star):
@@ -214,6 +235,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(200, {'chats': chat_list(urllib.request.unquote(params.get('paper', '')))})
         if path == '/paper/add':   # the paper being (or last) added
             return self.reply(200, {'job': _add['job']})
+        if path == '/topic/tag':
+            return self.reply(200, {'job': _topic['job']})
         if path == '/chat':
             pid = urllib.request.unquote(params.get('paper', ''))
             c = load_chat(pid)
@@ -265,6 +288,13 @@ class Handler(BaseHTTPRequestHandler):
                 j = _add['job']
                 if j and j['state'] == 'running': return self.reply(409, {'error': 'busy', 'job': j})
                 return self.reply(200, {'job': start_add(text, bool(data.get('star')))})
+        if path == '/topic/tag':   # a topic was approved: put it on the existing papers that belong in it
+            name = str(data.get('topic', '')).strip()[:200]
+            if not name: return self.reply(400, {'error': 'topic'})
+            with _lock:
+                j = _topic['job']
+                if j and j['state'] == 'running': return self.reply(409, {'error': 'busy', 'job': j})
+                return self.reply(200, {'job': start_topic(name)})
         if path == '/paper/add/stop':
             p = _add['proc']
             if p: p.terminate()
