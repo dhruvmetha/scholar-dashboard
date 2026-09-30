@@ -7755,7 +7755,7 @@ function applyPanelLayout() {
 function setPanelLayout(mode, first, active) {
   const wasSide = panelMode() === 'side';
   PanelLayout.mode = mode; if (first) PanelLayout.first = first;
-  if (active) _panelTab = active;
+  if (active) { _panelTab = active; rememberPanelTab(); }
   savePanelLayout();
   if ((panelMode() === 'side') !== wasSide) applyPanelWidth(storedPanelFrac() || (panelMode() === 'side' ? 640 / window.innerWidth : null));
   applyPanelLayout();
@@ -8175,7 +8175,11 @@ const Chat = {
   pid: null, messages: [], fresh: true, model: 'opus', running: false, streaming: '', tool: '', error: '',
   draft: { quotes: [], images: [], mentions: [] }, draftText: '', pairCode: '', loadedFor: null,
 };
-let _panelTab = 'notes';
+/* Notes or Chat: remembered on this device, so coming back to the reader (after iOS reloads the app, too) finds
+   the tab you left it on */
+const PANEL_TAB_KEY = 'scholar_panel_tab';
+let _panelTab = (() => { try { return localStorage.getItem(PANEL_TAB_KEY) === 'chat' ? 'chat' : 'notes'; } catch (e) { return 'notes'; } })();
+function rememberPanelTab() { try { localStorage.setItem(PANEL_TAB_KEY, _panelTab); } catch (e) {} }
 const ICON_SEND = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
 const ICON_STOP = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5"/></svg>';
 const ICON_FIGURE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/></svg>';
@@ -8224,7 +8228,7 @@ function paneClose(pane) {
 function setPanelTab(t, focus) {
   if (t === 'chat' && readerPhone()) t = 'notes';
   const changed = _panelTab !== t;
-  _panelTab = t;
+  _panelTab = t; rememberPanelTab();
   if (!document.getElementById('reader').classList.contains('panel-open')) toggleReaderPanel(true);
   else if (changed && panelMode() === 'tabs') { renderReaderPanel(); replay(document.getElementById('readerPanel'), 'tab-swap'); }
   if (t === 'chat') chatOpen(focus);
