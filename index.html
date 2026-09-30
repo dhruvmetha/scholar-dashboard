@@ -1711,6 +1711,16 @@ body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
 
 /* LIBRARY TAB */
 .library-wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
+.lib-sec-head { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; }
+.lib-sec-head h3 { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); }
+.lib-sec-head .grow { flex: 1; }
+.lib-sort select { appearance: none; -webkit-appearance: none; height: 32px; padding: 0 28px 0 12px; border-radius: 999px; border: 1px solid var(--border); background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23999' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 11px center; color: var(--text-secondary); font: inherit; font-size: 13px; cursor: pointer; transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+.lib-sort select:hover, .lib-sort-dir:hover { border-color: rgba(255,255,255,0.3); color: var(--text); }
+.lib-sort-dir { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font: inherit; font-size: 13px; cursor: pointer; transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+.lib-sort-dir svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.lib-divider { display: flex; align-items: center; gap: 12px; margin: 26px 0 20px; color: var(--text-muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+.lib-divider::before, .lib-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 /* Library header: left-aligned title like the other pages, actions beside it, wrapping below on phones */
 .lib-head { max-width: 1200px; margin: 0 auto; padding: 32px 24px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; }
 .lib-head h2 { font-family: var(--serif); font-optical-sizing: auto; font-size: 36px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.15; }
@@ -2387,6 +2397,7 @@ function bootstrapStateFromCSV() {
       libraryLists[name].push(k);
     });
   });
+  adoptListMeta();
 }
 
 /* Write current readSet/starSet/libraryLists back into allPapers rows */
@@ -2485,7 +2496,54 @@ window.addEventListener('beforeunload', e => {
 
 function persistRead()   { flushStateToCSV(); _stateDirty = true; showSaveBar(); }
 function persistStars()  { flushStateToCSV(); _stateDirty = true; showSaveBar(); }
-function persistLists()  { flushStateToCSV(); _stateDirty = true; showSaveBar(); }
+function persistLists()  { flushStateToCSV(); _stateDirty = true; showSaveBar(); touchListMeta(); }
+/* ===== YOUR LISTS: when each was created and last changed =====
+   The papers file only says which lists a paper is in, so each list's times are kept here: on this device and, with
+   notes unlocked, in the encrypted notes index (Vault.index.lists), newest entry per list winning, like reading
+   places. Every change to lists goes through persistLists, which compares each list with how it was and stamps the
+   ones that changed. Lists from before have no entry: their times come from their papers' dates. A list you made
+   but haven't put a paper in yet is kept by its entry (the papers file can't hold an empty list). */
+const LISTMETA_KEY = 'scholar_list_meta_v1', LISTSORT_KEY = 'scholar_list_sort';
+let _listSig = null;
+function listSigs() { const o = {}; Object.entries(libraryLists).forEach(([n, a]) => { o[n] = a.slice().sort().join('|'); }); return o; }
+function listMetaLocal() { try { return JSON.parse(localStorage.getItem(LISTMETA_KEY) || '{}'); } catch (e) { return {}; } }
+function listMetaAll() { return mergeReading(listMetaLocal(), Vault.index && Vault.index.lists); }
+function saveListMeta(changes) {
+  const all = listMetaLocal();
+  Object.assign(all, changes);
+  try { localStorage.setItem(LISTMETA_KEY, JSON.stringify(all)); } catch (e) {}
+  if (Vault.key && Vault.index) { Vault.index.lists = mergeReading(Vault.index.lists, changes); nfSave('_index.json', Vault.index).catch(() => {}); }
+}
+function touchListMeta() {
+  const now = new Date().toISOString(), sigs = listSigs(), was = _listSig || {}, meta = listMetaAll(), changes = {};
+  Object.keys(sigs).forEach(n => { if (sigs[n] !== was[n]) changes[n] = { created: (meta[n] && !meta[n].deleted && meta[n].created) || (n in was ? listDates(n).created : now), at: now }; });
+  Object.keys(was).forEach(n => { if (!(n in sigs)) changes[n] = { deleted: true, at: now }; });
+  _listSig = sigs;
+  if (Object.keys(changes).length) saveListMeta(changes);
+}
+function listDates(name) {
+  const m = listMetaAll()[name];
+  if (m && !m.deleted && m.created) return { created: m.created, updated: m.at || m.created };
+  const ds = (libraryLists[name] || []).map(k => (findPaper(k) || {}).date_found).filter(Boolean).sort();   // from before: its papers' dates
+  return { created: ds[0] || '', updated: ds[ds.length - 1] || '' };
+}
+/* after the lists are read from the papers: remember them as they are, and bring back lists that are still empty */
+function adoptListMeta() {
+  Object.entries(listMetaAll()).forEach(([n, m]) => { if (m && !m.deleted && !libraryLists[n] && !n.includes('|')) libraryLists[n] = []; });
+  _listSig = listSigs();
+}
+function listSort() { try { return Object.assign({ by: 'updated', dir: 'desc' }, JSON.parse(localStorage.getItem(LISTSORT_KEY) || '{}')); } catch (e) { return { by: 'updated', dir: 'desc' }; } }
+function setListSort(by, dir) {
+  const cur = listSort();
+  const next = { by: by || cur.by, dir: dir || (by && by !== cur.by ? (by === 'name' ? 'asc' : 'desc') : cur.dir) };
+  try { localStorage.setItem(LISTSORT_KEY, JSON.stringify(next)); } catch (e) {}
+  renderLibrary();
+}
+function sortedListNames() {
+  const { by, dir } = listSort(), sign = dir === 'asc' ? 1 : -1;
+  const key = n => by === 'name' ? n.toLowerCase() : listDates(n)[by === 'created' ? 'created' : 'updated'];
+  return Object.keys(libraryLists).sort((a, b) => { const x = key(a), y = key(b); return (x < y ? -1 : x > y ? 1 : a.localeCompare(b)) * sign; });
+}
 function paperKey(p) { return p.id; }
 function paperInAnyList(k) { return Object.values(libraryLists).some(arr => arr.includes(k)); }
 function listCount() { return Object.values(libraryLists).reduce((n, arr) => n + arr.length, 0); }
@@ -4734,16 +4792,30 @@ function renderLibrary() {
   if (!allPapers.length) {
     html += '<div class="library-empty">No papers in the database yet.</div>';
   } else {
+    // your lists first, sorted as you choose; then a divider; then the groups the app makes
+    const mine = sortedListNames();
+    let own = '';
+    if (mine.length) {
+      const { by, dir } = listSort();
+      const dirLabel = by === 'name' ? (dir === 'asc' ? 'A\u2013Z' : 'Z\u2013A') : (dir === 'desc' ? 'Newest first' : 'Oldest first');
+      own = `<div class="lib-sec-head"><h3>Your lists</h3><span class="grow"></span>
+        <label class="lib-sort"><span class="sr-only">Sort lists by</span><select onchange="setListSort(this.value)" aria-label="Sort lists by">${[['updated', 'Last updated'], ['created', 'Created'], ['name', 'Name']].map(([v, l]) => `<option value="${v}"${v === by ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+        <button class="lib-sort-dir" onclick="setListSort(null, '${dir === 'asc' ? 'desc' : 'asc'}')" title="Reverse the order" aria-label="Order: ${dirLabel}. Reverse it">${dirLabel}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg></button></div>`;
+      mine.forEach(name => {
+        const papers = allPapers.filter(p => libraryLists[name].includes(paperKey(p)));
+        const actions = `<span class="library-actions" onclick="event.stopPropagation()"><button onclick="renameList('${escAttr(name)}')">Rename</button><button onclick="showCopyDD(this,'${escAttr(name)}')">Copy to...</button><button class="danger" onclick="deleteList('${escAttr(name)}')">Delete</button></span>`;
+        own += libGroupHTML('list-' + name, '&#9776;', name, papers, actions);
+      });
+      own += '<div class="lib-divider" role="separator"><span>Made by the app</span></div>';
+    }
+    html = own + html;
     const reading = continueReadingList(true, true).map(x => x.p);
     if (reading.length) html += libGroupHTML('progress', '&#9656;', 'In progress', reading);
+    const mineAdded = allPapers.filter(p => /\bmanual\b/.test(p.source_mode || '')).sort((x, y) => (y.date_found || '').localeCompare(x.date_found || ''));   // + Add paper / /add-paper, newest first
+    if (mineAdded.length) html += libGroupHTML('manual', '&#43;', 'Added by you', mineAdded);
     if (starred.length) html += libGroupHTML('starred', '&#9733;', 'Starred', starred);
     if (noted.length) html += libGroupHTML('noted', '&#9998;', 'Notes & highlights', noted);
     else if (!Vault.key && vaultSupported() && Vault.meta) html += `<div class="lib-hint"><strong>Notes &amp; highlights</strong> are encrypted. <button class="lib-hint-btn" onclick="vaultReady().then(ok => ok && renderLibrary())">Unlock notes</button> to list the papers you annotated.</div>`;
-    listNames.forEach(name => {
-      const papers = allPapers.filter(p => libraryLists[name].includes(paperKey(p)));
-      const actions = `<span class="library-actions" onclick="event.stopPropagation()"><button onclick="renameList('${escAttr(name)}')">Rename</button><button onclick="showCopyDD(this,'${escAttr(name)}')">Copy to...</button><button class="danger" onclick="deleteList('${escAttr(name)}')">Delete</button></span>`;
-      html += libGroupHTML('list-'+name, '&#9776;', name, papers, actions);
-    });
     if (read.length) html += libGroupHTML('read', '&#10003;', 'Read', read);
     if (_hiddenPapers.length) html += libGroupHTML('hidden', '&#8856;', 'Hidden', sortPapers(_hiddenPapers.slice()));
     const MON = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
@@ -4784,6 +4856,9 @@ async function renameList(oldName) {
   if (libraryLists[newName]) { toast('A list with that name already exists'); return; }
   libraryLists[newName] = libraryLists[oldName];
   delete libraryLists[oldName];
+  const d = listDates(oldName), now = new Date().toISOString();
+  saveListMeta({ [oldName]: { deleted: true, at: now }, [newName]: { created: d.created || now, at: now } });   // renamed, not new
+  if (_listSig) { _listSig[newName] = _listSig[oldName]; delete _listSig[oldName]; }
   persistLists();
   toast(`Renamed to "${newName}"`);
   renderLibrary();
@@ -6527,7 +6602,7 @@ function mergeIndex(a, b) {
   const papers = { ...(a.papers || {}) };
   Object.entries(b.papers || {}).forEach(([id, e]) => { if (!papers[id] || (e.updated || '') > (papers[id].updated || '')) papers[id] = e; });
   const newerColors = (a.colorsUpdated || '') >= (b.colorsUpdated || '') ? a : b;
-  return { v: 1, papers, colors: newerColors.colors || {}, colorsUpdated: newerColors.colorsUpdated || '', uploads: mergeUploads(a.uploads, b.uploads), reading: mergeReading(a.reading, b.reading) };
+  return { v: 1, papers, colors: newerColors.colors || {}, colorsUpdated: newerColors.colorsUpdated || '', uploads: mergeUploads(a.uploads, b.uploads), reading: mergeReading(a.reading, b.reading), lists: mergeReading(a.lists, b.lists) };
 }
 
 /* ---- pushing: every dirty file, merged with GitHub's copy when that changed meanwhile ---- */
