@@ -1741,6 +1741,10 @@ body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
 .library-actions button { background: none; border: 1px solid var(--border); color: var(--text-muted); font-size: 11px; padding: 3px 10px; border-radius: 14px; cursor: pointer; transition: all 0.15s; }
 .library-actions button:hover { background: var(--bg-hover); color: var(--text); }
 .library-actions button.danger:hover { border-color: #f28b82; color: #f28b82; }
+.library-actions button.lib-ico { width: 32px; height: 32px; padding: 0; border: none; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+.library-actions button.lib-ico svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.library-actions button.lib-ico:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+.library-actions button.lib-ico.danger:hover { background: rgba(242,139,130,0.1); color: #f28b82; }
 .library-rename-input { background: var(--bg); border: 1px solid var(--accent); color: var(--text); font-size: 14px; padding: 2px 8px; border-radius: 6px; outline: none; width: 200px; }
 .library-empty { padding: 40px; text-align: center; color: var(--text-muted); font-size: 14px; }
 .btn-interests { font-size: 15px; padding: 10px 22px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
@@ -4820,7 +4824,7 @@ function renderLibrary() {
         <button class="lib-sort-dir" onclick="setListSort(null, '${dir === 'asc' ? 'desc' : 'asc'}')" title="Reverse the order" aria-label="Order: ${dirLabel}. Reverse it">${dirLabel}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg></button></div>`;
       mine.forEach(name => {
         const papers = allPapers.filter(p => libraryLists[name].includes(paperKey(p)));
-        const actions = `<span class="library-actions" onclick="event.stopPropagation()"><button onclick="renameList('${escAttr(name)}')">Rename</button><button onclick="showCopyDD(this,'${escAttr(name)}')">Copy to...</button><button class="danger" onclick="deleteList('${escAttr(name)}')">Delete</button></span>`;
+        const actions = `<span class="library-actions" onclick="event.stopPropagation()"><button class="lib-ico" onclick="renameList('${escAttr(name)}')" title="Rename" aria-label="Rename ${escAttr(name)}">${ICON_EDIT}</button><button class="lib-ico" onclick="showCopyDD(this,'${escAttr(name)}')" title="Copy its papers to another list" aria-label="Copy ${escAttr(name)} to another list">${ICON_COPY}</button><button class="lib-ico danger" onclick="deleteList('${escAttr(name)}')" title="Delete list (the papers stay)" aria-label="Delete ${escAttr(name)}">${ICON_TRASH}</button></span>`;
         own += libGroupHTML('list-' + name, '&#9776;', name, papers, actions);
       });
       own += '<hr class="lib-divider">';
