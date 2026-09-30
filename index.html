@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>/* Read-only unless this browser holds the owner's GitHub token (see OWNER MODE): set before anything draws */
+try { if (!localStorage.getItem('gh_pat')) document.documentElement.classList.add('ro'); } catch (e) { document.documentElement.classList.add('ro'); }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Scholar Dashboard</title>
 <meta name="description" content="Research papers from Google Scholar alerts and weekly surveys, ranked by Sumanth's research interests.">
@@ -118,6 +120,18 @@ a { color: inherit; text-decoration: none; }
 .nav-refresh { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 36px; height: 36px; margin-left: -12px; border-radius: 50%; border: none; background: none; color: var(--text-secondary); cursor: pointer; transition: background var(--t-fast), color var(--t-fast); }
 .nav-refresh:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 .nav-refresh svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+/* ===== READ-ONLY (html.ro: no owner's GitHub token in this browser; see OWNER MODE) =====
+   The key to sign in shows only then; every control that changes something is gone. The functions behind them
+   are guarded as well, so this list is about what shows, not what's safe. */
+.nav-key { display: none; }
+html.ro .nav-key { display: inline-flex; }
+html.ro .owner-only,
+html.ro .p-actions, html.ro .save-anchor, html.ro .pd-act:not(.pd-nav-prev):not(.pd-nav-next), html.ro .group-remove, html.ro .group-add-wrap, html.ro .pd-edit, html.ro .pd-notes,
+html.ro #crStrip, html.ro #crPhone, html.ro #saveBar, html.ro #syncStatus, html.ro .sync-btn,
+html.ro #libAddBtn, html.ro #libUploadBtn, html.ro .lib-head .btn-new-list, html.ro .lib-add-wrap, html.ro .library-actions,
+html.ro .interest-actions, html.ro .group-drag-handle, html.ro .tt-line,
+html.ro #readerNotesBtn, html.ro #readerPanel, html.ro #rpResize, html.ro #selBar, html.ro .reader-change, html.ro .anno-mark,
+html.ro #vaultOverlay { display: none !important; }
 .nav-refresh.spinning svg { animation: spin 0.7s linear infinite; }
 @media (max-width: 600px) {
   .nav-search-toggle { display: inline-flex; align-items: center; justify-content: center; margin-left: auto; width: 40px; height: 40px; border-radius: 50%; border: none; background: none; color: var(--text-secondary); cursor: pointer; transition: background 0.15s, color 0.15s; }
@@ -2041,6 +2055,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
       <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
       <input type="text" id="searchInput" placeholder="Search papers and authors..." oninput="debouncedSearch()" onpaste="setTimeout(debouncedSearch,0)" onkeydown="if (event.key === 'Escape') { event.preventDefault(); this.value = ''; clearTimeout(_searchTimer); hideGlobalSearch(); this.blur(); }">
     </div>
+    <button class="nav-refresh nav-key" id="navKey" onclick="connectGitHub()" title="Sign in" aria-label="Sign in"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M18 5l2 2"/></svg></button>
     <button class="nav-refresh" id="navRefresh" onclick="refreshPage()" title="Refresh: the latest papers and the latest version of the site" aria-label="Refresh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/></svg></button>
   </div>
 </nav>
@@ -2260,8 +2275,8 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
     <dl class="keys-reader">
       <dt><kbd>&darr;</kbd> <kbd>&uarr;</kbd> <kbd>Space</kbd></dt><dd>Scroll the paper (PageUp / PageDown, Home / End too)</dd>
       <dt><kbd>+</kbd> <kbd>&minus;</kbd></dt><dd>Zoom in / out</dd>
-      <dt><kbd>&#8984;</kbd> <kbd>Enter</kbd></dt><dd>Save the note or comment you&rsquo;re writing</dd>
-      <dt><kbd>[[</kbd></dt><dd>In a note: cite one of your highlights</dd>
+      <dt class="owner-only"><kbd>&#8984;</kbd> <kbd>Enter</kbd></dt><dd class="owner-only">Save the note or comment you&rsquo;re writing</dd>
+      <dt class="owner-only"><kbd>[[</kbd></dt><dd class="owner-only">In a note: cite one of your highlights</dd>
       <dt><kbd>Esc</kbd></dt><dd>Close a comment, clear the selection, or close the reader</dd>
       <dt><kbd>?</kbd></dt><dd>Show this list</dd>
     </dl>
@@ -2269,8 +2284,8 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
       <dt><kbd>/</kbd></dt><dd>Search</dd>
       <dt><kbd>j</kbd> <kbd>k</kbd></dt><dd>Next / previous paper in a list, or on a paper's page</dd>
       <dt><kbd>o</kbd> <kbd>Enter</kbd></dt><dd>Open the selected paper</dd>
-      <dt><kbd>x</kbd></dt><dd>Mark the selected paper read (and move on)</dd>
-      <dt><kbd>s</kbd></dt><dd>Star the selected paper</dd>
+      <dt class="owner-only"><kbd>x</kbd></dt><dd class="owner-only">Mark the selected paper read (and move on)</dd>
+      <dt class="owner-only"><kbd>s</kbd></dt><dd class="owner-only">Star the selected paper</dd>
       <dt><kbd>Esc</kbd></dt><dd>Close a pop-up or this panel</dd>
       <dt><kbd>?</kbd></dt><dd>Show this list</dd>
     </dl>
@@ -2461,7 +2476,7 @@ function writeBackup() {
     localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify(b));
   } catch (e) { /* storage full or blocked: the leave-page warning still applies */ }
 }
-function readBackup() { try { return JSON.parse(localStorage.getItem(LOCAL_BACKUP_KEY) || 'null'); } catch (e) { return null; } }
+function readBackup() { if (!isOwner()) return null; try { return JSON.parse(localStorage.getItem(LOCAL_BACKUP_KEY) || 'null'); } catch (e) { return null; } }
 function clearBackup() { clearTimeout(_backupTimer); try { localStorage.removeItem(LOCAL_BACKUP_KEY); } catch (e) {} }
 /* Saved rows win; rows added to the CSV since the backup was taken are kept */
 function mergeBackupRows(remote, saved, key) {
@@ -3391,7 +3406,7 @@ function tokCardHTML(p, idx) {
       ${displayDate(p) ? `<span>${esc(displayDate(p))}</span>` : ''}
     </div>
     <button class="tok-open" onclick="${pdfSourceOf(p) ? `openReader('${ka}')` : `openPaper('${ka}', event)`}">Read full paper</button>
-    ${hint ? '<div class="tok-hint">Swipe up for next &middot; right to star &middot; left to mark read</div>' : ''}
+    ${hint ? `<div class="tok-hint">${isOwner() ? 'Swipe up for next &middot; right to star &middot; left to mark read' : 'Swipe up for the next paper'}</div>` : ''}
   </article>`;
 }
 /* ---- sideways gestures: right stars, left marks read, hold saves to a list ---- */
@@ -3415,6 +3430,7 @@ function tokBindGestures(feed) {
 }
 function tokIsSideways(dx, dy) { return Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy) * 1.2; }   // decided before iOS starts a scroll (~10px)
 function tokDown(e) {
+  if (!isOwner()) return;   // swipes star or mark read, holding saves to a list: yours only
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   if (e.target.closest('button, a')) return;          // rail and "Read full paper" keep their taps
   const card = e.target.closest('.tok-card');
@@ -3512,9 +3528,9 @@ function tokMenu(ev, btn, k) {
   closeTokMenu();
   const p = allPapers.find(x => paperKey(x) === k), st = starSet.has(k), rd = readSet.has(k), ka = escAttr(k);
   m.dataset.key = k;
-  m.innerHTML = `<button role="menuitem" class="${st ? 'on-star' : ''}" onclick="tokMenuAct('star')"><i>&#9733;</i>${st ? 'Unstar' : 'Star'}</button>`
+  m.innerHTML = (isOwner() ? `<button role="menuitem" class="${st ? 'on-star' : ''}" onclick="tokMenuAct('star')"><i>&#9733;</i>${st ? 'Unstar' : 'Star'}</button>`
     + `<button role="menuitem" class="${rd ? 'on-read' : ''}" onclick="tokMenuAct('read')"><i>&#10003;</i>${rd ? 'Mark unread' : 'Mark read'}</button>`
-    + `<button role="menuitem" class="${paperInAnyList(k) ? 'on-list' : ''}" onclick="tokMenuAct('list')"><i>&#9776;</i>Save to a list…</button>`
+    + `<button role="menuitem" class="${paperInAnyList(k) ? 'on-list' : ''}" onclick="tokMenuAct('list')"><i>&#9776;</i>Save to a list…</button>` : '')
     + (p && p.url ? `<a role="menuitem" href="${esc(p.url)}" target="_blank" rel="noopener" onclick="closeTokMenu()"><i><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></i>Open the paper's page</a>` : '');
   const r = btn.getBoundingClientRect();
   m.style.top = (r.bottom + 6) + 'px'; m.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
@@ -4619,7 +4635,7 @@ document.addEventListener('keydown', e => {
   if (i < 0) i = rows.findIndex(r => r.dataset.key === _kbKey);
   if ((e.key === 'Enter' || e.key === 'o' || e.key === 'x' || e.key === 's') && i < 0) return;
   e.preventDefault();
-  if (!_kbHinted) { _kbHinted = true; toast('Keys: j / k move, o open, x mark read, s star. Press ? for all.', null, { duration: 5000 }); }
+  if (!_kbHinted) { _kbHinted = true; toast(isOwner() ? 'Keys: j / k move, o open, x mark read, s star. Press ? for all.' : 'Keys: j / k move, o open. Press ? for all.', null, { duration: 5000 }); }
   const key = i >= 0 ? rows[i].dataset.key : null;
   if (e.key === 'j') kbSelect(rows[i < 0 ? 0 : Math.min(i + 1, rows.length - 1)]);
   else if (e.key === 'k') kbSelect(rows[i < 0 ? 0 : Math.max(i - 1, 0)]);
@@ -4841,9 +4857,9 @@ function renderLibrary() {
     if (mineAdded.length) html += libGroupHTML('manual', '&#43;', 'Added by you', mineAdded);
     if (starred.length) html += libGroupHTML('starred', '&#9733;', 'Starred', starred);
     if (noted.length) html += libGroupHTML('noted', '&#9998;', 'Notes & highlights', noted);
-    else if (!Vault.key && vaultSupported() && Vault.meta) html += `<div class="lib-hint"><strong>Notes &amp; highlights</strong> are encrypted. <button class="lib-hint-btn" onclick="vaultReady().then(ok => ok && renderLibrary())">Unlock notes</button> to list the papers you annotated.</div>`;
+    else if (isOwner() && !Vault.key && vaultSupported() && Vault.meta) html += `<div class="lib-hint"><strong>Notes &amp; highlights</strong> are encrypted. <button class="lib-hint-btn" onclick="vaultReady().then(ok => ok && renderLibrary())">Unlock notes</button> to list the papers you annotated.</div>`;
     if (read.length) html += libGroupHTML('read', '&#10003;', 'Read', read);
-    if (_hiddenPapers.length) html += libGroupHTML('hidden', '&#8856;', 'Hidden', sortPapers(_hiddenPapers.slice()));
+    if (isOwner() && _hiddenPapers.length) html += libGroupHTML('hidden', '&#8856;', 'Hidden', sortPapers(_hiddenPapers.slice()));
     const MON = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
     function pubDateVal(p) {
       const s = (p.publishing_date||'').trim().toLowerCase();
@@ -5006,7 +5022,7 @@ function renderInterests() {
   Object.values(grouped).forEach(a => a.sort((x,y)=> r(so,x.status)-r(so,y.status) || r(ro,x.relevance_mapping)-r(ro,y.relevance_mapping) || r(po,x.priority_level)-r(po,y.priority_level)));
   const sugN = allInterests.filter(i=>i.status==='suggested').length;
   let html = `<p class="ig-legend"><strong>Interests</strong> decide how papers rank; each paper lists the ones it matches. They are separate from <a href="#interests/groups" class="ig-link">Topics</a>, which only group papers for browsing.</p><p class="ig-legend"><span class="badge badge-definitely">Must Read</span> <span class="badge badge-probably">Interesting</span> <span class="badge badge-mildly">Tangential</span> sets how papers matching an interest rank. <span class="badge badge-priority">core</span> to <span class="badge badge-priority">low-moderate</span> is your own priority. ${TOUCH ? 'Tap' : 'Click'} either on an interest to change it.</p>`;
-  if (sugN > 0 && currentIStatus === 'all') html += `<div style="padding:12px 20px;margin-bottom:16px;background:var(--purple-bg);border:1px solid var(--purple);border-radius:8px;font-size:13px;color:var(--purple);">${sugN} suggested interest${sugN>1?'s':''} from recent papers</div>`;
+  if (sugN > 0 && currentIStatus === 'all' && isOwner()) html += `<div style="padding:12px 20px;margin-bottom:16px;background:var(--purple-bg);border:1px solid var(--purple);border-radius:8px;font-size:13px;color:var(--purple);">${sugN} suggested interest${sugN>1?'s':''} from recent papers</div>`;
   ['Application Areas','Methods'].forEach(cat => {
     if (!grouped[cat]) return;
     const collapsed = _collapsedGroups.has(cat) ? ' collapsed' : '';
@@ -5029,8 +5045,8 @@ function renderGroupsTab(main) {
   const so = {suggested:0,confirmed:1,rejected:2};
   groups = [...groups].sort((a,b) => (so[a.status]||9) - (so[b.status]||9) || (parseInt(a.display_order)||999) - (parseInt(b.display_order)||999));
   const sugN = allGroups.filter(g=>g.status==='suggested').length;
-  let html = `<p class="ig-legend"><strong>Topics</strong> group papers for browsing: the cards on Recent Works and the chips on each paper. They don't change ranking; that is what <a href="#interests/interests" class="ig-link">Interests</a> do. Drag a topic to reorder the cards.</p>`;
-  if (sugN > 0 && currentIStatus === 'all') html += `<div style="padding:12px 20px;margin-bottom:16px;background:var(--purple-bg);border:1px solid var(--purple);border-radius:8px;font-size:13px;color:var(--purple);">${sugN} suggested topic${sugN>1?'s':''} from recent papers</div>`;
+  let html = `<p class="ig-legend"><strong>Topics</strong> group papers for browsing: the cards on Recent Works and the chips on each paper. They don't change ranking; that is what <a href="#interests/interests" class="ig-link">Interests</a> do.${isOwner() ? ' Drag a topic to reorder the cards.' : ''}</p>`;
+  if (sugN > 0 && currentIStatus === 'all' && isOwner()) html += `<div style="padding:12px 20px;margin-bottom:16px;background:var(--purple-bg);border:1px solid var(--purple);border-radius:8px;font-size:13px;color:var(--purple);">${sugN} suggested topic${sugN>1?'s':''} from recent papers</div>`;
   html += '<div class="interest-group"><div class="interest-group-inner" style="padding:10px 0">';
   html += groups.map(g => groupCardHTML(g, true)).join('');
   html += '</div></div>';
@@ -5047,7 +5063,8 @@ function groupCardHTML(g) {
   else if (g.status === 'confirmed') actions = `<div class="interest-actions"><button class="btn-quiet-remove" onclick="event.stopPropagation();updateG('${escAttr(g.group_name)}','rejected')" title="Hide this topic (you can restore it from Rejected)">Remove</button></div>`;
   else if (g.status === 'rejected') actions = `<div class="interest-actions"><button class="btn-approve" onclick="event.stopPropagation();updateG('${escAttr(g.group_name)}','confirmed')">Restore</button></div>`;
   const handle = `<div class="group-drag-handle" title="Drag to reorder"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div>`;
-  return `<div class="interest-card" draggable="true" data-group="${dataAttr(g.group_name)}" ondragstart="gDragStart(event)" ondragover="gDragOver(event)" ondragenter="gDragEnter(event)" ondragleave="gDragLeave(event)" ondrop="gDrop(event)" ondragend="gDragEnd(event)">${handle}<div class="interest-info"><div class="interest-name">${g.status === 'confirmed' ? gdot(norm(g.group_name)) : ''}${esc(g.group_name)}</div><div class="interest-detail">${esc(g.description||'')}</div>${notes}<div class="interest-meta">${statusBadge}<span class="badge badge-venue">${paperCount} paper${paperCount!==1?'s':''}${readCount ? `, ${readCount} read` : ''}</span></div>${topicTagLineHTML(g, paperCount)}</div>${actions}</div>`;
+  const drag = isOwner() ? ' draggable="true" ondragstart="gDragStart(event)" ondragover="gDragOver(event)" ondragenter="gDragEnter(event)" ondragleave="gDragLeave(event)" ondrop="gDrop(event)" ondragend="gDragEnd(event)"' : '';   // reordering is yours
+  return `<div class="interest-card"${drag} data-group="${dataAttr(g.group_name)}">${isOwner() ? handle : ''}<div class="interest-info"><div class="interest-name">${g.status === 'confirmed' ? gdot(norm(g.group_name)) : ''}${esc(g.group_name)}</div><div class="interest-detail">${esc(g.description||'')}</div>${notes}<div class="interest-meta">${statusBadge}<span class="badge badge-venue">${paperCount} paper${paperCount!==1?'s':''}${readCount ? `, ${readCount} read` : ''}</span></div>${topicTagLineHTML(g, paperCount)}</div>${actions}</div>`;
 }
 /* ===== A NEW TOPIC'S EXISTING PAPERS =====
    Approving a topic (or restoring one that has no papers) tags the papers already in the database: through the
@@ -5156,8 +5173,11 @@ function gDragEnd(e) {
 }
 
 function interestCardHTML(i) {
-  const relBadge = `<span class="badge badge-${i.relevance_mapping||'mildly'} badge-editable" title="How papers matching this interest rank. Click to change." onclick="event.stopPropagation();toggleInterestDropdown(event,'${escAttr(i.interest_name)}','relevance')">${relLabel(i.relevance_mapping||'mildly')}</span>`;
-  const priBadge = `<span class="badge badge-priority badge-editable" title="Your own priority for this interest. Click to change." onclick="event.stopPropagation();toggleInterestDropdown(event,'${escAttr(i.interest_name)}','priority')">${esc(i.priority_level||'medium')}</span>`;
+  const own = isOwner();   // a visitor sees the values, not a way to change them
+  const relBadge = own ? `<span class="badge badge-${i.relevance_mapping||'mildly'} badge-editable" title="How papers matching this interest rank. Click to change." onclick="event.stopPropagation();toggleInterestDropdown(event,'${escAttr(i.interest_name)}','relevance')">${relLabel(i.relevance_mapping||'mildly')}</span>`
+    : `<span class="badge badge-${i.relevance_mapping||'mildly'}" title="How papers matching this interest rank">${relLabel(i.relevance_mapping||'mildly')}</span>`;
+  const priBadge = own ? `<span class="badge badge-priority badge-editable" title="Your own priority for this interest. Click to change." onclick="event.stopPropagation();toggleInterestDropdown(event,'${escAttr(i.interest_name)}','priority')">${esc(i.priority_level||'medium')}</span>`
+    : `<span class="badge badge-priority" title="Priority">${esc(i.priority_level||'medium')}</span>`;
   const related = i.related_to ? `<div class="interest-detail">Related: ${esc(i.related_to)}</div>` : '';
   const notes = i.notes ? `<div class="interest-detail interest-notes" title="${escAttr(i.notes)}">${esc(i.notes)}</div>` : '';
   const actions = i.status==='suggested'
@@ -5413,6 +5433,47 @@ const GH_BRANCH = 'main';
 const AUTO_PUSH_DELAY = 5000, AUTO_PUSH_RETRY = 30000;
 let _autoPushTimer = null, _pushing = false, _pushAgain = false, _editGen = 0;
 function hasPAT() { try { return !!localStorage.getItem('gh_pat'); } catch (e) { return false; } }
+/* ===== OWNER MODE =====
+   The GitHub token is the key to the app. With it (checked with GitHub: it must be able to write to
+   scholar-dashboard) this is you, and everything works; the notes password can then unlock notes. Without it the
+   site is read-only for whoever is looking: every control that changes anything, the notes (and their password
+   prompt), chat, uploads, Add paper, Continue reading and the save bar are gone, and the functions behind them do
+   nothing (the guards at the end of the script), so no key, swipe or link can reach them either. The mode is
+   fixed for the page's life: signing in or out reloads it. */
+const PAT_OK_KEY = 'gh_pat_ok';
+var _ownerAtLoad;   // (var: callable from code that runs earlier in the script)
+function isOwner() { if (_ownerAtLoad === undefined) _ownerAtLoad = hasPAT(); return _ownerAtLoad && hasPAT(); }
+function patPrint(t) { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+/* true: it can write to the repo; false: GitHub says no; null: couldn't ask */
+async function patCanWrite(pat) {
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`, { headers: { Authorization: `Bearer ${pat}`, Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+    if (r.status === 401 || r.status === 403 || r.status === 404) return false;
+    if (!r.ok) return null;
+    const j = await r.json();
+    return !!(j.permissions && j.permissions.push);
+  } catch (e) { return null; }
+}
+/* A token saved before tokens were checked (or one revoked since) is checked once in the background */
+if (isOwner()) setTimeout(async () => {
+  const pat = localStorage.getItem('gh_pat');
+  if (!pat || localStorage.getItem(PAT_OK_KEY) === patPrint(pat)) return;
+  const ok = await patCanWrite(pat);
+  if (ok === true) localStorage.setItem(PAT_OK_KEY, patPrint(pat));
+  else if (ok === false) { localStorage.removeItem('gh_pat'); ownerLost(); }
+}, 1500);
+function ownerLost() {
+  try { sessionStorage.setItem('owner_toast', 'lost'); } catch (e) {}
+  setTimeout(() => location.reload(), 300);
+}
+(function () {   // after signing in or out: say what changed
+  let t = null; try { t = sessionStorage.getItem('owner_toast'); sessionStorage.removeItem('owner_toast'); } catch (e) {}
+  if (t) window.addEventListener('load', () => setTimeout(() => {
+    if (t === 'in') toast('Signed in.');
+    else if (t === 'out') toast('Signed out. The site is read-only in this browser.');
+    else toast('Your sign-in stopped working, so the site is read-only here. Sign in again with the key icon.', null, { duration: 7000 });
+  }, 600));
+})();
 /* Library header: whether edits reach GitHub, and when they last did */
 const LAST_SAVED_KEY = 'scholar_last_saved';
 function agoText(t) {
@@ -5434,22 +5495,24 @@ function updateSyncStatus() {
   } else if (anyDirty()) {
     el.innerHTML = `<span class="sync-dot warn"></span>Not saved yet <button class="sync-btn" onclick="pushToGitHub()">Save now</button>`;
   } else {
-    el.innerHTML = `<span class="sync-dot on"></span>Saves to GitHub automatically${last ? ` \u00b7 last saved ${agoText(last)}` : ''} <button class="sync-btn quiet" onclick="disconnectGitHub()">Disconnect</button>`;
+    el.innerHTML = `<span class="sync-dot on"></span>Saves to GitHub automatically${last ? ` \u00b7 last saved ${agoText(last)}` : ''} <button class="sync-btn quiet" onclick="disconnectGitHub()" title="Sign out on this browser: the site becomes read-only here">Sign out</button>`;
   }
 }
 async function connectGitHub() {
-  const pat = await showPrompt('Connect GitHub', 'Paste a fine-grained PAT with Contents read+write access to the scholar-dashboard repo. It is stored in this browser and only sent to api.github.com. From then on, changes save by themselves.', 'Paste PAT here', '', true);
+  const pat = (await showPrompt('Sign in', null, 'Password', '', true) || '').trim();   // (it's the GitHub token; checked with GitHub)
   if (!pat) return;
-  localStorage.setItem('gh_pat', pat.trim());
-  toast('Connected. Changes now save to GitHub automatically.');
-  if (anyDirty()) scheduleAutoPush(500);
-  updateSyncStatus();
+  const ok = await patCanWrite(pat);
+  if (ok !== true) { toastError(ok === false ? 'That password didn\u2019t work.' : 'Couldn\u2019t check the password. Try again when you\u2019re online.'); return; }
+  localStorage.setItem('gh_pat', pat); localStorage.setItem(PAT_OK_KEY, patPrint(pat));
+  try { sessionStorage.setItem('owner_toast', 'in'); } catch (e) {}
+  location.reload();   // everything is drawn again, with your controls
 }
 async function disconnectGitHub() {
-  const ok = await showConfirm('Disconnect GitHub?', 'This browser forgets the token. Changes will stay here until you push or connect again.', 'Disconnect', true);
+  const ok = await showConfirm('Sign out on this browser?', 'The site becomes read-only here: no changes, notes or chat until you sign in again with the key icon.', 'Sign out', true);
   if (!ok) return;
-  localStorage.removeItem('gh_pat');
-  updateSyncStatus();
+  localStorage.removeItem('gh_pat'); localStorage.removeItem(PAT_OK_KEY);
+  try { sessionStorage.setItem('owner_toast', 'out'); } catch (e) {}
+  location.reload();   // read-only from here
 }
 function scheduleAutoPush(delay) {
   if (!hasPAT()) return;
@@ -5462,7 +5525,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 
 function _ghFileUrl(filename) { return `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${filename}`; }
 function _ghFail(res, what) {
-  if (res.status === 401) { localStorage.removeItem('gh_pat'); const e = new Error('GitHub rejected the token, so it was removed. Push once to enter a new one.'); e.fatal = true; return e; }
+  if (res.status === 401) { localStorage.removeItem('gh_pat'); localStorage.removeItem(PAT_OK_KEY); ownerLost(); const e = new Error('GitHub rejected the token, so it was removed'); e.fatal = true; return e; }
   const e = new Error(`GitHub ${what} failed (${res.status})`);
   e.conflict = res.status === 409 || res.status === 422;
   return e;
@@ -5663,6 +5726,7 @@ const UPLOADS_KEY = 'scholar_uploads_v1';
 let _uploads = (() => { try { return JSON.parse(localStorage.getItem(UPLOADS_KEY) || '{}') || {}; } catch (e) { return {}; } })();
 const _uploadObjs = new Map();   // one object per paper, so the reader can tell it's the same one
 function uploadById(id) {
+  if (!isOwner()) return null;   // papers under review are yours alone
   const u = _uploads[id];
   if (!u || u.deleted) return null;
   let p = _uploadObjs.get(id);
@@ -5670,6 +5734,7 @@ function uploadById(id) {
   return Object.assign(p, { title: u.title || 'Untitled PDF', authors: '', date_found: (u.added || '').slice(0, 10), venue: '', url: '' });
 }
 function uploadedPapers() {
+  if (!isOwner()) return [];
   return Object.keys(_uploads).map(uploadById).filter(Boolean).sort((a, b) => (_uploads[b.id].added || '').localeCompare(_uploads[a.id].added || ''));
 }
 function findPaper(id) { return allPapers.find(x => x.id === id) || _hiddenPapers.find(x => x.id === id) || uploadById(id); }
@@ -5847,7 +5912,7 @@ async function showReader(id) {
   if (_reader.paper !== p) { _rnFilter = { colors: new Set(), comments: false, notes: false, q: '' }; endDraft('discard'); endInk(); }
   _reader.paper = p;
   clearTimeout(_reader.panelT); el.classList.remove('panel-leaving');
-  el.classList.toggle('panel-open', window.innerWidth >= 1024);   // notes beside the paper by default; on a phone or an upright iPad the paper needs the width (Notes opens it)
+  el.classList.toggle('panel-open', isOwner() && window.innerWidth >= 1024);   // notes beside the paper by default; on a phone or an upright iPad the paper needs the width (Notes opens it)
   document.getElementById('readerNotesBtn').setAttribute('aria-pressed', el.classList.contains('panel-open') ? 'true' : 'false'); _reader.zoom = 'fit';
   if (_reader.leaveClear) _reader.leaveClear();   // reopened while fading out: finish that at once
   el.classList.add('open'); el.classList.toggle('dark', readerDark());
@@ -6170,6 +6235,7 @@ function refreshNotesIndex() {
   })).catch(() => {});
 }
 function savedReaderPage(id) {
+  if (!isOwner()) return 1;   // no reading places for visitors
   const e = readingAll()[id];
   if (e && e.pos) return e.pos;
   try { return (JSON.parse(localStorage.getItem(READER_POS_KEY) || '{}')[id]) || 1; } catch (err) { return 1; }   // places saved before syncing
@@ -6177,6 +6243,7 @@ function savedReaderPage(id) {
 /* Papers you're partway through: opened in the reader and past the first page, not read, hidden or removed; the
    most recent first. The home row and phone strip only take the last CR_DAYS days (older ones stay in Library) */
 function continueReadingList(dbOnly, everything) {
+  if (!isOwner()) return [];
   const out = [], since = Date.now() - CR_DAYS * 86400000;
   Object.entries(readingAll()).forEach(([id, e]) => {
     if (!e || e.done || !(e.pos >= 2)) return;
@@ -6235,6 +6302,7 @@ function crPhoneHTML() {
 }
 /* The Read button on a paper's page says where you'd pick up */
 function readLabelHTML(p) {
+  if (!isOwner()) return 'Read';
   const e = readingAll()[p.id];
   if (!e || e.done || !(e.pos >= 2) || readSet.has(paperKey(p))) return 'Read';
   const page = Math.floor(e.pos);
@@ -6442,6 +6510,14 @@ document.addEventListener('keydown', e => {
 /* No PDF yet, or the one we have fails: paste an open link (checked before it's saved) or drop a file */
 async function showPdfPicker(p, why, detail) {
   if (!p) return;
+  if (!isOwner()) {
+    if (_reader.doc) { _reader.doc.destroy(); _reader.doc = null; }
+    document.getElementById('reader').classList.add('no-doc');
+    document.getElementById('readerBody').innerHTML = `<div class="pdf-picker"><h3>${why === 'failed' ? 'This PDF couldn\u2019t be opened here' : 'No PDF to read here'}</h3>
+      <p class="pp-why">${p.url ? 'The paper is on its own page.' : 'There\u2019s no link to this paper yet.'}</p>
+      ${p.url ? `<div class="pp-foot"><a class="pp-go" href="${esc(p.url)}" target="_blank" rel="noopener">Open the paper\u2019s page &#8599;</a></div>` : ''}</div>`;
+    return;
+  }
   const inModal = why === 'change';
   if (!inModal) {
     if (_reader.obs) _reader.obs.disconnect();
@@ -7642,7 +7718,8 @@ const PENCIL_KEY = 'scholar_pencil_v1';
   if (['read', 'hl', 'write'].includes(v.mode)) Pencil.mode = v.mode;
   if (v.hl === 'note' || HL_COLORS.includes(v.hl)) Pencil.hl = v.hl;
   if (PEN_COLORS[v.color]) Ink.color = v.color;
-  if (INK_SIZES[v.size]) Ink.size = v.size; } catch (e) {} })();
+  if (INK_SIZES[v.size]) Ink.size = v.size; } catch (e) {}
+  if (!isOwner()) Pencil.mode = 'read'; })();   // a visitor's Pencil only reads (the saved mode waits for you)
 function savePencil() { try { localStorage.setItem(PENCIL_KEY, JSON.stringify({ mode: Pencil.mode, hl: Pencil.hl, color: Ink.color, size: Ink.size })); } catch (e) {} }
 function lastHlColor() { try { const c = localStorage.getItem('scholar_pen_hl'); return HL_COLORS.includes(c) ? c : 'orange'; } catch (e) { return 'orange'; } }
 function rememberHlColor(c) { try { if (c) localStorage.setItem('scholar_pen_hl', c); } catch (e) {} }
@@ -7694,11 +7771,12 @@ function setInkTool(tool, color, size) {
 const ICON_PANEL = '<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M14.5 4v16M17 8.5h1.5M17 11.5h1.5"/></svg>';
 const ICON_MIN = '<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
 function pencilSwitchHTML() {
-  if (!pencilDevice()) return '';
+  if (!pencilDevice() || !isOwner()) return '';
   return `<span class="pencil-mode" data-mode="${Pencil.mode}" role="group" aria-label="What the Apple Pencil does">${PENCIL_MODES.map(o =>
     `<button data-pm="${o.m}" aria-pressed="${Pencil.mode === o.m}" onclick="setPencilMode('${o.m}')" title="${o.title}" aria-label="${o.label}">${o.svg}</button>`).join('')}</span>`;
 }
 function inkToolsHTML() {
+  if (!isOwner()) return '';
   if (Pencil.mode === 'hl') {
     const cur = pencilHl();
     return HL_COLORS.map(c => `<button class="sel-dot ${cur === c ? 'on' : ''}" style="--hc:var(--hl-${c})" title="Highlight: ${escAttr(hlLabel(c))}" aria-label="Highlight: ${escAttr(hlLabel(c))}" aria-pressed="${cur === c}" onclick="setPencilHl('${c}')"></button>`).join('')
@@ -7740,7 +7818,7 @@ function morphInto(el, html, own) {
    the Pencil switch, its tools, and on the right Notes (when the panel is closed) and the way out */
 function renderInkBar() {
   const bar = document.getElementById('inkBar'), reader = document.getElementById('reader'), zen = reader.classList.contains('zen');
-  const want = reader.classList.contains('open') && _reader.doc && (zen ? !reader.classList.contains('chrome-hidden') : pencilDevice());
+  const want = reader.classList.contains('open') && _reader.doc && (zen ? !reader.classList.contains('chrome-hidden') : pencilDevice() && isOwner());
   if (!want) {
     if (barShown(bar)) slideBar(bar, false, () => bar.classList.remove('open'));
     return;
@@ -7749,7 +7827,7 @@ function renderInkBar() {
   // the switch on the left, the chosen mode's tools in the middle, and in full screen Notes and the way out on the right
   const shellKept = morphInto(bar, `<div class="zb-side">${pencilSwitchHTML()}</div><div class="ink-tools zb-mid" data-mode="${Pencil.mode}"></div><div class="zb-side zb-right"></div>`, '.ink-tools, .zb-right');
   const right = bar.querySelector('.zb-right');
-  if (!morphInto(right, zen ? (reader.classList.contains('panel-open') ? '' : `<button class="sel-icon" onclick="toggleReaderPanel(true)" title="Notes and chat" aria-label="Notes and chat">${ICON_PANEL}</button>`) + `<button class="sel-icon" onclick="exitZen()" title="Leave full screen" aria-label="Leave full screen">${ICON_MIN}</button>` : '') && barShown(bar)) replay(right, 'swap');   // full screen's own buttons fade in
+  if (!morphInto(right, zen ? (reader.classList.contains('panel-open') || !isOwner() ? '' : `<button class="sel-icon" onclick="toggleReaderPanel(true)" title="Notes and chat" aria-label="Notes and chat">${ICON_PANEL}</button>`) + `<button class="sel-icon" onclick="exitZen()" title="Leave full screen" aria-label="Leave full screen">${ICON_MIN}</button>` : '') && barShown(bar)) replay(right, 'swap');   // full screen's own buttons fade in
   const mid = bar.querySelector('.ink-tools');
   if (!morphInto(mid, tools) && was && was !== Pencil.mode && bar.classList.contains('open')) {   // Highlight <-> Write: the tools cross-fade
     mid.classList.remove('swap'); void mid.offsetWidth; mid.classList.add('swap');
@@ -9567,7 +9645,7 @@ function renderPaperDetail(p) {
       <button class="pd-act ${ir?'on-read':''}" onclick="toggleRead('${ka}',this);${again}" title="${ir?'Mark unread':'Mark as read'}" aria-label="${ir?'Mark unread':'Mark as read'}">&#10003;<span class="pd-act-label"><span>${ir?'Read':'Mark read'}</span></span></button>
       <span class="save-anchor"><button class="pd-act ${inAny?'on-list':''}" onclick="event.stopPropagation();openSaveDD(this,'${ka}')" title="Add to list" aria-label="Add to list">&#9776;<span class="pd-act-label"><span>${inAny?'In a list':'Save'}</span></span></button></span>
       <button class="pd-act" onclick="${isHiddenRow(p) ? 'unhidePaper' : 'hidePaper'}('${ka}');${again}" title="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper (restore it from Library)'}" aria-label="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper'}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${isHiddenRow(p) ? '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg><span class="pd-act-label"><span>${isHiddenRow(p) ? 'Restore' : 'Hide'}</span></span></button>
-      <button class="pd-read" onclick="openReader('${ka}')" title="${pdfSourceOf(p) ? 'Read the PDF here' : 'Add a PDF to read it here'}"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>${readLabelHTML(p)}</button>
+      ${isOwner() || pdfSourceOf(p) ? `<button class="pd-read" onclick="openReader('${ka}')" title="${pdfSourceOf(p) ? 'Read the PDF here' : 'Add a PDF to read it here'}"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>${readLabelHTML(p)}</button>` : ''}
       ${p.url ? `<a class="pd-open" href="${esc(p.url)}" target="_blank" rel="noopener" title="Open the paper's page" aria-label="Open paper"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}
     </div>
   </div></div>`;
@@ -9964,6 +10042,46 @@ window.addEventListener('resize', () => {
 document.addEventListener('DOMContentLoaded', () => { loadPapers(); loadInterests(); loadGroups(); });
 
 
+
+/* ===== READ-ONLY GUARDS (see OWNER MODE) =====
+   Without the owner's token, everything that changes data, asks for the notes password, talks to Claude on the
+   laptop, or keeps something private does nothing, however it's reached (a button, a key, a swipe, a link, code).
+   The controls are hidden too (html.ro); this is the backstop. A name that no longer exists is reported, so the
+   list can't quietly go stale. */
+(function () {
+  const ALWAYS = ['toggleStar', 'toggleRead', 'persistStars', 'persistRead', 'persistLists', 'openSaveDD', 'toggleListItem', 'createListFromDD',
+    'hidePaper', 'unhidePaper', 'addGroupToPaper', 'removeGroupFromPaper', 'toggleGroupAddDD', 'createNewList', 'renameList', 'deleteList',
+    'showCopyDD', 'doCopyList', 'doCopyNew', 'updateI', 'updateG', 'updateInterestField', 'toggleInterestDropdown', 'gDragStart', 'gDrop',
+    'resetChanges', 'pushToGitHub', 'showSaveBar', 'scheduleAutoPush', 'disconnectGitHub', 'submitPdfLink', 'pinPdfVersion', 'tokMenuAct',
+    // notes and their password
+    'vaultReady', 'openVaultModal', 'submitVault', 'unlockFromPanel', 'lockNotes', 'nfSave', 'savePaperNotes', 'scheduleNotesPush', 'pushNotes',
+    'reconcileNotesIndex', 'renameHlColor', 'createAnno', 'deleteAnno', 'editAnnoComment', 'setAnnoColor', 'citeAnno', 'citeSelection',
+    'startNewNote', 'editNote', 'saveNoteEdit', 'deleteGeneralNote', 'setInkTool', 'setPencilHl', 'undoInk', 'toggleReaderPanel', 'setPanelTab', 'showSelBar',
+    // Claude on the laptop
+    'chatOpen', 'chatSend', 'chatSendOrStop', 'chatNew', 'chatSwitch', 'chatConnect', 'chatSetRemote', 'chatForgetRemote', 'askAboutSelection',
+    'startFigureSelect', 'chatApplyBlock', 'chatSaveAsNote', 'chatAddPaper', 'chatRefresh', 'toggleLibPanel', 'startAddPaper', 'stopAddPaper', 'startTopicTag',
+    // private papers and PDFs
+    'pickUploadPdf', 'uploadPdf', 'usePdfFile', 'openPdfChange', 'removeLocalPdf', 'removeUpload', 'renameUpload', 'startReview', 'saveUploads',
+    // reading places and list times
+    'noteReading', 'dismissReading', 'flushReading', 'showInProgress', 'saveListMeta'];
+  const WHEN = {   // allowed only when undoing: closing the panel, putting the Pencil back to reading
+    setReaderPanel: a => a[0] === false,
+    setPencilMode: a => a[0] === 'read'
+  };
+  const wrap = (name, allowed) => {
+    const f = window[name];
+    if (typeof f !== 'function') { console.error('read-only guard: no function ' + name); return; }
+    const isAsync = f.constructor && f.constructor.name === 'AsyncFunction';
+    window[name] = function () {
+      if (isOwner() || (allowed && allowed(arguments))) return f.apply(this, arguments);
+      return isAsync ? Promise.resolve(false) : undefined;
+    };
+  };
+  ALWAYS.forEach(n => wrap(n));
+  Object.entries(WHEN).forEach(([n, ok]) => wrap(n, ok));
+  const bf = window.bridgeFetch;   // every request to the laptop goes through here
+  window.bridgeFetch = function () { return isOwner() ? bf.apply(this, arguments) : Promise.reject(new Error('read-only')); };
+})();
 </script>
 </body>
 </html>
