@@ -1912,6 +1912,30 @@ body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
 .save-bar-btns .btn-save-csv:first-child:hover { background: #fff; }
 .btn-dismiss-bar { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 0 2px; line-height: 1; transition: color 0.15s; }
 .btn-dismiss-bar:hover { color: var(--text); }
+/* the minimal pill (overrides the card layout above) */
+.save-bar[data-state] { flex-wrap: nowrap; gap: 10px; padding: 7px 8px 7px 14px; border-radius: 999px; max-width: none; right: auto; min-height: 36px; box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+.save-bar[data-state] .save-bar-msg { margin: 0; padding: 0; flex: none; white-space: nowrap; }
+.save-bar[data-state] .save-bar-msg strong { font-size: 13px; font-weight: 500; }
+.save-bar[data-state] .save-bar-sub { display: none; }
+.save-bar[data-state] .save-bar-btns { width: auto; gap: 4px; }
+.save-bar[data-state] .btn-save-csv { flex: none; padding: 4px 12px; border-radius: 999px; font-size: 12.5px; }
+.save-bar[data-state] .btn-save-csv.sb-reset { background: none; border-color: transparent; color: var(--text-muted); }
+.save-bar[data-state] .btn-save-csv.sb-reset:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+.save-bar[data-state] .btn-dismiss-bar { position: static; order: 0; padding: 0 4px; }
+.save-bar[data-state="saving"], .save-bar[data-state="offline"] { padding-right: 16px; }
+.save-bar[data-state="saving"] .save-bar-btns, .save-bar[data-state="saving"] .btn-dismiss-bar,
+.save-bar[data-state="offline"] .save-bar-btns, .save-bar[data-state="offline"] .btn-dismiss-bar,
+.save-bar[data-state="error"] .sb-reset { display: none; }
+.sb-mark { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.save-bar[data-state="saving"] .sb-mark { width: 12px; height: 12px; background: none; border: 2px solid rgba(255,255,255,0.15); border-top-color: var(--accent); animation: chat-spin 0.8s linear infinite; }
+.save-bar[data-state="offline"] .sb-mark { background: var(--text-muted); }
+.save-bar[data-state="error"] .sb-mark { background: #e57373; }
+@media (prefers-reduced-motion: reduce) { .save-bar[data-state="saving"] .sb-mark { animation: none; } }
+@media (max-width: 700px) { .save-bar[data-state] { right: auto; max-width: calc(100% - 24px); } }
+@media (min-width: 701px) and (max-width: 1280px) {
+  body:has(.save-bar.visible) .toast { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+  body:has(.save-bar.visible) .toast:not(.show) { transform: translateX(-50%) translateY(calc(100% + 80px + env(safe-area-inset-bottom, 0px))); }
+}
 
 /* ===== TOUCH SCREENS (phone, iPad) =====
    Last in the stylesheet on purpose: these adjust components defined above and must win over them. */
@@ -2249,13 +2273,14 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
 <div id="toast" class="toast"></div>
 
 <!-- SAVE BAR -->
-<div class="save-bar" id="saveBar">
+<div class="save-bar" id="saveBar" data-state="push" role="status">
+  <span class="sb-mark" aria-hidden="true"></span>
   <span class="save-bar-msg"><strong id="saveBarTitle">Unsaved changes</strong><span class="save-bar-sub" id="saveBarSub">Kept in this browser until you push</span></span>
-  <button class="btn-dismiss-bar" onclick="hideSaveBar()" title="Dismiss">&times;</button>
   <div class="save-bar-btns">
-    <button class="btn-save-csv" onclick="pushToGitHub()" id="btnPushGH">Push to GitHub</button>
-    <button class="btn-save-csv" onclick="resetChanges()">Reset</button>
+    <button class="btn-save-csv" onclick="pushToGitHub()" id="btnPushGH">Push</button>
+    <button class="btn-save-csv sb-reset" onclick="resetChanges()">Reset</button>
   </div>
+  <button class="btn-dismiss-bar" onclick="hideSaveBar()" title="Dismiss" aria-label="Dismiss">&times;</button>
 </div>
 
 <script>
@@ -5190,11 +5215,16 @@ function showSaveBar() {
   if (hasPAT()) { setSaveBar('Saving to GitHub…', 'Saves a few seconds after your last change', 'Save now'); scheduleAutoPush(); }
   else setSaveBar('Unsaved changes', 'Kept in this browser until you push', 'Push to GitHub');
 }
+/* The save pill: just "Saving…" while it saves (it goes once saved), "Offline" when it can't; a button only when you
+   have to act (no GitHub token yet: Push; GitHub refused: Retry). The longer explanation is its tooltip. */
 function setSaveBar(title, sub, btnText) {
   setTimeout(updateSyncStatus, 0);
-  document.getElementById('saveBarTitle').textContent = title;
+  const state = /^Saving/.test(title) ? 'saving' : title === 'Offline' ? 'offline' : /^Not saved/.test(title) ? 'error' : 'push';
+  const bar = document.getElementById('saveBar');
+  bar.dataset.state = state; bar.title = sub || '';
+  document.getElementById('saveBarTitle').textContent = { saving: 'Saving\u2026', offline: 'Offline \u00b7 kept here', error: 'Not saved yet', push: 'Unsaved changes' }[state];
   document.getElementById('saveBarSub').textContent = sub;
-  if (btnText) document.getElementById('btnPushGH').textContent = btnText;
+  document.getElementById('btnPushGH').textContent = state === 'error' ? 'Retry' : 'Push';
 }
 function hideSaveBar() { document.getElementById('saveBar').classList.remove('visible'); }
 
