@@ -2325,9 +2325,11 @@ const GROUP_NORMALIZE = {
   'Safety & Imitation Learning': 'Safety & Verification',
   'Conformal Prediction / Verification': 'Conformal Prediction',
   'Conformal Prediction / Uncertainty': 'Conformal Prediction',
-  'Diffusion Models / Safety': 'Diffusion & Flow Policies',
-  'Flow Matching / RL': 'Diffusion & Flow Policies',
-  'Diffusion/Flow Matching Policies': 'Diffusion & Flow Policies',
+  'Diffusion Models / Safety': 'Generative Policies',
+  'Flow Matching / RL': 'Generative Policies',
+  'Diffusion/Flow Matching Policies': 'Generative Policies',
+  'Diffusion & Flow Policies': 'Generative Policies',   // renamed 2026-09-30
+  'VLA & Generalist Policies': 'Generalist Policies',   // renamed 2026-09-30
   'Safe RL': 'Reinforcement Learning',
 };
 let GROUP_ORDER = []; // Populated dynamically from groups_database.csv
@@ -9870,7 +9872,8 @@ function applyHash() {
     const groupName = decodeURIComponent(hash.slice(6));
     if (groupName) {
       markTab();
-      openGroup(groupName, true);
+      if (norm(groupName) !== groupName) history.replaceState(null, '', '#group/' + encodeURIComponent(norm(groupName)));   // an old link to a renamed topic: its new name
+      openGroup(norm(groupName), true);
       return;
     }
   }

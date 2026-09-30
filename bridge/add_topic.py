@@ -10,6 +10,7 @@ in the database. Same split as add_paper.py:
     python3 bridge/add_topic.py "Visuomotor Policies"                        # the topic exists (suggested or confirmed)
     python3 bridge/add_topic.py "Visuomotor Policies" --create "what belongs"   # make it (confirmed) first
     python3 bridge/add_topic.py "Visuomotor Policies" --ids ids.json          # apply ids you chose (no Claude)
+    python3 bridge/add_topic.py --rename "Old name" "New name"                # rename a topic on its row and papers
 The bridge runs it when you approve a topic in the dashboard; weekly runs run it for approved topics not yet tagged.
 """
 import csv, datetime, io, json, os, re, subprocess, sys
@@ -118,6 +119,31 @@ def publish(name, ids, create_desc=None, cb=None):
         if attempt == 2: raise RuntimeError('push failed: ' + (r.stderr or '')[-300:].replace(ap.gh_token(), '***'))
 
 
+def rename(old, new, cb=None):
+    """Rename a topic everywhere the data names it: its row, and every paper's theme_groups."""
+    new = new.strip()
+    if not new or '|' in new: raise Stop('Give a new name without "|".')
+    for attempt in range(3):
+        ap.fresh_clone()
+        gfields, groups = read_groups()
+        g = topic_row(groups, old)
+        if not g: raise Stop(f'There is no topic called \u201c{old}\u201d.')
+        if topic_row(groups, new) and topic_row(groups, new) is not g: raise Stop(f'A topic called \u201c{new}\u201d already exists.')
+        old = g['group_name']; g['group_name'] = new
+        pfields, papers = ap.read_papers()
+        n = 0
+        for p in papers:
+            gs = [x for x in (p.get('theme_groups') or '').split('|') if x]
+            if old in gs: p['theme_groups'] = '|'.join(dict.fromkeys(new if x == old else x for x in gs)); n += 1
+        write_csv(PAPERS, pfields, papers)
+        write_csv(GROUPS, gfields, groups, '|')
+        ap.git('add', PAPERS, GROUPS)
+        ap.git('commit', '-q', '-m', f'Rename topic "{old}" to "{new}" ({n} papers)')
+        r = ap.git('push', *(['--dry-run'] if ap.DRY_RUN else []), f'https://x-access-token:{ap.gh_token()}@{ap.REMOTE}', 'HEAD:main', check=False)
+        if r.returncode == 0: return {'old': old, 'new': new, 'papers': n}
+        if attempt == 2: raise RuntimeError('push failed: ' + (r.stderr or '')[-300:].replace(ap.gh_token(), '***'))
+
+
 def tag(name, create_desc=None, cb=None, on_proc=None):
     log('Reading your topics…', cb)
     ap.fresh_clone()
@@ -136,6 +162,8 @@ if __name__ == '__main__':
         if not a: print(__doc__); sys.exit(2)
         if a[0] == '--pending':
             print('\n'.join(needs_tagging())); sys.exit(0)
+        if a[0] == '--rename':
+            r = rename(a[1], a[2]); print(f"Renamed \u201c{r['old']}\u201d to \u201c{r['new']}\u201d on {r['papers']} papers."); sys.exit(0)
         name = a[0]
         if '--ids' in a:
             with open(a[a.index('--ids') + 1]) as f: data = json.load(f)
