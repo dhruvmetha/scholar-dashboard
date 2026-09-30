@@ -133,7 +133,10 @@ def clean_row(p, interests, groups):
     try: res = max(-1, min(1, int(p.get('residual_score') or 0)))
     except Exception: res = 0
     tier = p.get('relevance_tier') if p.get('relevance_tier') in ('definitely', 'probably', 'mildly') else 'mildly'
-    out.update(matched_interests='|'.join(dict.fromkeys(m.strip() for m in mi)), theme_groups='|'.join(dict.fromkeys(g.strip() for g in tg)),
+    mi = list(dict.fromkeys(m.strip() for m in mi))
+    st = p.get('match_strengths') if isinstance(p.get('match_strengths'), dict) else {}
+    strengths = '|'.join(f"{m}={st[m] if st.get(m) in ('about', 'partly', 'touches') else 'partly'}" for m in mi)   # every match gets one
+    out.update(matched_interests='|'.join(mi), match_strengths=strengths, theme_groups='|'.join(dict.fromkeys(g.strip() for g in tg)),
                residual_score=str(res), relevance_tier=tier, notes=out['notes'] or 'Added by you.',
                arxiv_id=str(p.get('arxiv_id') or ''), doi=str(p.get('doi') or ''))
     return out

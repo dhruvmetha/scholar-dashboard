@@ -153,10 +153,10 @@ Run targeted searches grouped by research interest:
 
 0. **Pull from GitHub** — **ALWAYS the first step.** Run `bash pull_from_github.sh` from the project directory. This fetches the latest `papers_database.csv` and `interests_database.csv` from GitHub, ensuring the task starts with up-to-date data regardless of what previous sessions pushed. If this script exits non-zero, **abort immediately** and notify the user — do not proceed with stale or missing data.
 0.5. **Tag approved topics' existing papers** — `python3 bridge/add_topic.py --pending` lists confirmed topics whose existing papers were never tagged (the user just approved or created them). For each: decide from its `description` which papers belong (see `bridge/add_topic.md`), write `{"ids": [...]}` to a temp file, run `python3 bridge/add_topic.py "<topic>" --ids <file>` (it applies and publishes from its own copy of the repo), then re-run `bash pull_from_github.sh`.
-1. **Load interests** — Read `interests_database.csv` as the sole source of truth for filtering, ranking, and search query construction. Use confirmed interests (status="confirmed") for active filtering; use their `relevance_mapping` column for tier assignment. Ignore rejected interests. Treat suggested interests as "mildly" relevant.
+1. **Load interests** — Read `interests_database.csv` as the sole source of truth for filtering, ranking, and search query construction. Use confirmed interests (status="confirmed") for active filtering. Each has one **level** in `relevance_mapping`: `definitely` = **Core** (the user's research), `probably` = **Related**, `mildly` = **Peripheral**. The level sets both how papers rank and how hard Mode 2 searches for it. Ignore rejected interests; treat suggested ones as Peripheral.
 2. **Source** — Gather raw paper list (from emails or web sources above)
 3. **Deduplicate** — Remove papers already in the database or appearing multiple times. If a paper exists from a different source, update `source_mode` to reflect both sources. **Match on the paper itself, never on the generated `id`**: the same paper gets a different slug when the author or title words are parsed differently (e.g. `wan-2026-free-checker` vs `wan-2026-no-free`). Treat a paper as already present if its arXiv ID / DOI / OpenReview ID matches, or its title matches after lowercasing and stripping punctuation. Rows with `is_hidden="true"` count as present: the user hid them, so never add them again.
-4. **Filter & score** — For each paper, determine which confirmed interests from `interests_database.csv` it matches and record them in `matched_interests` (pipe-separated, exact `interest_name` values). Assign a `residual_score` (integer, typically -1, 0, or +1) to fine-tune relevance beyond what the interests alone capture. The website computes dynamic relevance as: `max(matched interest relevance_mapping scores) + residual_score`, clamped to [1,3] and mapped to definitely/probably/mildly. Also set the static `relevance_tier` column as a snapshot fallback.
+4. **Filter & score** — For each paper, determine which confirmed interests from `interests_database.csv` it matches and record them in `matched_interests` (pipe-separated, exact `interest_name` values), and **how strongly** it matches each in `match_strengths` (`Name=about|Other=partly`): `about` (the interest is what the paper is about), `partly` (a substantial part), `touches` (appears, not substantially). Be selective: most papers are about one or two of their interests at most. Assign a `residual_score` (integer, -1, 0 or +1; rare) and set the static `relevance_tier` snapshot. The website scores papers from these (see the Dynamic Relevance Model below).
 5. **Group** — Assign `theme_groups` (pipe-separated) to each paper using the live canonical list from `groups_database.csv` (confirmed entries only, sorted by `display_order`). Default to 1–2 groups; add a third only when the paper makes a genuine, substantial contribution to a third cluster. Hard cap: 5.
    - **If a paper fits an existing confirmed group**, use its exact `group_name` from `groups_database.csv`.
    - **If a paper is genuinely novel and fits no existing group**, create a new row in `groups_database.csv` with `status="suggested"` and a descriptive `group_name`. Assign that group name to the paper. The user will review it in the Interests tab of the website (Approve to confirm, Dismiss to reject).
@@ -189,7 +189,8 @@ Maintain a CSV file (`papers_database.csv`) with these columns:
 | `date_found` | Date this paper was added |
 | `source_mode` | "email", "web_survey", "email,web_survey", or "manual" (added by hand) |
 | `relevance_tier` | **Static fallback only.** "definitely", "probably", or "mildly". The website now computes relevance dynamically from `matched_interests` + `residual_score` (see below). This column is still written at ingestion time as a snapshot, but the website ignores it when `matched_interests` is populated. |
-| `matched_interests` | Pipe-separated list of interest names from `interests_database.csv` that this paper matches (e.g. `"Conformal prediction\|Data-driven verification"`). **Must use exact `interest_name` values.** The website uses this + `residual_score` to compute dynamic relevance at render time. |
+| `matched_interests` | Pipe-separated list of interest names from `interests_database.csv` that this paper matches (e.g. `"Conformal prediction\|Data-driven verification"`). **Must use exact `interest_name` values.** |
+| `match_strengths` | How strongly the paper matches each of its interests: `Name=about\|Other=partly\|Third=touches` (about / partly / touches; see Step 4). The website's score uses it. The user can change strengths on the paper's page, so **never overwrite a strength already there**; add ones that are missing. |
 | `residual_score` | Integer adjustment to the interest-derived relevance score. Typically -1, 0, or +1. `+1` = paper is more relevant than its interests suggest (e.g., directly about data-driven verification of black-box systems, or combines multiple core interests). `-1` = paper is less relevant (e.g., pure theory with no robotics/learning connection). `0` = interest-based score is appropriate. The justification for any non-zero value MUST be noted in the `notes` column. |
 | `theme_groups` | Pipe-separated list of thematic clusters (e.g. `"Safety & Verification\|Conformal Prediction"`). Typically 1–2 groups; up to 5 max for genuinely cross-cutting papers. **Always use canonical group names** — see Step 5 in the Execution Workflow. |
 | `headline` | One-line attention-grabbing takeaway (generated, ~10-15 words). Shown as the main display text on the website. |
@@ -239,8 +240,7 @@ Maintain a CSV file (`interests_database.csv`) with these columns:
 |--------|-------------|
 | `interest_name` | Name of the research interest (e.g., "Data-driven verification") |
 | `category` | "application" or "method" |
-| `priority_level` | "core", "high", "key", "medium", "low-moderate" |
-| `relevance_mapping` | "definitely", "probably", or "mildly" — how papers matching this interest should be ranked |
+| `relevance_mapping` | The interest's level: "definitely" = **Core** (the user's research), "probably" = **Related**, "mildly" = **Peripheral**. It sets how papers matching it score and how hard the weekly survey searches for it. (There is no separate priority any more.) |
 | `status` | "confirmed" (active), "suggested" (pending user review), or "rejected" (dismissed) |
 | `related_to` | Other interests or topics this connects to |
 | `discovered_from` | How this interest was found: "manual" (user-specified) or paper titles/descriptions |
@@ -255,35 +255,39 @@ During each run (Mode 1 or Mode 2), after processing papers:
 1. **Identify candidates** — Look for recurring themes, methods, or application areas in the papers that don't match any existing interest in the database (regardless of status).
 2. **Threshold** — Only suggest an interest if it appeared in 2+ papers, OR if a single paper is very closely related to existing confirmed interests.
 3. **Skip rejected** — Never re-suggest an interest that has status "rejected".
-4. **Add to CSV** — Append new suggested interests with `status="suggested"`, best-guess priority and relevance, and a `discovered_from` note explaining which papers triggered it.
+4. **Add to CSV** — Append new suggested interests with `status="suggested"`, a best-guess level (`relevance_mapping`; Core only if it is the user's research itself), and a `discovered_from` note explaining which papers triggered it.
 5. **User review** — The website's Interests tab shows suggested interests with Approve/Dismiss buttons. When the user clicks a button, the CSV is updated (downloaded for replacement). Future runs respect the updated status.
 
 ## How Interests Drive Filtering (Dynamic Relevance Model)
 
-Relevance is computed **dynamically at display time** by the website, not baked in at ingestion. This means changing an interest's `relevance_mapping` in the Interests tab immediately affects how all papers matching that interest are ranked — no re-processing needed.
+Relevance is computed **dynamically at display time** by the website, from each paper's matches, their strengths and the interests' current levels: changing an interest's level in the Interests tab, or a paper's strength on its page, re-scores papers at once — no re-processing needed.
 
 ### At ingestion time (Claude):
 
 1. Read all rows from `interests_database.csv`
-2. For each paper, determine which confirmed interests it matches → store in `matched_interests` (pipe-separated exact `interest_name` values)
-3. Assign a `residual_score` (integer, typically -1, 0, or +1) to fine-tune relevance
-4. Set the static `relevance_tier` column as a snapshot fallback (used only when `matched_interests` is empty)
+2. For each paper, record the confirmed interests it matches (`matched_interests`) and how strongly (`match_strengths`: about / partly / touches)
+3. Assign a `residual_score` (integer, -1, 0 or +1; rare)
+4. Set the static `relevance_tier` column as a snapshot fallback (used only when no confirmed interest matches)
 
-### At display time (website JS):
+### At display time (website JS): Core first, context second
 
-1. For each paper, look up its `matched_interests` against the current `allInterests` array
-2. Find the highest `relevance_mapping` score among matching confirmed interests (definitely=3, probably=2, mildly=1)
-3. Add the paper's `residual_score`
-4. Clamp to [1,3] and map back: 3→definitely ("Must Read"), 2→probably ("Interesting"), 1→mildly ("Tangential")
-5. **Must Read has to be earned:** a 3 stays Must Read only if the paper matches **two or more** confirmed "definitely" interests, or has `residual_score` +1. Otherwise it shows as Interesting. (This keeps Must Read to roughly the top fifth of the database.)
-6. **Top Papers order:** Must Read papers are ranked by `(best interest score + 0.5 per extra Must Read interest + residual) × 0.5^(days since date_found / 90)`, so strong papers stay near the top for about a season. The list can also be viewed by week.
-5. If `matched_interests` is empty, fall back to the static `relevance_tier` column
+- Strength values: about 1, partly 0.6, touches 0.25 (a match with no strength yet counts as partly).
+- **Score** = 3 × the strength of the paper's **best Core** match + its **best other** match (Related 1, Peripheral 1/3, times strength) + 0.5 × `residual_score`. Only the best of each counts, so being tagged with many broad interests can't pile up.
+- **Labels**: Must Read at score 2.5+ (about a Core interest, or partly about one with a strong related match), Interesting at 0.6+, else Tangential. That is roughly the top sixth as Must Read.
+- **Top Papers** order: score × 0.5^(days since `date_found` / 90), so strong papers stay near the top for about a season. The list can also be viewed by week.
+- The paper page shows the score, and "How this was scored" shows each match, its level and strength, and what counted.
+
+### Search effort by level (Mode 2)
+
+- **Core**: searched every run, across every tier (conferences, workshops, journals, arXiv), with several queries each.
+- **Related**: searched every run on arXiv and the main venues, one query each.
+- **Peripheral**: no searches of its own; its papers come from the email alerts or while searching for other interests.
 
 ### Residual score guidelines:
 
 The residual score is a **rare exception**, not a routine adjustment. The vast majority of papers (80%+) should have `residual_score = 0`. The interest-based system should do most of the work — if you find yourself assigning many non-zero residuals, the interests database probably needs updating instead.
 
-- **+1**: Reserved for papers that are **exceptionally** relevant beyond what their matched interests capture. The bar is high: the paper must directly address data-driven verification of black-box robotic systems (Sumanth's exact research focus), or represent a genuinely novel intersection of 3+ core interests that none of the individual interest scores would reflect. Simply matching multiple interests is NOT enough for +1 — that's what the max-score logic already handles. Ask: "Would removing this +1 meaningfully misrank this paper?" If no, leave it at 0.
+- **+1**: Reserved for papers that are **exceptionally** relevant beyond what their matched interests capture. The bar is high: the paper must directly address data-driven verification of black-box robotic systems (Sumanth's exact research focus), or represent a genuinely novel intersection of 3+ core interests that none of the individual interest scores would reflect. Simply matching multiple interests is NOT enough for +1, and neither is being strongly about an interest — that's what the strengths handle. Ask: "Would removing this +1 meaningfully misrank this paper?" If no, leave it at 0.
 - **0**: The default for the vast majority of papers. Interest-based relevance is appropriate as-is. When in doubt, use 0.
 - **-1**: Paper is less relevant than matched interests suggest. Use when: the paper is purely theoretical with no data-driven, learning, or robotics component; the paper only tangentially touches the matched interest (e.g., uses CBFs as a minor baseline comparison); or the paper is from a different domain (power systems, NLP) despite keyword overlap.
 

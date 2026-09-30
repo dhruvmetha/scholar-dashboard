@@ -25,11 +25,15 @@ The databases are in the current folder: `papers_database.csv`, `interests_datab
 The user is a robotics researcher working on data-driven verification of black-box robotic systems with black-box
 controllers. Use `interests_database.csv` as the definition of their interests.
 - `matched_interests`: the **confirmed** interests the paper genuinely matches, exact `interest_name` values. Can be
-  empty for an off-topic paper; the user still wants it in the database.
+  empty for an off-topic paper; the user still wants it in the database. Each interest's level is in
+  `relevance_mapping`: `definitely` = Core (the user's research), `probably` = Related, `mildly` = Peripheral.
+- `match_strengths`: for each matched interest, how strongly the paper matches it: `about` (it's what the paper is
+  about), `partly` (a substantial part), or `touches` (it appears, but not substantially). Be selective: most papers
+  are about one or two of their interests at most. The dashboard's score comes from these.
 - `residual_score`: 0 almost always; +1 only when the paper is directly about data-driven verification of black-box
   robotic systems, or a real intersection of 3+ core interests; -1 when it only touches its matched interests.
-- `relevance_tier`: `definitely`, `probably` or `mildly` (the best matched interest's `relevance_mapping`, adjusted by
-  the residual; `mildly` when nothing matches).
+- `relevance_tier` (a snapshot, used only when no interest matches): `definitely` if the paper is about a Core
+  interest, `probably` if it matches any Related or Core one otherwise, else `mildly`.
 - `theme_groups`: 1-2 (at most 3) exact `group_name` values of **confirmed** groups in `groups_database.csv`. Never
   `Other` or any name not in the file; leave it empty when nothing fits.
 - `headline`: the takeaway in about 10-15 words (not the title).
@@ -48,7 +52,8 @@ Reply with **only** one fenced JSON block, nothing before or after it:
 ```json
 {"papers": [{"title": "", "authors": "", "venue": "", "publishing_date": "", "url": "", "pdf_url": "",
   "arxiv_id": "", "doi": "", "abstract": "", "headline": "", "summary": "", "notes": "",
-  "matched_interests": [], "residual_score": 0, "relevance_tier": "", "theme_groups": []}]}
+  "matched_interests": [], "match_strengths": {"interest name": "about"}, "residual_score": 0, "relevance_tier": "",
+  "theme_groups": []}]}
 ```
 
 Several papers in the input: one object each. When you can't add it, instead:

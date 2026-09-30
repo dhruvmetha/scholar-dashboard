@@ -620,7 +620,20 @@ html.no-hover .pd-topic-chip:hover:not(:active) { background: rgba(255,255,255,0
 .pd-sub { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 .pd-info { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 0 4px; transition: color 0.15s; }
 .pd-info:hover { color: var(--text); }
-.pd-matches { display: flex; flex-wrap: wrap; gap: 5px; }
+.pd-matches { display: flex; flex-wrap: wrap; gap: 6px; }
+.pd-match-row { display: inline-flex; align-items: stretch; gap: 0; }
+.pd-match-list { flex-direction: column; align-items: stretch; gap: 5px; }
+.pd-match-list .pd-match-row { display: flex; }
+.pd-match-list .pd-match { flex: 1; min-width: 0; text-align: left; word-break: normal; overflow-wrap: break-word; }
+.pd-match-list .pd-strength { flex-shrink: 0; justify-content: flex-end; padding: 2px 8px; }
+.pd-match-row .pd-match:has(+ .pd-strength) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.pd-strength { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 11.5px; line-height: 1.4; padding: 2px 7px; border-radius: 0 6px 6px 0; border: none; border-left: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: var(--text-muted); white-space: nowrap; }
+button.pd-strength { cursor: pointer; transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease); }
+button.pd-strength:hover { color: var(--text); background: rgba(255,255,255,0.1); }
+.pd-strength svg { width: 8px; height: 5px; fill: none; stroke: currentColor; stroke-width: 1.4; }
+.pd-strength.lv-definitely { color: #7fcf9a; }   /* a Core interest: it's what can make the paper Must Read */
+.pd-strength.unrated { font-style: italic; }
+.pd-score { margin-left: 8px; font-size: 12.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .pd-match { font: inherit; font-size: 12px; line-height: 1.4; color: var(--text-secondary); background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; text-align: left; transition: border-color 0.15s, color 0.15s; }
 .pd-match:hover { color: var(--text); border-color: rgba(255,255,255,0.22); }
 .badge-link { font: inherit; font-size: 11px; cursor: pointer; border: 1px solid transparent; transition: border-color 0.15s, color 0.15s; }
@@ -1706,7 +1719,12 @@ body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
 .badge-confirmed { background: var(--green-bg); color: var(--green); }
 .badge-suggested { background: var(--purple-bg); color: var(--purple); }
 .badge-rejected { background: var(--gray-badge-bg); color: var(--gray-badge); }
-.badge-priority { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+.level-dd { max-width: 320px; }
+.level-dd .interest-dropdown-item { display: flex; align-items: flex-start; gap: 10px; white-space: normal; }
+.level-dd-help { font-size: 12px; line-height: 1.4; color: var(--text-muted); }
+.rel-strength { display: block; font-size: 11.5px; color: var(--text-muted); }
+.rel-pts { margin-left: auto; font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.relevance-interest-row.muted { opacity: 0.55; }
 .badge-editable { cursor: pointer; position: relative; user-select: none; }
 .badge-editable:hover { filter: brightness(1.3); }
 .interest-dropdown { position: absolute; z-index: 200; background: #000000ee; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); overflow: hidden; min-width: 110px; padding: 5px 0; animation: dropdown-in 0.15s ease forwards; }
@@ -2349,42 +2367,58 @@ const GROUP_NORMALIZE = {
 };
 let GROUP_ORDER = []; // Populated dynamically from groups_database.csv
 const REL_ORDER = { definitely: 0, probably: 1, mildly: 2 };
-const REL_SCORE = { definitely: 3, probably: 2, mildly: 1 };
-const SCORE_TO_REL = { 3: 'definitely', 2: 'probably', 1: 'mildly' };
 
-/* Dynamic relevance: computed from matched_interests × current interest settings + residual_score */
-/* How a paper's matched interests score: the best tier, how many Must Read interests it hits,
-   and the triage residual */
-function relevanceParts(p) {
-  const mi = (p.matched_interests || '').split('|').map(s => s.trim()).filter(Boolean);
-  let maxScore = 0, nMust = 0;
-  for (const name of mi) {
+/* ===== SCORING: Core first, context second =====
+   Each interest has one level, stored in relevance_mapping: Core (definitely), Related (probably), Peripheral
+   (mildly). Each interest a paper matches has a strength, in match_strengths ("Name=about|Other=partly"): the
+   paper is about it, partly about it, or only touches it (rated when the paper is added; you can change it on the
+   paper's page). A paper's score:
+     core fit  3 x the strength of its best Core match        (about 1, partly 0.6, touches 0.25)
+   + context   its best other match: Related 1, Peripheral 1/3, times strength
+   + residual  half the triage adjustment (-1, 0 or +1)
+   Only the best of each counts, so being tagged with many broad interests can't pile up. The label is a cut-off on
+   the score (SCORE_CUTS): Must Read means about your research (or partly, with a strong related match). */
+const LEVEL_NAME = { definitely: 'Core', probably: 'Related', mildly: 'Peripheral' };
+const STRENGTH = { about: 1, partly: 0.6, touches: 0.25 };
+const STRENGTH_NAME = { about: 'About', partly: 'Partly about', touches: 'Touches' };
+const STRENGTH_DEFAULT = 'partly';   // a match not rated yet
+const SCORE_CUTS = { definitely: 2.5, probably: 0.6 };   // Must Read at 2.5+, Interesting at 0.6+, else Tangential
+function matchStrengths(p) {
+  const out = {};
+  (p.match_strengths || '').split('|').forEach(part => { const k = part.lastIndexOf('='); if (k > 0) { const v = part.slice(k + 1).trim(); if (STRENGTH[v]) out[part.slice(0, k).trim()] = v; } });
+  return out;
+}
+function scoreParts(p) {
+  const st = matchStrengths(p);
+  const matches = [];
+  (p.matched_interests || '').split('|').map(s => s.trim()).filter(Boolean).forEach(name => {
     const i = allInterests.find(x => x.interest_name === name && x.status === 'confirmed');
-    if (!i) continue;
-    const sc = REL_SCORE[i.relevance_mapping] || 1;
-    maxScore = Math.max(maxScore, sc);
-    if (sc === 3) nMust++;
-  }
-  return { mi, maxScore, nMust, residual: parseFloat(p.residual_score) || 0 };
+    if (!i) return;
+    const level = LEVEL_NAME[i.relevance_mapping] ? i.relevance_mapping : 'mildly', strength = st[name] || STRENGTH_DEFAULT;
+    const value = level === 'definitely' ? 3 * STRENGTH[strength] : (level === 'probably' ? 1 : 1 / 3) * STRENGTH[strength];
+    matches.push({ name, level, strength, value, rated: !!st[name] });
+  });
+  const core = matches.filter(m => m.level === 'definitely').sort((a, b) => b.value - a.value)[0] || null;
+  const context = matches.filter(m => m.level !== 'definitely').sort((a, b) => b.value - a.value)[0] || null;
+  const residual = Math.max(-1, Math.min(1, parseFloat(p.residual_score) || 0));
+  const score = (core ? core.value : 0) + (context ? context.value : 0) + 0.5 * residual;
+  return { matches, core, context, residual, score: Math.round(score * 100) / 100 };
 }
-/* Must Read has to be earned twice over: two or more Must Read interests, or a +1 residual.
-   A single Must Read match on its own reads as Interesting. */
-function mustReadEarned(parts) { return parts.nMust >= 2 || parts.residual > 0; }
+function paperScore(p) {
+  const parts = scoreParts(p);
+  if (parts.matches.length) return parts.score;
+  return { definitely: 3, probably: 1, mildly: 0.25 }[p.relevance_tier] || 0.25;   // no confirmed matches: the stored tier
+}
 function dynamicRelevance(p) {
-  const parts = relevanceParts(p);
-  if (!parts.mi.length || parts.maxScore === 0) return p.relevance_tier || 'mildly'; // none confirmed → static fallback
-  let final = Math.max(1, Math.min(3, Math.round(parts.maxScore + parts.residual)));
-  if (final === 3 && !mustReadEarned(parts)) final = 2;
-  return SCORE_TO_REL[final] || 'mildly';
+  const sc = paperScore(p);
+  return sc >= SCORE_CUTS.definitely ? 'definitely' : sc >= SCORE_CUTS.probably ? 'probably' : 'mildly';
 }
-/* Top Papers order: base score, halved for every 90 days since the paper was added, so strong
-   older papers stay near the top for a season while this week's still surface */
+/* Top Papers order: the score, halved for every 90 days since the paper was added, so strong older papers stay
+   near the top for a season while this week's still surface */
 const TOP_HALF_LIFE_DAYS = 90;
 function topScore(p) {
-  const parts = relevanceParts(p);
-  const base = (parts.maxScore || REL_SCORE[p.relevance_tier] || 1) + 0.5 * Math.max(0, parts.nMust - 1) + parts.residual;
   const age = p.date_found ? Math.max(0, (Date.now() - new Date(p.date_found + 'T00:00:00')) / 86400000) : 365;
-  return base * Math.pow(0.5, age / TOP_HALF_LIFE_DAYS);
+  return Math.max(0.05, paperScore(p)) * Math.pow(0.5, age / TOP_HALF_LIFE_DAYS);
 }
 function byTopScore(arr) {
   const sc = new Map(arr.map(p => [p, topScore(p)]));
@@ -2447,7 +2481,7 @@ function flushStateToCSV() {
    closed tab doesn't lose them: only the fields people edit are stored for papers, so papers a
    digest run added in the meantime still come through when the backup is re-applied. */
 const LOCAL_BACKUP_KEY = 'scholar_unpushed_v1';
-const EDITABLE_FIELDS = ['is_read', 'is_starred', 'user_lists', 'user_notes', 'theme_groups', 'is_hidden', 'pdf_url'];
+const EDITABLE_FIELDS = ['is_read', 'is_starred', 'user_lists', 'user_notes', 'theme_groups', 'is_hidden', 'pdf_url', 'match_strengths'];
 let _loadedPaperFields = new Map();              // id -> editable fields as loaded, to diff against
 let _loadedInterestNames = [], _loadedGroupNames = [];
 let _backupTimer = null, _restoreAnnounced = false;
@@ -2980,48 +3014,30 @@ function formatDate(d) {
 
 /* Build relevance breakdown inner HTML (used in hover popup) */
 function buildRelevanceBreakdown(p) {
-  const mi = (p.matched_interests || '').split('|').map(s => s.trim()).filter(Boolean);
-  const residual = parseInt(p.residual_score) || 0;
-  const rel = dynamicRelevance(p);
-  const finalScore = REL_SCORE[rel] || 1;
-
+  const parts = scoreParts(p), residual = parts.residual;
+  const rel = dynamicRelevance(p), sc = paperScore(p);
   let html = '<div class="relevance-breakdown">';
-
-  // Score row
   html += `<div class="relevance-score-row">
-    <span class="relevance-score-val sc-${finalScore}">${finalScore}</span>
-    <span class="relevance-score-label"><strong>${relLabel(rel)}</strong><br>${rel === 'definitely' ? 'Directly relevant to your research' : rel === 'probably' ? 'Related to your interests' : 'Tangentially connected'}</span>
+    <span class="relevance-score-val sc-${rel === 'definitely' ? 3 : rel === 'probably' ? 2 : 1}">${sc.toFixed(1)}</span>
+    <span class="relevance-score-label"><strong>${relLabel(rel)}</strong><br>Score ${sc.toFixed(1)} · Must Read at ${SCORE_CUTS.definitely}+, Interesting at ${SCORE_CUTS.probably}+</span>
   </div>`;
-
-  // Matched interests with their scores
-  if (mi.length) {
-    let maxBase = 0;
-    const scores = [];
-    const rows = mi.map(name => {
-      const i = allInterests.find(x => x.interest_name === name);
-      const confirmed = i && i.status === 'confirmed';
-      const rm = confirmed ? (i.relevance_mapping || 'mildly') : 'mildly';
-      const sc = REL_SCORE[rm] || 1;
-      scores.push(sc);
-      if (confirmed && sc > maxBase) maxBase = sc;
-      const statusNote = !i ? ' (unknown)' : !confirmed ? ` (${i.status})` : '';
-      return `<div class="relevance-interest-row">
-        <span class="badge badge-${rm} relevance-interest-score">${sc}</span>
-        <span class="relevance-interest-name">${esc(name)}${statusNote}</span>
+  if (parts.matches.length) {
+    const rows = parts.matches.slice().sort((a, b) => b.value - a.value).map(m => {
+      const counts = m === parts.core || m === parts.context;
+      return `<div class="relevance-interest-row${counts ? '' : ' muted'}">
+        <span class="badge badge-${m.level} relevance-interest-score">${LEVEL_NAME[m.level]}</span>
+        <span class="relevance-interest-name">${esc(m.name)}<span class="rel-strength">${STRENGTH_NAME[m.strength].toLowerCase()}${m.rated ? '' : ' (not rated yet)'}</span></span>
+        <span class="rel-pts">${counts ? '+' + m.value.toFixed(1) : '–'}</span>
       </div>`;
     }).join('');
-    html += `<div class="relevance-interests"><div class="relevance-interests-title">Matched Interests</div>${rows}</div>`;
-
-    // Formula
-    const clamped = Math.max(1, Math.min(3, maxBase + residual));
-    const scoreList = scores.join(', ');
-    const demoted = clamped === 3 && finalScore === 2;
-    html += `<div class="relevance-formula">max(${scoreList}) + ${residual >= 0 ? residual : '(' + residual + ')'} = ${maxBase + residual}${(maxBase + residual) !== clamped ? ' \u2192 clamped to ' + clamped : ''}${demoted ? ' \u2192 2' : ''}</div>`;
-    if (demoted) html += `<div class="relevance-formula-note">Must Read needs two or more Must Read interests, or a +1 residual.</div>`;
+    html += `<div class="relevance-interests"><div class="relevance-interests-title">How it matches your interests</div>${rows}</div>`;
+    const bits = [`core fit ${(parts.core ? parts.core.value : 0).toFixed(1)}`, `context ${(parts.context ? parts.context.value : 0).toFixed(1)}`];
+    if (residual) bits.push(`residual ${residual > 0 ? '+' : '−'}${Math.abs(0.5 * residual).toFixed(1)}`);
+    html += `<div class="relevance-formula">${bits.join(' + ').replace('+ residual −', '− residual ')} = ${sc.toFixed(1)}</div>`;
+    html += `<div class="relevance-formula-note">Only the best Core match and the best other match count.</div>`;
   } else {
-    html += `<div class="relevance-interests"><div class="relevance-interests-title">Matched Interests</div><div style="font-size:13px;color:var(--text-muted);font-style:italic;">No matched interests \u2014 using static fallback (${esc(p.relevance_tier || 'mildly')})</div></div>`;
+    html += `<div class="relevance-interests"><div class="relevance-interests-title">How it matches your interests</div><div style="font-size:13px;color:var(--text-muted);font-style:italic;">No current interests match, so its stored rating (${esc(relLabel(p.relevance_tier || 'mildly'))}) is used.</div></div>`;
   }
-
   // Residual score
   const resClass = residual === 0 ? 'zero' : '';
   const resSign = residual > 0 ? '+' + residual : residual < 0 ? String(residual) : '0';
@@ -5017,11 +5033,10 @@ function renderInterests() {
   interests.forEach(i => { const c = i.category==='method'?'Methods':'Application Areas'; if (!grouped[c]) grouped[c]=[]; grouped[c].push(i); });
   const so = {suggested:0,confirmed:1,rejected:2};
   const ro = {definitely:0,probably:1,mildly:2};
-  const po = {core:0,high:1,key:2,medium:3,'low-moderate':4};
   const r = (map,k) => k in map ? map[k] : 9;
-  Object.values(grouped).forEach(a => a.sort((x,y)=> r(so,x.status)-r(so,y.status) || r(ro,x.relevance_mapping)-r(ro,y.relevance_mapping) || r(po,x.priority_level)-r(po,y.priority_level)));
+  Object.values(grouped).forEach(a => a.sort((x,y)=> r(so,x.status)-r(so,y.status) || r(ro,x.relevance_mapping)-r(ro,y.relevance_mapping) || interestPaperCount(y.interest_name)-interestPaperCount(x.interest_name)));
   const sugN = allInterests.filter(i=>i.status==='suggested').length;
-  let html = `<p class="ig-legend"><strong>Interests</strong> decide how papers rank; each paper lists the ones it matches. They are separate from <a href="#interests/groups" class="ig-link">Topics</a>, which only group papers for browsing.</p><p class="ig-legend">Papers matching an interest rank as <span class="badge badge-definitely">Must Read</span>, <span class="badge badge-probably">Interesting</span> or <span class="badge badge-mildly">Tangential</span>, and each interest has your own priority, from <span class="badge badge-priority">core</span> to <span class="badge badge-priority">low-moderate</span>.${isOwner() ? ` ${TOUCH ? 'Tap' : 'Click'} either badge on an interest to change it.` : ''}</p>`;
+  let html = `<p class="ig-legend"><strong>Interests</strong> decide how papers rank; each paper lists the ones it matches. They are separate from <a href="#interests/groups" class="ig-link">Topics</a>, which only group papers for browsing.</p><p class="ig-legend">Each interest is <span class="badge badge-definitely">Core</span> (your research), <span class="badge badge-probably">Related</span> or <span class="badge badge-mildly">Peripheral</span>. A paper scores by how strongly it matches: being about a Core interest makes it Must Read, and Related and Peripheral ones add context. The level also sets how hard the weekly survey searches for it.${isOwner() ? ` ${TOUCH ? 'Tap' : 'Click'} an interest\u2019s level to change it.` : ''}</p>`;
   if (sugN > 0 && currentIStatus === 'all' && isOwner()) html += `<div style="padding:12px 20px;margin-bottom:16px;background:var(--purple-bg);border:1px solid var(--purple);border-radius:8px;font-size:13px;color:var(--purple);">${sugN} suggested interest${sugN>1?'s':''} from recent papers</div>`;
   ['Application Areas','Methods'].forEach(cat => {
     if (!grouped[cat]) return;
@@ -5173,12 +5188,10 @@ function gDragEnd(e) {
 }
 
 function interestCardHTML(i) {
-  const own = isOwner();   // a visitor sees the values, not a way to change them
-  const relBadge = own ? `<span class="badge badge-${i.relevance_mapping||'mildly'} badge-editable" title="How papers matching this interest rank. Click to change." onclick="event.stopPropagation();toggleInterestDropdown(event,'${escAttr(i.interest_name)}','relevance')">${relLabel(i.relevance_mapping||'mildly')}</span>`
-    : `<span class="badge badge-${i.relevance_mapping||'mildly'}" title="How papers matching this interest rank">${relLabel(i.relevance_mapping||'mildly')}</span>`;
-  const priBadge = own ? `<span class="badge badge-priority badge-editable" title="Your own priority for this interest. Click to change." onclick="event.stopPropagation();toggleInterestDropdown(event,'${escAttr(i.interest_name)}','priority')">${esc(i.priority_level||'medium')}</span>`
-    : `<span class="badge badge-priority" title="Priority">${esc(i.priority_level||'medium')}</span>`;
-  const related = i.related_to ? `<div class="interest-detail">Related: ${esc(i.related_to)}</div>` : '';
+  const own = isOwner(), lv = LEVEL_NAME[i.relevance_mapping] ? i.relevance_mapping : 'mildly';   // a visitor sees the level, not a way to change it
+  const relBadge = own ? `<span class="badge badge-${lv} badge-editable" title="${escAttr(LEVEL_HELP[lv])} ${TOUCH ? 'Tap' : 'Click'} to change." onclick="event.stopPropagation();toggleInterestDropdown(event,'${escAttr(i.interest_name)}','relevance')">${LEVEL_NAME[lv]}</span>`
+    : `<span class="badge badge-${lv}" title="${escAttr(LEVEL_HELP[lv])}">${LEVEL_NAME[lv]}</span>`;
+  const related = i.related_to ? `<div class="interest-detail">See also: ${esc(i.related_to)}</div>` : '';
   const notes = i.notes ? `<div class="interest-detail interest-notes" title="${escAttr(i.notes)}">${esc(i.notes)}</div>` : '';
   const actions = i.status==='suggested'
     ? `<div class="interest-actions"><button class="btn-approve" onclick="event.stopPropagation();updateI('${escAttr(i.interest_name)}','confirmed')">Approve</button><button class="btn-reject" onclick="event.stopPropagation();updateI('${escAttr(i.interest_name)}','rejected')">Dismiss</button></div>`
@@ -5191,7 +5204,7 @@ function interestCardHTML(i) {
   const statusBadge = showStatus && i.status && i.status !== 'confirmed' ? `<span class="badge badge-${i.status}">${i.status.charAt(0).toUpperCase()+i.status.slice(1)}</span>` : '';
   const n = interestPaperCount(i.interest_name);
   const count = n ? `<button class="badge badge-venue badge-link" onclick="event.stopPropagation();openInterest('${escAttr(i.interest_name)}')" title="List the papers that match this interest">${n} paper${n !== 1 ? 's' : ''}</button>` : '<span class="badge badge-venue">No papers yet</span>';
-  return `<div class="interest-card"><div class="interest-info"><div class="interest-name">${esc(i.interest_name)}</div>${related}${notes}<div class="interest-meta">${statusBadge}${relBadge}${priBadge}${count}</div></div>${actions}</div>`;
+  return `<div class="interest-card"><div class="interest-info"><div class="interest-name">${esc(i.interest_name)}</div>${related}${notes}<div class="interest-meta">${statusBadge}${relBadge}${count}</div></div>${actions}</div>`;
 }
 function matchesOf(p) { return (p.matched_interests || '').split('|').map(x => x.trim()).filter(Boolean); }
 let _interestCounts = null, _interestCountsKey = null;
@@ -5235,23 +5248,24 @@ function updateG(name, status) {
 
 /* ===== INTEREST INLINE DROPDOWNS ===== */
 const REL_OPTIONS = ['definitely','probably','mildly'];
-const PRI_OPTIONS = ['core','high','key','medium','low-moderate'];
+const LEVEL_HELP = {
+  definitely: 'Core: your research. A paper about it is Must Read; the weekly survey searches it hardest.',
+  probably: 'Related: close to your work. Adds to a paper\u2019s score as context; searched every week.',
+  mildly: 'Peripheral: background. Adds a little; no searches of its own (papers come from alerts).'
+};
 let _openInterestDD = null;
 function closeInterestDD() { if (_openInterestDD) { _openInterestDD.remove(); _openInterestDD = null; } document.removeEventListener('click', _onInterestDDOutside, true); }
 function _onInterestDDOutside(e) { if (_openInterestDD && !_openInterestDD.contains(e.target)) closeInterestDD(); }
 function toggleInterestDropdown(e, name, field) {
   closeInterestDD();
   const i = allInterests.find(x=>x.interest_name===name); if (!i) return;
-  const options = field==='relevance' ? REL_OPTIONS : PRI_OPTIONS;
-  const current = field==='relevance' ? (i.relevance_mapping||'mildly') : (i.priority_level||'medium');
-  const dd = document.createElement('div'); dd.className = 'interest-dropdown';
-  options.forEach(o => {
-    const label = field==='relevance' ? relLabel(o) : o;
+  const current = i.relevance_mapping || 'mildly';
+  const dd = document.createElement('div'); dd.className = 'interest-dropdown level-dd';
+  REL_OPTIONS.forEach(o => {
     const item = document.createElement('div');
-    item.className = 'interest-dropdown-item' + (o===current?' selected':'') + (field==='relevance'?' rel-item':'');
-    if (field==='relevance') item.innerHTML = `<span class="badge badge-${o}" style="pointer-events:none;font-size:11px;">${esc(label)}</span>`;
-    else item.textContent = label;
-    item.onclick = (ev) => { ev.stopPropagation(); updateInterestField(name, field, o); closeInterestDD(); };
+    item.className = 'interest-dropdown-item rel-item' + (o===current?' selected':'');
+    item.innerHTML = `<span class="badge badge-${o}" style="pointer-events:none;font-size:11px;">${LEVEL_NAME[o]}</span><span class="level-dd-help">${esc(LEVEL_HELP[o].replace(/^[A-Za-z]+: /, ''))}</span>`;
+    item.onclick = (ev) => { ev.stopPropagation(); updateInterestField(name, 'relevance', o); closeInterestDD(); };
     dd.appendChild(item);
   });
   document.body.appendChild(dd);
@@ -5266,15 +5280,50 @@ function toggleInterestDropdown(e, name, field) {
 }
 function updateInterestField(name, field, value) {
   const i = allInterests.find(x=>x.interest_name===name); if (!i) return;
-  const prev = field==='relevance' ? i.relevance_mapping : i.priority_level;
-  if (field==='relevance') i.relevance_mapping = value;
-  else i.priority_level = value;
+  const prev = i.relevance_mapping;
+  i.relevance_mapping = value;
   i.date_updated = new Date().toISOString().split('T')[0];
   renderInterests();
   showSaveBar();
   _interestsDirty = true;
-  const label = field==='relevance' ? relLabel(value) : value;
-  toast(`"${name}" ${field==='relevance'?'relevance':'priority'} → ${label}`, () => { updateInterestField(name, field, prev); });
+  toast(`\u201c${name}\u201d is now ${LEVEL_NAME[value]}`, () => { updateInterestField(name, field, prev); });
+  refresh();   // every paper that matches it re-scores
+}
+
+/* How strongly a paper matches one of its interests: about / partly about / touches. It re-scores the paper at once
+   and saves like your other edits (match_strengths). */
+function openStrengthDD(e, key, name) {
+  closeInterestDD();
+  const p = findPaper(key); if (!p) return;
+  const cur = matchStrengths(p)[name] || STRENGTH_DEFAULT;
+  const dd = document.createElement('div'); dd.className = 'interest-dropdown level-dd'; dd.setAttribute('role', 'menu');
+  [['about', 'It\u2019s what the paper is about'], ['partly', 'A substantial part of it'], ['touches', 'Appears, but not substantially']].forEach(([v, help]) => {
+    const item = document.createElement('div');
+    item.className = 'interest-dropdown-item' + (v === cur ? ' selected' : ''); item.setAttribute('role', 'menuitem');
+    item.innerHTML = `<strong style="font-weight:500;min-width:84px">${STRENGTH_NAME[v]}</strong><span class="level-dd-help">${help}</span>`;
+    item.onclick = ev => { ev.stopPropagation(); closeInterestDD(); setMatchStrength(key, name, v); };
+    dd.appendChild(item);
+  });
+  document.body.appendChild(dd);
+  const rect = e.currentTarget.getBoundingClientRect();
+  dd.style.position = 'fixed';
+  dd.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - dd.offsetWidth - 8)) + 'px';
+  dd.style.top = (rect.bottom + 4) + 'px';
+  if (rect.bottom + 4 + dd.offsetHeight > window.innerHeight - 8) dd.style.top = Math.max(8, rect.top - 4 - dd.offsetHeight) + 'px';
+  _openInterestDD = dd;
+  setTimeout(() => document.addEventListener('click', _onInterestDDOutside, true), 0);
+}
+function setMatchStrength(key, name, value) {
+  const p = findPaper(key); if (!p) return;
+  const st = matchStrengths(p), prev = st[name] || null, beforeRel = dynamicRelevance(p);
+  if (value) st[name] = value; else delete st[name];
+  const order = (p.matched_interests || '').split('|').map(x => x.trim()).filter(Boolean);
+  p.match_strengths = order.filter(n => st[n]).map(n => `${n}=${st[n]}`).join('|');
+  _stateDirty = true; showSaveBar();
+  if (_paperViewActive) renderPaperDetail(p);
+  refresh();
+  const rel = dynamicRelevance(p);
+  toast(`\u201c${name}\u201d: ${STRENGTH_NAME[value || STRENGTH_DEFAULT].toLowerCase()} \u00b7 score ${paperScore(p).toFixed(1)}${rel !== beforeRel ? ', now ' + relLabel(rel) : ''}`, () => setMatchStrength(key, name, prev));
 }
 
 /* ===== GENERIC MODAL (prompt / confirm) ===== */
@@ -9683,8 +9732,20 @@ function renderPaperDetail(p) {
   if (paperDate(p)) facts.push(['Published', esc(paperDate(p))]);
   if (p.date_found) facts.push(['Added', esc(shortDate(p.date_found))]);
   if (via) facts.push(['Found via', `${via}${why && why.source ? `<span class="pd-sub">${esc(why.source)} alert</span>` : ''}`]);
-  facts.push(['Relevance', `<span class="f-rel rel-${rel}"><i></i>${relLabel(rel)}</span><span class="triage-anchor" onmouseenter="showRelevancePopup(this,'${ka}')" onmouseleave="hideRelevancePopup(this)"><button class="pd-info" title="How this was scored" aria-label="How this was scored" aria-expanded="false" onclick="toggleRelevancePopup(event,this.parentElement,'${ka}')">&#9432;</button></span>`]);
-  if (matches.length) facts.push(['Matches', `<span class="pd-matches">${matches.map(m => `<button class="pd-match" onclick="openInterest('${escAttr(m)}')" title="Papers that match ${escAttr(m)}">${esc(m)}</button>`).join('')}</span>`]);
+  facts.push(['Relevance', `<span class="f-rel rel-${rel}"><i></i>${relLabel(rel)}</span><span class="pd-score" title="Score (Must Read at ${SCORE_CUTS.definitely}+)">${paperScore(p).toFixed(1)}</span><span class="triage-anchor" onmouseenter="showRelevancePopup(this,'${ka}')" onmouseleave="hideRelevancePopup(this)"><button class="pd-info" title="How this was scored" aria-label="How this was scored" aria-expanded="false" onclick="toggleRelevancePopup(event,this.parentElement,'${ka}')">&#9432;</button></span>`]);
+  if (matches.length) {   // each interest it matches, and how strongly (yours to change)
+    const sp = scoreParts(p), byName = new Map(sp.matches.map(m => [m.name, m]));
+    const ordered = matches.slice().sort((a, b) => ((byName.get(b) || {}).value || 0) - ((byName.get(a) || {}).value || 0));   // strongest first
+    facts.push(['Matches', `<span class="pd-matches pd-match-list">${ordered.map(name => {
+      const m = byName.get(name);
+      const chip = `<button class="pd-match" onclick="openInterest('${escAttr(name)}')" title="Papers that match ${escAttr(name)}">${esc(name)}</button>`;
+      if (!m) return `<span class="pd-match-row">${chip}</span>`;   // not a current interest: no strength to set
+      const tip = `${LEVEL_NAME[m.level]} interest \u00b7 ${STRENGTH_NAME[m.strength].toLowerCase()}${m.rated ? '' : ' (not rated yet)'} \u00b7 worth ${m.value.toFixed(1)}`;
+      const str = isOwner() ? `<button class="pd-strength lv-${m.level}${m.rated ? '' : ' unrated'}" onclick="event.stopPropagation();openStrengthDD(event,'${ka}','${escAttr(name)}')" title="${escAttr(tip)}. Change how strongly this paper matches it" aria-haspopup="true">${STRENGTH_NAME[m.strength]}<svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>`
+        : `<span class="pd-strength lv-${m.level}" title="${escAttr(tip)}">${STRENGTH_NAME[m.strength]}</span>`;
+      return `<span class="pd-match-row">${chip}${str}</span>`;
+    }).join('')}</span>`]);
+  }
 
   const groups = (p.theme_groups||'').split('|').map(x => x.trim()).filter(Boolean);
   const x = `<svg width="10" height="10" viewBox="0 0 10 10"><line x1="2" y1="2" x2="8" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="2" x2="2" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
@@ -10052,7 +10113,7 @@ document.addEventListener('DOMContentLoaded', () => { loadPapers(); loadInterest
   const ALWAYS = ['toggleStar', 'toggleRead', 'persistStars', 'persistRead', 'persistLists', 'openSaveDD', 'toggleListItem', 'createListFromDD',
     'hidePaper', 'unhidePaper', 'addGroupToPaper', 'removeGroupFromPaper', 'toggleGroupAddDD', 'createNewList', 'renameList', 'deleteList',
     'showCopyDD', 'doCopyList', 'doCopyNew', 'updateI', 'updateG', 'updateInterestField', 'toggleInterestDropdown', 'gDragStart', 'gDrop',
-    'resetChanges', 'pushToGitHub', 'showSaveBar', 'scheduleAutoPush', 'disconnectGitHub', 'submitPdfLink', 'pinPdfVersion', 'tokMenuAct',
+    'resetChanges', 'pushToGitHub', 'showSaveBar', 'openStrengthDD', 'setMatchStrength', 'scheduleAutoPush', 'disconnectGitHub', 'submitPdfLink', 'pinPdfVersion', 'tokMenuAct',
     // notes and their password
     'vaultReady', 'openVaultModal', 'submitVault', 'unlockFromPanel', 'lockNotes', 'nfSave', 'savePaperNotes', 'scheduleNotesPush', 'pushNotes',
     'reconcileNotesIndex', 'renameHlColor', 'createAnno', 'deleteAnno', 'editAnnoComment', 'setAnnoColor', 'citeAnno', 'citeSelection',
