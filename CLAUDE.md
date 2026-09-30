@@ -27,6 +27,10 @@ Both modes write to a **single unified database** (`papers_database.csv`). The `
 - `"email"` — found via Google Scholar alerts only
 - `"web_survey"` — found via web survey only
 - `"email,web_survey"` — found by both (prefer email as primary source)
+- `"manual"` — added by the user by hand (dashboard Library → + Add paper, or `/add-paper` here). Digest runs treat these like any other row (dedupe against them; if a digest finds the same paper, keep `manual` and don't add a copy).
+
+## Adding a paper by hand
+Library → **+ Add paper** (any paired device, through the bridge) or `/add-paper` in Claude Code on the laptop. Both follow `bridge/add_paper.md` for the research, and `bridge/add_paper.py` does the checking and publishing from the bridge's own copy of the repo (`~/.scholar-bridge/repo`), never from this working copy. A paper with no public version is never added (Library → To review keeps it private instead).
 
 ## Mode 1: Google Scholar Email Digest
 - Read Google Scholar alert emails from Gmail
@@ -180,7 +184,7 @@ Maintain a CSV file (`papers_database.csv`) with these columns:
 | `publishing_date` | Publication month and year, e.g. "Mar 2026". Extract from arXiv ID (YYMM), conference date, or journal issue. Fall back to year only if month unknown. |
 | `url` | Link to paper |
 | `date_found` | Date this paper was added |
-| `source_mode` | "email", "web_survey", or "email,web_survey" |
+| `source_mode` | "email", "web_survey", "email,web_survey", or "manual" (added by hand) |
 | `relevance_tier` | **Static fallback only.** "definitely", "probably", or "mildly". The website now computes relevance dynamically from `matched_interests` + `residual_score` (see below). This column is still written at ingestion time as a snapshot, but the website ignores it when `matched_interests` is populated. |
 | `matched_interests` | Pipe-separated list of interest names from `interests_database.csv` that this paper matches (e.g. `"Conformal prediction\|Data-driven verification"`). **Must use exact `interest_name` values.** The website uses this + `residual_score` to compute dynamic relevance at render time. |
 | `residual_score` | Integer adjustment to the interest-derived relevance score. Typically -1, 0, or +1. `+1` = paper is more relevant than its interests suggest (e.g., directly about data-driven verification of black-box systems, or combines multiple core interests). `-1` = paper is less relevant (e.g., pure theory with no robotics/learning connection). `0` = interest-based score is appropriate. The justification for any non-zero value MUST be noted in the `notes` column. |

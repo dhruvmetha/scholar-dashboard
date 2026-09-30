@@ -1737,6 +1737,31 @@ body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
 .btn-interests:hover { border-color: var(--accent); color: var(--accent); }
 .btn-new-list { font-size: 15px; padding: 10px 22px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
 .btn-new-list:hover { border-color: var(--accent); color: var(--accent); }
+.btn-new-list[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); }
+/* ===== ADD A PAPER (Library): Claude Code on the laptop finds it, describes it, and adds it to the database ===== */
+.lib-add-wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.lib-add { margin-top: 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg-surface); padding: 16px 18px; animation: ui-rise var(--t-slow) var(--ease); }
+.lib-add[hidden] { display: none; }
+.la-row { display: flex; gap: 8px; align-items: center; }
+.la-input { flex: 1; min-width: 0; height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; font-size: 15px; transition: border-color var(--t-fast) var(--ease); }
+.la-input:focus { outline: none; border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+.la-input:disabled { color: var(--text-muted); }
+.la-go { height: 40px; padding: 0 18px; border-radius: 10px; border: none; background: var(--accent); color: #111; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; flex-shrink: 0; transition: filter var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease); }
+.la-go:hover { filter: brightness(1.08); }
+.la-go:disabled { opacity: 0.45; cursor: default; filter: none; }
+.la-plain { height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font: inherit; font-size: 14px; cursor: pointer; flex-shrink: 0; transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+.la-plain:hover { border-color: rgba(255,255,255,0.3); color: var(--text); }
+.la-note { margin-top: 10px; font-size: 13px; line-height: 1.55; color: var(--text-muted); }
+.la-star { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 13px; color: var(--text-secondary); cursor: pointer; }
+.la-status { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 14px; color: var(--text-secondary); }
+.la-spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.15); border-top-color: var(--accent); animation: chat-spin 0.8s linear infinite; flex-shrink: 0; }
+.la-result { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: rgba(255,255,255,0.04); }
+.la-result .t { flex: 1; min-width: 0; }
+.la-result .k { font-size: 12px; color: var(--text-muted); }
+.la-result .h { font-family: var(--serif); font-size: 16px; color: var(--text); line-height: 1.35; }
+.la-result.warn .k { color: var(--accent); }
+@media (max-width: 600px) { .la-row { flex-wrap: wrap; } .la-input { flex-basis: 100%; } }
+@media (prefers-reduced-motion: reduce) { .lib-add { animation: none; } .la-spin { animation: none; } }
 .library-list-empty { padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px; font-style: italic; }
 
 /* [12] COPY-TO DROPDOWN (library) — animated entrance */
@@ -2049,9 +2074,11 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
     <h2>Library</h2>
     <div class="lib-head-actions">
       <span class="sync-status" id="syncStatus"></span>
+      <button class="btn-new-list" id="libAddBtn" onclick="toggleAddPaper()" aria-expanded="false" aria-controls="libAdd">+ Add paper</button>
       <button class="btn-new-list" onclick="createNewList()">+ New list</button>
     </div>
   </div>
+  <div class="lib-add-wrap"><section class="lib-add" id="libAdd" hidden aria-live="polite"></section></div>
   <div class="library-wrap" id="libraryContent"></div>
 </div>
 
@@ -4546,14 +4573,14 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeRelevancePopup(); closeAbsPopup(); closeSaveDD(); _resolveGeneric(null); } });
 
 /* ===== LIBRARY ===== */
-let _collapsedLibGroups = new Set(['all', 'read']);
+let _openLibGroups = new Set(['progress']);   // every group starts collapsed except In progress; opening one is remembered for the visit
 function toggleLibGroup(headerEl, key) {
   const group = headerEl.closest('.interest-group');
   const body = group.querySelector('.interest-group-body');
   if (group.classList.contains('collapsed') && !body.innerHTML) body.innerHTML = libBodyHTML(_libPapers[key] || [], key);
   group.classList.toggle('collapsed');
-  if (group.classList.contains('collapsed')) _collapsedLibGroups.add(key);
-  else _collapsedLibGroups.delete(key);
+  if (group.classList.contains('collapsed')) _openLibGroups.delete(key);
+  else _openLibGroups.add(key);
 }
 /* Collapsed lists ("All" has ~1,000 papers) render their rows only when opened */
 let _libPapers = {};
@@ -4579,9 +4606,91 @@ function uploadRowHTML(p) {
 }
 function libGroupHTML(key, icon, label, papers, extra) {
   _libPapers[key] = papers;
-  const collapsed = _collapsedLibGroups.has(key) ? ' collapsed' : '';
+  const collapsed = _openLibGroups.has(key) ? '' : ' collapsed';
   const body = collapsed ? '' : libBodyHTML(papers, key);
   return `<div class="interest-group${collapsed}" data-lib="${escAttr(key)}"><div class="interest-group-inner"><div class="interest-group-header" onclick="toggleLibGroup(this,'${escAttr(key)}')"><span class="lib-icon" aria-hidden="true">${icon}</span>${esc(label)} <span class="interest-group-count">${papers.length}</span>${extra||''}<svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="interest-group-body">${body}</div></div></div>`;
+}
+/* ===== ADD A PAPER =====
+   Library → + Add paper: a link, DOI, arXiv id or title goes to the bridge on the laptop, where Claude Code finds the
+   paper and describes it for your interests (read-only), and bridge/add_paper.py checks it, adds the row and
+   publishes it. The page follows the job (it keeps going if you leave Library) and shows the paper once it's in. */
+const AddPaper = { open: false, job: null, poll: 0, text: '', star: false };
+function toggleAddPaper(force) {
+  AddPaper.open = typeof force === 'boolean' ? force : !AddPaper.open;
+  document.getElementById('libAddBtn').setAttribute('aria-expanded', AddPaper.open);
+  const box = document.getElementById('libAdd');
+  box.hidden = !AddPaper.open;
+  if (!AddPaper.open) return;
+  renderAddPaper();
+  addPaperSync().then(() => { const i = document.getElementById('laInput'); if (i && !i.disabled) i.focus(); });
+}
+async function addPaperSync() {   // where things stand: connected? a job already running (from before a reload)?
+  if (Chat.status !== 'ready' || !Chat.bridgeVersion) await bridgeCheck();
+  if (Chat.status === 'ready' && Chat.bridgeVersion >= 2) {
+    try { const j = (await (await bridgeFetch('/paper/add')).json()).job; if (j && (j.state === 'running' || !AddPaper.job || AddPaper.job.id === j.id)) setAddJob(j, true); } catch (e) {}
+  }
+  renderAddPaper();
+}
+function addPaperResultHTML(j) {
+  const open = id => `<button class="la-plain" onclick="openPaper('${escAttr(id)}')">Open</button>`;
+  const title = id => { const p = findPaper(id); return esc(p ? (p.title || id) : id); };
+  if (j.state === 'done') return (j.added || []).map(r => `<div class="la-result"><div class="t"><div class="k">Added to your library</div><div class="h">${esc(r.title)}</div></div>${open(r.id)}</div>`).join('')
+    + (j.existing || []).map(id => `<div class="la-result"><div class="t"><div class="k">Already in your library</div><div class="h">${title(id)}</div></div>${open(id)}</div>`).join('');
+  return `<div class="la-result warn"><div class="t"><div class="k">${j.state === 'stopped' ? 'Not added' : 'Something went wrong'}</div><div class="h" style="font-family:inherit;font-size:14px">${esc(j.message || '')}</div></div></div>`;
+}
+function renderAddPaper() {
+  const box = document.getElementById('libAdd');
+  if (!box || box.hidden) return;
+  const j = AddPaper.job, running = j && j.state === 'running';
+  let body;
+  if (Chat.status === 'unknown' || Chat.status === 'checking') body = `<div class="la-status"><span class="la-spin"></span>Connecting to Claude Code on your laptop…</div>`;
+  else if (Chat.status !== 'ready') body = `<p class="la-note" style="margin:0">Adding a paper runs through Claude Code on your laptop, like Chat. ${Chat.status === 'unpaired' ? 'Connect this device first: open any paper, choose Chat, and allow it on the Mac.' : 'The laptop isn’t reachable right now: it needs to be awake' + (bridgeRemote() ? ', with Tailscale on.' : '.')}</p><div class="la-row" style="margin-top:12px"><button class="la-plain" onclick="Chat.status='unknown';addPaperSync()">Try again</button></div>`;
+  else if (Chat.bridgeVersion < 2) body = `<p class="la-note" style="margin:0">The bridge on your laptop is an older version. Restart it (log out and in, or <code>bash bridge/install_bridge.sh</code>) and try again.</p>`;
+  else body = `<form class="la-row" onsubmit="event.preventDefault();startAddPaper()">
+      <input class="la-input" id="laInput" type="text" enterkeyhint="go" autocomplete="off" spellcheck="false" placeholder="arXiv or DOI link, or the paper’s title" value="${escAttr(running ? j.input : AddPaper.text)}" oninput="AddPaper.text=this.value;document.getElementById('laGo').disabled=!this.value.trim()" ${running ? 'disabled' : ''}>
+      ${running ? `<button type="button" class="la-plain" onclick="stopAddPaper()">Stop</button>` : `<button class="la-go" id="laGo" ${AddPaper.text.trim() ? '' : 'disabled'}>Add</button>`}
+    </form>
+    ${running ? `<div class="la-status"><span class="la-spin"></span>${esc(j.stage || 'Working…')}</div>`
+      : `<label class="la-star"><input type="checkbox" ${AddPaper.star ? 'checked' : ''} onchange="AddPaper.star=this.checked"> Star it</label>
+         <p class="la-note">Claude Code on your laptop finds the paper, reads its abstract, matches it to your interests and adds it (about a minute). A paper with no public version isn’t added: upload it under To review instead, where it stays private.</p>`}
+    ${j && j.state !== 'running' ? addPaperResultHTML(j) : ''}`;
+  box.innerHTML = body;
+}
+async function startAddPaper() {
+  const text = (AddPaper.text || '').trim();
+  if (!text) return;
+  try {
+    const r = await bridgeFetch('/paper/add', { method: 'POST', body: JSON.stringify({ input: text, star: AddPaper.star }) });
+    const j = await r.json();
+    if (r.status === 401) { saveBridgeToken(''); Chat.status = 'unpaired'; renderAddPaper(); return; }
+    if (j.job) setAddJob(j.job);
+  } catch (e) { Chat.status = 'offline'; renderAddPaper(); }
+}
+function stopAddPaper() { bridgeFetch('/paper/add/stop', { method: 'POST', body: '{}' }).catch(() => {}); }
+function setAddJob(j, quiet) {
+  const was = AddPaper.job;
+  AddPaper.job = j;
+  if (j.state === 'running') {
+    clearTimeout(AddPaper.poll);
+    AddPaper.poll = setTimeout(async () => { try { setAddJob((await (await bridgeFetch('/paper/add')).json()).job); } catch (e) { AddPaper.poll = setTimeout(() => setAddJob(AddPaper.job), 4000); } }, 1500);
+  } else if (was && was.state === 'running' && was.id === j.id && !quiet) addPaperFinished(j);
+  renderAddPaper();
+}
+/* The paper is on GitHub now: show it at once (GitHub's copy of the file catches up on its own) */
+function addPaperFinished(j) {
+  const rows = (j.added || []).filter(r => r.id && !findPaper(r.id));
+  rows.forEach(r => {
+    const row = {}; Object.keys(r).forEach(k => { if (typeof r[k] === 'string') row[k] = r[k]; });
+    allPapers.push(row);
+    _loadedPaperFields.set(row.id, paperFields(row));   // as saved: nothing here to push
+    if (row.is_starred === 'true') starSet.add(paperKey(row));
+  });
+  if (rows.length) { _relIndexKey = null; AddPaper.text = ''; refresh(); if (currentTab === 'library') renderLibrary(); }
+  const first = (j.added || [])[0] || (j.existing && j.existing[0] ? { id: j.existing[0] } : null);
+  if (currentTab !== 'library' || !AddPaper.open) {
+    if (j.state === 'done' && first) toast(j.added && j.added.length ? 'Added to your library' : 'Already in your library', () => openPaper(first.id), { actionLabel: 'Open', duration: 8000 });
+    else if (j.state !== 'done') toastError('Paper not added: ' + (j.message || 'something went wrong'));
+  }
 }
 function renderLibrary() {
   _libPapers = {};
@@ -4610,7 +4719,6 @@ function renderLibrary() {
       const actions = `<span class="library-actions" onclick="event.stopPropagation()"><button onclick="renameList('${escAttr(name)}')">Rename</button><button onclick="showCopyDD(this,'${escAttr(name)}')">Copy to...</button><button class="danger" onclick="deleteList('${escAttr(name)}')">Delete</button></span>`;
       html += libGroupHTML('list-'+name, '&#9776;', name, papers, actions);
     });
-    if (!listNames.length) html += `<div class="lib-hint"><strong>Lists</strong> keep papers together for a project, a talk or a reading group. Make one with <button class="lib-hint-btn" onclick="createNewList()">+ New list</button>, then add papers with the &#9776; button on any paper${window.matchMedia('(max-width: 700px)').matches ? ', or hold a card in the feed' : ''}.</div>`;
     if (read.length) html += libGroupHTML('read', '&#10003;', 'Read', read);
     if (_hiddenPapers.length) html += libGroupHTML('hidden', '&#8856;', 'Hidden', sortPapers(_hiddenPapers.slice()));
     const MON = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
@@ -5976,7 +6084,7 @@ function refreshContinueReading() {
   if (currentTab === 'library' && !_paperViewActive && !_listViewActive && !_searchActive) renderLibrary();
 }
 function showInProgress() {
-  _collapsedLibGroups.delete('progress');
+  _openLibGroups.add('progress');
   switchTab('library');
   requestAnimationFrame(() => { const g = document.querySelector('#libraryContent [data-lib="progress"]'); if (g) g.scrollIntoView({ block: 'start', behavior: reduceMotion() ? 'auto' : 'smooth' }); });
 }
@@ -8212,7 +8320,7 @@ function bridgeFetch(path, opts = {}) {
 }
 async function bridgeCheck() {
   const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 2500);
-  try { const j = await (await bridgeFetch('/health', { signal: ctl.signal })).json(); Chat.status = j.paired ? 'ready' : 'unpaired'; }
+  try { const j = await (await bridgeFetch('/health', { signal: ctl.signal })).json(); Chat.status = j.paired ? 'ready' : 'unpaired'; Chat.bridgeVersion = j.version || 1; }
   catch (e) { Chat.status = 'offline'; }
   clearTimeout(t);
   return Chat.status;

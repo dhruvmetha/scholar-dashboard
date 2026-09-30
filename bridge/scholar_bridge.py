@@ -10,12 +10,17 @@ Safety:
     macOS dialog on this laptop;
   * Claude runs with no shell, no connectors or plugins, and may read only files in this bridge's work folder
     (the paper PDFs and figures the dashboard sends); it may search and fetch from the web.
+  * Adding a paper (the dashboard's Add paper box, /paper/add): Claude only researches it, read-only, in the bridge's
+    own copy of the repository (~/.scholar-bridge/repo); add_paper.py checks what it returns and commits and pushes
+    just that row (and its link-preview page) from that copy. Your working copy is never touched.
 
 Everything lives in ~/.scholar-bridge:  token, sessions.json, chats/<paper>.json (what the dashboard shows),
 work/ (Claude Code's working folder: papers/<paper>.pdf, attachments/). The Claude Code sessions themselves
 are ordinary ones: `cd ~/.scholar-bridge/work && claude --resume` lists them.
 """
-import base64, json, os, re, secrets, shutil, subprocess, threading, time, urllib.request, uuid
+import base64, json, os, re, secrets, shutil, subprocess, sys, threading, time, urllib.request, uuid
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import add_paper
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 PORT = int(os.environ.get('SCHOLAR_BRIDGE_PORT', '7823'))
@@ -28,7 +33,7 @@ SESSIONS_FILE = os.path.join(HOME, 'sessions.json')
 NO_MCP = os.path.join(HOME, 'no-mcp.json')
 MODELS = {'opus': 'opus', 'sonnet': 'sonnet', 'haiku': 'haiku'}
 EFFORTS = {'low', 'medium', 'high', 'xhigh', 'max'}   # anything else: Claude Code's default
-VERSION = 1
+VERSION = 2   # 2: /paper/add
 
 for d in (HOME, WORK, CHATS, os.path.join(WORK, 'papers'), os.path.join(WORK, 'attachments')):
     os.makedirs(d, exist_ok=True)
@@ -37,6 +42,26 @@ if not os.path.exists(NO_MCP):
 
 _lock = threading.Lock()
 _running = {}   # paper id -> subprocess.Popen
+_add = {'job': None, 'proc': None}   # the paper being added (one at a time); the page polls GET /paper/add
+
+
+def start_add(text, star):
+    job = {'id': uuid.uuid4().hex[:12], 'state': 'running', 'stage': 'Starting…', 'input': text[:300], 'started': time.time()}
+    _add['job'] = job
+
+    def stage(s): job['stage'] = s
+    def run():
+        try:
+            out = add_paper.add(text, star=star, cb=stage, on_proc=lambda p: _add.__setitem__('proc', p))
+            job.update(state='done', added=out['added'], existing=out['existing'])
+        except add_paper.Stop as e:
+            job.update(state='stopped', message=str(e))
+        except Exception as e:
+            job.update(state='error', message=(str(e) or 'failed')[-400:])
+        finally:
+            _add['proc'] = None; job['ended'] = time.time()
+    threading.Thread(target=run, daemon=True).start()
+    return job
 
 
 def claude_bin():
@@ -187,6 +212,8 @@ class Handler(BaseHTTPRequestHandler):
         if not self.authed(): return self.reply(401, {'error': 'not paired'})
         if path == '/chats':
             return self.reply(200, {'chats': chat_list(urllib.request.unquote(params.get('paper', '')))})
+        if path == '/paper/add':   # the paper being (or last) added
+            return self.reply(200, {'job': _add['job']})
         if path == '/chat':
             pid = urllib.request.unquote(params.get('paper', ''))
             c = load_chat(pid)
@@ -231,6 +258,17 @@ class Handler(BaseHTTPRequestHandler):
             if not re.fullmatch(r'up-[0-9a-f]{12}', pid): return self.reply(400, {'error': 'only uploaded papers'})
             if pid in _running: _running[pid] and _running[pid].terminate()
             return self.reply(200, {'ok': True, 'removed': forget_paper(pid)})
+        if path == '/paper/add':   # add a paper you chose: research (Claude, read-only), then publish (add_paper.py)
+            text = str(data.get('input', '')).strip()[:2000]
+            if not text: return self.reply(400, {'error': 'input'})
+            with _lock:
+                j = _add['job']
+                if j and j['state'] == 'running': return self.reply(409, {'error': 'busy', 'job': j})
+                return self.reply(200, {'job': start_add(text, bool(data.get('star')))})
+        if path == '/paper/add/stop':
+            p = _add['proc']
+            if p: p.terminate()
+            return self.reply(200, {'ok': True})
         if path == '/library':   # the user's paper list, for finding papers they describe (no notes in it)
             with open(os.path.join(WORK, 'library.tsv'), 'w') as f: f.write(str(data.get('tsv', ''))[:3_000_000])
             return self.reply(200, {'ok': True})
