@@ -1138,6 +1138,7 @@ body.tok-mode .tok-cues { display: block; position: absolute; inset: 0; pointer-
 .cite-pill { user-select: all; -webkit-user-select: all; }
 .cite-pill.sel { background: color-mix(in srgb, var(--hc) 34%, transparent); border-color: var(--hc); }
 .cite-chip.gone { opacity: 0.6; cursor: default; }
+.cite-chip.page-only { gap: 0; padding-left: 6px; padding-right: 6px; }   /* the words are in the sentence; the pill is the footnote */
 .rp-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; }
 .rp-filters .sel-dot { width: 18px; height: 18px; opacity: 0.45; }
 .rp-filters .sel-dot.on { opacity: 1; }
@@ -8385,9 +8386,45 @@ function chatToolLabel(t) { return { WebSearch: 'Searching the web…', WebFetch
 
 /* Markdown with clickable citations [[p.N "exact words"]], and cards for notes/highlights Claude was asked to add */
 const QUOTE_RE = /\[\[p\.(\d+)\s+"([^"\]\n]*)"\]\]/g;
-function citeQuotePill(page, quote, tok) {
+function citeQuotePill(page, quote, tok, pageOnly) {
+  if (pageOnly) return `<button class="cite-chip quote-chip page-only" data-page="${escAttr(String(page))}" data-quote="${escAttr(quote)}" title="${escAttr('Page ' + page + ' \u00b7 click to go to it')}"><span class="cp-page">p.\u00a0${esc(String(page))}</span></button>`;
   if (tok) return `<span class="cite-chip cite-pill quote-chip" contenteditable="false" draggable="false" data-tok="${escAttr(tok)}" data-page="${escAttr(String(page))}" data-quote="${escAttr(quote)}" title="${escAttr('\u201c' + shortQuote(quote, 300) + '\u201d \u00b7 click to go to it')}"><span class="cp-page">p.\u00a0${esc(String(page))}</span><span class="cp-q">${esc(shortQuote(quote, 48))}</span></span>`;
   return `<button class="cite-chip quote-chip" data-page="${escAttr(String(page))}" data-quote="${escAttr(quote)}" title="${escAttr('“' + shortQuote(quote, 300) + '” · click to go to it')}"><span class="cp-page">p. ${esc(String(page))}</span><span class="cp-q">${esc(shortQuote(quote, 48))}</span></button>`;
+}
+/* A citation that carries the sentence's own words ("It [[p.4 "is the observation function…"]]."): the pill would
+   show only "p. 4 is the obs…" and the sentence can't be read. When the word before it can't end a sentence, the
+   quote is written out as text and only the page is a pill. */
+const CITE_LEADS = new Set('it its is are was were be been being the a an of on in into onto to that which who whose as by for with from and or but than this these those they we he she you can could will would must may might should does do did has have had at via how what where when whether so such their our his her also then thus namely called'.split(' '));
+const CITE_VERBS = new Set('is are was were be being been can could will would must may might should has have had does do did which that who whose'.split(' '));
+function quoteReplacer(slot) {
+  return (m, page, q, off, src) => {
+    const before = src.slice(Math.max(0, off - 40), off).replace(/@@SLOT\d+@@/g, ' ');
+    const w = (before.match(/([A-Za-z]+)\s*$/) || [])[1];
+    const qw = (String(q).match(/^([a-z]+)\b/) || [])[1];   // or the quote itself carries on the sentence ("The encoder [[p.4 "is the …"]]")
+    if ((w && CITE_LEADS.has(w.toLowerCase())) || (qw && CITE_VERBS.has(qw) && !/[.!?:;]\s*$/.test(before))) return slot(esc(q)) + ' ' + slot(citeQuotePill(page, q, null, true));   // as text, untouched by Markdown (phi_obs)
+    return slot(citeQuotePill(page, q));
+  };
+}
+/* Update a live element from freshly rendered HTML, touching only what changed: while Claude writes, the finished
+   paragraphs (and the citation pills in them) stay the same elements, so they don't flicker and can be tapped. */
+function morphInto(el, html) {
+  const next = document.createElement(el.tagName); next.innerHTML = html;
+  const sameAttrs = (a, b) => a.attributes.length === b.attributes.length && [...a.attributes].every(x => b.getAttribute(x.name) === x.value);
+  const walk = (a, b) => {
+    const olds = [...a.childNodes], news = [...b.childNodes];
+    news.forEach((n, i) => {
+      const o = olds[i];
+      if (!o) { a.appendChild(n); return; }
+      if (o.nodeType !== n.nodeType || o.nodeName !== n.nodeName) { a.replaceChild(n, o); return; }
+      if (o.nodeType === 3 || o.nodeType === 8) { if (o.data !== n.data) o.data = n.data; return; }
+      if (o.nodeType !== 1) return;
+      if (!sameAttrs(o, n)) { a.replaceChild(n, o); return; }
+      if (o.hasAttribute('data-card-note')) return;   // a note card's own rendering: kept while its text is unchanged (data-card-src)
+      if (!o.isEqualNode(n)) walk(o, n);
+    });
+    for (let i = olds.length - 1; i >= news.length; i--) if (olds[i].parentNode === a) a.removeChild(olds[i]);
+  };
+  walk(el, next);
 }
 const CHAT_BLOCK_RE = /```(note|highlight)([^\n]*)\n?([\s\S]*?)```/g;
 function blockBody(kind, first, rest) { return (kind === 'highlight' ? first + ' ' + rest : rest).replace(/\s+\n/g, '\n').trim(); }
@@ -8396,9 +8433,10 @@ function chatBlocks(text) {
   String(text).replace(CHAT_BLOCK_RE, (m, kind, first, rest) => { out.push({ kind, body: blockBody(kind, first, rest), raw: m }); return m; });
   return out;
 }
+let _mdReady = false;
 async function renderChatMarkdown(el, text, msgIdx) {
-  el.textContent = text;
-  try { await loadMdLibs(); } catch (e) { return; }
+  if (!_mdReady) el.textContent = text;   // readable at once; formatted when the libraries arrive
+  try { await loadMdLibs(); _mdReady = true; } catch (e) { return; }
   const slots = [], slot = html => `@@SLOT${slots.push(html) - 1}@@`;
   let bi = 0;
   let src = String(text).replace(/```paper\s+([\w.-]+)\s*```/g, (m, id) => { const q = findPaper(id); return slot(`<div class="chat-status static">Reading ${q ? '<em>' + esc(shortQuote(q.title, 70)) + '</em>' : 'the paper'} and your notes on it\u2026</div>`); })
@@ -8409,15 +8447,16 @@ async function renderChatMarkdown(el, text, msgIdx) {
       return slot(`<div class="chat-card"><div class="chat-card-head">Highlight${h ? ` · ${esc(h[2])}` : ''}${msgIdx != null ? `<button class="chat-card-btn" onclick="chatApplyBlock(${msgIdx},${i})">${chatBlockDone(msgIdx, i) ? 'Added' : 'Add'}</button>` : ''}</div>${h ? citeQuotePill(h[1], h[3]) : esc(body)}</div>`);
     }
     return slot(`<div class="chat-card"><div class="chat-card-head">Note${msgIdx != null ? `<button class="chat-card-btn" onclick="chatApplyBlock(${msgIdx},${i})">${chatBlockDone(msgIdx, i) ? 'In your notes' : 'Save to notes'}</button>` : ''}</div><div class="md" data-card-note="${i}"></div></div>`);
-  }).replace(QUOTE_RE, (m, page, q) => slot(citeQuotePill(page, q)))
+  }).replace(QUOTE_RE, quoteReplacer(slot))
     .replace(/\$\$([\s\S]+?)\$\$/g, (m, tex) => slot(katex.renderToString(tex, { displayMode: true, throwOnError: false })))
     .replace(/(^|[^\\$])\$([^\s$](?:[^$\n]*?[^\s$])?)\$/g, (m, pre, tex) => pre + slot(katex.renderToString(tex, { throwOnError: false })));
   let html = DOMPurify.sanitize(marked.parse(src, { breaks: true, gfm: true }));
   html = html.replace(/@@SLOT(\d+)@@/g, (m, i) => slots[+i]);
-  el.innerHTML = html;
-  mdTables(el);
+  const tmp = document.createElement('div'); tmp.innerHTML = html; mdTables(tmp);
   const blocks = chatBlocks(text);
-  el.querySelectorAll('[data-card-note]').forEach(n => { const b = blocks[+n.dataset.cardNote]; if (b) renderNotesMarkdown(n, b.body, _rn); });
+  tmp.querySelectorAll('[data-card-note]').forEach(n => { const b = blocks[+n.dataset.cardNote]; n.dataset.cardSrc = b ? b.body.length + ':' + b.body.slice(-40) : ''; });
+  morphInto(el, tmp.innerHTML);
+  el.querySelectorAll('[data-card-note]').forEach(n => { const b = blocks[+n.dataset.cardNote]; if (b && n.dataset.done !== n.dataset.cardSrc) { n.dataset.done = n.dataset.cardSrc; renderNotesMarkdown(n, b.body, _rn); } });
   el.querySelectorAll('a[href]').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
 }
 document.addEventListener('click', e => {   // citation pills anywhere (chat, notes, cards) jump to the passage
@@ -9036,7 +9075,7 @@ async function renderNotesMarkdown(el, text, notesObj) {
   const slot = html => `@@SLOT${slots.push(html) - 1}@@`;
   let src = text
     .replace(CITE_RE, (m, id, rest) => slot(citePillHTML(m, id, rest, notesObj)))
-    .replace(QUOTE_RE, (m, page, q) => slot(citeQuotePill(page, q)))
+    .replace(QUOTE_RE, quoteReplacer(slot))
     .replace(/\$\$([\s\S]+?)\$\$/g, (m, tex) => slot(katex.renderToString(tex, { displayMode: true, throwOnError: false })))
     .replace(/(^|[^\\$])\$([^\s$](?:[^$\n]*?[^\s$])?)\$/g, (m, pre, tex) => pre + slot(katex.renderToString(tex, { throwOnError: false })));
   let html = DOMPurify.sanitize(marked.parse(src, { breaks: true, gfm: true }));
