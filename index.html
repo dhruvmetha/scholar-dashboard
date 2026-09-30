@@ -58,6 +58,7 @@
 
 
 body { font-family: 'Google Sans', Roboto, -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+html, body { overscroll-behavior: none; }   /* the app never rubber-bands as a whole; its own lists scroll */
 [hidden] { display: none !important; }   /* the hidden attribute always wins over a component's display rule */
 .main-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scroll-behavior: smooth; }   /* the page never scrolls sideways; wide content scrolls inside its own box */
 a { color: inherit; text-decoration: none; }
@@ -5557,6 +5558,36 @@ async function showReader(id) {
   if (!local && !src) { showPdfPicker(p, 'none'); ensureReaderNotes().then(runPendingNotes); return; }
   await loadIntoReader(p, local ? { data: await local.arrayBuffer() } : { url: src }, !!local);
 }
+/* While the reader is open, a swipe only ever scrolls something inside it. iOS hands a swipe that nothing under the
+   finger can scroll (a short chat, the notes header, the toolbar, a list already at its end) to the page behind,
+   and the whole app slides. So each move is checked: if no element from the finger up to the reader can scroll
+   that way, the move is cancelled. Pinches, and moves inside a text field being edited, are left alone. */
+(function () {
+  let x0 = 0, y0 = 0;
+  const canScroll = (el, dx, dy) => {
+    const cs = getComputedStyle(el);
+    if (Math.abs(dy) >= Math.abs(dx)) {
+      if (!/(auto|scroll)/.test(cs.overflowY) || el.scrollHeight <= el.clientHeight + 1) return false;
+      return dy > 0 ? el.scrollTop > 0 : el.scrollTop + el.clientHeight < el.scrollHeight - 1;   // finger down = scroll up
+    }
+    if (!/(auto|scroll)/.test(cs.overflowX) || el.scrollWidth <= el.clientWidth + 1) return false;
+    return dx > 0 ? el.scrollLeft > 0 : el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+  };
+  document.addEventListener('touchstart', e => { const t = e.touches[0]; if (t) { x0 = t.clientX; y0 = t.clientY; } }, { passive: true, capture: true });
+  document.addEventListener('touchmove', e => {
+    const reader = document.getElementById('reader');
+    if (!reader || !reader.classList.contains('open') || e.touches.length > 1 || !e.cancelable) return;
+    const t = e.touches[0], dx = t.clientX - x0, dy = t.clientY - y0;
+    if (!dx && !dy) return;
+    const tgt = e.target;
+    if (tgt === document.activeElement && (tgt.tagName === 'TEXTAREA' || tgt.tagName === 'INPUT' || tgt.isContentEditable)) return;   // moving the caret or a selection
+    for (let el = tgt; el && el !== document.body; el = el.parentElement) {
+      if (el.nodeType === 1 && canScroll(el, dx, dy)) return;
+      if (el === reader) break;
+    }
+    e.preventDefault();
+  }, { passive: false, capture: true });
+})();
 function readerStatus(html) { document.getElementById('readerBody').innerHTML = `<div class="reader-status">${html}</div>`; }
 async function loadIntoReader(p, source, isLocal) {
   const token = ++_reader.token;
