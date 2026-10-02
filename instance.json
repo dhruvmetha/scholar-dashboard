@@ -1,0 +1,12 @@
+{
+  "schema": 2,
+  "data_repo": "dhruvmetha/scholar-dashboard-data",
+  "branch": "main",
+  "site": "https://dhruvmetha.github.io/scholar-dashboard/",
+  "public_read": false,
+  "auth": "pat",
+  "share_pages": false,
+  "bridge_origins": [
+    "https://dhruvmetha.github.io"
+  ]
+}
