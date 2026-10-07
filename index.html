@@ -208,6 +208,7 @@ html.ro #vaultOverlay { display: none !important; }
 .p-headline { font-size: 15px; font-weight: 500; line-height: 1.35; color: var(--text); }
 .p-headline.lead { font-size: 18px; }
 .p-title { font-size: 12px; color: var(--text-muted); line-height: 1.3; margin-top: 2px; }
+.pd-attribution { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
 .p-authors { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
 .p-detail-panel { font-size: 13px; color: var(--text-secondary); line-height: 1.55; max-height: 0; overflow: hidden; opacity: 0; margin-top: 0; transition: max-height 0.4s ease, opacity 0.25s ease, margin-top 0.3s ease; }
 .p-detail-panel.open { max-height: 500px; opacity: 1; margin-top: 10px; }
@@ -2632,12 +2633,12 @@ function lockPrivate(state = 'required', detail) {
   if (Ink.cancelGesture) Ink.cancelGesture();
   _pushing = _pushAgain = Vault.pushing = Vault.pushAgain = false;
   allPapers = []; _hiddenPapers = []; allInterests = []; allGroups = []; GROUP_ORDER = [];
-  readSet.clear(); starSet.clear(); libraryLists = {}; _loadedPaperFields.clear(); _loadedInterestNames = []; _loadedGroupNames = [];
+  readSet.clear(); starSet.clear(); libraryLists = {}; _loadedPaperFields.clear(); _loadedInterestNames = []; _loadedGroupNames = []; _loadedGroupFields = new Map(); _loadedInterestFields = new Map();
   _papersText = _papersFresh = _emptyPapersCandidate = null; _dataLoaded = false; _restoreAnnounced = false;
   _uploads = {}; _uploadObjs.clear(); _lastSeen = null; _listSig = null;
   _libPapers = {}; _libSent = ''; _paperTextCache.clear(); _relIndex = null; _relIndexKey = null; _interestCounts = _interestCountsKey = null; _colorSlots = null; _colorKey = ''; _kbKey = null;
   clearTimeout(AddPaper.poll); clearTimeout(TopicTag.poll); clearTimeout(Pinch.timer); clearTimeout(_reader.panelT); clearTimeout(_reader.leaveT);
-  Object.assign(AddPaper, { open: false, job: null, poll: 0, text: '', star: false }); Object.assign(TopicTag, { job: null, poll: 0 });
+  Object.assign(AddPaper, { open: false, job: null, poll: 0, text: '', star: false }); Object.assign(TopicTag, { job: null, poll: 0, afterSave: new Set() });
   if (_tokGesture) clearTimeout(_tokGesture.hold);
   _libPanel = null; _tokGesture = null; _lastSearchQ = ''; _searchFilters = { rel: 'all', unread: false, topic: null, year: null }; Pinch.active = false; Pinch.anchor = null;
   _collapsedGroups.clear(); _venuesOpen.clear();
@@ -2811,6 +2812,8 @@ async function loadPrivateLibrary() {
     allInterests = interests; allGroups = groups;
     _loadedInterestNames = interests.map(row => row.interest_name); _loadedGroupNames = groups.map(row => row.group_name);
     const backup = readBackup();
+    _loadedInterestFields = rowSnapshot(interests, 'interest_name', backup && backup.interests && backup.interests.loadedFields);
+    _loadedGroupFields = rowSnapshot(groups, 'group_name', backup && backup.groups && backup.groups.loadedFields);
     if (backup && backup.interests) { allInterests = mergeBackupRows(interests, backup.interests, 'interest_name'); _interestsDirty = true; announceRestore(backup); }
     if (backup && backup.groups) { allGroups = mergeBackupRows(groups, backup.groups, 'group_name'); _groupsDirty = true; announceRestore(backup); }
     buildGroupOrder(); applyPapers(papers, texts[0]); _ownerDecisionDone = true;
@@ -2955,6 +2958,13 @@ const LOCAL_BACKUP_KEY = 'scholar_unpushed_v1';
 const EDITABLE_FIELDS = ['is_read', 'is_starred', 'user_lists', 'user_notes', 'theme_groups', 'is_hidden', 'pdf_url', 'match_strengths'];
 let _loadedPaperFields = new Map();              // id -> editable fields as loaded, to diff against
 let _loadedInterestNames = [], _loadedGroupNames = [];
+let _loadedGroupFields = new Map();              // topic -> its row as loaded, so a save keeps what the worker wrote since
+let _loadedInterestFields = new Map();           // interest -> its row as loaded, likewise (an owner confirmation from the CLI)
+function rowSnapshot(rows, key, saved) {          // saved: a backup's own snapshot, which wins for the rows it names
+  const m = new Map(rows.map(r => [r[key], { ...r }]));
+  Object.entries(saved || {}).forEach(([k, v]) => m.set(k, v));
+  return m;
+}
 let _backupTimer = null, _restoreAnnounced = false;
 function anyDirty() { return _stateDirty || _interestsDirty || _groupsDirty; }
 function paperFields(p) { const o = {}; EDITABLE_FIELDS.forEach(f => o[f] = p[f] || ''); return o; }
@@ -2969,17 +2979,18 @@ function writeBackup() {
     const b = { savedAt: new Date().toISOString() };
     if (_stateDirty) {
       flushStateToCSV();
-      const present = new Set(), papers = {};
+      const present = new Set(), papers = {}, loaded = {};
       everyPaper().forEach(p => {
         present.add(p.id);
         const now = paperFields(p), was = _loadedPaperFields.get(p.id);
-        if (!was || JSON.stringify(now) !== JSON.stringify(was)) papers[p.id] = now;
+        if (!was || JSON.stringify(now) !== JSON.stringify(was)) { papers[p.id] = now; if (was) loaded[p.id] = was; }
       });
       b.papers = papers;
+      b.loadedPapers = loaded;   // what each edit was made against, so a restore re-applies the edits, not the whole fields
       b.deleted = [..._loadedPaperFields.keys()].filter(id => !present.has(id));
     }
-    if (_interestsDirty) b.interests = { rows: allInterests, loadedNames: _loadedInterestNames };
-    if (_groupsDirty) b.groups = { rows: allGroups, loadedNames: _loadedGroupNames };
+    if (_interestsDirty) b.interests = { rows: allInterests, loadedNames: _loadedInterestNames, loadedFields: Object.fromEntries(_loadedInterestFields) };
+    if (_groupsDirty) b.groups = { rows: allGroups, loadedNames: _loadedGroupNames, loadedFields: Object.fromEntries(_loadedGroupFields) };
     checkedStorageSet(LOCAL_BACKUP_KEY, JSON.stringify(b));
   } catch (e) { toastError("Could not save the browser backup: " + e.message); throw e; }
 }
@@ -3002,9 +3013,15 @@ function restorePapersFromBackup() {
   _loadedPaperFields = new Map(allPapers.map(p => [p.id, paperFields(p)]));
   const b = readBackup();
   if (!b || (!b.papers && !b.deleted)) return;
-  const gone = new Set(b.deleted || []);
+  const gone = new Set(b.deleted || []), base = b.loadedPapers || {};
   allPapers = allPapers.filter(p => !gone.has(p.id));
-  everyPaper().forEach(p => { const o = b.papers && b.papers[p.id]; if (o) Object.assign(p, o); });
+  // The saved edits onto the copy just loaded, still pending: a topic the worker added since stays, and a removal the
+  // copy already agrees with is applied again at the next save (an older backup has no base)
+  everyPaper().forEach(p => {
+    const o = b.papers && b.papers[p.id]; if (!o) return;
+    const theirs = paperFields(p), was = base[p.id] || theirs;
+    Object.assign(p, mergedPaperFields(o, was, theirs)); _loadedPaperFields.set(p.id, pendingBase(o, was, theirs));
+  });
   _stateDirty = true;
   announceRestore(b);
 }
@@ -3242,6 +3259,7 @@ function loadInterests() {
     allInterests = r.data.filter(i => i.interest_name && i.interest_name.trim());
     _loadedInterestNames = allInterests.map(i => i.interest_name);
     const b = readBackup();
+    _loadedInterestFields = rowSnapshot(allInterests, 'interest_name', b && b.interests && b.interests.loadedFields);
     if (b && b.interests) { allInterests = mergeBackupRows(allInterests, b.interests, 'interest_name'); _interestsDirty = true; announceRestore(b); }
     updateInterestsBadge();
     renderInterests();
@@ -3255,6 +3273,7 @@ function loadGroups() {
     allGroups = r.data.filter(g => g.group_name && g.group_name.trim());
     _loadedGroupNames = allGroups.map(g => g.group_name);
     const b = readBackup();
+    _loadedGroupFields = rowSnapshot(allGroups, 'group_name', b && b.groups && b.groups.loadedFields);
     if (b && b.groups) { allGroups = mergeBackupRows(allGroups, b.groups, 'group_name'); _groupsDirty = true; announceRestore(b); }
     buildGroupOrder();
     updateInterestsBadge();
@@ -3404,7 +3423,7 @@ function venueLinkHTML(p, cls) {
   return `<span class="${cls} v-link" role="link" tabindex="0" title="${escAttr(p.venue || '')}" onclick="event.stopPropagation();openVenue('${escAttr(v.name)}'${yr ? ',' + yr : ''})">${esc(rowVenueLabel(p))}</span>`;
 }
 
-function norm(g) { return GROUP_NORMALIZE[g] || g || 'Other'; }
+function norm(g) { return GROUP_NORMALIZE[g] || g || ''; }   // no topic stays no topic: never an "Other" chip
 function relLabel(t) { return t === 'definitely' ? 'Must Read' : t === 'probably' ? 'Interesting' : 'Tangential'; }
 function esc(s) { if (!s) return ''; const el = document.createElement('span'); el.textContent = s; return el.innerHTML; }
 function dataAttr(s) { return (s||'').replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -4071,8 +4090,8 @@ function renderPapers(papers, topPool) {   // topPool: the tab's unread papers, 
   const shownAbove = new Set(top.slice(0, nTop).map(paperKey));
 
   const grouped = {};
-  const _confirmedGroups = new Set(allGroups.filter(g => g.status === 'confirmed').map(g => norm(g.group_name)));
-  papers.forEach(p => { (p.theme_groups||'').split('|').map(norm).filter(g => !_confirmedGroups.size || _confirmedGroups.has(g)).forEach(g => { if (g && (!_confirmedGroups.size || _confirmedGroups.has(g))) { if (!grouped[g]) grouped[g]=[]; grouped[g].push(p); } }); });
+  const confirmed = confirmedTopics();   // the chips' rule: no confirmed topic, no card
+  papers.forEach(p => groupsOfPaper(p, confirmed).forEach(g => { if (!grouped[g]) grouped[g]=[]; grouped[g].push(p); }));
   Object.values(grouped).forEach(a => sortPapers(a));
   const sorted = Object.keys(grouped).sort((a,b) => {
     const ia=GROUP_ORDER.indexOf(a), ib=GROUP_ORDER.indexOf(b);
@@ -4181,19 +4200,23 @@ function renderWeekPulse(weekPapers) {
   const el = document.getElementById('weekPulse');
   if (!weekPapers.length) { el.innerHTML = ''; return; }
   const counts = {};
-  weekPapers.forEach(p => groupsOfPaper(p).forEach(g => counts[g] = (counts[g] || 0) + 1));
+  let untopiced = 0;   // in no confirmed topic: counted in the caption, never drawn as a made-up group
+  weekPapers.forEach(p => { const gs = groupsOfPaper(p).filter(g => GROUP_ORDER.includes(g)); if (!gs.length) untopiced++; gs.forEach(g => counts[g] = (counts[g] || 0) + 1); });
   const ordered = GROUP_ORDER.filter(g => counts[g]);
   const items = ordered.map(g => ({ g, n: counts[g] })).sort((a, b) => b.n - a.n);   // biggest first, in the bar and the legend alike
-  if (!items.length) { el.innerHTML = ''; return; }
+  const arrived = `<b>${weekPapers.length} ${weekPapers.length === 1 ? 'paper' : 'papers'}</b> arrived this week`;
+  if (!items.length) {
+    el.innerHTML = `<div class="pulse-cap">${arrived}. ${GROUP_ORDER.length ? 'None is in a topic yet.' : 'Approve topics in the Interests tab to see them by topic.'}</div>`;
+    return;
+  }
   const tagTotal = items.reduce((n, it) => n + it.n, 0);
   const go = currentTab === 'email' ? 'openGroup' : 'jumpToTopic';
-  const seg = it => `<div class="pulse-seg" style="flex-grow:${it.n};--gc:${it.g ? groupColor(it.g) : 'var(--g-other)'}" data-g="${escAttr(it.g || '')}" data-tip="${escAttr((it.g || 'Other topics') + ': ' + it.n)}" ${it.g ? `onclick="${go}('${escAttr(it.g)}')"` : ''}></div>`;
-  const key = it => it.g
-    ? `<button class="pulse-key" onclick="${go}('${escAttr(it.g)}')" onmouseenter="pulseHL('${escAttr(it.g)}')" onmouseleave="pulseHL(null)">${gdot(it.g)}${esc(it.g)} <span class="n">${it.n}</span></button>`
-    : `<span class="pulse-key static">${gdot('')}Other <span class="n">${it.n}</span></span>`;
+  const seg = it => `<div class="pulse-seg" style="flex-grow:${it.n};--gc:${groupColor(it.g)}" data-g="${escAttr(it.g)}" data-tip="${escAttr(it.g + ': ' + it.n)}" onclick="${go}('${escAttr(it.g)}')"></div>`;
+  const key = it => `<button class="pulse-key" onclick="${go}('${escAttr(it.g)}')" onmouseenter="pulseHL('${escAttr(it.g)}')" onmouseleave="pulseHL(null)">${gdot(it.g)}${esc(it.g)} <span class="n">${it.n}</span></button>`;
+  const rest = untopiced ? ` (${untopiced} not yet in a topic)` : '';
   el.innerHTML = `
-    <div class="pulse-cap"><b>${weekPapers.length} ${weekPapers.length === 1 ? 'paper' : 'papers'}</b> arrived this week${tagTotal > weekPapers.length ? `, tagged ${tagTotal} times across ${ordered.length} topics (a paper can have more than one)` : ', by topic'}</div>
-    <div class="pulse-bar" role="img" aria-label="${escAttr(items.map(it => (it.g || 'Other') + ' ' + it.n).join(', '))}">${items.map(seg).join('')}</div>
+    <div class="pulse-cap">${arrived}${tagTotal > weekPapers.length - untopiced ? `, tagged ${tagTotal} times across ${ordered.length} topics (a paper can have more than one)` : ', by topic'}${rest}</div>
+    <div class="pulse-bar" role="img" aria-label="${escAttr(items.map(it => it.g + ' ' + it.n).join(', '))}">${items.map(seg).join('')}</div>
     <div class="pulse-legend">${items.map(key).join('')}</div>`;
 }
 function pulseHL(g) {
@@ -4702,10 +4725,12 @@ function publishedBucket(p) {
   return { key: String(k), label: new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) };
 }
 
-/* Confirmed theme groups a paper belongs to */
-function groupsOfPaper(p) {
-  const confirmed = new Set(allGroups.filter(g => g.status === 'confirmed').map(g => norm(g.group_name)));
-  return (p.theme_groups||'').split('|').map(norm).filter(g => g && (!confirmed.size || confirmed.has(g)));
+/* Confirmed theme groups a paper belongs to. Only a confirmed topic is ever a chip or a card: a stored suggested or
+   rejected tag stays hidden, also when no topic is confirmed at all. */
+function confirmedTopics() { return new Set(allGroups.filter(g => g.status === 'confirmed').map(g => norm(g.group_name))); }
+function groupsOfPaper(p, confirmed) {
+  confirmed = confirmed || confirmedTopics();
+  return (p.theme_groups||'').split('|').map(norm).filter(g => g && confirmed.has(g));
 }
 
 /* Rows with the reading rail, used by Library and search */
@@ -5530,27 +5555,47 @@ function groupCardHTML(g) {
   else if (g.status === 'rejected') actions = `<div class="interest-actions"><button class="btn-approve" onclick="event.stopPropagation();updateG('${escAttr(g.group_name)}','confirmed')">Restore</button></div>`;
   const handle = `<div class="group-drag-handle" title="Drag to reorder"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></div>`;
   const drag = isOwner() ? ' draggable="true" ondragstart="gDragStart(event)" ondragover="gDragOver(event)" ondragenter="gDragEnter(event)" ondragleave="gDragLeave(event)" ondrop="gDrop(event)" ondragend="gDragEnd(event)"' : '';   // reordering is yours
-  return `<div class="interest-card"${drag} data-group="${dataAttr(g.group_name)}">${isOwner() ? handle : ''}<div class="interest-info"><div class="interest-name">${g.status === 'confirmed' ? gdot(norm(g.group_name)) : ''}${esc(g.group_name)}</div><div class="interest-detail">${esc(g.description||'')}</div>${notes}<div class="interest-meta">${statusBadge}<span class="badge badge-venue">${paperCount} paper${paperCount!==1?'s':''}${readCount ? `, ${readCount} read` : ''}</span></div>${topicTagLineHTML(g, paperCount)}</div>${actions}</div>`;
+  return `<div class="interest-card"${drag} data-group="${dataAttr(g.group_name)}">${isOwner() ? handle : ''}<div class="interest-info"><div class="interest-name">${g.status === 'confirmed' ? gdot(norm(g.group_name)) : ''}${esc(g.group_name)}</div><div class="interest-detail">${esc(g.description||'')}</div>${notes}<div class="interest-meta">${statusBadge}<span class="badge badge-venue">${paperCount} paper${paperCount!==1?'s':''}${readCount ? `, ${readCount} read` : ''}</span></div>${topicTagLineHTML(g)}</div>${actions}</div>`;
 }
 /* ===== A NEW TOPIC'S EXISTING PAPERS =====
-   Approving a topic (or restoring one that has no papers) tags the papers already in the database: through the
-   bridge on the laptop (bridge/add_topic.py: Claude decides, read-only; the script applies and publishes), or, when
-   the laptop can't be reached, at the next weekly run. A topic's card says which is happening. */
-const TopicTag = { job: null, poll: 0 };
-function topicTagLineHTML(g, n) {
+   Approving a topic (or restoring one not yet tagged) tags the papers already in the database: through the bridge
+   (bridge/add_topic.py: Claude decides, read-only; the script applies and publishes), or, when the bridge can't be
+   reached, by the worker's hourly pass. A topic's card says which is happening. Only the "Existing papers tagged" note
+   says it's done: a paper the Judge gave the topic since doesn't mean the older ones have it. */
+const TopicTag = { job: null, poll: 0, afterSave: new Set() };   // afterSave: approvals here waiting for their save
+function topicTagLineHTML(g) {
   const j = TopicTag.job;
   if (j && j.topic === g.group_name) {
     if (j.state === 'running') return `<div class="tt-line"><span class="la-spin"></span>${esc(j.stage || 'Tagging existing papers\u2026')}</div>`;
     if (j.state === 'done') return `<div class="tt-line done">Tagged ${(j.tagged || []).length} existing paper${(j.tagged || []).length === 1 ? '' : 's'}</div>`;
-    return `<div class="tt-line warn">${esc(j.message || 'Tagging failed')} <button class="lib-hint-btn" onclick="startTopicTag('${escAttr(g.group_name)}')">Try again</button></div>`;
+    return `<div class="tt-line warn">${esc(j.message || 'Tagging failed')} <button class="lib-hint-btn" onclick="tagWhenSaved('${escAttr(g.group_name)}')">Try again</button></div>`;
   }
-  if (g.status !== 'confirmed' || n || /Existing papers tagged/.test(g.notes || '')) return '';
+  if (g.status !== 'confirmed' || /Existing papers tagged/.test(g.notes || '')) return '';
   const can = Chat.status === 'ready' && Chat.bridgeVersion >= 3;
-  return `<div class="tt-line">Its existing papers get tagged at the next weekly run.${can ? ` <button class="lib-hint-btn" onclick="startTopicTag('${escAttr(g.group_name)}')">Tag now</button>` : ''}</div>`;
+  return `<div class="tt-line">Its existing papers get tagged ${isPrivate() ? 'by the worker within the hour' : 'at the next weekly run'}.${can ? ` <button class="lib-hint-btn" onclick="tagWhenSaved('${escAttr(g.group_name)}')">Tag now</button>` : ''}</div>`;
+}
+/* Tagging is asked for only once GitHub has the topic as confirmed, since the bridge cancels a topic it doesn't find
+   confirmed there. An approval made here is saved first and tagging waits for that save to land. */
+function tagWhenSaved(name, quiet) {
+  if (!isOwner()) return false;   // nothing can be saved, so nothing is asked for
+  const was = _loadedGroupFields.get(name);
+  if (was && was.status === 'confirmed') return startTopicTag(name, quiet);
+  TopicTag.afterSave.add(name);
+  return pushToGitHub(true);
+}
+/* A topics save landed: ask for the approvals it carried. One approved while the save was out waits for the next. */
+function tagSavedApprovals(written) {
+  TopicTag.afterSave.forEach(name => {
+    const g = allGroups.find(x => x.group_name === name), w = written.get(name);
+    if (!g || g.status !== 'confirmed') { TopicTag.afterSave.delete(name); return; }   // undone here meanwhile
+    if (!w || w.status !== 'confirmed') return;
+    TopicTag.afterSave.delete(name);
+    if (!/Existing papers tagged/.test(w.notes || '')) startTopicTag(name, true);
+  });
 }
 async function startTopicTag(name, quiet) { const _authEpoch = capturePrivateEpoch();
   if (Chat.status !== 'ready' || !Chat.bridgeVersion) await privateAwait(bridgeCheck(), _authEpoch);
-  if (Chat.status !== 'ready' || Chat.bridgeVersion < 3) { if (!quiet) toast('Tagging runs on your laptop; it isn\u2019t reachable now, so the next weekly run will do it'); renderInterests(); return false; }
+  if (Chat.status !== 'ready' || Chat.bridgeVersion < 3) { if (!quiet) toast(isPrivate() ? 'The bridge isn\u2019t reachable now, so the worker tags its papers within the hour' : 'Tagging runs on your laptop; it isn\u2019t reachable now, so the next weekly run will do it'); renderInterests(); return false; }
   try {
     const r = await privateAwait(bridgeFetch('/topic/tag', { method: 'POST', body: JSON.stringify({ topic: name }) }), _authEpoch);
     const j = await privateAwait(r.json(), _authEpoch);
@@ -5567,18 +5612,20 @@ function setTopicJob(j) {
   } else if (was && was.state === 'running' && was.id === j.id && j.state === 'done') topicTagged(j);
   if (currentTab === 'interests') renderInterests();
 }
-/* On GitHub now: the same here, so the page shows it at once and never saves over it */
+/* On GitHub now: the same here, so the page shows it at once and never saves over it. Only the tags and the topic's
+   notes change, and only while the topic is still confirmed here: a Dismiss or Remove made since stands. */
 function topicTagged(j) {
   const name = j.group && j.group.group_name || j.topic;
+  const g = allGroups.find(x => x.group_name === name);
+  if (!g || g.status !== 'confirmed') return;
+  const withTopic = s => { const gs = (s || '').split('|').filter(Boolean); return gs.includes(name) ? s : gs.concat(name).join('|'); };
   (j.tagged || []).forEach(id => {
     const p = findPaper(id);
     if (!p) return;
-    const gs = (p.theme_groups || '').split('|').filter(Boolean);
-    if (!gs.includes(name)) p.theme_groups = gs.concat(name).join('|');
-    const base = _loadedPaperFields.get(id); if (base) base.theme_groups = p.theme_groups;
+    p.theme_groups = withTopic(p.theme_groups);
+    const base = _loadedPaperFields.get(id); if (base) base.theme_groups = withTopic(base.theme_groups);   // the baseline too: not an edit made here
   });
-  const g = allGroups.find(x => x.group_name === name);
-  if (g && j.group) { g.status = 'confirmed'; g.notes = j.group.notes; }
+  if (j.group && j.group.notes != null) { g.notes = j.group.notes; const was = _loadedGroupFields.get(name); if (was) was.notes = g.notes; }
   _colorKey = null; buildGroupOrder(); refresh();
   toast(`\u201c${name}\u201d: tagged ${(j.tagged || []).length} existing papers`, () => { location.hash = '#group/' + encodeURIComponent(name); }, { actionLabel: 'Show', duration: 8000 });
 }
@@ -5693,8 +5740,8 @@ function updateG(name, status) {
   showSaveBar();
   refresh();
   toast(`Topic "${name}" ${status === 'confirmed' ? 'approved' : prev === 'suggested' ? 'dismissed' : 'removed'}`, () => updateG(name, prev));
-  // approved (or restored) and no paper has it yet: tag the existing ones
-  if (status === 'confirmed' && prev !== 'confirmed' && !allPapers.some(p => groupsOfPaper(p).includes(name)) && !/Existing papers tagged/.test(g.notes || '')) startTopicTag(name, true);
+  // approved (or restored) and not tagged yet: save the approval, then tag the existing papers
+  if (status === 'confirmed' && prev !== 'confirmed' && !/Existing papers tagged/.test(g.notes || '')) tagWhenSaved(name, true);
 }
 
 /* ===== INTEREST INLINE DROPDOWNS ===== */
@@ -6083,35 +6130,91 @@ async function _ghMergePush(headers, filename, merge, message) { const _authEpoc
 /* CSVs end with a line break so a digest run's appended row starts on its own line */
 function toCSV(rows, opts) { return Papa.unparse(rows, opts) + '\r\n'; }
 
-/* Papers: only fields changed here are written into GitHub's rows. A field changed on GitHub
-   but not here (a digest run re-grouping a paper) is taken into this page instead. */
+/* Papers: only fields changed here are written into GitHub's rows, and topics only as the names added or removed here.
+   The page and its baselines stay as they are until the PUT is acknowledged, so every edit stays pending, against the
+   same baseline, through a conflict retry or a failed save, also where GitHub already agrees. sent: each paper as
+   merged, for papersSaved. */
 function mergePapers(text) {
   const r = Papa.parse(text, { header: true, skipEmptyLines: true });   // line endings detected
   const fields = r.meta.fields.slice();
   flushStateToCSV();
-  const mine = new Map(everyPaper().map(p => [p.id, p]));
-  let adopted = false;
+  const mine = new Map(everyPaper().map(p => [p.id, p])), sent = new Map();
   const rows = r.data.filter(row => {
     const p = row.id && mine.get(row.id);
     if (!p) return !(row.id && _loadedPaperFields.has(row.id));   // deleted here: drop; new on GitHub: keep
-    const now = paperFields(p), was = _loadedPaperFields.get(row.id) || {};
-    EDITABLE_FIELDS.forEach(f => {
-      const theirs = row[f] || '';
-      if (now[f] !== (was[f] || '')) row[f] = now[f];
-      else if (theirs !== now[f]) { p[f] = theirs; adopted = true; }
-    });
+    const now = paperFields(p), theirs = paperFields(row), merged = mergedPaperFields(now, _loadedPaperFields.get(row.id) || {}, theirs);
+    EDITABLE_FIELDS.forEach(f => { if (merged[f] !== theirs[f]) row[f] = merged[f]; });
+    sent.set(row.id, { p, now });
     return true;
   });
   EDITABLE_FIELDS.forEach(f => { if (!fields.includes(f) && rows.some(x => x[f])) fields.push(f); });
-  if (adopted) { splitHidden(); bootstrapStateFromCSV(); refresh(); }
-  return { csv: toCSV(rows, { columns: fields }), rows };
+  return { csv: toCSV(rows, { columns: fields }), rows, sent };
 }
-/* Interests and topics: this page's rows, plus rows added on GitHub that this page never saw */
-function mergeRows(mineRows, loadedNames, key, parseOpts, unparseOpts) {
+/* The papers save landed: the edits it carried are done. Each paper takes its saved row, which becomes its baseline,
+   and an edit made here since the merge stays pending on top of it. A field changed on GitHub but not here (a digest
+   run re-grouping a paper) comes into this page now. */
+function papersSaved(out) {
+  flushStateToCSV();
+  const saved = new Map(out.rows.filter(x => x.id).map(x => [x.id, paperFields(x)])), sent = out.sent, base = new Map();
+  let adopted = false;
+  everyPaper().forEach(p => {
+    const m = saved.get(p.id), s = sent.get(p.id);
+    if (!m) { base.set(p.id, paperFields(p)); return; }
+    // since the merge, or for a copy loaded while the save was out, its own pending edits (sent again, to no effect)
+    const now = paperFields(p), was = s && s.p === p ? s.now : _loadedPaperFields.get(p.id) || {}, merged = mergedPaperFields(now, was, m);
+    EDITABLE_FIELDS.forEach(f => { if (merged[f] !== now[f]) { p[f] = merged[f]; adopted = true; } });
+    base.set(p.id, pendingBase(now, was, m));
+  });
+  _loadedPaperFields = base;
+  if (adopted) { splitHidden(); bootstrapStateFromCSV(); refresh(); }
+}
+/* One paper's edits laid onto another copy of it: a field changed here (now against was) wins, any other takes theirs.
+   Topics merge as a set: the names added and removed here, applied to theirs, so a topic the worker added since stays. */
+function mergedPaperFields(now, was, theirs) {
+  const out = {};
+  EDITABLE_FIELDS.forEach(f => {
+    const n = now[f] || '', w = was[f] || '', t = theirs[f] || '';
+    out[f] = n === w ? t : f === 'theme_groups' ? topicsDelta(w, n, t) : n;
+  });
+  return out;
+}
+/* The baseline that keeps those edits pending on that merge: a field changed here keeps its old value, and topics keep
+   each name added here out and each name removed here in, so the next merge applies them again, even where GitHub
+   already agrees. */
+function pendingBase(now, was, theirs) {
+  const out = {};
+  EDITABLE_FIELDS.forEach(f => {
+    const n = now[f] || '', w = was[f] || '', t = theirs[f] || '';
+    out[f] = n === w ? t : f === 'theme_groups' ? topicsDelta(n, w, t) : w;
+  });
+  return out;
+}
+function topicsDelta(was, now, theirs) {
+  const list = s => s.split('|').map(g => g.trim()).filter(Boolean);
+  const before = new Set(list(was)), after = new Set(list(now));
+  const out = list(theirs).filter(g => after.has(g) || !before.has(g));   // minus the names removed here
+  list(now).forEach(g => { if (!before.has(g) && !out.includes(g)) out.push(g); });   // plus the names added here
+  return out.join('|');
+}
+/* Interests and topics: this page's rows, plus rows added on GitHub that this page never saw. With loadedFields, a
+   field this page left as loaded takes GitHub's value, so the worker's "Existing papers tagged" note and an owner
+   confirmation from the CLI survive a save. The value taken becomes that field's baseline, so a conflict retry takes
+   GitHub's newer one again. written is the rows as saved: the next baseline, which edits made while the save is out
+   don't touch. */
+function mergeRows(mineRows, loadedNames, key, parseOpts, unparseOpts, loadedFields) {
   return text => {
     const r = Papa.parse(text, { header: true, skipEmptyLines: true, ...parseOpts });
-    const rows = mergeBackupRows(r.data.filter(x => x[key] && x[key].trim()), { rows: mineRows, loadedNames }, key);
-    return { csv: toCSV(rows, { ...unparseOpts, columns: r.meta.fields }), rows };   // the file's own columns
+    const remote = r.data.filter(x => x[key] && x[key].trim());
+    if (loadedFields) {
+      const theirs = new Map(remote.map(x => [x[key], x]));
+      mineRows.forEach(row => {
+        const t = theirs.get(row[key]), was = loadedFields.get(row[key]);
+        if (!t || !was) return;
+        (r.meta.fields || []).forEach(f => { if (f !== key && (row[f] || '') === (was[f] || '') && (t[f] || '') !== (row[f] || '')) row[f] = was[f] = t[f]; });
+      });
+    }
+    const rows = mergeBackupRows(remote, { rows: mineRows, loadedNames }, key);
+    return { csv: toCSV(rows, { ...unparseOpts, columns: r.meta.fields }), rows, written: rowSnapshot(rows, key) };   // the file's own columns
   };
 }
 
@@ -6146,21 +6249,21 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
   const headers = { 'Authorization': `Bearer ${pat}`, 'Accept': 'application/vnd.github+json' };
   try {
     if (_stateDirty) {
-      const { rows } = await privateAwait(_ghMergePush(headers, 'papers_database.csv', mergePapers, 'Update papers_database.csv from dashboard'), _authEpoch);
+      const out = await privateAwait(_ghMergePush(headers, 'papers_database.csv', mergePapers, 'Update papers_database.csv from dashboard'), _authEpoch);
       // The edits just saved are the new baseline; anything changed since stays unsaved
-      requireOwner(); const saved = new Map(rows.filter(x => x.id).map(x => [x.id, paperFields(x)]));
-      _loadedPaperFields = new Map(everyPaper().map(p => [p.id, saved.get(p.id) || paperFields(p)]));
+      requireOwner(); papersSaved(out);
     }
     if (_interestsDirty) {
-      const { rows } = await privateAwait(_ghMergePush(headers, 'interests_database.csv', mergeRows(allInterests, _loadedInterestNames, 'interest_name'), 'Update interests_database.csv from dashboard'), _authEpoch);
+      const { rows, written } = await privateAwait(_ghMergePush(headers, 'interests_database.csv', mergeRows(allInterests, _loadedInterestNames, 'interest_name', {}, {}, _loadedInterestFields), 'Update interests_database.csv from dashboard'), _authEpoch);
       requireOwner(); allInterests = rows;
-      _loadedInterestNames = rows.map(i => i.interest_name);
+      _loadedInterestNames = rows.map(i => i.interest_name); _loadedInterestFields = written;
     }
     if (_groupsDirty) {
-      const { rows } = await privateAwait(_ghMergePush(headers, 'groups_database.csv', mergeRows(allGroups, _loadedGroupNames, 'group_name', { delimiter: '|' }, { delimiter: '|' }), 'Update groups_database.csv from dashboard'), _authEpoch);
+      const { rows, written } = await privateAwait(_ghMergePush(headers, 'groups_database.csv', mergeRows(allGroups, _loadedGroupNames, 'group_name', { delimiter: '|' }, { delimiter: '|' }, _loadedGroupFields), 'Update groups_database.csv from dashboard'), _authEpoch);
       requireOwner(); allGroups = rows;
-      _loadedGroupNames = rows.map(g => g.group_name);
+      _loadedGroupNames = rows.map(g => g.group_name); _loadedGroupFields = written;
       buildGroupOrder();
+      tagSavedApprovals(written);
     }
     requireOwner(); updateInterestsBadge();
     if (_interestsDirty || _groupsDirty) renderInterests();
@@ -6175,6 +6278,7 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
     }
   } catch (e) { checkPrivateEpoch(_authEpoch);
     console.error(e);
+    TopicTag.afterSave.clear();   // the approval isn't on GitHub: the worker tags those topics once a later save lands
     if (!configReady() || e.target) return;
     if (e.fatal || !hasPAT()) {
       setSaveBar('Unsaved changes', 'Kept in this browser until you push', 'Push to GitHub');
@@ -10533,7 +10637,7 @@ function renderPaperDetail(p) {
   // Reading column
   let main = '';
   if (hasText(p.summary)) main += `<section class="pd-section"><h2>Summary</h2><p class="pd-prose">${esc(p.summary)}</p></section>`;
-  if (hasText(p.abstract)) main += `<section class="pd-section"><h2>Abstract</h2><p class="pd-prose">${esc(p.abstract)}</p></section>`;
+  if (hasText(p.abstract)) main += `<section class="pd-section"><h2>Abstract</h2><p class="pd-prose">${esc(p.abstract)}</p><p class="pd-attribution">Some abstracts are provided by Semantic Scholar and OpenAlex.</p></section>`;
   if (hasNotes || (ix && ix.h + ix.c)) main += `<section class="pd-section pd-notes"><h2>Your notes <button class="pd-edit" onclick="openReader('${ka}', 'new')">+ Add note</button></h2>${hasNotes ? vn.entries.map(e => `<div class="pd-note"><div class="pd-note-top"><span>${esc(noteDate(e))}</span><button class="rp-icon-btn sm" onclick="openReader('${ka}', '${e.id}')" title="Edit note" aria-label="Edit note">${ICON_EDIT}</button></div><div class="pd-prose md" data-pdnote="${e.id}"></div></div>`).join('') : ''}${ix && ix.h + ix.c ? `<div class="pd-notes-meta">${[ix.h && `${ix.h} highlight${ix.h === 1 ? '' : 's'}`, ix.c && `${ix.c} comment${ix.c === 1 ? '' : 's'}`].filter(Boolean).join(', ')} · <button onclick="openReader('${ka}', 'panel')">Open in the reader</button></div>` : ''}</section>`;
   if (!main) main = `<p class="pd-empty">No summary or abstract yet. Open the paper to read it at the source.</p>`;
 
@@ -10576,7 +10680,7 @@ function renderPaperDetail(p) {
   const rel6 = relatedTo(p, 6);
   let related = '';
   if (rel6.length) related += `<div class="pd-rel-group"><div class="pd-rel-grid">${rel6.map(feedItemHTML).join('')}</div></div>`;
-  const topicLinks = [...new Set(groups.map(norm))].map(g => {
+  const topicLinks = [...new Set(glowGroups)].map(g => {   // confirmed topics only, as the chips
     const n = allPapers.filter(pp => !readSet.has(paperKey(pp)) && (pp.theme_groups||'').split('|').map(norm).includes(g)).length;   // to read, as its list page counts
     return `<button class="pd-rel-topic" onclick="openGroup('${escAttr(g)}')">${gdot(g)}${esc(g)}<span class="n">${n}</span></button>`;
   }).join('');
