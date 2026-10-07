@@ -1727,6 +1727,16 @@ body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
 .ig-link:hover { border-color: var(--accent); }
 .ig-empty { line-height: 1.6; max-width: 520px; margin: 48px auto; color: var(--text-secondary); }
 .ig-empty strong { display: block; color: var(--text); margin-bottom: 4px; }
+.ig-tools { max-width: 1200px; margin: 0 auto 14px; padding: 0 24px; display: flex; gap: 8px; }
+.author-form { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 8px 20px 12px; max-width: 720px; }
+.author-form h3 { font-family: var(--serif); font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+.author-form label { font-size: 12.5px; color: var(--text-secondary); margin-top: 6px; }
+.author-form textarea.pp-input { resize: vertical; min-height: 64px; line-height: 1.5; }
+.author-form .af-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.author-form .af-row label { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; }
+.af-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.af-hint { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.author-form .pp-msg:empty { display: none; }
 .badge-editable::after { content: '\25BE'; margin-left: 5px; opacity: 0.6; font-size: 9px; }
 .badge-editable:hover { filter: none; box-shadow: 0 0 0 1px currentColor inset; }
 .btn-quiet-remove { background: none; border: 1px solid transparent; color: var(--text-muted); font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 999px; cursor: pointer; opacity: 0; transition: opacity 0.15s, color 0.15s, border-color 0.15s; }
@@ -2842,11 +2852,112 @@ document.addEventListener('visibilitychange', verifyOnReturn);
 let GROUP_ORDER = []; // Populated dynamically from groups_database.csv
 const REL_ORDER = { definitely: 0, probably: 1, mildly: 2 };
 
+/* ===== WHO OWNS A VALUE =====
+   From papers schema 2 on, a paper's strengths, topics and PDF each have a column the worker writes (machine_strengths
+   with matched_interests, machine_topics, machine_pdf_url) and columns this page writes (match_strengths; theme_groups
+   and topics_removed; pdf_url and pdf_removed). The page shows one projection of both, the same one ingest/ownership.py
+   computes for the worker:
+     strengths  the person's entry wins per interest; a person's "none" removes that match
+     topics     theme_groups and machine_topics, less topics_removed (groupsOfPaper keeps the confirmed ones)
+     PDF        pdf_url; else machine_pdf_url unless pdf_removed; else the arXiv PDF
+   A schema 1 file has none of the new columns and reads exactly as before. Interest names go through the aliases a
+   rename leaves behind, so a paper that still names an interest by its old name counts for the renamed one. */
+function nameList(s) { return String(s || '').split('|').map(x => x.trim()).filter(Boolean); }
+const isStrength = v => v === 'about' || v === 'partly' || v === 'touches';
+/* "Name=about|Other=none" as an ordered Map. Every value is kept, so a rewrite never loses an entry it doesn't read. */
+function strengthEntries(s) {
+  const out = new Map();
+  String(s || '').split('|').forEach(part => { const k = part.lastIndexOf('='); if (k > 0) { const name = part.slice(0, k).trim(), v = part.slice(k + 1).trim(); if (name && v) out.set(name, v); } });
+  return out;
+}
+function strengthText(entries) { return [...entries].map(([k, v]) => `${k}=${v}`).join('|'); }
+/* The interest a name belongs to now: an interest's own name, else the interest that lists it in aliases (exactly,
+   then ignoring case). Any other name stays as it is. rows: interests_database.csv rows. */
+function aliasIndex(rows) {
+  const exact = new Map(), folded = new Map();
+  (rows || []).forEach(i => { const n = (i.interest_name || '').trim(); if (n) exact.set(n, n); });
+  (rows || []).forEach(i => {
+    const n = (i.interest_name || '').trim(); if (!n) return;
+    nameList(i.aliases).forEach(a => { if (!exact.has(a)) exact.set(a, n); if (!folded.has(a.toLowerCase())) folded.set(a.toLowerCase(), n); });
+  });
+  return name => { const k = String(name || '').trim(); return exact.get(k) || folded.get(k.toLowerCase()) || k; };
+}
+function aliasMap() {   // the page's own interests, rebuilt when they change (a rename here clears the cache)
+  const c = aliasMap.cache;
+  if (c && c.rows === allInterests && c.n === allInterests.length) return c.fn;
+  aliasMap.cache = { rows: allInterests, n: allInterests.length, fn: aliasIndex(allInterests) };
+  return aliasMap.cache.fn;
+}
+function canonicalInterest(name) { return aliasMap()(name); }
+/* One strength map by current names. An entry under the current name wins over one left under an old name. */
+function canonStrengths(entries, canon) {
+  const out = Object.create(null);
+  entries.forEach((v, k) => { if (canon(k) === k) out[k] = v; });
+  entries.forEach((v, k) => { const c = canon(k); if (!(c in out)) out[c] = v; });
+  return out;
+}
+/* The paper's matches (the machine's: matched_interests, then machine_strengths) by current name, in order, less any
+   the person marked "none"; and each one's strength, the person's before the machine's. A match with neither strength
+   is not rated yet. Kept per paper until one of the three fields or the interests' names change, since sorting asks
+   for it many times; callers only read it. */
+function strengthView(p, canon) {
+  canon = canon || aliasMap();
+  const key = (p.matched_interests || '') + '\u0000' + (p.match_strengths || '') + '\u0000' + (p.machine_strengths || '');
+  const memo = strengthView.memo || (strengthView.memo = new WeakMap()), hit = memo.get(p);
+  if (hit && hit.canon === canon && hit.key === key) return hit.view;
+  const user = canonStrengths(strengthEntries(p.match_strengths), canon), machine = canonStrengths(strengthEntries(p.machine_strengths), canon);
+  const matches = [], strengths = Object.create(null);
+  nameList(p.matched_interests).concat(Object.keys(machine).filter(n => machine[n] !== 'none')).forEach(n => {
+    const c = canon(n);
+    if (matches.includes(c) || user[c] === 'none') return;
+    matches.push(c);
+    const v = isStrength(user[c]) ? user[c] : isStrength(machine[c]) ? machine[c] : '';
+    if (v) strengths[c] = v;
+  });
+  const view = { matches, strengths };
+  memo.set(p, { canon, key, view });
+  return view;
+}
+function effMatches(p, canon) { return strengthView(p, canon).matches; }
+function effStrengths(p, canon) { return strengthView(p, canon).strengths; }
+/* A paper's topics, by stored name: the person's (theme_groups) and the tagger's (machine_topics), less the ones the
+   person removed (topics_removed). Unconfirmed names included; groupsOfPaper keeps the confirmed ones. */
+function effTopics(p) {
+  const removed = new Set(nameList(p.topics_removed)), out = [];
+  nameList(p.theme_groups).concat(nameList(p.machine_topics)).forEach(g => { if (!removed.has(g) && !out.includes(g)) out.push(g); });
+  return out;
+}
+/* The PDF the reader opens: the person's link; else the open PDF the worker found, unless the person chose none;
+   else the arXiv PDF (from arxiv_id, else from an arXiv link) */
+function effPdf(p) {
+  if (hasText(p.pdf_url)) return p.pdf_url.trim();
+  if (hasText(p.machine_pdf_url) && p.pdf_removed !== 'true') return p.machine_pdf_url.trim();
+  const a = String(p.arxiv_id || '').trim().replace(/^arxiv:/i, '').match(/^(\d{4}\.\d{4,5}|[a-z][a-z.-]+\/\d{7})(v\d+)?$/i);
+  if (a) return `https://arxiv.org/pdf/${a[1]}${a[2] || ''}`;
+  const m = (p.url || '').match(/arxiv\.org\/(?:abs|pdf|html)\/(\d{4}\.\d{4,5})/);
+  return m ? `https://arxiv.org/pdf/${m[1]}` : '';
+}
+/* Writes go to the person's columns only. Schema 1 files have no topics_removed or pdf_removed, so there the edit is
+   theme_groups or pdf_url alone, as before. */
+function setPaperTopic(p, name, on) {
+  const tg = nameList(p.theme_groups).filter(g => g !== name);
+  if (on) tg.push(name);
+  p.theme_groups = tg.join('|');
+  if (p.topics_removed === undefined) return;
+  const rm = nameList(p.topics_removed).filter(g => g !== name);
+  if (!on) rm.push(name);
+  p.topics_removed = rm.join('|');
+}
+function setPaperPdf(p, url) {   // a link chosen, or '' for none
+  p.pdf_url = url;
+  if (p.pdf_removed !== undefined) p.pdf_removed = url ? '' : 'true';
+}
+
 /* ===== SCORING: Core first, context second =====
    Each interest has one level, stored in relevance_mapping: Core (definitely), Related (probably), Peripheral
-   (mildly). Each interest a paper matches has a strength, in match_strengths ("Name=about|Other=partly"): the
-   paper is about it, partly about it, or only touches it (rated when the paper is added; you can change it on the
-   paper's page). A paper's score:
+   (mildly). Each interest a paper matches has a strength ("Name=about|Other=partly"): the paper is about it, partly
+   about it, or only touches it (rated when the paper is added, kept in machine_strengths from schema 2 on; what you
+   set on the paper's page goes in match_strengths and wins). A paper's score:
      core fit  3 x the strength of its best Core match        (about 1, partly 0.6, touches 0.25)
    + context   its best other match: Related 1, Peripheral 1/3, times strength
    + residual  half the triage adjustment (-1, 0 or +1)
@@ -2863,9 +2974,9 @@ function matchStrengths(p) {
   return out;
 }
 function scoreParts(p) {
-  const st = matchStrengths(p);
+  const view = strengthView(p), st = view.strengths;   // the person's strengths over the machine's, by current names
   const matches = [];
-  (p.matched_interests || '').split('|').map(s => s.trim()).filter(Boolean).forEach(name => {
+  view.matches.forEach(name => {
     const i = allInterests.find(x => x.interest_name === name && x.status === 'confirmed');
     if (!i) return;
     const level = LEVEL_NAME[i.relevance_mapping] ? i.relevance_mapping : 'mildly', strength = st[name] || STRENGTH_DEFAULT;
@@ -2955,7 +3066,7 @@ function flushStateToCSV() {
    closed tab doesn't lose them: only the fields people edit are stored for papers, so papers a
    digest run added in the meantime still come through when the backup is re-applied. */
 const LOCAL_BACKUP_KEY = 'scholar_unpushed_v1';
-const EDITABLE_FIELDS = ['is_read', 'is_starred', 'user_lists', 'user_notes', 'theme_groups', 'is_hidden', 'pdf_url', 'match_strengths'];
+const EDITABLE_FIELDS = ['is_read', 'is_starred', 'user_lists', 'user_notes', 'theme_groups', 'is_hidden', 'pdf_url', 'match_strengths', 'topics_removed', 'pdf_removed'];
 let _loadedPaperFields = new Map();              // id -> editable fields as loaded, to diff against
 let _loadedInterestNames = [], _loadedGroupNames = [];
 let _loadedGroupFields = new Map();              // topic -> its row as loaded, so a save keeps what the worker wrote since
@@ -4725,12 +4836,12 @@ function publishedBucket(p) {
   return { key: String(k), label: new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) };
 }
 
-/* Confirmed theme groups a paper belongs to. Only a confirmed topic is ever a chip or a card: a stored suggested or
-   rejected tag stays hidden, also when no topic is confirmed at all. */
+/* Confirmed theme groups a paper belongs to (its topics as effTopics projects them). Only a confirmed topic is ever a
+   chip or a card: a stored suggested or rejected tag stays hidden, also when no topic is confirmed at all. */
 function confirmedTopics() { return new Set(allGroups.filter(g => g.status === 'confirmed').map(g => norm(g.group_name))); }
 function groupsOfPaper(p, confirmed) {
   confirmed = confirmed || confirmedTopics();
-  return (p.theme_groups||'').split('|').map(norm).filter(g => g && confirmed.has(g));
+  return effTopics(p).map(norm).filter((g, i, all) => g && confirmed.has(g) && all.indexOf(g) === i);
 }
 
 /* Rows with the reading rail, used by Library and search */
@@ -4798,12 +4909,12 @@ function listModel(key) {
       all: _venueYear ? every.filter(p => venueOf(p).year === _venueYear) : every, everyN: every.filter(p => !readSet.has(paperKey(p))).length };
   }
   if (key.startsWith(INTEREST_KEY)) {
-    const name = key.slice(INTEREST_KEY.length), i = allInterests.find(x => x.interest_name === name);
+    const name = canonicalInterest(key.slice(INTEREST_KEY.length)), i = allInterests.find(x => x.interest_name === name);   // an old link opens the renamed interest
     return { kind: 'interest', eyebrow: 'Interest', title: name, sub: i ? `A ${relLabel(i.relevance_mapping || 'mildly')} interest` : '', color: quiet,
       all: inTab(allPapers).filter(p => matchesOf(p).includes(name)) };
   }
   return { kind: 'topic', eyebrow: currentTab === 'email' ? 'Topic in your email alerts' : 'Topic', title: key, topic: key, color: groupColor(key), glow: topicGlow([key]),
-    all: inTab(allPapers).filter(p => (p.theme_groups || '').split('|').map(norm).includes(key)) };
+    all: inTab(allPapers).filter(p => effTopics(p).map(norm).includes(key)) };
 }
 
 /* The lists beside this one: Top Papers and the topics (Recent Works); the latest digest, alerts and topics (Email
@@ -4826,7 +4937,7 @@ function listFamily(key) {
   }
   const email = currentTab === 'email' || key === LATEST_KEY || key.startsWith(ALERT_KEY);
   const pool = allPapers.filter(p => unread(p) && (!email || isEmailPaper(p)));
-  const topics = { title: 'Topics', items: GROUP_ORDER.map(g => item(g, '#group/' + encodeURIComponent(g), g, pool.filter(p => (p.theme_groups || '').split('|').map(norm).includes(g)).length, groupColor(g))).filter(x => x.n || x.k === key) };
+  const topics = { title: 'Topics', items: GROUP_ORDER.map(g => item(g, '#group/' + encodeURIComponent(g), g, pool.filter(p => effTopics(p).map(norm).includes(g)).length, groupColor(g))).filter(x => x.n || x.k === key) };
   if (!email) return [{ title: '', items: [item(TOP_LIST_KEY, '#top', 'Top Papers', pool.filter(p => dynamicRelevance(p) === 'definitely').length)] }, topics];
   const byAlert = {};
   pool.forEach(p => alertSourcesOf(p).forEach(a => byAlert[a] = (byAlert[a] || 0) + 1));
@@ -5481,6 +5592,7 @@ function toggleIStatus(s) {
 }
 let _interestsAutoSwitched = false;
 function renderInterests() {
+  keepAuthorDraft();
   if (!_interestsAutoSwitched && currentIStatus === 'suggested') {
     const items = currentIGTab === 'interests' ? allInterests : allGroups;
     if (!items.some(x => x.status === 'suggested')) {
@@ -5504,7 +5616,10 @@ function renderInterests() {
   if (currentIGTab === 'groups') { renderGroupsTab(main); return; }
   let interests = allInterests;
   if (currentIStatus !== 'all') interests = interests.filter(i => i.status === currentIStatus);
-  if (!interests.length) { main.innerHTML = interestsEmptyHTML('interests'); return; }
+  const adding = _authorForm && _authorForm.kind === 'interest' && !_authorForm.name;
+  const tools = !isOwner() ? '' : adding ? `<div class="interest-group"><div class="interest-group-inner">${authorFormHTML()}</div></div>`
+    : `<div class="ig-tools"><button class="lib-hint-btn" onclick="openAuthorForm('interest')">+ New interest</button></div>`;
+  if (!interests.length) { main.innerHTML = tools + interestsEmptyHTML('interests'); return; }
   const grouped = {};
   interests.forEach(i => { const c = i.category==='method'?'Methods':'Application Areas'; if (!grouped[c]) grouped[c]=[]; grouped[c].push(i); });
   const so = {suggested:0,confirmed:1,rejected:2};
@@ -5514,6 +5629,7 @@ function renderInterests() {
   const sugN = allInterests.filter(i=>i.status==='suggested').length;
   let html = `<p class="ig-legend"><strong>Interests</strong> decide how papers rank; each paper lists the ones it matches. They are separate from <a href="#interests/groups" class="ig-link">Topics</a>, which only group papers for browsing.</p><p class="ig-legend">Each interest is <span class="badge badge-definitely">Core</span> (your research), <span class="badge badge-probably">Related</span> or <span class="badge badge-mildly">Peripheral</span>. A paper scores by how strongly it matches: being about a Core interest makes it Must Read, and Related and Peripheral ones add context. The level also sets how hard the weekly survey searches for it.${isOwner() ? ` ${TOUCH ? 'Tap' : 'Click'} an interest\u2019s level to change it.` : ''}</p>`;
   if (sugN > 0 && currentIStatus === 'all' && isOwner()) html += `<div style="padding:12px 20px;margin-bottom:16px;background:var(--purple-bg);border:1px solid var(--purple);border-radius:8px;font-size:13px;color:var(--purple);">${sugN} suggested interest${sugN>1?'s':''} from recent papers</div>`;
+  html += tools;
   ['Application Areas','Methods'].forEach(cat => {
     if (!grouped[cat]) return;
     const collapsed = _collapsedGroups.has(cat) ? ' collapsed' : '';
@@ -5532,19 +5648,22 @@ function interestsEmptyHTML(what) {
 function renderGroupsTab(main) {
   let groups = allGroups;
   if (currentIStatus !== 'all') groups = groups.filter(g => g.status === currentIStatus);
-  if (!groups.length) { main.innerHTML = interestsEmptyHTML('topics'); return; }
+  const tools = !isOwner() ? '' : _authorForm && _authorForm.kind === 'topic' ? `<div class="interest-group"><div class="interest-group-inner">${authorFormHTML()}</div></div>`
+    : `<div class="ig-tools"><button class="lib-hint-btn" onclick="openAuthorForm('topic')">+ New topic</button></div>`;
+  if (!groups.length) { main.innerHTML = tools + interestsEmptyHTML('topics'); return; }
   const so = {suggested:0,confirmed:1,rejected:2};
   groups = [...groups].sort((a,b) => (so[a.status]||9) - (so[b.status]||9) || (parseInt(a.display_order)||999) - (parseInt(b.display_order)||999));
   const sugN = allGroups.filter(g=>g.status==='suggested').length;
   let html = `<p class="ig-legend"><strong>Topics</strong> group papers for browsing: the cards on Recent Works and the chips on each paper. They don't change ranking; that is what <a href="#interests/interests" class="ig-link">Interests</a> do.${isOwner() ? ' Drag a topic to reorder the cards.' : ''}</p>`;
   if (sugN > 0 && currentIStatus === 'all' && isOwner()) html += `<div style="padding:12px 20px;margin-bottom:16px;background:var(--purple-bg);border:1px solid var(--purple);border-radius:8px;font-size:13px;color:var(--purple);">${sugN} suggested topic${sugN>1?'s':''} from recent papers</div>`;
+  html += tools;
   html += '<div class="interest-group"><div class="interest-group-inner" style="padding:10px 0">';
   html += groups.map(g => groupCardHTML(g, true)).join('');
   html += '</div></div>';
   main.innerHTML = html;
 }
 function groupCardHTML(g) {
-  const inGroup = allPapers.filter(p => (p.theme_groups||'').split('|').map(norm).includes(norm(g.group_name)));
+  const inGroup = allPapers.filter(p => effTopics(p).map(norm).includes(norm(g.group_name)));
   const paperCount = inGroup.length, readCount = inGroup.filter(p => readSet.has(paperKey(p))).length;
   const notes = g.notes ? `<div class="interest-detail interest-notes" title="${escAttr(g.notes)}">${esc(g.notes)}</div>` : '';
   const showStatus = currentIStatus === 'all' || g.status === 'suggested';
@@ -5622,6 +5741,7 @@ function topicTagged(j) {
   (j.tagged || []).forEach(id => {
     const p = findPaper(id);
     if (!p) return;
+    if (p.machine_topics !== undefined) { p.machine_topics = withTopic(p.machine_topics); return; }   // schema 2: the tagger's own column, never an edit here
     p.theme_groups = withTopic(p.theme_groups);
     const base = _loadedPaperFields.get(id); if (base) base.theme_groups = withTopic(base.theme_groups);   // the baseline too: not an edit made here
   });
@@ -5686,6 +5806,7 @@ function gDragEnd(e) {
 }
 
 function interestCardHTML(i) {
+  if (_authorForm && _authorForm.kind === 'interest' && _authorForm.name === i.interest_name && isOwner()) return `<div class="interest-card">${authorFormHTML()}</div>`;
   const own = isOwner(), lv = LEVEL_NAME[i.relevance_mapping] ? i.relevance_mapping : 'mildly';   // a visitor sees the level, not a way to change it
   const relBadge = own ? `<span class="badge badge-${lv} badge-editable" title="${escAttr(LEVEL_HELP[lv])} ${TOUCH ? 'Tap' : 'Click'} to change." onclick="event.stopPropagation();toggleInterestDropdown(event,'${escAttr(i.interest_name)}','relevance')">${LEVEL_NAME[lv]}</span>`
     : `<span class="badge badge-${lv}" title="${escAttr(LEVEL_HELP[lv])}">${LEVEL_NAME[lv]}</span>`;
@@ -5702,15 +5823,17 @@ function interestCardHTML(i) {
   const statusBadge = showStatus && i.status && i.status !== 'confirmed' ? `<span class="badge badge-${i.status}">${i.status.charAt(0).toUpperCase()+i.status.slice(1)}</span>` : '';
   const n = interestPaperCount(i.interest_name);
   const count = n ? `<button class="badge badge-venue badge-link" onclick="event.stopPropagation();openInterest('${escAttr(i.interest_name)}')" title="List the papers that match this interest">${n} paper${n !== 1 ? 's' : ''}</button>` : '<span class="badge badge-venue">No papers yet</span>';
-  return `<div class="interest-card"><div class="interest-info"><div class="interest-name">${esc(i.interest_name)}</div>${related}${notes}<div class="interest-meta">${statusBadge}${relBadge}${count}</div></div>${actions}</div>`;
+  const edit = own ? `<button class="lib-hint-btn" onclick="event.stopPropagation();openAuthorForm('interest','${escAttr(i.interest_name)}')" title="Rename it, or change what it covers">Edit</button>` : '';
+  const aka = nameList(i.aliases).length ? `<div class="interest-detail">Formerly ${esc(nameList(i.aliases).join(', '))}</div>` : '';
+  return `<div class="interest-card"><div class="interest-info"><div class="interest-name">${esc(i.interest_name)}</div>${aka}${related}${notes}<div class="interest-meta">${statusBadge}${relBadge}${count}${edit}</div></div>${actions}</div>`;
 }
-function matchesOf(p) { return (p.matched_interests || '').split('|').map(x => x.trim()).filter(Boolean); }
-let _interestCounts = null, _interestCountsKey = null;
+function matchesOf(p) { return effMatches(p); }   // by current names: a paper that names an old name counts for the renamed interest
+let _interestCounts = null, _interestCountsKey = null, _interestCountsAliases = null;
 function interestPaperCount(name) {
-  if (_interestCountsKey !== allPapers) {
-    _interestCounts = {};
+  if (_interestCountsKey !== allPapers || _interestCountsAliases !== aliasMap()) {
+    _interestCounts = Object.create(null);
     allPapers.forEach(p => matchesOf(p).forEach(m => _interestCounts[m] = (_interestCounts[m] || 0) + 1));
-    _interestCountsKey = allPapers;
+    _interestCountsKey = allPapers; _interestCountsAliases = aliasMap();
   }
   return _interestCounts[name] || 0;
 }
@@ -5742,6 +5865,158 @@ function updateG(name, status) {
   toast(`Topic "${name}" ${status === 'confirmed' ? 'approved' : prev === 'suggested' ? 'dismissed' : 'removed'}`, () => updateG(name, prev));
   // approved (or restored) and not tagged yet: save the approval, then tag the existing papers
   if (status === 'confirmed' && prev !== 'confirmed' && !/Existing papers tagged/.test(g.notes || '')) tagWhenSaved(name, true);
+}
+
+/* ===== WRITING INTERESTS AND TOPICS =====
+   New interest: a confirmed row, discovered_from "manual: <date>"; the worker then rates the library against it.
+   Edit on an interest card: its name, notes and related_to. A new name keeps the old one in aliases, so papers that
+   still name it, and the worker's records, find the renamed interest; mentions in other interests' related_to follow.
+   An old name stays reserved: no other interest can take a name or alias of another one (case ignored).
+   New topic: a confirmed row noted "Added by you.", tagged like an approved topic once the save lands. */
+const todayISO = () => new Date().toISOString().split('T')[0];
+function aliasesKept() { return allInterests.some(i => i.aliases !== undefined); }   // the interests file has its aliases column (schema 2)
+function interestNameProblem(name, self) {
+  const n = String(name || '').trim(), k = n.toLowerCase();
+  if (!n) return 'Give it a name.';
+  if (/[|,]/.test(n)) return 'A name can\u2019t contain | or a comma.';
+  if (n.length > 120) return 'Keep the name under 120 characters.';
+  const other = allInterests.find(i => i !== self && ((i.interest_name || '').trim().toLowerCase() === k || nameList(i.aliases).some(a => a.toLowerCase() === k)));
+  if (!other) return '';
+  return (other.interest_name || '').trim().toLowerCase() === k ? `\u201c${other.interest_name}\u201d already exists.` : `\u201c${n}\u201d is an old name of \u201c${other.interest_name}\u201d, so it stays reserved for it.`;
+}
+function renameInRelated(text, old, name) {   // related_to is a comma-separated list
+  return String(text || '').split(',').map(s => s.trim().toLowerCase() === old.toLowerCase() ? s.replace(s.trim(), name) : s).join(',');
+}
+/* Renames one interest row here. The old name joins aliases only if GitHub has it (the name the row was loaded or last
+   saved with), and the baseline follows the row, so the save finds GitHub's row by its old name. */
+function renameInterestRow(i, name) {
+  const old = i.interest_name, was = _loadedInterestFields.get(old), k = name.toLowerCase();
+  const aliases = nameList(i.aliases).filter(a => a.toLowerCase() !== k);
+  if (was && was.interest_name === old && !aliases.some(a => a.toLowerCase() === old.toLowerCase())) aliases.push(old);
+  i.interest_name = name; i.aliases = aliases.join('|');
+  if (was) { _loadedInterestFields.delete(old); _loadedInterestFields.set(name, was); }
+  allInterests.forEach(x => { if (x !== i && x.related_to) x.related_to = renameInRelated(x.related_to, old, name); });
+  aliasMap.cache = null;
+}
+/* Saves the card's edit: { name, notes, related_to }. Returns '' or what is wrong with the name. */
+function editInterest(oldName, edit) {
+  if (!isOwner()) return 'Sign in to change interests.';
+  requireOwner();
+  const i = allInterests.find(x => x.interest_name === oldName); if (!i) return 'That interest is gone.';
+  const name = edit.name.trim();
+  // a rename needs somewhere to keep the old name: the aliases column (schema 2). A row made here and not saved has none to keep.
+  if (name !== oldName && !aliasesKept() && _loadedInterestFields.has(oldName)) return 'Renaming waits for the worker\u2019s update of this library, which adds a place for old names.';
+  const problem = name !== oldName ? interestNameProblem(name, i) : '';
+  if (problem) return problem;
+  const before = { name: oldName, notes: i.notes || '', related_to: i.related_to || '' };
+  if (before.notes === edit.notes && before.related_to === edit.related_to && name === oldName) return '';
+  i.notes = edit.notes; i.related_to = edit.related_to; i.date_updated = todayISO();
+  if (name !== oldName) renameInterestRow(i, name);
+  _interestsDirty = true; showSaveBar(); updateInterestsBadge(); renderInterests(); refresh();
+  toast(name !== oldName ? `Renamed to \u201c${name}\u201d` : `Saved \u201c${name}\u201d`, () => { editInterest(name, before); });
+  return '';
+}
+function addInterest(row) {
+  if (!isOwner()) return 'Sign in to add interests.';
+  requireOwner();
+  const name = row.interest_name.trim(), problem = interestNameProblem(name, null);
+  if (problem) return problem;
+  const day = todayISO();
+  const i = { interest_name: name, category: row.category === 'method' ? 'method' : 'application', relevance_mapping: LEVEL_NAME[row.relevance_mapping] ? row.relevance_mapping : 'probably',
+    status: 'confirmed', related_to: row.related_to || '', discovered_from: 'manual: ' + day, date_added: day, date_updated: day, notes: row.notes || '' };
+  if (aliasesKept() || !allInterests.length) i.aliases = '';
+  allInterests.push(i); aliasMap.cache = null;
+  _interestsDirty = true; showSaveBar(); updateInterestsBadge(); renderInterests(); refresh();
+  toast(`Added \u201c${name}\u201d. Papers already here get rated against it within the hour.`, () => {
+    allInterests = allInterests.filter(x => x !== i); _interestsDirty = true; showSaveBar(); updateInterestsBadge(); renderInterests(); refresh();
+  });
+  return '';
+}
+function topicNameProblem(name) {
+  const n = String(name || '').trim(), k = n.toLowerCase();
+  if (!n) return 'Give it a name.';
+  if (n.includes('|')) return 'A name can\u2019t contain |.';
+  if (n.length > 120) return 'Keep the name under 120 characters.';
+  const g = allGroups.find(x => (x.group_name || '').trim().toLowerCase() === k);
+  return !g ? '' : g.status === 'rejected' ? `\u201c${g.group_name}\u201d was removed; restore it from Rejected.` : `\u201c${g.group_name}\u201d already exists.`;
+}
+function addTopic(name, description) {
+  if (!isOwner()) return 'Sign in to add topics.';
+  requireOwner();
+  name = String(name || '').trim();
+  const problem = topicNameProblem(name);
+  if (problem) return problem;
+  const order = allGroups.reduce((m, g) => Math.max(m, parseInt(g.display_order) || 0), 0) + 1;
+  const g = { group_name: name, status: 'confirmed', description: String(description || '').trim(), display_order: String(order), date_added: todayISO(), notes: 'Added by you.' };
+  allGroups.push(g);
+  buildGroupOrder(); updateInterestsBadge(); renderInterests();
+  _groupsDirty = true; showSaveBar(); refresh();
+  toast(`Topic \u201c${name}\u201d added`, () => { allGroups = allGroups.filter(x => x !== g); buildGroupOrder(); _groupsDirty = true; showSaveBar(); renderInterests(); refresh(); });
+  tagWhenSaved(name, true);   // saved first, then its existing papers get tagged, as for an approved topic
+  return '';
+}
+
+/* The forms, drawn into the Interests tab: { kind: 'interest' | 'topic', name: the interest being edited or null for
+   a new one, draft: what was typed, kept across a redraw } */
+let _authorForm = null;
+function openAuthorForm(kind, name) {
+  if (!isOwner()) return;
+  _authorForm = { kind, name: name || null, draft: null };
+  renderInterests();
+  setTimeout(privateCallback(() => { const el = document.getElementById('afName'); if (el) { el.focus(); if (name) el.select(); } }), 0);
+}
+function closeAuthorForm() { _authorForm = null; renderInterests(); }
+function authorValue(id) { const el = document.getElementById(id); return el ? el.value : null; }
+function keepAuthorDraft() {   // a redraw (a save landing) keeps what was typed
+  if (!_authorForm || authorValue('afName') === null) return;
+  _authorForm.draft = { name: authorValue('afName'), notes: authorValue('afNotes'), related_to: authorValue('afRelated'), description: authorValue('afDesc'), category: authorValue('afCat'), level: authorValue('afLevel') };
+}
+function authorFormHTML() {
+  const f = _authorForm, d = f.draft || {}, val = (k, dflt) => d[k] != null ? d[k] : dflt || '';
+  const btns = submit => `<div class="pp-msg err" id="afErr"></div><div class="vault-btns"><button type="button" class="ui-btn ui-btn-secondary" onclick="closeAuthorForm()">Cancel</button><button class="ui-btn ui-btn-primary" type="submit">${submit}</button></div>`;
+  if (f.kind === 'topic') return `<form class="author-form" onsubmit="event.preventDefault(); submitAuthorForm()"><h3>New topic</h3>
+    <label for="afName">Name</label><input class="pp-input" id="afName" maxlength="120" autocomplete="off" value="${dataAttr(val('name'))}">
+    <label for="afDesc">Which papers belong in it</label><textarea class="pp-input" id="afDesc" rows="3">${esc(val('description'))}</textarea>
+    <p class="af-hint">The description decides which papers already here get tagged, after it is saved.</p>${btns('Add topic')}</form>`;
+  const i = f.name ? allInterests.find(x => x.interest_name === f.name) : null;
+  const others = allInterests.filter(x => x !== i && ['confirmed', 'suggested'].includes(x.status)).map(x => x.interest_name);
+  const head = i ? `<h3>Edit interest</h3>` : `<h3>New interest</h3>`;
+  const kinds = i ? '' : `<div class="af-row"><label>Category <select class="pp-input" id="afCat">${[['application', 'Application area'], ['method', 'Method']].map(([v, l]) => `<option value="${v}"${val('category', 'application') === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+    <label>Level <select class="pp-input" id="afLevel">${REL_OPTIONS.map(o => `<option value="${o}"${val('level', 'probably') === o ? ' selected' : ''}>${LEVEL_NAME[o]}</option>`).join('')}</select></label></div>`;
+  const fixedName = !!i && !aliasesKept() && _loadedInterestFields.has(i.interest_name);   // schema 1: no aliases column to keep an old name
+  const aliases = i && nameList(i.aliases).length ? `<p class="af-hint">Also known as ${esc(nameList(i.aliases).join(', '))}.</p>`
+    : fixedName ? `<p class="af-hint">Renaming waits for the worker\u2019s update of this library, which adds a place for old names.</p>` : '';
+  const related = val('related_to', i ? i.related_to : ''), relOn = new Set(related.split(',').map(s => s.trim().toLowerCase()).filter(Boolean));
+  return `<form class="author-form" onsubmit="event.preventDefault(); submitAuthorForm()">${head}
+    <label for="afName">Name</label><input class="pp-input" id="afName" maxlength="120" autocomplete="off" value="${dataAttr(val('name', i ? i.interest_name : ''))}"${fixedName ? ' readonly' : ''}>${aliases}${kinds}
+    <label for="afNotes">What it covers</label><textarea class="pp-input" id="afNotes" rows="3">${esc(val('notes', i ? i.notes : ''))}</textarea>
+    <label for="afRelated">Related to</label><input class="pp-input" id="afRelated" autocomplete="off" placeholder="Other interests, separated by commas" value="${dataAttr(related)}" oninput="syncRelatedChips()">
+    ${others.length ? `<div class="af-chips">${others.map(n => `<button type="button" class="tl-chip${relOn.has(n.toLowerCase()) ? ' active' : ''}" data-name="${dataAttr(n)}" onclick="toggleRelated(this.dataset.name)">${esc(n)}</button>`).join('')}</div>` : ''}
+    <p class="af-hint">${i ? 'A new name keeps the old one as an alias, so papers that match it keep their scores. Changing the notes or related interests has the papers here rated against it again.' : 'Papers already in your library get rated against it within the hour.'}</p>${btns(i ? 'Save' : 'Add interest')}</form>`;
+}
+function relatedItems() { return (authorValue('afRelated') || '').split(',').map(s => s.trim()).filter(Boolean); }
+function syncRelatedChips() { const on = new Set(relatedItems().map(s => s.toLowerCase())); document.querySelectorAll('.af-chips .tl-chip').forEach(b => b.classList.toggle('active', on.has(b.dataset.name.toLowerCase()))); }
+function toggleRelated(name) {
+  const items = relatedItems(), k = items.findIndex(s => s.toLowerCase() === name.toLowerCase());
+  if (k >= 0) items.splice(k, 1); else items.push(name);
+  document.getElementById('afRelated').value = items.join(', ');
+  syncRelatedChips();
+}
+function submitAuthorForm() {
+  const f = _authorForm; if (!f) return;
+  const name = (authorValue('afName') || '').trim();
+  let problem;
+  if (f.kind === 'topic') problem = addTopic(name, authorValue('afDesc'));
+  else {
+    const i = f.name ? allInterests.find(x => x.interest_name === f.name) : null, items = relatedItems().join(', ');
+    const same = i && (i.related_to || '').split(',').map(s => s.trim()).filter(Boolean).join(', ') === items;   // as it was, spacing aside
+    const notes = (authorValue('afNotes') || '').trim();
+    const fields = { name, notes: i && (i.notes || '').trim() === notes ? i.notes || '' : notes, related_to: same ? i.related_to || '' : items };
+    problem = f.name ? editInterest(f.name, fields)
+      : addInterest({ interest_name: name, category: authorValue('afCat'), relevance_mapping: authorValue('afLevel'), notes: fields.notes, related_to: fields.related_to });
+  }
+  if (problem) { const e = document.getElementById('afErr'); if (e) e.textContent = problem; return; }
+  closeAuthorForm();
 }
 
 /* ===== INTEREST INLINE DROPDOWNS ===== */
@@ -5789,11 +6064,11 @@ function updateInterestField(name, field, value) {
 }
 
 /* How strongly a paper matches one of its interests: about / partly about / touches. It re-scores the paper at once
-   and saves like your other edits (match_strengths). */
+   and saves like your other edits (match_strengths, which wins over the worker's machine_strengths). */
 function openStrengthDD(e, key, name) {
   closeInterestDD();
   const p = findPaper(key); if (!p) return;
-  const cur = matchStrengths(p)[name] || STRENGTH_DEFAULT;
+  const cur = effStrengths(p)[name] || STRENGTH_DEFAULT;
   const dd = document.createElement('div'); dd.className = 'interest-dropdown level-dd'; dd.setAttribute('role', 'menu');
   [['about', 'It\u2019s what the paper is about'], ['partly', 'A substantial part of it'], ['touches', 'Appears, but not substantially']].forEach(([v, help]) => {
     const item = document.createElement('div');
@@ -5813,15 +6088,25 @@ function openStrengthDD(e, key, name) {
 }
 function setMatchStrength(key, name, value) {
   const p = findPaper(key); if (!p) return;
-  const st = matchStrengths(p), prev = st[name] || null, beforeRel = dynamicRelevance(p);
-  if (value) st[name] = value; else delete st[name];
-  const order = (p.matched_interests || '').split('|').map(x => x.trim()).filter(Boolean);
-  p.match_strengths = order.filter(n => st[n]).map(n => `${n}=${st[n]}`).join('|');
+  const beforeRel = dynamicRelevance(p);
+  let prev;
+  if (p.machine_strengths === undefined) {   // schema 1: match_strengths holds every strength, ordered as the matches
+    const st = matchStrengths(p); prev = st[name] || null;
+    if (value) st[name] = value; else delete st[name];
+    const order = (p.matched_interests || '').split('|').map(x => x.trim()).filter(Boolean);
+    p.match_strengths = order.filter(n => st[n]).map(n => `${n}=${st[n]}`).join('|');
+  } else {   // schema 2: only your own entries, under the interest's current name; any under an old name give way
+    const c = canonicalInterest(name), mine = [...strengthEntries(p.match_strengths)];
+    prev = canonStrengths(new Map(mine), canonicalInterest)[c] || null;
+    const at = mine.findIndex(([k]) => canonicalInterest(k) === c), rest = mine.filter(([k]) => canonicalInterest(k) !== c);
+    if (value) rest.splice(at < 0 ? rest.length : at, 0, [c, value]);
+    p.match_strengths = strengthText(rest);
+  }
   _stateDirty = true; showSaveBar();
   if (_paperViewActive) renderPaperDetail(p);
   refresh();
-  const rel = dynamicRelevance(p);
-  toast(`\u201c${name}\u201d: ${STRENGTH_NAME[value || STRENGTH_DEFAULT].toLowerCase()} \u00b7 score ${paperScore(p).toFixed(1)}${rel !== beforeRel ? ', now ' + relLabel(rel) : ''}`, () => setMatchStrength(key, name, prev));
+  const rel = dynamicRelevance(p), now = effStrengths(p)[canonicalInterest(name)] || STRENGTH_DEFAULT;
+  toast(`\u201c${name}\u201d: ${STRENGTH_NAME[now].toLowerCase()} \u00b7 score ${paperScore(p).toFixed(1)}${rel !== beforeRel ? ', now ' + relLabel(rel) : ''}`, () => setMatchStrength(key, name, prev));
 }
 
 /* ===== GENERIC MODAL (prompt / confirm) ===== */
@@ -6133,8 +6418,8 @@ function toCSV(rows, opts) { return Papa.unparse(rows, opts) + '\r\n'; }
 /* Papers: only fields changed here are written into GitHub's rows, and topics only as the names added or removed here.
    The page and its baselines stay as they are until the PUT is acknowledged, so every edit stays pending, against the
    same baseline, through a conflict retry or a failed save, also where GitHub already agrees. sent: each paper as
-   merged, for papersSaved. */
-function mergePapers(text) {
+   merged, for papersSaved. canon: interest names as GitHub has them now (its aliases), for strength edits. */
+function mergePapers(text, canon) {
   const r = Papa.parse(text, { header: true, skipEmptyLines: true });   // line endings detected
   const fields = r.meta.fields.slice();
   flushStateToCSV();
@@ -6142,13 +6427,14 @@ function mergePapers(text) {
   const rows = r.data.filter(row => {
     const p = row.id && mine.get(row.id);
     if (!p) return !(row.id && _loadedPaperFields.has(row.id));   // deleted here: drop; new on GitHub: keep
-    const now = paperFields(p), theirs = paperFields(row), merged = mergedPaperFields(now, _loadedPaperFields.get(row.id) || {}, theirs);
+    const now = paperFields(p), theirs = paperFields(row), merged = mergedPaperFields(now, _loadedPaperFields.get(row.id) || {}, theirs, canon);
     EDITABLE_FIELDS.forEach(f => { if (merged[f] !== theirs[f]) row[f] = merged[f]; });
     sent.set(row.id, { p, now });
     return true;
   });
-  EDITABLE_FIELDS.forEach(f => { if (!fields.includes(f) && rows.some(x => x[f])) fields.push(f); });
-  return { csv: toCSV(rows, { columns: fields }), rows, sent };
+  // a column people edit joins the file when first used; topics_removed and pdf_removed come only with schema 2
+  EDITABLE_FIELDS.forEach(f => { if (!fields.includes(f) && !['topics_removed', 'pdf_removed'].includes(f) && rows.some(x => x[f])) fields.push(f); });
+  return { csv: toCSV(rows, { columns: fields }), rows, sent, canon };
 }
 /* The papers save landed: the edits it carried are done. Each paper takes its saved row, which becomes its baseline,
    and an edit made here since the merge stays pending on top of it. A field changed on GitHub but not here (a digest
@@ -6161,20 +6447,32 @@ function papersSaved(out) {
     const m = saved.get(p.id), s = sent.get(p.id);
     if (!m) { base.set(p.id, paperFields(p)); return; }
     // since the merge, or for a copy loaded while the save was out, its own pending edits (sent again, to no effect)
-    const now = paperFields(p), was = s && s.p === p ? s.now : _loadedPaperFields.get(p.id) || {}, merged = mergedPaperFields(now, was, m);
+    const now = paperFields(p), was = s && s.p === p ? s.now : _loadedPaperFields.get(p.id) || {}, merged = mergedPaperFields(now, was, m, out.canon);
     EDITABLE_FIELDS.forEach(f => { if (merged[f] !== now[f]) { p[f] = merged[f]; adopted = true; } });
-    base.set(p.id, pendingBase(now, was, m));
+    base.set(p.id, pendingBase(now, was, m, out.canon));
   });
   _loadedPaperFields = base;
   if (adopted) { splitHidden(); bootstrapStateFromCSV(); refresh(); }
 }
 /* One paper's edits laid onto another copy of it: a field changed here (now against was) wins, any other takes theirs.
-   Topics merge as a set: the names added and removed here, applied to theirs, so a topic the worker added since stays. */
-function mergedPaperFields(now, was, theirs) {
+   Topics and removed topics merge as sets: the names added and removed here, applied to theirs, so a topic the worker
+   added since stays. Strengths merge per interest (strengthsDelta). */
+function mergedPaperFields(now, was, theirs, canon) {
   const out = {};
   EDITABLE_FIELDS.forEach(f => {
     const n = now[f] || '', w = was[f] || '', t = theirs[f] || '';
-    out[f] = n === w ? t : f === 'theme_groups' ? topicsDelta(w, n, t) : n;
+    out[f] = n === w ? t : f === 'theme_groups' || f === 'topics_removed' ? topicsDelta(w, n, t) : f === 'match_strengths' ? strengthsDelta(w, n, t, canon) : n;
+  });
+  return out;
+}
+/* The baseline that keeps those edits pending on that merge: a field changed here keeps its old value, and topics and
+   strengths keep each change made here undone on theirs, so the next merge applies them again, even where GitHub
+   already agrees. */
+function pendingBase(now, was, theirs, canon) {
+  const out = {};
+  EDITABLE_FIELDS.forEach(f => {
+    const n = now[f] || '', w = was[f] || '', t = theirs[f] || '';
+    out[f] = n === w ? t : f === 'theme_groups' || f === 'topics_removed' ? topicsDelta(n, w, t) : f === 'match_strengths' ? strengthsDelta(n, w, t, canon) : w;
   });
   return out;
 }
@@ -6196,24 +6494,79 @@ function topicsDelta(was, now, theirs) {
   list(now).forEach(g => { if (!before.has(g) && !out.includes(g)) out.push(g); });   // plus the names added here
   return out.join('|');
 }
+/* Strengths as the entries added, changed or removed here (now against was), each applied to theirs under the
+   interest's current name (canon), in place of any entry theirs has for that interest; every other entry stays as
+   theirs has it. So an edit made in a tab that still showed an old name lands on the renamed interest, and a strength
+   the worker wrote since for another interest stays. Changes under an old name go first, so one under the current
+   name wins. */
+function strengthsDelta(was, now, theirs, canon) {
+  canon = canon || canonicalInterest;
+  const W = strengthEntries(was), N = strengthEntries(now), changes = [];
+  if (theirs === was && [...N.keys()].every(k => canon(k) === k)) return now;   // nothing changed there: exactly the edit, as before
+  new Set([...W.keys(), ...N.keys()]).forEach(k => { if (W.get(k) !== N.get(k)) changes.push([k, N.has(k) ? N.get(k) : null]); });
+  changes.sort((a, b) => (canon(a[0]) === a[0]) - (canon(b[0]) === b[0]));
+  let out = [...strengthEntries(theirs)];
+  const place = new Map();   // where an interest's entries were, so one set after its old name was dropped keeps that place
+  changes.forEach(([k, v]) => {
+    const c = canon(k), at = out.findIndex(([x]) => canon(x) === c);
+    if (at >= 0 && !place.has(c)) place.set(c, at);
+    out = out.filter(([x]) => canon(x) !== c);
+    if (v != null) out.splice(at >= 0 ? at : place.has(c) ? Math.min(place.get(c), out.length) : out.length, 0, [c, v]);
+  });
+  return strengthText(out);
+}
 /* Interests and topics: this page's rows, plus rows added on GitHub that this page never saw. With loadedFields, a
    field this page left as loaded takes GitHub's value, so the worker's "Existing papers tagged" note and an owner
    confirmation from the CLI survive a save. The value taken becomes that field's baseline, so a conflict retry takes
    GitHub's newer one again. written is the rows as saved: the next baseline, which edits made while the save is out
-   don't touch. */
+   don't touch.
+   Interests carry aliases (old names). A row renamed here finds its GitHub row by the name it was loaded with; a row
+   renamed on GitHub since finds it through GitHub's aliases, takes the new name and keeps the edits made here; a copy
+   of it under the old name (a backup restored next to the renamed row) folds its edits into the renamed row. aliases
+   merge as a set, and a related_to edited here is written with current names. A new or renamed name that GitHub has
+   given to another interest, as a name or an old name, stops the save. */
 function mergeRows(mineRows, loadedNames, key, parseOpts, unparseOpts, loadedFields) {
   return text => {
     const r = Papa.parse(text, { header: true, skipEmptyLines: true, ...parseOpts });
-    const remote = r.data.filter(x => x[key] && x[key].trim());
+    let remote = r.data.filter(x => x[key] && x[key].trim());
+    const fields = r.meta.fields || [], drop = new Set(), taken = new Set();
     if (loadedFields) {
-      const theirs = new Map(remote.map(x => [x[key], x]));
+      const theirs = new Map(remote.map(x => [x[key], x])), mine = new Map(mineRows.map(row => [row[key], row]));
+      const renamed = fields.includes('aliases') ? aliasIndex(remote) : null;   // GitHub's names now
       mineRows.forEach(row => {
-        const t = theirs.get(row[key]), was = loadedFields.get(row[key]);
+        const was = loadedFields.get(row[key]);
+        const here = was && (row[key] || '') !== (was[key] || '');   // renamed in this page
+        let t = !was ? theirs.get(row[key]) : here ? theirs.get(was[key]) : theirs.get(row[key]);
+        if (!t && was && renamed) t = theirs.get(renamed(was[key]));
+        if (here && key === 'interest_name' && !fields.includes('aliases') && theirs.has(was[key])) throw Object.assign(new Error(`GitHub\u2019s interests file has no place for old names, so \u201c${was[key]}\u201d can\u2019t be renamed yet. Undo the rename to save.`), { fatal: true });
+        if (renamed && (!was || here)) {
+          const clash = remote.find(x => x !== t && (x[key].trim().toLowerCase() === row[key].trim().toLowerCase() || nameList(x.aliases).some(a => a.toLowerCase() === row[key].trim().toLowerCase())));
+          if (clash) throw Object.assign(new Error(`\u201c${row[key]}\u201d is now the name or an old name of \u201c${clash[key]}\u201d on GitHub. Rename this interest to save it.`), { fatal: true });
+        }
         if (!t || !was) return;
-        (r.meta.fields || []).forEach(f => { if (f !== key && (row[f] || '') === (was[f] || '') && (t[f] || '') !== (row[f] || '')) row[f] = was[f] = t[f]; });
+        taken.add(t);
+        const other = !here && t[key] !== row[key] ? mine.get(t[key]) : null;
+        if (other && other !== row) {   // the renamed row is here too: this old copy's edits go to it
+          fields.forEach(f => { if (f !== key && (row[f] || '') !== (was[f] || '')) other[f] = f === 'aliases' ? topicsDelta(was[f] || '', row[f] || '', other[f] || '') : row[f]; });
+          drop.add(row);
+          return;
+        }
+        const oldKey = row[key];
+        fields.forEach(f => {
+          const n = row[f] || '', w = was[f] || '', v = t[f] || '';
+          if (n === w) { if (v !== n) row[f] = was[f] = t[f]; }
+          else if (f === 'aliases') row[f] = topicsDelta(w, n, v);
+          else if (f === 'related_to' && renamed) row[f] = n.split(',').map(s => { const x = s.trim(), c = renamed(x); return c === x ? s : s.replace(x, c); }).join(',');
+        });
+        if (here && t[key] !== was[key] && t[key] !== row[key] && 'aliases' in row) {   // renamed in both places: GitHub's name stays reserved
+          const al = nameList(row.aliases); if (!al.includes(t[key])) row.aliases = al.concat(t[key]).join('|');
+        }
+        if (row[key] !== oldKey) { loadedFields.delete(oldKey); loadedFields.set(row[key], was); }   // a retry finds it again
       });
+      if (renamed) aliasMap.cache = null;   // names and aliases may have changed in place, also if this save fails
     }
-    const rows = mergeBackupRows(remote, { rows: mineRows, loadedNames }, key);
+    remote = remote.filter(x => !taken.has(x));
+    const rows = mergeBackupRows(remote, { rows: mineRows.filter(row => !drop.has(row)), loadedNames }, key);
     return { csv: toCSV(rows, { ...unparseOpts, columns: r.meta.fields }), rows, written: rowSnapshot(rows, key) };   // the file's own columns
   };
 }
@@ -6249,9 +6602,14 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
   const headers = { 'Authorization': `Bearer ${pat}`, 'Accept': 'application/vnd.github+json' };
   try {
     if (_stateDirty) {
-      const out = await privateAwait(_ghMergePush(headers, 'papers_database.csv', mergePapers, 'Update papers_database.csv from dashboard'), _authEpoch);
+      // A strength edit is saved under the interest's name as GitHub has it now, so read its interests (and aliases) first
+      const fresh = await privateAwait(freshInterests(headers), _authEpoch); requireOwner();
+      const canon = fresh ? aliasIndex(fresh) : undefined;
+      const out = await privateAwait(_ghMergePush(headers, 'papers_database.csv', text => mergePapers(text, canon), 'Update papers_database.csv from dashboard'), _authEpoch);
       // The edits just saved are the new baseline; anything changed since stays unsaved
-      requireOwner(); papersSaved(out);
+      requireOwner();
+      if (fresh && !_interestsDirty) adoptInterests(fresh);   // nothing pending here: show the interests as saved (a rename made elsewhere)
+      papersSaved(out);
     }
     if (_interestsDirty) {
       const { rows, written } = await privateAwait(_ghMergePush(headers, 'interests_database.csv', mergeRows(allInterests, _loadedInterestNames, 'interest_name', {}, {}, _loadedInterestFields), 'Update interests_database.csv from dashboard'), _authEpoch);
@@ -6297,10 +6655,28 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
   }
 }
 
+/* GitHub's interests, read before a papers save that carries a strength edit: their aliases give each interest's name
+   now. null when no strength edit is pending. */
+function strengthEditPending() {
+  return everyPaper().some(p => { const w = _loadedPaperFields.get(p.id); return !!w && (p.match_strengths || '') !== (w.match_strengths || ''); });
+}
+async function freshInterests(headers) { const _authEpoch = capturePrivateEpoch(); requireOwner();
+  if (!strengthEditPending()) return null;
+  const { text } = await privateAwait(_ghGetFile(headers, 'interests_database.csv'), _authEpoch); requireOwner();
+  const r = Papa.parse(text, { header: true, skipEmptyLines: true });
+  if (!r.meta.fields || !r.meta.fields.includes('interest_name')) throw new Error('Invalid interests CSV');
+  return r.data.filter(i => i.interest_name && i.interest_name.trim());
+}
+function adoptInterests(rows) {
+  allInterests = rows; _loadedInterestNames = rows.map(i => i.interest_name); _loadedInterestFields = rowSnapshot(rows, 'interest_name');
+  updateInterestsBadge(); if (currentTab === 'interests') renderInterests();
+}
+
 /* ===== PDF READER =====
    PDF.js (loaded on first use from jsDelivr) draws each page on a canvas, with a transparent text
    layer so text can be selected and found. Where the PDF comes from, in order: a file you dropped
-   in on this device (IndexedDB), the paper's pdf_url, or its arXiv PDF. */
+   in on this device (IndexedDB), then effPdf: the paper's pdf_url, the open PDF the worker found
+   (machine_pdf_url, unless you chose none), or its arXiv PDF. */
 const PDFJS_VER = '4.10.38';
 const READER_POS_KEY = 'scholar_reader_pos_v1', READER_DARK_KEY = 'scholar_reader_dark';
 let _pdfjs = null;
@@ -6324,11 +6700,9 @@ function normalizePdfUrl(u) {
   if (m) return `https://openreview.net/pdf?id=${m[1]}`;
   return u;
 }
-function pdfSourceOf(p) {
-  if (hasText(p.pdf_url)) return p.pdf_url.trim();
-  const m = (p.url || '').match(/arxiv\.org\/(?:abs|pdf|html)\/(\d{4}\.\d{4,5})/);
-  return m ? `https://arxiv.org/pdf/${m[1]}` : '';
-}
+function pdfSourceOf(p) { return effPdf(p); }
+/* The link on record that "Remove the saved link" would drop: yours, else the worker's (unless you chose none) */
+function pdfLinkOnRecord(p) { return hasText(p.pdf_url) ? p.pdf_url.trim() : hasText(p.machine_pdf_url) && p.pdf_removed !== 'true' ? p.machine_pdf_url.trim() : ''; }
 /* Files dropped in stay in this browser only */
 function pdfStore(mode, fn) { requireOwner(); const epoch = capturePrivateEpoch();
   return new Promise((resolve, reject) => {
@@ -7225,7 +7599,7 @@ async function showPdfPicker(p, why, detail) { const _authEpoch = capturePrivate
     <p class="pp-why">${sub}</p>
     <label class="pp-label" for="ppLink">Link to an open PDF</label>
     <form class="pp-row" onsubmit="event.preventDefault(); submitPdfLink()">
-      <input class="pp-input" id="ppLink" type="url" placeholder="https://arxiv.org/abs/… or a direct .pdf link" value="${esc(why === 'change' ? (p.pdf_url || '') : '')}" autocomplete="off" required>
+      <input class="pp-input" id="ppLink" type="url" placeholder="https://arxiv.org/abs/… or a direct .pdf link" value="${esc(why === 'change' ? pdfLinkOnRecord(p) : '')}" autocomplete="off" required>
       <button class="ui-btn ui-btn-primary" id="ppCheck" type="submit">Check and save</button>
     </form>
     <div class="pp-msg" id="ppMsg">The link is saved for this paper only if the reader can actually open it.</div>
@@ -7234,7 +7608,7 @@ async function showPdfPicker(p, why, detail) { const _authEpoch = capturePrivate
       <input type="file" accept="application/pdf,.pdf" onchange="usePdfFile(this.files[0])">
       ${TOUCH ? '<strong>Choose a PDF</strong> from your files.' : '<strong>Drop a PDF here</strong> or click to choose one.'}<br>It stays in this browser, on this device only.
     </label>
-    <div class="pp-foot">${hasLocal ? `This paper has a copy stored on this device. <button onclick="removeLocalPdf()">Remove it</button>` : ''}${inModal ? ` <button onclick="closePdfModal()">Keep the current PDF</button>` : ''}</div>
+    <div class="pp-foot">${hasLocal ? `This paper has a copy stored on this device. <button onclick="removeLocalPdf()">Remove it</button>` : ''}${pdfLinkOnRecord(p) ? ` <button onclick="clearPdfLink()" title="${escAttr(pdfLinkOnRecord(p))}">Remove the saved link</button>` : ''}${inModal ? ` <button onclick="closePdfModal()">Keep the current PDF</button>` : ''}</div>
   </div>`;
   if (!matchMedia('(pointer: coarse)').matches) setTimeout(privateCallback(() => { const i = document.getElementById('ppLink'); if (i && why !== 'failed') i.focus(); }), 0);   // touch: no keyboard over the dialog before you choose
 }
@@ -7251,7 +7625,7 @@ async function submitPdfLink() { const _authEpoch = capturePrivateEpoch();
     await privateAwait((await privateAwait(doc.getPage(1), _authEpoch)).getOperatorList(), _authEpoch);   // the first page actually parses
     destroyPdfDocument(doc); doc = null;
     if (!n) throw { name: 'InvalidPDFException' };
-    requireOwner(); p.pdf_url = url;
+    requireOwner(); setPaperPdf(p, url);   // your choice: wins over the worker's link, and clears a "no PDF" choice
     _stateDirty = true; showSaveBar();
     await privateAwait(localPdfDel(p.id), _authEpoch); requireOwner();
     toast(`PDF saved for this paper (${n} page${n === 1 ? '' : 's'})`);
@@ -7282,6 +7656,16 @@ async function usePdfFile(file) { const _authEpoch = capturePrivateEpoch();
     msg.className = 'pp-msg err';
     msg.textContent = 'Couldn’t open that file. ' + pdfErrorText(e);
   } finally { destroyPdfDocument(doc); }
+}
+/* The saved link is wrong and there is no better one: you choose none. pdf_url is cleared and, from schema 2 on,
+   pdf_removed hides the worker's link too; the arXiv PDF, if there is one, stays readable. */
+function clearPdfLink() {
+  const p = _reader.paper; if (!p) return;
+  requireOwner(); setPaperPdf(p, '');
+  _stateDirty = true; showSaveBar();
+  toast('Removed the saved PDF link');
+  if (pdfModalOpen()) closePdfModal();
+  showReader(p.id);
 }
 async function removeLocalPdf() { const _authEpoch = capturePrivateEpoch();
   await privateAwait(localPdfDel(_reader.paper.id), _authEpoch); requireOwner();
@@ -9936,7 +10320,7 @@ function libraryTSV() {
   const clean = v => String(v || '').replace(/[\t\r\n]+/g, ' ').trim();
   const opened = new Map(recentReads().map(r => [r.id, r.t]));
   const day = t => new Date(t).toISOString().slice(0, 10);
-  return 'id\ttitle\tauthors\tdate\tvenue\ttopics\tsummary\tflags\n' + uploadedPapers().concat(allPapers.filter(p => !isHidden(p))).map(p => [p.id, p.title, shortQuote(p.authors, 160), p.publishing_date, p.venue, (p.theme_groups || '').replace(/\|/g, ', '), p.headline,
+  return 'id\ttitle\tauthors\tdate\tvenue\ttopics\tsummary\tflags\n' + uploadedPapers().concat(allPapers.filter(p => !isHidden(p))).map(p => [p.id, p.title, shortQuote(p.authors, 160), p.publishing_date, p.venue, effTopics(p).join(', '), p.headline,
     [p.uploaded && 'uploaded by me for review (confidential)', p.is_starred === 'true' && 'starred', p.is_read === 'true' && 'read', p.user_lists && 'lists: ' + p.user_lists.replace(/\|/g, ', '), hasNotesIx(p.id) && 'has my notes', opened.has(p.id) && 'opened ' + day(opened.get(p.id)), p.date_found && 'added ' + p.date_found].filter(Boolean).join('; ')].map(clean).join('\t')).join('\n');
 }
 async function syncLibrary() { const _authEpoch = capturePrivateEpoch();
@@ -9950,18 +10334,18 @@ let _mentionCtx = null;
 function mentionMatches(q) {
   const cur = _reader.paper && _reader.paper.id, pool = uploadedPapers().concat(allPapers).filter(p => p.id !== cur && !isHidden(p));
   if (!q) {   // nothing typed yet: the papers you most likely mean
-    const groups = new Set(((_reader.paper && _reader.paper.theme_groups) || '').split('|').filter(Boolean));
+    const groups = new Set(_reader.paper ? effTopics(_reader.paper) : []);
     const seen = new Set(), out = [];
     const add = (p, why) => { if (p && !seen.has(p.id)) { seen.add(p.id); out.push({ p, why }); } };
     recentReads().slice(0, 6).forEach(r => add(pool.find(p => p.id === r.id), 'opened recently'));
     pool.filter(p => p.uploaded).slice(0, 3).forEach(p => add(p, 'to review'));
     pool.filter(p => p.is_starred === 'true').slice(0, 3).forEach(p => add(p, 'starred'));
-    pool.filter(p => (p.theme_groups || '').split('|').some(g => groups.has(g))).slice(0, 4).forEach(p => add(p, 'same topic'));
+    pool.filter(p => effTopics(p).some(g => groups.has(g))).slice(0, 4).forEach(p => add(p, 'same topic'));
     return out.slice(0, 8);
   }
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);   // any words, any order: title, authors, summary, topics, venue, year
   return pool.map(p => {
-    const title = (p.title || '').toLowerCase(), hay = [title, p.authors, p.headline, p.theme_groups, p.venue, p.publishing_date, p.id].join(' ').toLowerCase();
+    const title = (p.title || '').toLowerCase(), hay = [title, p.authors, p.headline, effTopics(p).join('|'), p.venue, p.publishing_date, p.id].join(' ').toLowerCase();
     if (!words.every(w => hay.includes(w))) return null;
     return { p, score: words.filter(w => title.includes(w)).length * 3 + words.filter(w => (p.authors || '').toLowerCase().includes(w)).length * 2 + (p.is_starred === 'true' ? 1 : 0) };
   }).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, 8);
@@ -10644,13 +11028,13 @@ function renderPaperDetail(p) {
   // Side panel: facts + editable topics
   const sm = p.source_mode || '';
   const via = sm.includes('email') && sm.includes('web_survey') ? 'Email alert and web survey'
-    : sm.includes('email') ? 'Email alert' : sm.includes('web_survey') ? 'Web survey' : '';
-  const matches = (p.matched_interests || '').split('|').map(x => x.trim()).filter(Boolean);
+    : sm.includes('email') ? 'Email alert' : sm.includes('web_survey') ? 'Web survey' : importLabel(p);
+  const matches = effMatches(p);   // by current names, less any you marked as no match
   const facts = [];
   if (hasText(p.venue)) facts.push(['Venue', `${venueLinkHTML(p, '')}${p.venue.trim() !== rowVenueLabel(p) ? `<span class="pd-sub">${esc(p.venue)}</span>` : ''}`]);
   if (paperDate(p)) facts.push(['Published', esc(paperDate(p))]);
   if (p.date_found) facts.push(['Added', esc(shortDate(p.date_found))]);
-  if (via) facts.push(['Found via', `${via}${why && why.source ? `<span class="pd-sub">${esc(why.source)} alert</span>` : ''}`]);
+  if (via) facts.push(['Found via', `${esc(via)}${why && why.source ? `<span class="pd-sub">${esc(why.source)} alert</span>` : ''}`]);
   facts.push(['Relevance', `<span class="f-rel rel-${rel}"><i></i>${relLabel(rel)}</span><span class="pd-score" title="Score (Must Read at ${SCORE_CUTS.definitely}+)">${paperScore(p).toFixed(1)}</span><span class="triage-anchor" onmouseenter="showRelevancePopup(this,'${ka}')" onmouseleave="hideRelevancePopup(this)"><button class="pd-info" title="How this was scored" aria-label="How this was scored" aria-expanded="false" onclick="toggleRelevancePopup(event,this.parentElement,'${ka}')">&#9432;</button></span>`]);
   if (matches.length) {   // each interest it matches, and how strongly (yours to change)
     const sp = scoreParts(p), byName = new Map(sp.matches.map(m => [m.name, m]));
@@ -10666,7 +11050,7 @@ function renderPaperDetail(p) {
     }).join('')}</span>`]);
   }
 
-  const groups = (p.theme_groups||'').split('|').map(x => x.trim()).filter(Boolean);
+  const groups = effTopics(p);   // yours and the tagger's, less the ones you removed
   const x = `<svg width="10" height="10" viewBox="0 0 10 10"><line x1="2" y1="2" x2="8" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="2" x2="2" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
   const topics = groups.map(g => `<span class="badge badge-group badge-group-edit">${gdot(norm(g))}${esc(g)}<span class="group-remove" title="Remove topic" onclick="event.stopPropagation();removeGroupFromPaper('${ka}','${escAttr(g)}')">${x}</span></span>`).join('');
   const addBtn = `<span class="group-add-wrap"><button class="group-add-btn" onclick="event.stopPropagation();toggleGroupAddDD(this,'${ka}')">+ Add</button><div class="group-add-dd"></div></span>`;
@@ -10681,7 +11065,7 @@ function renderPaperDetail(p) {
   let related = '';
   if (rel6.length) related += `<div class="pd-rel-group"><div class="pd-rel-grid">${rel6.map(feedItemHTML).join('')}</div></div>`;
   const topicLinks = [...new Set(glowGroups)].map(g => {   // confirmed topics only, as the chips
-    const n = allPapers.filter(pp => !readSet.has(paperKey(pp)) && (pp.theme_groups||'').split('|').map(norm).includes(g)).length;   // to read, as its list page counts
+    const n = allPapers.filter(pp => !readSet.has(paperKey(pp)) && effTopics(pp).map(norm).includes(g)).length;   // to read, as its list page counts
     return `<button class="pd-rel-topic" onclick="openGroup('${escAttr(g)}')">${gdot(g)}${esc(g)}<span class="n">${n}</span></button>`;
   }).join('');
   if (topicLinks) related += `<div class="pd-rel-more"><span>More in</span>${topicLinks}</div>`;
@@ -10709,11 +11093,12 @@ function updatePaperBar() {
   if (bar && h) bar.classList.toggle('stuck', h.getBoundingClientRect().bottom < bar.getBoundingClientRect().bottom);
 }
 
+/* Removing a topic drops it from theme_groups and, from schema 2 on, records it in topics_removed so the tagger's
+   machine_topics can't bring it back; adding one does the reverse (setPaperTopic) */
 function removeGroupFromPaper(key, groupName) {
   const p = allPapers.find(pp => paperKey(pp) === key);
   if (!p) return;
-  const groups = (p.theme_groups||'').split('|').map(s => s.trim()).filter(g => g && g !== groupName);
-  p.theme_groups = groups.join('|');
+  setPaperTopic(p, groupName, false);
   _stateDirty = true; showSaveBar(); refresh();
   renderPaperDetail(p);
 }
@@ -10721,12 +11106,17 @@ function removeGroupFromPaper(key, groupName) {
 function addGroupToPaper(key, groupName) {
   const p = allPapers.find(pp => paperKey(pp) === key);
   if (!p) return;
-  const groups = (p.theme_groups||'').split('|').map(s => s.trim()).filter(Boolean);
-  if (groups.includes(groupName)) return;
-  groups.push(groupName);
-  p.theme_groups = groups.join('|');
+  if (effTopics(p).includes(groupName)) return;
+  setPaperTopic(p, groupName, true);
   _stateDirty = true; showSaveBar(); refresh();
   renderPaperDetail(p);
+}
+/* "Imported (relevant)" for a paper a seed import added: source_ref is import:<run>:<lane> */
+function importLabel(p) {
+  const ref = String(p.source_ref || '').trim();
+  if (!/\bimport\b/.test(p.source_mode || '') && !/^import:/.test(ref)) return '';
+  const lane = ref.match(/^import:[^:]*:([^:]+)$/);
+  return lane ? `Imported (${lane[1]})` : 'Imported';
 }
 
 let _relPopupTimer = null;
@@ -10810,7 +11200,7 @@ function toggleGroupAddDD(btn, key) {
   document.querySelectorAll('.group-add-dd.open').forEach(d => { if (d._close) d._close(); else d.classList.remove('open'); });
   if (wasOpen) return;
   const p = allPapers.find(pp => paperKey(pp) === key);
-  const current = new Set((p?.theme_groups||'').split('|').map(s => s.trim()).filter(Boolean));
+  const current = new Set(p ? effTopics(p) : []);
   const confirmed = allGroups.filter(g => g.status === 'confirmed').sort((a,b) => (parseInt(a.display_order)||999) - (parseInt(b.display_order)||999));
   dd.innerHTML = confirmed.map(g => {
     const has = current.has(g.group_name);
