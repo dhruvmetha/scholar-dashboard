@@ -6476,17 +6476,6 @@ function pendingBase(now, was, theirs, canon) {
   });
   return out;
 }
-/* The baseline that keeps those edits pending on that merge: a field changed here keeps its old value, and topics keep
-   each name added here out and each name removed here in, so the next merge applies them again, even where GitHub
-   already agrees. */
-function pendingBase(now, was, theirs) {
-  const out = {};
-  EDITABLE_FIELDS.forEach(f => {
-    const n = now[f] || '', w = was[f] || '', t = theirs[f] || '';
-    out[f] = n === w ? t : f === 'theme_groups' ? topicsDelta(n, w, t) : w;
-  });
-  return out;
-}
 function topicsDelta(was, now, theirs) {
   const list = s => s.split('|').map(g => g.trim()).filter(Boolean);
   const before = new Set(list(was)), after = new Set(list(now));
