@@ -352,6 +352,45 @@ html.ro #vaultOverlay { display: none !important; }
 .top-side .topic-item.feed-item { padding-left: 20px; }
 #topicsHeader .sh-rule { flex: 1; height: 1px; background: var(--border); }
 #topicsHeader .filters { max-width: none; margin: 0; padding: 0; flex-wrap: nowrap; }
+/* For you, the home page: interest chips, then the papers, drawn into #topStories. While it shows, the week,
+   topic-card and relevance blocks below stay hidden; the email tab still uses them. */
+#papersContent.fy-on > :not(#topStories) { display: none; }
+.for-you { display: flex; flex-direction: column; gap: 18px; }
+.fy-chips { display: flex; flex-direction: column; gap: 10px; }
+.fy-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.fy-row.fy-topics .pill { font-size: 12.5px; padding: 4px 12px; }
+.fy-row .pill .pill-count { font-weight: 400; color: var(--text-muted); }
+.fy-row .pill.active .pill-count { color: inherit; font-weight: 600; }
+.fy-list .feed-item { position: relative; }
+.fy-fit { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 6px; font-size: 12.5px; color: var(--text-muted); }
+.fy-fit b { font-weight: 500; color: var(--text-secondary); }
+.fy-sep { opacity: 0.6; }
+.fy-found i { font-style: normal; color: var(--text-secondary); }
+.fy-more { align-self: center; }
+.tok-chiprows { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.tok-pill .pill-count { opacity: 0.7; }
+.tok-fit { margin-top: 12px; font-size: 12.5px; }
+/* Hiding asks why, in one tap: the reason teaches the recommendations. A sheet over the page, at the bottom on a phone */
+.hide-sheet { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.55); display: none; align-items: flex-start; justify-content: center; padding: 14vh 16px 16px; }
+.hide-sheet.open { display: flex; }
+.hide-box { width: min(460px, 100%); background: var(--bg-surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; box-shadow: 0 16px 48px rgba(0,0,0,0.6); padding: 20px 20px 14px; animation: ui-rise 0.22s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.hide-box h3 { font-size: 17px; font-weight: 600; color: var(--text); }
+.hide-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hide-ask { font-size: 13.5px; color: var(--text-secondary); margin: 14px 0 10px; line-height: 1.45; }
+.hide-later { color: var(--text-muted); }
+.hide-reasons { display: flex; flex-wrap: wrap; gap: 8px; }
+.hide-reason { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text); font: inherit; font-size: 13.5px; padding: 8px 13px; border-radius: 999px; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+.hide-reason:hover, .hide-reason:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+.hide-own { display: flex; gap: 8px; margin-top: 12px; }
+.hide-own .pp-btn { min-height: 40px; }
+.hide-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.hide-foot button { background: none; border: none; color: var(--text-muted); font: inherit; font-size: 13px; cursor: pointer; padding: 6px 0; }
+.hide-foot button:hover, .hide-foot button:focus-visible { color: var(--text); outline: none; }
+@media (max-width: 700px) {
+  .hide-sheet { align-items: flex-end; padding: 0; }
+  .hide-box { width: 100%; border-radius: 16px 16px 0 0; padding: 18px 16px calc(14px + env(safe-area-inset-bottom)); }
+  .hide-reason { padding: 10px 14px; }
+}
 
 /* compact feed item (top side list + topic cards) */
 .feed-body { max-height: none; overflow: visible; padding: 0; }
@@ -2098,7 +2137,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
       Scholar
     </div>
     <div class="nav-tabs">
-      <button class="nav-tab active" data-tab="all" onclick="switchTab('all')">Recent Works</button>
+      <button class="nav-tab active" data-tab="all" onclick="switchTab('all')">For you</button>
       <button class="nav-tab" data-tab="email" onclick="switchTab('email')" hidden>Email Digest</button>   <!-- off: SHOW_EMAIL_TAB -->
       <button class="nav-tab" data-tab="venues" onclick="switchTab('venues')">Venues</button>
       <button class="nav-tab" data-tab="library" onclick="switchTab('library')">Library</button>
@@ -2140,7 +2179,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
 <div class="tab-section" id="sec-papers">
   <div class="briefing">
     <div>
-      <h2 id="briefingTitle">Recent Works</h2>
+      <h2 id="briefingTitle">For you</h2>
       <p class="briefing-date"><span id="briefingDate"></span><span id="briefingNote"></span></p>
     </div>
   </div>
@@ -2664,14 +2703,14 @@ function lockPrivate(state = 'required', detail) {
   _acId = _acPending = _acOrigin = _selPending = _citeCtx = _mentionCtx = _pendingJump = null; _chatApplied.clear();
   Object.assign(Chat, { token: '', pid: null, messages: [], history: [], draft: { quotes: [], images: [], mentions: [] }, draftText: '', loadedFor: null, streaming: '', tool: '', error: '', running: false, refreshing: false, pairCode: '', status: 'setup' });
   for (const key of Object.keys(PanelLayout)) delete PanelLayout[key]; _panelTab = 'notes'; _rnSort = 'page'; _listOrder = 'best';
-  Pencil.mode = 'read'; Ink.on = false; Ink.undo = []; _tokPapers = []; _tokTopic = ''; _tokNewOnly = false; _tokShown = 0; _navList = null; _listKey = null; _listQuery = ''; _paperFromList = null; _crShown = null;
+  Pencil.mode = 'read'; Ink.on = false; Ink.undo = []; _tokPapers = []; _tokTopic = ''; _tokNewOnly = false; _tokShown = 0; _fyInterests = new Set(); _fyTopics = new Set(); _fyNewOnly = false; _fyShown = FY_BATCH; _navList = null; _listKey = null; _listQuery = ''; _paperFromList = null; _crShown = null;
   _openLibGroups = new Set(['progress']); _draggedGroup = null;
   _paperViewActive = _searchActive = _listViewActive = false;
   // Keep the static papersContent structure so Retry can render into its leaves.
-  for (const id of ['interestsBadge', 'igBadgeGroups', 'igBadgeInterests', 'syncStatus', 'saveBarTitle', 'saveBarSub', 'topicsGrid', 'topicJump', 'libraryContent', 'venuesContent', 'venuesJump', 'venuesFilter', 'venuesNote', 'briefingDate', 'briefingNote', 'weekPulse', 'globalSearchResults', 'libAdd', 'lpTools', 'lpBarTitle', 'lpEyebrow', 'inkBar', 'genericTitle', 'genericSub', 'genericInput', 'genericError', 'genericBtns', 'vaultTitle', 'vaultSub', 'vaultErr', 'vaultGo', 'vaultPat', 'vaultPw', 'vaultPw2', 'lpFilter', 'laInput', 'ppLink', 'stat-all', 'stat-def', 'stat-mild', 'stat-prob', 'topStories', 'allPapersGrid', 'groupSections', 'venuesMain', 'libraryMain', 'interestsMain', 'paperDetail', 'lpBody', 'lpTitle', 'lpSub', 'lpStats', 'lpChips', 'lpRail', 'readerTitle', 'readerBody', 'readerPageNo', 'notesPane', 'chatPane', 'pdfModalBody', 'selBar', 'annoCard', 'citeDD', 'tokBar', 'tokFeed', 'tokCount', 'tokProgress', 'tokMiniProgress', 'searchResults', 'searchInput', 'crStrip', 'crPhone', 'toast']) {
+  for (const id of ['interestsBadge', 'igBadgeGroups', 'igBadgeInterests', 'syncStatus', 'saveBarTitle', 'saveBarSub', 'topicsGrid', 'topicJump', 'libraryContent', 'venuesContent', 'venuesJump', 'venuesFilter', 'venuesNote', 'briefingDate', 'briefingNote', 'weekPulse', 'globalSearchResults', 'libAdd', 'lpTools', 'lpBarTitle', 'lpEyebrow', 'inkBar', 'genericTitle', 'genericSub', 'genericInput', 'genericError', 'genericBtns', 'vaultTitle', 'vaultSub', 'vaultErr', 'vaultGo', 'vaultPat', 'vaultPw', 'vaultPw2', 'lpFilter', 'laInput', 'ppLink', 'stat-all', 'stat-def', 'stat-mild', 'stat-prob', 'topStories', 'allPapersGrid', 'groupSections', 'venuesMain', 'libraryMain', 'interestsMain', 'paperDetail', 'lpBody', 'lpTitle', 'lpSub', 'lpStats', 'lpChips', 'lpRail', 'readerTitle', 'readerBody', 'readerPageNo', 'notesPane', 'chatPane', 'pdfModalBody', 'selBar', 'annoCard', 'citeDD', 'tokBar', 'tokFeed', 'tokCount', 'tokProgress', 'tokMiniProgress', 'searchResults', 'searchInput', 'crStrip', 'crPhone', 'toast', 'hideSheet']) {
     const el = document.getElementById(id); if (el) { el.innerHTML = ''; el.textContent = ''; if ('value' in el) el.value = ''; }
   }
-  for (const id of ['reader', 'pdfModal', 'vaultOverlay', 'genericOverlay', 'annoCard', 'selBar', 'saveBar']) { const el = document.getElementById(id); if (el) el.classList.remove('open', 'show', 'visible'); }
+  for (const id of ['reader', 'pdfModal', 'vaultOverlay', 'genericOverlay', 'annoCard', 'selBar', 'saveBar', 'hideSheet']) { const el = document.getElementById(id); if (el) el.classList.remove('open', 'show', 'visible'); }
   for (const id of ['vaultGo', 'btnPushGH']) { const el = document.getElementById(id); if (el) el.disabled = false; }
   const pushButton = document.getElementById('btnPushGH'); if (pushButton) pushButton.textContent = 'Push';
   for (const id of ['tokProgress', 'tokMiniProgress']) { const el = document.getElementById(id); if (el) el.style.width = ''; }
@@ -3066,7 +3105,7 @@ function flushStateToCSV() {
    closed tab doesn't lose them: only the fields people edit are stored for papers, so papers a
    digest run added in the meantime still come through when the backup is re-applied. */
 const LOCAL_BACKUP_KEY = 'scholar_unpushed_v1';
-const EDITABLE_FIELDS = ['is_read', 'is_starred', 'user_lists', 'user_notes', 'theme_groups', 'is_hidden', 'pdf_url', 'match_strengths', 'topics_removed', 'pdf_removed'];
+const EDITABLE_FIELDS = ['is_read', 'is_starred', 'user_lists', 'user_notes', 'theme_groups', 'is_hidden', 'pdf_url', 'match_strengths', 'topics_removed', 'pdf_removed', 'hide_reason'];
 let _loadedPaperFields = new Map();              // id -> editable fields as loaded, to diff against
 let _loadedInterestNames = [], _loadedGroupNames = [];
 let _loadedGroupFields = new Map();              // topic -> its row as loaded, so a save keeps what the worker wrote since
@@ -3854,7 +3893,7 @@ function applyFilters() {
   document.getElementById('stat-mild').textContent = counted.filter(p=>dynamicRelevance(p)==='mildly').length;
 
   const dates = allPapers.map(p=>p.date_found).filter(Boolean).sort();
-  document.getElementById('briefingTitle').textContent = currentTab==='email'?'Email Digest':'Recent Works';
+  document.getElementById('briefingTitle').textContent = currentTab==='email'?'Email Digest':'For you';
   renderContinueReading();
   document.getElementById('briefingDate').textContent = dates.length ? `Updated ${formatDate(dates[dates.length-1])}.` : '';
   const weekAgo = Date.now() - 7 * 86400000;
@@ -3864,16 +3903,123 @@ function applyFilters() {
   if (sinceVisit) notes.push(`${sinceVisit} new since your last visit`);
   if (newMust) notes.push(`${newMust} new must-read ${newMust === 1 ? 'paper' : 'papers'} this week`);
   document.getElementById('briefingNote').textContent = notes.length ? ' ' + notes.join(', ') + '.' : '';
-  renderWeekPulse(base.filter(p => p.date_found && new Date(p.date_found + 'T00:00:00') >= weekAgo));
+  // The home tab is For you; the switched-off email tab keeps the week pulse, Top Papers and topic cards
+  const forYou = currentTab === 'all';
+  if (!forYou) renderWeekPulse(base.filter(p => p.date_found && new Date(p.date_found + 'T00:00:00') >= weekAgo));
+  const content = document.getElementById('papersContent');
+  if (content && content.classList) content.classList.toggle('fy-on', forYou);
 
   if (phoneFeedOn()) {
+    if (forYou) { const pool = forYouPool(); renderTok(forYouFeed(pool), pool); return; }
     let feed = papers;
     if (_tokTopic) feed = feed.filter(p => groupsOfPaper(p).includes(_tokTopic));
     if (_tokNewOnly) feed = feed.filter(isNewSinceVisit);
     renderTok(sortForFeed(feed.slice()), papers);
     return;
   }
+  if (forYou) { renderForYou(forYouPool()); return; }
   renderPapers(papers, counted.slice());
+}
+
+/* ===== FOR YOU: the home page, laptop and phone =====
+   Every unread paper that matches a confirmed interest, in the Top Papers order (topScore). Interest chips narrow it
+   to the papers matching any chosen interest, ranked by how strongly they match one of those, then topScore, then the
+   newer date_found; once an interest is chosen, the approved topics within it are chips as well. The choices live in
+   memory and reset on reload. A paper that matches no confirmed interest stays in Library. */
+const FY_BATCH = 30;
+let _fyInterests = new Set(), _fyTopics = new Set(), _fyNewOnly = false, _fyShown = FY_BATCH;
+function forYouPool() {
+  return allPapers.filter(p => !readSet.has(paperKey(p)) && scoreParts(p).matches.length);
+}
+function forYouRank(papers, chosen) {
+  if (!chosen || !chosen.size) return byTopScore(papers.slice());
+  const best = new Map(), top = new Map();
+  const kept = papers.filter(p => {
+    const ms = scoreParts(p).matches.filter(m => chosen.has(m.name));
+    if (!ms.length) return false;
+    best.set(p, Math.max(...ms.map(m => STRENGTH[m.strength] || 0)));
+    top.set(p, topScore(p));
+    return true;
+  });
+  return kept.sort((a, b) => best.get(b) - best.get(a) || top.get(b) - top.get(a) || (b.date_found || '').localeCompare(a.date_found || ''));
+}
+/* The pool as the chips choose it, in For you's order */
+function forYouFeed(pool) {
+  let list = forYouRank(pool, _fyInterests);
+  if (_fyInterests.size && _fyTopics.size) {
+    const confirmed = confirmedTopics();
+    list = list.filter(p => groupsOfPaper(p, confirmed).some(g => _fyTopics.has(g)));
+  }
+  if (_fyNewOnly) list = list.filter(isNewSinceVisit);
+  return list;
+}
+/* The chips, with counts over the pool: All, one per confirmed interest that has papers here (or is chosen), New when
+   there is something new; and, once an interest is chosen, the approved topics among its papers. `phone`: the feed's
+   smaller pills, New first as before. */
+function forYouChips(pool, phone) {
+  const counts = new Map();
+  pool.forEach(p => scoreParts(p).matches.forEach(m => counts.set(m.name, (counts.get(m.name) || 0) + 1)));
+  const names = allInterests.filter(i => i.status === 'confirmed' && (counts.get(i.interest_name) || _fyInterests.has(i.interest_name))).map(i => i.interest_name);
+  const newN = pool.filter(isNewSinceVisit).length;
+  const chip = (on, label, n, call, name, dot) => `<button class="${phone ? 'tok-pill' : 'pill'}${on ? ' active' : ''}" aria-pressed="${on}" onclick="${call}"${name === undefined ? '' : ` data-n="${dataAttr(name)}"`}>${dot || ''}${esc(label)} <span class="pill-count">${n}</span></button>`;
+  const newChip = newN || _fyNewOnly ? chip(_fyNewOnly, 'New', newN, 'fyNew()') : '';
+  const interests = (phone ? newChip : '') + chip(!_fyInterests.size, 'All', pool.length, 'fyAll()')
+    + names.map(n => chip(_fyInterests.has(n), n, counts.get(n) || 0, 'fyInterest(this.dataset.n)', n)).join('') + (phone ? '' : newChip);
+  let topics = '';
+  if (_fyInterests.size) {
+    const confirmed = confirmedTopics(), tc = new Map();
+    forYouRank(pool, _fyInterests).forEach(p => groupsOfPaper(p, confirmed).forEach(g => tc.set(g, (tc.get(g) || 0) + 1)));
+    topics = GROUP_ORDER.filter(g => tc.get(g) || _fyTopics.has(g)).map(g => chip(_fyTopics.has(g), g, tc.get(g) || 0, 'fyTopic(this.dataset.n)', g, gdot(g))).join('');
+  }
+  return { interests, topics };
+}
+function fyChoose() { _fyShown = FY_BATCH; applyFilters(); }
+function fyAll() { _fyInterests.clear(); _fyTopics.clear(); fyChoose(); }
+function fyInterest(name) {
+  if (_fyInterests.has(name)) _fyInterests.delete(name); else _fyInterests.add(name);
+  if (!_fyInterests.size) _fyTopics.clear();
+  fyChoose();
+}
+function fyTopic(name) { if (_fyTopics.has(name)) _fyTopics.delete(name); else _fyTopics.add(name); fyChoose(); }
+function fyNew() { _fyNewOnly = !_fyNewOnly; fyChoose(); }
+function fyMore() { _fyShown += FY_BATCH; applyFilters(); }
+/* Where QuickRead found a paper, from source_ref: quickread:<run>:near:<row id>, :star:<row id> or :interest:<name> */
+function quickreadOrigin(p) {
+  const parts = String(p.source_ref || '').split(':');
+  return parts[0] === 'quickread' && parts.length >= 4 ? { kind: parts[2], ref: parts.slice(3).join(':') } : null;
+}
+function foundHTML(p) {
+  const o = quickreadOrigin(p);
+  if (!o) return '';
+  if (o.kind === 'near' || o.kind === 'star') {
+    const near = everyPaper().find(x => x.id === o.ref);   // the paper it sits near, hidden or not
+    return near ? `found near <i>${esc(near.title || near.headline)}</i>` : 'found by QuickRead';
+  }
+  return o.kind === 'interest' && o.ref ? `found for <i>${esc(o.ref)}</i>` : 'found by QuickRead';
+}
+/* Why a paper is here: each confirmed match with its strength, the chosen interests first, then the strongest; the
+   Must read mark; and what QuickRead found it near. `noMust`: the phone card's footer already says Must Read. */
+function fitLineHTML(p, chosen, cls, noMust) {
+  const on = name => chosen && chosen.has(name) ? 1 : 0;
+  const ms = scoreParts(p).matches.slice().sort((a, b) => on(b.name) - on(a.name) || b.value - a.value);
+  const bits = ms.map(m => `<span class="fy-match">${esc(STRENGTH_NAME[m.strength] || '')} <b>${esc(m.name)}</b></span>`);
+  const found = foundHTML(p);
+  if (found) bits.push(`<span class="fy-found">${found}</span>`);
+  const must = !noMust && dynamicRelevance(p) === 'definitely' ? '<span class="tc-must">Must read</span>' : '';
+  return bits.length || must ? `<div class="fy-fit${cls ? ' ' + cls : ''}">${must}${bits.join('<span class="fy-sep" aria-hidden="true">&middot;</span>')}</div>` : '';
+}
+/* The laptop page: the chips, then the papers 30 at a time */
+function renderForYou(pool) {
+  const box = document.getElementById('topStories');
+  const list = forYouFeed(pool), shown = list.slice(0, _fyShown), c = forYouChips(pool, false);
+  const empty = !allPapers.length ? 'No papers yet'
+    : !pool.length ? 'Nothing unread matches a confirmed interest. Papers that match none are in Library.'
+    : 'No paper here matches the chips you chose.';
+  box.innerHTML = `<div class="for-you">
+    <div class="fy-chips"><div class="fy-row" role="group" aria-label="Filter by interest">${c.interests}</div>${c.topics ? `<div class="fy-row fy-topics" role="group" aria-label="Filter by topic">${c.topics}</div>` : ''}</div>
+    ${shown.length ? `<div class="top-side fy-list">${shown.map(p => feedItemHTML(p, { topics: true, fit: fitLineHTML(p, _fyInterests) })).join('')}</div>` : `<div class="empty-state">${empty}</div>`}
+    ${list.length > shown.length ? `<button class="pill fy-more" onclick="fyMore()">Show more <span class="pill-count">${list.length - shown.length}</span></button>` : ''}
+  </div>`;
 }
 
 /* ===== PHONE FEED (one paper per screen) ===== */
@@ -3918,17 +4064,7 @@ function renderTok(papers, unfiltered) {
   _tokPapers = papers; _tokShown = 0;
   const feed = document.getElementById('tokFeed');
   const pool = unfiltered || papers;
-  const newN = pool.filter(isNewSinceVisit).length;
-  const tCounts = {};
-  pool.forEach(p => groupsOfPaper(p).forEach(g => tCounts[g] = (tCounts[g] || 0) + 1));
-  const topics = GROUP_ORDER.filter(g => tCounts[g]);
-  document.getElementById('tokBar').innerHTML = `
-    <div class="tok-pills">
-      ${newN || _tokNewOnly ? `<button class="tok-pill tok-new ${_tokNewOnly?'active':''}" onclick="toggleTokNew()" aria-pressed="${_tokNewOnly}">New ${newN}</button>` : ''}
-      <select class="tok-pill tok-select ${_tokTopic?'active':''}" aria-label="Topic" onchange="setTokTopic(this.value)"><option value="">All topics</option>${topics.map(g => `<option value="${esc(g)}" ${_tokTopic===g?'selected':''}>${esc(g)} (${tCounts[g]})</option>`).join('')}</select>
-      ${[['all','All'],['definitely','Must read'],['probably','Interesting'],['mildly','Tangential']].map(([r,label]) =>
-        `<button class="tok-pill ${currentRel===r?'active':''}" onclick="toggleRel('${r}')">${label}</button>`).join('')}
-    </div>
+  document.getElementById('tokBar').innerHTML = `${tokPillsHTML(pool)}
     <span class="tok-count" id="tokCount"></span>
     <span class="tok-progress" id="tokProgress"></span>${crPhoneHTML()}`;
   if (document.getElementById('crPhone')) markNewcomers([document.getElementById('crPhone')]);
@@ -3948,6 +4084,72 @@ function renderTok(papers, unfiltered) {
   _tokLastTop = feed.scrollTop;
   requestAnimationFrame(privateCallback(tokMeasureBars));
   tokOnScroll();
+}
+/* The feed's filter pills: For you's interest chips (then its topic chips) on the home tab; the topic picker and
+   relevance pills on the email tab */
+function tokPillsHTML(pool) {
+  if (currentTab === 'all') {
+    const c = forYouChips(pool, true);
+    return `<div class="tok-chiprows"><div class="tok-pills" role="group" aria-label="Filter by interest">${c.interests}</div>${c.topics ? `<div class="tok-pills" role="group" aria-label="Filter by topic">${c.topics}</div>` : ''}</div>`;
+  }
+  const newN = pool.filter(isNewSinceVisit).length;
+  const tCounts = {};
+  pool.forEach(p => groupsOfPaper(p).forEach(g => tCounts[g] = (tCounts[g] || 0) + 1));
+  const topics = GROUP_ORDER.filter(g => tCounts[g]);
+  return `
+    <div class="tok-pills">
+      ${newN || _tokNewOnly ? `<button class="tok-pill tok-new ${_tokNewOnly?'active':''}" onclick="toggleTokNew()" aria-pressed="${_tokNewOnly}">New ${newN}</button>` : ''}
+      <select class="tok-pill tok-select ${_tokTopic?'active':''}" aria-label="Topic" onchange="setTokTopic(this.value)"><option value="">All topics</option>${topics.map(g => `<option value="${esc(g)}" ${_tokTopic===g?'selected':''}>${esc(g)} (${tCounts[g]})</option>`).join('')}</select>
+      ${[['all','All'],['definitely','Must read'],['probably','Interesting'],['mildly','Tangential']].map(([r,label]) =>
+        `<button class="tok-pill ${currentRel===r?'active':''}" onclick="toggleRel('${r}')">${label}</button>`).join('')}
+    </div>`;
+}
+/* On For you a card marked read or hidden leaves the feed where it is: no re-render, which would lose the reader's
+   place. The next card moves up into its slot and the chips' counts follow. Undo puts it back in its place in the
+   current order; a card coming back above the one on screen keeps that one on screen. */
+function tokForYou() {
+  return currentTab === 'all' && document.body.classList.contains('tok-mode') && !_paperViewActive && !_listViewActive && !_searchActive;
+}
+function tokIndex() {
+  const feed = document.getElementById('tokFeed');
+  return feed.clientHeight ? Math.round(feed.scrollTop / feed.clientHeight) : 0;
+}
+function tokRefreshPills() {
+  const rows = document.querySelector('#tokBar .tok-chiprows');
+  if (rows) rows.outerHTML = tokPillsHTML(forYouPool());
+}
+function tokRemove(k) {
+  const i = _tokPapers.findIndex(p => paperKey(p) === k);
+  if (i < 0) return;
+  const feed = document.getElementById('tokFeed'), at = tokIndex();
+  _tokPapers.splice(i, 1);
+  if (i < _tokShown) {
+    _tokShown--;
+    const card = [...feed.querySelectorAll('.tok-card')].find(c => c.dataset.key === k);
+    if (card) card.remove();
+    if (i < at) jumpScroll(feed, feed.scrollTop - feed.clientHeight);
+  }
+  if (!_tokPapers.length) feed.innerHTML = '<div class="tok-empty">Nothing left here. Try another chip above.</div>';
+  tokRefreshPills();
+  tokOnScroll();
+}
+function tokRestore(k) {
+  const p = allPapers.find(x => paperKey(x) === k);
+  if (!p || _tokPapers.includes(p)) return;
+  tokRefreshPills();
+  const order = forYouFeed(forYouPool()), j = order.indexOf(p);
+  if (j < 0) return;   // the chips chosen now leave it out
+  const ahead = new Set(order.slice(0, j)), at = _tokPapers.filter(x => ahead.has(x)).length;
+  const feed = document.getElementById('tokFeed'), now = tokIndex();
+  if (!_tokPapers.length) feed.innerHTML = '';
+  _tokPapers.splice(at, 0, p);
+  if (at < _tokShown) {
+    const cards = feed.querySelectorAll('.tok-card'), html = tokCardHTML(p, at);
+    if (cards[at]) cards[at].insertAdjacentHTML('beforebegin', html); else feed.insertAdjacentHTML('beforeend', html);
+    _tokShown++;
+    if (at < now) jumpScroll(feed, feed.scrollTop + feed.clientHeight);
+  }
+  tokOnScroll();   // a card past the rendered ones is appended in its turn
 }
 function tokAppend() {
   const feed = document.getElementById('tokFeed');
@@ -3994,6 +4196,7 @@ function tokCardHTML(p, idx) {
     ${showTitle ? `<div class="tok-title">${esc(p.title)}</div>` : ''}
     ${hasText(p.authors) ? `<div class="tok-authors">${esc(p.authors)}</div>` : ''}
     ${body ? `<p class="tok-summary" onclick="openPaper('${ka}', event)">${esc(body)}</p>` : '<div class="tok-summary"></div>'}
+    ${currentTab === 'all' ? fitLineHTML(p, _fyInterests, 'tok-fit', true) : ''}
     <div class="tok-foot">
       ${isNewSinceVisit(p) ? '<span class="f-new">New</span>' : ''}
       <span class="f-rel rel-${rel}"><i></i>${relLabel(rel)}</span>
@@ -4096,14 +4299,16 @@ function tokCommit(card, action) {
     }
     toggleRead(k, null);
     const on = readSet.has(k);
-    card.classList.toggle('is-read', on);
+    if (tokForYou()) { if (on) tokRemove(k); else tokRestore(k); }   // For you holds unread papers only
+    else card.classList.toggle('is-read', on);
     _tokLock = false;
     return on ? 'Marked read' : 'Marked unread';
   };
+  const leaves = action === 'read' && tokForYou();
   const msg = apply();
   toast(msg, () => apply());
   tokReset(card);
-  tokNext();
+  if (!leaves) tokNext();   // on For you the next card has already moved up into this one's place
 }
 function tokNext() {
   const feed = document.getElementById('tokFeed');
@@ -4127,7 +4332,8 @@ function tokMenu(ev, btn, k) {
   m.dataset.key = k;
   m.innerHTML = (isOwner() ? `<button role="menuitem" class="${st ? 'on-star' : ''}" onclick="tokMenuAct('star')"><i>&#9733;</i>${st ? 'Unstar' : 'Star'}</button>`
     + `<button role="menuitem" class="${rd ? 'on-read' : ''}" onclick="tokMenuAct('read')"><i>&#10003;</i>${rd ? 'Mark unread' : 'Mark read'}</button>`
-    + `<button role="menuitem" class="${paperInAnyList(k) ? 'on-list' : ''}" onclick="tokMenuAct('list')"><i>&#9776;</i>Save to a list…</button>` : '')
+    + `<button role="menuitem" class="${paperInAnyList(k) ? 'on-list' : ''}" onclick="tokMenuAct('list')"><i>&#9776;</i>Save to a list…</button>`
+    + `<button role="menuitem" onclick="tokMenuAct('hide')"><i>&#8856;</i>Hide…</button>` : '')
     + (p && p.url ? `<a role="menuitem" href="${esc(p.url)}" target="_blank" rel="noopener" onclick="closeTokMenu()"><i><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></i>Open the paper's page</a>` : '');
   const r = btn.getBoundingClientRect();
   m.style.top = (r.bottom + 6) + 'px'; m.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
@@ -4144,10 +4350,16 @@ function tokMenuAct(what) {
   const m = document.getElementById('tokMenu'), k = m.dataset.key, btn = m._btn;
   closeTokMenu();
   if (what === 'list') { openSaveDD(btn, k); return; }
+  if (what === 'hide') { askHide(k); return; }
   const card = btn && btn.closest('.tok-card');
   const apply = () => {   // the same as a swipe, with the same Undo
     _tokLock = true;
-    if (what === 'star') toggleStar(k, null); else { toggleRead(k, null); if (card) card.classList.toggle('is-read', readSet.has(k)); }
+    if (what === 'star') toggleStar(k, null);
+    else {
+      toggleRead(k, null);
+      if (tokForYou()) { if (readSet.has(k)) tokRemove(k); else tokRestore(k); }
+      else if (card) card.classList.toggle('is-read', readSet.has(k));
+    }
     _tokLock = false;
     return what === 'star' ? (starSet.has(k) ? 'Starred' : 'Unstarred') : (readSet.has(k) ? 'Marked read' : 'Marked unread');
   };
@@ -4474,6 +4686,7 @@ function feedItemHTML(p, opts) {
   return `<article class="topic-item feed-item ${ir?'is-read':''}" tabindex="0" data-key="${escAttr(k)}" onclick="openPaper('${escAttr(k)}', event)"${gs.length ? ` style="--gbg:${topicGlow(gs)}"` : ''}>
     <div class="f-headline">${esc(p.headline||p.title)}</div>
     ${showTitle ? `<div class="f-title" title="${escAttr(p.title)}">${esc(p.title)}</div>` : ''}
+    ${opts && opts.fit ? opts.fit : ''}
     ${opts && opts.topics ? whyLineHTML(p, 'one') : ''}
     ${feedMetaHTML(p, true, !!(opts && opts.topics))}
     <div class="f-actions"><div>${feedActionsHTML(p, true)}</div></div>
@@ -4500,7 +4713,7 @@ function saveBtn(p, labelled) {
 function deleteBtn(p) {
   const k = paperKey(p);
   if (isHiddenRow(p)) return `<button class="btn-icon btn-restore" onclick="event.preventDefault();event.stopPropagation();unhidePaper('${escAttr(k)}')" title="Restore paper"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>`;
-  return `<button class="btn-icon btn-delete" onclick="event.preventDefault();event.stopPropagation();hidePaper('${escAttr(k)}')" title="Hide paper (you can restore it from Library)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>`;
+  return `<button class="btn-icon btn-delete" onclick="event.preventDefault();event.stopPropagation();askHide('${escAttr(k)}')" title="Hide paper (you can restore it from Library)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>`;
 }
 
 function summaryBtn(p) {
@@ -4687,33 +4900,94 @@ function toggleRead(k, btn) {
   readSet.has(k)?readSet.delete(k):readSet.add(k);
   persistRead();
   if (btn) { btn.classList.add('pop-sm'); btn.addEventListener('animationend', () => btn.classList.remove('pop-sm'), { once: true }); }
+  // on For you a paper marked read leaves the list, so say so, with Undo
+  if (btn && btn.closest && btn.closest('#topStories .fy-list') && readSet.has(k)) toast('Marked read', () => toggleRead(k, null));
   refresh();
 }
 
 /* Hiding keeps the row (marked is_hidden) so the paper can come back and a digest run
    won't re-add it; stars, reads and lists stay on the row for when it is restored */
-function hidePaper(k) {
+function hidePaper(k, reason) {
   const p = allPapers.find(x => paperKey(x) === k);
   if (!p) return;
   closeSaveDD();
   flushStateToCSV();
   p.is_hidden = 'true';
+  if (hideReasonsKept()) p.hide_reason = reason || '';
   splitHidden();
   _stateDirty = true; showSaveBar();
   toast(`Hidden "${esc(p.headline || p.title)}"`, () => unhidePaper(k));
+  if (tokForYou()) { tokRemove(k); return; }   // the phone feed keeps the reader's place
   refresh();
 }
 function unhidePaper(k) {
   const p = _hiddenPapers.find(x => paperKey(x) === k);
   if (!p) return;
   p.is_hidden = '';
+  if (p.hide_reason) p.hide_reason = '';
   splitHidden();
   if (p.is_read === 'true') readSet.add(k);
   if (p.is_starred === 'true') starSet.add(k);
   (p.user_lists || '').split('|').filter(Boolean).forEach(name => { (libraryLists[name] = libraryLists[name] || []).includes(k) || libraryLists[name].push(k); });
   _stateDirty = true; showSaveBar();
   toast(`Restored "${esc(p.headline || p.title)}"`);
+  if (tokForYou()) { tokRestore(k); return; }
   refresh();
+}
+/* hide_reason is a column from schema 3 on; until the worker adds it to the file a reason has nowhere to go, and the
+   hide works as before */
+function hideReasonsKept() {
+  const text = _papersText || '', end = text.search(/\r?\n/), head = end < 0 ? text : text.slice(0, end);
+  return head.replace(/^\uFEFF/, '').split(',').some(c => c.trim().replace(/^"(.*)"$/, '$1') === 'hide_reason');
+}
+/* Hiding asks why first, in one tap. Enter or Hide saves what was typed; Escape hides without a reason; a tap outside
+   or Cancel keeps the paper. Undo on the toast brings it back and clears the reason. */
+const HIDE_REASONS = ['Not my field', 'Too far from my work', 'Know it already', 'Not a research paper'];
+function askHide(k) {
+  const p = allPapers.find(x => paperKey(x) === k);
+  if (!p) return;
+  closeSaveDD(); closeTokMenu();
+  let s = document.getElementById('hideSheet');
+  if (!s) {
+    s = document.createElement('div'); s.id = 'hideSheet'; s.className = 'hide-sheet';
+    s.setAttribute('role', 'dialog'); s.setAttribute('aria-modal', 'true'); s.setAttribute('aria-labelledby', 'hideSheetTitle');
+    s.onclick = e => { if (e.target === s) closeHideSheet(); };
+    s.onkeydown = e => { if (e.key === 'Escape') { e.preventDefault(); confirmHide(''); } };
+    document.body.appendChild(s);
+  }
+  s.dataset.key = k;
+  s._from = document.activeElement;
+  s.innerHTML = `<div class="hide-box">
+    <h3 id="hideSheetTitle">Hide this paper</h3>
+    <p class="hide-sub">${esc(p.headline || p.title)}</p>
+    <p class="hide-ask">Why isn't it for you? A reason teaches the recommendations.${hideReasonsKept() ? '' : ' <span class="hide-later">Reasons are saved once the library is updated.</span>'}</p>
+    <div class="hide-reasons">${HIDE_REASONS.map(r => `<button type="button" class="hide-reason" data-reason="${dataAttr(r)}" onclick="confirmHide(this.dataset.reason)">${esc(r)}</button>`).join('')}</div>
+    <form class="hide-own" onsubmit="event.preventDefault();confirmHide(this.elements.reason.value)">
+      <input name="reason" class="pp-input" maxlength="200" autocomplete="off" enterkeyhint="done" placeholder="Or say why in a few words" aria-label="Why isn't it for you">
+      <button class="pp-btn" type="submit">Hide</button>
+    </form>
+    <div class="hide-foot"><button type="button" onclick="confirmHide('')">Hide without a reason</button><button type="button" onclick="closeHideSheet()">Cancel</button></div>
+  </div>`;
+  s.classList.add('open');
+  const first = s.querySelector('.hide-reason');
+  if (first) first.focus();
+}
+function hideReasonText(text) {   // one line of at most 200 characters, no control characters
+  return String(text || '').replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
+}
+function confirmHide(reason) {
+  const s = document.getElementById('hideSheet');
+  if (!s || !s.classList.contains('open')) return;
+  const k = s.dataset.key;
+  closeHideSheet(true);
+  hidePaper(k, hideReasonText(reason));
+}
+function closeHideSheet(hidden) {
+  const s = document.getElementById('hideSheet');
+  if (!s) return;
+  const from = s._from;
+  s.classList.remove('open'); s.innerHTML = ''; s._from = null;
+  if (!hidden && from && from.isConnected && from.focus) from.focus();   // Cancel: back where the reader was
 }
 
 function refresh() {
@@ -4863,7 +5137,7 @@ let _listQuery = '', _listShowLow = false, _listQueryTimer = null;
 let _listOrder = 'best';
 const LIST_ORDERS = [['best', 'Best', 'Must read, then Interesting, then Tangential; the best score first within each'],
   ['added', 'Recently added', 'Newest to the dashboard first'], ['published', 'Newest published', 'By publication date']];
-const TAB_NAMES = { all: 'Recent Works', email: 'Email Digest', venues: 'Venues', library: 'Library', interests: 'Interests' };
+const TAB_NAMES = { all: 'For you', email: 'Email Digest', venues: 'Venues', library: 'Library', interests: 'Interests' };
 function openTopList(skipHash) { if (!skipHash) location.hash = '#top'; else showList(TOP_LIST_KEY); }
 
 /* Best: Must read, then Interesting, then Tangential; within each, the Top Papers score (relevance, fading by
@@ -5654,7 +5928,7 @@ function renderGroupsTab(main) {
   const so = {suggested:0,confirmed:1,rejected:2};
   groups = [...groups].sort((a,b) => (so[a.status]||9) - (so[b.status]||9) || (parseInt(a.display_order)||999) - (parseInt(b.display_order)||999));
   const sugN = allGroups.filter(g=>g.status==='suggested').length;
-  let html = `<p class="ig-legend"><strong>Topics</strong> group papers for browsing: the cards on Recent Works and the chips on each paper. They don't change ranking; that is what <a href="#interests/interests" class="ig-link">Interests</a> do.${isOwner() ? ' Drag a topic to reorder the cards.' : ''}</p>`;
+  let html = `<p class="ig-legend"><strong>Topics</strong> group papers for browsing: the chips on For you once you pick an interest, and on each paper. They don't change ranking; that is what <a href="#interests/interests" class="ig-link">Interests</a> do.${isOwner() ? ' Drag a topic to reorder the cards.' : ''}</p>`;
   if (sugN > 0 && currentIStatus === 'all' && isOwner()) html += `<div style="padding:12px 20px;margin-bottom:16px;background:var(--purple-bg);border:1px solid var(--purple);border-radius:8px;font-size:13px;color:var(--purple);">${sugN} suggested topic${sugN>1?'s':''} from recent papers</div>`;
   html += tools;
   html += '<div class="interest-group"><div class="interest-group-inner" style="padding:10px 0">';
@@ -6432,8 +6706,9 @@ function mergePapers(text, canon) {
     sent.set(row.id, { p, now });
     return true;
   });
-  // a column people edit joins the file when first used; topics_removed and pdf_removed come only with schema 2
-  EDITABLE_FIELDS.forEach(f => { if (!fields.includes(f) && !['topics_removed', 'pdf_removed'].includes(f) && rows.some(x => x[f])) fields.push(f); });
+  // a column people edit joins the file when first used; topics_removed and pdf_removed come only with schema 2,
+  // hide_reason only with schema 3
+  EDITABLE_FIELDS.forEach(f => { if (!fields.includes(f) && !['topics_removed', 'pdf_removed', 'hide_reason'].includes(f) && rows.some(x => x[f])) fields.push(f); });
   return { csv: toCSV(rows, { columns: fields }), rows, sent, canon };
 }
 /* The papers save landed: the edits it carried are done. Each paper takes its saved row, which becomes its baseline,
@@ -10902,7 +11177,7 @@ function captureNavList(fromEl) {
   else if (fromEl.closest('#sec-search')) label = 'search results';
   else if (fromEl.closest('#sec-library')) label = 'your Library';
   else if (fromEl.closest('.pd-rel-grid')) label = 'related papers';
-  else label = currentTab === 'email' ? 'Email Digest' : 'Recent Works';
+  else label = currentTab === 'email' ? 'Email Digest' : 'For you';
   _navList = keys.length > 1 ? { keys, label } : null;
 }
 /* Step to another paper without adding history, so Back still returns to the list */
@@ -11250,7 +11525,7 @@ if (SHOW_EMAIL_TAB) document.querySelector('.nav-tab[data-tab="email"]').hidden 
 function applyHash() {
   if (!configReady() || !_ownerDecisionDone) return;
   try { requireTarget(); } catch (e) { return; }
-  // old links and history entries into the switched-off Email Digest land on Recent Works (without a new Back step)
+  // old links and history entries into the switched-off Email Digest land on For you (without a new Back step)
   if (!SHOW_EMAIL_TAB && (/^#(email|latest)$/.test(location.hash) || location.hash.startsWith('#alert/'))) history.replaceState(null, '', location.pathname + location.search + '#all');
   syncAddress();
   _appliedHash = location.hash;
