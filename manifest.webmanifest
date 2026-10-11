@@ -1,7 +1,7 @@
 {
   "name": "Scholar Dashboard",
   "short_name": "Scholar",
-  "description": "Research papers from Google Scholar alerts and weekly surveys, ranked by research interests.",
+  "description": "Your research papers, ranked by your interests.",
   "start_url": "./#all",
   "scope": "./",
   "display": "standalone",

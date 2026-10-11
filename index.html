@@ -38,7 +38,7 @@ Config.promise.catch(failConfig); // Attach immediately, even if the body has no
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Scholar">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111111'/%3E%3Cg transform='translate(4 4)'%3E%3Cpath fill='%23fbb13c' d='M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&display=swap" rel="stylesheet">
@@ -144,7 +144,7 @@ a { color: inherit; text-decoration: none; }
 .nav-refresh { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 36px; height: 36px; margin-left: -12px; border-radius: 50%; border: none; background: none; color: var(--text-secondary); cursor: pointer; transition: background var(--t-fast), color var(--t-fast); }
 .nav-refresh:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 .nav-refresh svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-html.private-locked .main-scroll, html.private-locked #reader, html.private-locked #skeleton, html.private-locked #tokFeed, html.private-locked #saveBar { display:none !important; }
+html.private-locked .main-scroll, html.private-locked #reader, html.private-locked #skeleton, html.private-locked #deckWrap, html.private-locked #saveBar { display:none !important; }
 /* ===== READ-ONLY (html.ro: no owner's GitHub token in this browser; see OWNER MODE) =====
    The key to sign in shows only then; every control that changes something is gone. The functions behind them
    are guarded as well, so this list is about what shows, not what's safe. */
@@ -342,7 +342,7 @@ html.ro #vaultOverlay { display: none !important; }
 #filtersBar .pill:not(.active) .pill-count { display: none; }   /* the selected pill says how many; the others just name a filter */
 /* Why a paper is in your feed (the digest's note): on Top Papers and the featured paper of each topic card */
 .why-line { display: flex; gap: 8px; font-size: 13px; line-height: 1.5; color: var(--text-muted); }
-.why-line b { flex-shrink: 0; padding-top: 2px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: color-mix(in srgb, var(--gc, var(--accent)) 70%, #fff); }
+.why-line b { flex-shrink: 0; padding-top: 2px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: color-mix(in srgb, var(--gc, var(--accent)) 70%, #fff); }
 .why-line.one { margin-top: 6px; min-width: 0; }
 .why-line.one span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .top-lead .lead-why { margin-top: auto; padding-top: 14px; --gc: var(--accent); }
@@ -367,9 +367,6 @@ html.ro #vaultOverlay { display: none !important; }
 .fy-sep { opacity: 0.6; }
 .fy-found i { font-style: normal; color: var(--text-secondary); }
 .fy-more { align-self: center; }
-.tok-chiprows { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.tok-pill .pill-count { opacity: 0.7; }
-.tok-fit { margin-top: 12px; font-size: 12.5px; }
 /* Hiding asks why, in one tap: the reason teaches the recommendations. A sheet over the page, at the bottom on a phone */
 .hide-sheet { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.55); display: none; align-items: flex-start; justify-content: center; padding: 14vh 16px 16px; }
 .hide-sheet.open { display: flex; }
@@ -704,7 +701,7 @@ button.pd-strength:hover { color: var(--text); background: rgba(255,255,255,0.1)
 .badge-link { font: inherit; font-size: 11px; cursor: pointer; border: 1px solid transparent; transition: border-color 0.15s, color 0.15s; }
 .badge-link:hover { color: var(--text); border-color: rgba(255,255,255,0.25); }
 .pd-topics { display: flex; flex-wrap: wrap; gap: 6px; }
-.pd-topics .badge-group { background: rgba(255,255,255,0.06); border: 1px solid transparent; color: var(--text-secondary); font-size: 12px; height: 26px; padding: 0 10px; border-radius: 999px; gap: 6px; }
+.pd-topics .badge-group { background: rgba(255,255,255,0.06); border: 1px solid transparent; color: var(--text-secondary); font-size: 12px; height: auto; min-height: 26px; padding: 3px 10px; border-radius: 999px; gap: 6px; text-align: left; }   /* a long name wraps and the pill grows with it */
 .pd-topics .badge-group:hover { background: rgba(255,255,255,0.1); }
 .pd-topics .gdot { width: 7px; height: 7px; }
 .pd-topics .group-add-btn { height: 26px; border-radius: 999px; border-color: rgba(255,255,255,0.22); color: var(--text-muted); }
@@ -745,80 +742,120 @@ button.pd-strength:hover { color: var(--text); background: rgba(255,255,255,0.1)
 }
 @media (prefers-reduced-motion: reduce) { .pd-bar-title, .pd-act-label, .pd-open, .pd-back svg { transition: none; } }
 
-/* PHONE FEED — one paper per screen, swipe up for the next */
-.tok, .tok-bar { display: none; }
-body.tok-mode .main-scroll { overflow: hidden; }
-body.tok-mode #sec-papers.active { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-body.tok-mode #sec-papers .briefing, body.tok-mode #sec-papers .filters, body.tok-mode #papersContent { display: none; }
-body.tok-mode .tok-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; flex-shrink: 0; border-bottom: 1px solid var(--border); position: fixed; top: var(--nav-h, 107px); left: 0; right: 0; z-index: 90; background: rgba(17,17,17,0.94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: transform 0.25s ease; }
-body.tok-mode .navbar { position: fixed; top: 0; left: 0; right: 0; transition: transform 0.25s ease; }
-body.tok-mode .tok-card { padding-top: calc(var(--tok-top, 153px) + 18px); transition: padding-top 0.25s ease; }
-body.tok-mode.tok-immersive .navbar { transform: translateY(-100%); }
-body.tok-mode.tok-immersive .tok-bar { transform: translateY(calc(-1 * var(--tok-top, 153px) - 4px)); }
-body.tok-mode.tok-immersive .tok-card { padding-top: calc(env(safe-area-inset-top, 0px) + 22px); }
-/* a thin progress line stays visible while the bars are away */
-.tok-mini-progress { display: none; }
-body.tok-mode.tok-immersive .tok-mini-progress { display: block; position: fixed; top: env(safe-area-inset-top, 0px); left: 0; height: 2px; background: var(--accent); z-index: 95; transition: width 0.2s ease; }
-body.tok-mode #tokWrap { display: flex; flex-direction: column; flex: 1; min-height: 0; position: relative; }
-#tokWrap { display: none; }
-body.tok-mode .tok { display: block; flex: 1; min-height: 0; overflow-y: auto; scroll-snap-type: y mandatory; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
-.tok::-webkit-scrollbar { display: none; }
-.tok { scrollbar-width: none; }
-
-.tok-pills { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); padding-right: 16px; }   /* the fade says the chips scroll */
-.tok-pills::-webkit-scrollbar { display: none; }
-.tok-pill { flex-shrink: 0; background: rgba(255,255,255,0.055); border: 1px solid transparent; color: var(--text-secondary); font: inherit; font-size: 12.5px; padding: 4px 11px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
-.tok-pill.active { background: var(--accent-dim); border-color: rgba(251,177,60,0.7); color: var(--accent); }
-.tok-select { -webkit-appearance: none; appearance: none; padding-right: 22px; max-width: 150px; text-overflow: ellipsis; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24'%3E%3Cpath fill='%239aa0a6' d='M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
-.tok-select option { background: #1b1b1d; color: var(--text); }
-.tok-new { color: var(--accent); }
-.tok-count { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; padding-left: 4px; }
-.tok-progress { position: absolute; left: 0; bottom: -1px; height: 2px; background: var(--accent); width: 0; transition: width 0.2s ease; }
-
-.tok-card { touch-action: pan-y; position: relative; z-index: 2; background: var(--bg); height: 100%; scroll-snap-align: start; scroll-snap-stop: always; display: flex; flex-direction: column; padding: 20px 20px 34px 20px; overflow: hidden; }
-/* a dark band at the foot of each card keeps neighbouring papers apart while swiping */
-.tok-card::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 14px; background: #000; border-top: 1px solid rgba(255,255,255,0.07); pointer-events: none; }
-.tok-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 45%; background: var(--gbg, var(--gc, var(--accent))); opacity: 0.07; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
-.tok-topics { display: flex; align-items: flex-start; gap: 6px; position: relative; }
-.tok-chips { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; min-width: 0; }   /* the chips wrap; the menu stays top right */
-/* a card's topics open that topic's list (a page with every paper in it, best first) */
-.tok-topic { position: relative; display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 11.5px; color: var(--text-secondary); background: rgba(255,255,255,0.07); border: none; padding: 3px 10px; border-radius: 999px; cursor: pointer; transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease); }
-.tok-topic::after { content: ''; position: absolute; inset: -6px -3px; }   /* a finger-sized target without a bigger chip */
-.tok-topic:hover { background: rgba(255,255,255,0.12); color: var(--text); }
-.tok-topic:active { background: rgba(255,255,255,0.16); color: var(--text); transform: scale(0.96); }
-html.no-hover .tok-topic:hover:not(:active) { background: rgba(255,255,255,0.07); color: var(--text-secondary); }
-.tok-head { font-family: var(--serif); font-optical-sizing: auto; font-size: 27px; line-height: 1.22; font-weight: 500; color: #f2f2f4; margin-top: 16px; text-wrap: pretty; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; position: relative; }
-.tok-title { font-size: 13.5px; line-height: 1.4; color: var(--text-muted); margin-top: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.tok-authors { font-size: 12.5px; color: var(--text-secondary); margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tok-summary { font-family: var(--serif); font-size: 17px; line-height: 1.55; color: #cfd0d5; margin-top: 16px; flex: 1; min-height: 0; overflow: hidden; -webkit-mask-image: linear-gradient(#000 78%, transparent); mask-image: linear-gradient(#000 78%, transparent); }
-.tok-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); margin-top: 14px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
-.tok-open { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; align-self: flex-start; padding: 9px 16px; border-radius: 999px; background: rgba(255,255,255,0.08); color: var(--text); font-size: 13.5px; font-weight: 500; border: none; font-family: inherit; flex-shrink: 0; }
-.tok-more { margin: -6px -10px -6px auto; width: 40px; height: 36px; border: none; border-radius: 10px; background: none; color: var(--text-secondary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
-.tok-more svg { width: 20px; height: 20px; fill: currentColor; }
-.tok-more[aria-expanded="true"], .tok-more:active { background: rgba(255,255,255,0.08); color: var(--text); }
-/* the card's actions, in a menu from the topic row (the text keeps the card's full width) */
-.tok-menu { position: fixed; z-index: 60; display: none; flex-direction: column; min-width: 210px; padding: 4px; background: #1d1d20; border: 1px solid rgba(255,255,255,0.14); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.55); transform-origin: 100% 0; }
-.tok-menu.open { display: flex; animation: ui-pop 0.14s ease-out; }
-.tok-menu.leaving { display: flex; pointer-events: none; animation: ui-out 0.12s ease-in forwards; }
-.tok-menu > * { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 14px; border: none; border-radius: 8px; background: none; color: var(--text); font: inherit; font-size: 15px; text-align: left; text-decoration: none; cursor: pointer; }
-.tok-menu > *:active { background: rgba(255,255,255,0.08); }
-.tok-menu i { width: 20px; font-style: normal; text-align: center; color: var(--text-secondary); }
-.tok-menu i svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; }
-.tok-menu .on-star i { color: var(--star); } .tok-menu .on-read i { color: var(--green); } .tok-menu .on-list i { color: var(--list); }
-.tok-card.has-hint { padding-bottom: 62px; }
-.tok-hint { position: absolute; left: 0; right: 0; bottom: 28px; text-align: center; font-size: 12px; color: var(--text-muted); animation: tok-bob 1.8s ease-in-out infinite; pointer-events: none; }
-@keyframes tok-bob { 0%, 100% { transform: translateY(0); opacity: 0.75; } 50% { transform: translateY(-5px); opacity: 1; } }
-.tok-card.snapback { transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
-.tok-card.is-read .tok-head, .tok-card.is-read .tok-summary { opacity: 0.6; }
-/* swipe cues sit in the space the card uncovers, so they stay put while the card moves */
-.tok-cues { display: none; }
-body.tok-mode .tok-cues { display: block; position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
-.tok-cue { position: absolute; top: 50%; transform: translateY(-50%) scale(0.92); display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; padding: 10px 15px; border-radius: 999px; opacity: 0; transition: opacity 0.1s linear, transform 0.1s ease; white-space: nowrap; }
-.tok-cue.star { left: 14px; color: var(--star); background: rgba(201,163,86,0.2); }
-.tok-cue.read { right: 14px; color: var(--green); background: rgba(129,201,149,0.2); }
-.tok-cue.armed { transform: translateY(-50%) scale(1.06); }
-.tok-empty { height: 100%; display: flex; align-items: center; justify-content: center; padding: 32px; text-align: center; color: var(--text-secondary); }
-@media (prefers-reduced-motion: reduce) { .tok-hint { animation: none; } .tok-progress, .tok-mini-progress, body.tok-mode .navbar, body.tok-mode .tok-bar, body.tok-mode .tok-card, .tok-topic { transition: none; } .tok-topic:active { transform: none; } }
+/* THE DECK: For you, one paper at a time (a phone, a phone sideways, the laptop's Deck mode) */
+#deckWrap, .deck-cues, .deck-top { display: none; }
+body.deck-mode #deckWrap { display: block; }
+body.deck-mode #papersContent, body.deck-mode #sec-papers .filters, body.deck-mode .cr-strip { display: none; }
+body.deck-phone .main-scroll, body.deck-land .main-scroll { overflow: hidden; }
+body.deck-phone #sec-papers .briefing, body.deck-land #sec-papers .briefing { display: none; }
+.deck-bar { display: flex; align-items: center; gap: 8px; }
+.deck-chips { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.deck-pills { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); padding-right: 16px; }   /* the fade says the chips scroll */
+.deck-pills::-webkit-scrollbar { display: none; }
+.deck-pill { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; background: rgba(255,255,255,0.055); border: 1px solid transparent; color: var(--text-secondary); font: inherit; font-size: 13px; padding: 0 12px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.deck-pill.active { background: var(--accent-dim); border-color: rgba(251,177,60,0.7); color: var(--accent); }
+.deck-pill .pill-count { opacity: 0.7; }
+.deck-count { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; white-space: nowrap; }
+.deck-legend { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 12px; color: var(--text-muted); }
+.deck-legend kbd, .da kbd, .ds-chip kbd { font: inherit; font-size: 11px; line-height: 1.4; padding: 0 5px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.04); color: var(--text-secondary); }
+.deck-legend kbd + kbd { margin-left: -2px; }
+.fy-mode { display: inline-flex; flex-shrink: 0; margin-left: auto; padding: 2px; border: 1px solid rgba(255,255,255,0.16); border-radius: 999px; }
+.fy-mode button { min-height: 30px; padding: 0 14px; border: none; border-radius: 999px; background: none; color: var(--text-secondary); font: inherit; font-size: 13px; cursor: pointer; }
+.fy-mode button.on { background: rgba(255,255,255,0.1); color: var(--text); }
+/* phone and sideways: the navbar keeps its tabs and search; the brand, the sign-in key and refresh give way */
+body.deck-phone .navbar, body.deck-land .navbar { position: fixed; top: 0; left: 0; right: 0; transition: transform 0.25s ease; }
+body.deck-phone .nav-portfolio-link, body.deck-phone .nav-brand-sep, body.deck-phone .nav-brand, body.deck-phone #navKey, body.deck-phone #navRefresh { display: none; }
+body.deck-phone .nav-tabs { order: 0; flex: 1 1 0; flex-basis: 0; min-width: 0; margin: 0; padding: 0; }
+body.deck-phone .deck-bar, body.deck-land .deck-bar { position: fixed; top: var(--nav-h, 56px); left: 0; right: 0; z-index: 90; padding: 8px 12px; border-bottom: 1px solid var(--border); background: rgba(17,17,17,0.94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: transform 0.25s ease; }
+body.deck-immersive .navbar { transform: translateY(-100%); }
+body.deck-immersive .deck-bar { transform: translateY(calc(-100% - var(--nav-h, 56px) - 4px)); }
+/* while the bars are away: the reading progress along the top, and a finger-sized strip there that brings them back */
+body.deck-immersive .deck-top { display: block; position: fixed; top: 0; left: 0; right: 0; height: calc(env(safe-area-inset-top, 0px) + 44px); z-index: 99; padding: 0; border: none; background: none; cursor: pointer; }
+.deck-progress { position: absolute; left: 0; top: env(safe-area-inset-top, 0px); height: 2px; width: 0; background: var(--accent); transition: width 0.2s ease; }
+body.deck-phone .deck, body.deck-land .deck { position: fixed; inset: 0; z-index: 1; overflow: hidden; }
+.deck-card { background: var(--bg); }
+body.deck-phone .deck-card, body.deck-land .deck-card { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding-top: calc(var(--deck-top, 120px) + 4px); padding-bottom: calc(var(--deck-bottom, 64px) + env(safe-area-inset-bottom, 0px) + 24px); transition: padding-top 0.25s ease; }
+body.deck-phone .deck-card::-webkit-scrollbar { display: none; }
+body.deck-immersive .deck-card { padding-top: calc(env(safe-area-inset-top, 0px) + 44px); }
+.deck-card.cur { z-index: 2; }
+.deck-card.next { z-index: 1; visibility: hidden; }
+body.deck-dragging .deck-card.next { visibility: visible; }
+.deck-card.snapback { transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
+.deck-card.leaving { z-index: 3; pointer-events: none; opacity: 0; transition: transform 0.26s ease-in, opacity 0.26s ease-in; }
+.deck-card.leaving.to-right { transform: translateX(110%) rotate(8deg); }
+.deck-card.leaving.to-left { transform: translateX(-110%) rotate(-8deg); }
+.deck-card .pd-article { padding-top: 14px; }
+.deck-card .pd-aside { position: static; }
+.pd-deck-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 20px; }
+.pd-deck-acts .pd-read, .pd-deck-acts .pd-open { margin-left: 0; min-height: 44px; }
+.pd-deck-acts .pd-read + .pd-open { background: none; color: var(--text-secondary); border: 1px solid var(--border); font-weight: 500; }
+body.deck-phone .deck-cues, body.deck-land .deck-cues { display: block; position: fixed; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
+.deck-cue { position: absolute; top: 42%; transform: translateY(-50%) scale(0.92); display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; font-size: 15px; font-weight: 600; white-space: nowrap; opacity: 0; transition: opacity 0.1s linear, transform 0.1s ease; }
+.deck-cue.yes { left: 14px; color: var(--star); background: rgba(201,163,86,0.22); }
+.deck-cue.no { right: 14px; color: #ef8a8a; background: rgba(229,115,115,0.18); }
+.deck-cue.armed { transform: translateY(-50%) scale(1.06); }
+/* the actions: always with words; under the card on a phone, a rail at its side sideways, the top strip on a laptop */
+.deck-actions { display: flex; gap: 6px; }
+.da { flex: 1 1 0; min-width: 0; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 10px; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; background: rgba(255,255,255,0.05); color: var(--text); font: inherit; font-size: 14.5px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: background 0.15s, transform 0.1s; }
+.da:active:not(:disabled) { transform: scale(0.97); }
+.da:disabled { opacity: 0.4; cursor: default; }
+.da-i { font-size: 16px; line-height: 1; }
+.da-yes { flex-grow: 1.6; background: var(--accent); border-color: transparent; color: #1a1406; font-weight: 600; }
+.da-no .da-i { color: #ef8a8a; }
+.da-undo, .da-more { flex-grow: 0.8; }
+.da kbd, .ds-chip kbd { display: none; }
+body.deck-phone .deck-actions, body.deck-land .deck-actions { position: fixed; z-index: 95; background: rgba(17,17,17,0.96); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+body.deck-phone .deck-actions { left: 0; right: 0; bottom: 0; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border); }
+body.deck-land .deck-actions { top: 0; bottom: 0; right: 0; width: 112px; flex-direction: column; justify-content: center; padding: 10px calc(10px + env(safe-area-inset-right, 0px)) 10px 10px; border-left: 1px solid var(--border); }
+body.deck-land .da { flex: none; flex-direction: column; gap: 2px; min-height: 58px; font-size: 13px; }
+body.deck-land .deck-card { padding-right: 120px; padding-bottom: 24px; }
+body.deck-land .deck-bar { right: 112px; }
+body.deck-land .deck-cue.no { right: 126px; }
+@media (max-width: 360px) { .da { gap: 4px; padding: 0 6px; font-size: 13px; } }
+/* the reason strip, for the paper just passed */
+.deck-strip { display: none; }
+.deck-strip.open { display: block; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; background: #1d1d20; box-shadow: 0 10px 30px rgba(0,0,0,0.55); }
+body.deck-phone .deck-strip.open { position: fixed; left: 8px; right: 8px; bottom: calc(var(--deck-bottom, 64px) + 8px); z-index: 96; }
+body.deck-land .deck-strip.open { position: fixed; left: 8px; right: 120px; bottom: 8px; z-index: 96; }
+.ds-head { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary); }
+.ds-what { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ds-what i { font-style: normal; color: var(--text); }
+.ds-undo { flex-shrink: 0; min-height: 44px; padding: 0 16px; border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; background: none; color: var(--accent); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.ds-why { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.ds-q { flex-basis: 100%; font-size: 12.5px; color: var(--text-muted); }
+.ds-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 1px solid rgba(255,255,255,0.14); border-radius: 999px; background: rgba(255,255,255,0.05); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+/* the laptop: a sticky strip with the chips, the actions with their keys, and the legend; the card in the page */
+body.deck-laptop #deckWrap { max-width: 1080px; margin: 0 auto; }
+body.deck-laptop .deck-head { position: sticky; top: 0; z-index: 30; display: flex; flex-direction: column; gap: 10px; padding: 12px 24px; border-bottom: 1px solid var(--border); background: rgba(17,17,17,0.94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+body.deck-laptop .deck-bar { flex-wrap: wrap; }
+body.deck-laptop .deck-actions { gap: 8px; }
+body.deck-laptop .da { flex: none; min-height: 40px; padding: 0 16px; font-size: 14px; }
+body.deck-laptop .da kbd, body.deck-laptop .ds-chip kbd { display: inline-block; }
+body.deck-laptop .deck-card.next { display: none; }
+body.deck-laptop .deck-card.leaving { display: none; }
+/* the end of the deck */
+.deck-end { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; min-height: 50vh; padding: 32px 24px; text-align: center; color: var(--text-secondary); }
+body.deck-phone .deck-end, body.deck-land .deck-end { position: absolute; inset: 0; padding-top: calc(var(--deck-top, 120px) + 16px); padding-bottom: calc(var(--deck-bottom, 64px) + 16px); }
+.deck-end h2 { font-family: var(--serif); font-size: 26px; font-weight: 500; color: var(--text); }
+.deck-end-acts { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.deck-end-acts .ui-btn { min-height: 44px; }
+/* the card's menu */
+.deck-menu { position: fixed; z-index: 120; display: none; flex-direction: column; min-width: 220px; padding: 4px; background: #1d1d20; border: 1px solid rgba(255,255,255,0.14); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.55); transform-origin: 100% 100%; }
+.deck-menu.open { display: flex; animation: ui-pop 0.14s ease-out; }
+.deck-menu.leaving { display: flex; pointer-events: none; animation: ui-out 0.12s ease-in forwards; }
+.deck-menu > * { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 14px; border: none; border-radius: 8px; background: none; color: var(--text); font: inherit; font-size: 15px; text-align: left; text-decoration: none; cursor: pointer; }
+.deck-menu > *:active { background: rgba(255,255,255,0.08); }
+.deck-menu i { width: 20px; font-style: normal; text-align: center; color: var(--text-secondary); }
+.deck-menu i svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; }
+.deck-menu .on-list i { color: var(--list); }
+/* from the bottom up: the action row, the strip, the save pill, the toast (heights measured, so none covers another) */
+body.deck-phone .save-bar { bottom: calc(var(--deck-bottom, 64px) + var(--deck-strip-h, 0px) + 10px); }
+body.deck-phone .toast { bottom: calc(var(--deck-bottom, 64px) + var(--deck-strip-h, 0px) + 12px); }
+body.deck-phone:has(.save-bar.visible) .toast { bottom: calc(var(--deck-bottom, 64px) + var(--deck-strip-h, 0px) + 60px); }
+body.deck-land .save-bar { left: 8px; bottom: calc(var(--deck-strip-h, 0px) + 10px); }
+body.deck-land .toast { left: calc(50% - 56px); bottom: calc(var(--deck-strip-h, 0px) + 12px); }
+body.deck-land:has(.save-bar.visible) .toast { bottom: calc(var(--deck-strip-h, 0px) + 60px); }
+@media (prefers-reduced-motion: reduce) { .deck-progress, body.deck-phone .navbar, body.deck-land .navbar, .deck-bar, .deck-card, .deck-card.leaving, .da { transition: none; } .da:active:not(:disabled) { transform: none; } }
 
 /* "New since your last visit" marker */
 .f-new { color: var(--accent); font-size: 11px; font-weight: 600; letter-spacing: 0.02em; }
@@ -1463,8 +1500,8 @@ body.rp-splitting, body.rp-splitting * { user-select: none !important; -webkit-u
   .anno-card { left: 12px !important; right: 12px; width: auto; }
   .cite-dd { left: 12px !important; right: 12px; width: auto; }
 }
-.keys-help .keys-reader, .keys-help.in-reader .keys-site { display: none; }
-.keys-help.in-reader .keys-reader { display: grid; }
+.keys-help .keys-reader, .keys-help .keys-deck, .keys-help.in-reader .keys-site, .keys-help.in-deck .keys-site { display: none; }
+.keys-help.in-reader .keys-reader, .keys-help.in-deck:not(.in-reader) .keys-deck { display: grid; }
 .keys-help { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; padding: 16px; }
 .keys-help.open { display: flex; }
 .keys-help-box { background: var(--bg-surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 20px 24px 22px; width: min(440px, 100%); box-shadow: 0 16px 48px rgba(0,0,0,0.6); }
@@ -1536,8 +1573,6 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 .cr-card:hover .cr-x, .cr-card:focus-within .cr-x { opacity: 1; }
 .cr-x:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 html.no-hover .cr-x { opacity: 0.7; }
-body.tok-mode .cr-strip { display: none; }
-body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
 .cr-phone { flex-basis: 100%; position: relative; display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; background: rgba(255,255,255,0.05); overflow: hidden; transition: opacity 0.2s var(--ease), transform 0.2s var(--ease); }
 .cr-phone-go { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 9px 4px 9px 12px; background: none; border: none; font: inherit; color: var(--text-secondary); text-align: left; cursor: pointer; transition: background-color var(--t-fast) var(--ease); }
 .cr-phone-go:active { background: rgba(255,255,255,0.06); }
@@ -1710,7 +1745,7 @@ body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
 .badge-probably { background: var(--yellow-bg); color: var(--yellow); }
 .badge-mildly { background: var(--gray-badge-bg); color: var(--gray-badge); }
 .badge-source { background: var(--accent-dim); color: var(--accent); font-size: 10px; }
-.badge-venue { background: #202020; color: var(--text-muted); font-size: 10px; border: 1px solid var(--border); max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; cursor: default; }
+.badge-venue { background: #202020; color: var(--text-muted); font-size: 11px; border: 1px solid var(--border); max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; cursor: default; }
 .badge-venue.truncated { cursor: pointer; }
 .badge-venue.truncated:hover { border-color: var(--accent); color: var(--text-secondary); }
 .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
@@ -1728,7 +1763,7 @@ body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
 .ig-toggle-btn { background: none; border: none; color: var(--text-muted); font-size: 13px; font-weight: 500; padding: 7px 18px; cursor: pointer; transition: background .15s, color .15s; position: relative; }
 .ig-toggle-btn.active { background: var(--accent); color: #202124; }
 .ig-toggle-btn:not(.active):hover { background: rgba(255,255,255,0.06); }
-.ig-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; font-size: 10px; font-weight: 700; line-height: 1; margin-left: 5px; }
+.ig-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; font-size: 11px; font-weight: 700; line-height: 1; margin-left: 5px; }
 .ig-toggle-btn.active .ig-badge { background: rgba(0,0,0,0.18); color: #202124; }
 .ig-toggle-btn:not(.active) .ig-badge { background: var(--accent); color: #202124; }
 .interests-scroll { padding: 24px 0; }
@@ -1901,10 +1936,10 @@ body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
 /* [12] SAVE DROPDOWN — animated entrance */
 .save-anchor { position: relative; display: inline-flex; }
 .save-anchor > .btn-icon { font-size: 16px; padding-bottom: 7px; }
-.save-dd { position: fixed; width: 210px; background: #000000ee; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); z-index: 9999; overflow: hidden; animation: dropdown-in 0.15s ease forwards; }
+.save-dd { position: fixed; width: 210px; background: #000000ee; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); z-index: 9999; overflow: hidden; display: flex; flex-direction: column; animation: dropdown-in 0.15s ease forwards; }
 .save-dd-input { width: 100%; padding: 8px 12px; background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--text); font-size: 13px; outline: none; }
 .save-dd-input::placeholder { color: var(--text-muted); }
-.save-dd-list { max-height: 180px; overflow-y: auto; }
+.save-dd-list { max-height: 180px; overflow-y: auto; min-height: 0; flex: 1 1 auto; }
 .save-dd-item { padding: 7px 12px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text-secondary); transition: background 0.1s; }
 .save-dd-item:hover { background: var(--bg-hover); }
 .save-dd-item .dd-check { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; transition: all 0.15s; }
@@ -2031,7 +2066,6 @@ body.tok-mode .tok-bar { flex-wrap: wrap; row-gap: 8px; }
   .save-bar .btn-dismiss-bar { position: static; order: 3; }
   body:has(.save-bar.visible) .toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
   body:has(.save-bar.visible) .toast:not(.show) { transform: translateX(-50%) translateY(calc(100% + 92px + env(safe-area-inset-bottom, 0px))); }   /* hidden fully off-screen when lifted */
-  body.tok-mode:has(.save-bar.visible) .tok-card { padding-bottom: 98px; }
 }
 .save-bar-btns .btn-save-csv { white-space: nowrap; }
 .btn-save-csv { padding: 5px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18); border-radius: 6px; color: var(--text); font-size: 12px; font-weight: 500; cursor: pointer; transition: background 0.15s; flex: 1; text-align: center; margin: 0 2px; }
@@ -2099,7 +2133,6 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   .p-actions .btn-icon:not(.btn-labelled) { min-width: 36px; }
   .lp-rail-item { min-height: 40px; }
   .lp-controls .tl-sort, .lp-pills .pill, .lp-filter { height: 38px; }
-  .tok-pill { min-height: 32px; }
   .anno-mark { width: 26px; height: 26px; margin-top: -13px; border-radius: 7px; }
   .anno-mark svg { width: 15px; height: 15px; }
   .ink-bar .sel-dot { width: 28px; height: 28px; margin: 0 4px; }
@@ -2123,6 +2156,53 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   .rp-hint { display: none; }   /* keyboard shortcuts mean nothing without a keyboard */
   .rp-resize { flex-basis: 24px; margin: 0 -12px; }
   .rp-resize::after { left: 11px; }
+}
+/* ===== PHASE 12: the paper page and the Interests tab on a phone (the 2026-10-11 mobile audit) =====
+   Last on purpose, after the touch rules. Below the laptop's folding labels the four icons say what they do in words,
+   in one row that scrolls sideways when it is too wide; Read comes first. The bar keeps one height, so nothing below
+   it jumps when it sticks. */
+@media (max-width: 999px) {
+  .pd-bar-title { display: none; }
+  .pd-actions { flex: 1; min-width: 0; margin-left: 0; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; padding-right: 18px; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); }
+  .pd-actions::-webkit-scrollbar { display: none; }
+  .pd-act { width: auto; min-width: 44px; height: 44px; padding: 0 10px; flex-shrink: 0; }
+  .pd-act-label { display: inline; margin-left: 6px; font-size: 13px; white-space: nowrap; }
+  .pd-actions .pd-read { order: -1; flex-shrink: 0; margin-left: 0; margin-right: 6px; min-height: 40px; }
+  .pd-actions .pd-open, .pd-nav-pos, .pd-nav-sep { flex-shrink: 0; }
+}
+.pd-act.pd-passed { color: #ef8a8a; }
+@media (max-width: 600px) {
+  /* a topic waiting for review: Approve and Dismiss under its description, which gets the whole width */
+  .interest-card { flex-wrap: wrap; }
+  .interest-card .interest-info { flex: 1 1 0; min-width: 0; }
+  .interest-card .interest-actions { flex-basis: 100%; justify-content: flex-end; }
+}
+@media (pointer: coarse) {
+  /* iPhone Safari zooms into a select under 16px too */
+  .lib-sort select, .chip-select { font-size: 16px; }
+  .deck-pill { min-height: 44px; }
+  .chip-select { min-height: 40px; }
+  /* touch targets of 44 pt, made with real room wherever a neighbour is close, so no two targets overlap */
+  .pd-back { min-width: 44px; min-height: 44px; }
+  .pd-topicline { gap: 8px; margin-bottom: 18px; }
+  .pd-topic-chip { min-height: 36px; padding: 0 12px; }
+  .pd-topic-chip::after { inset: -4px -3px; }   /* 44 tall; the 8 px gap between rows of chips holds both halves */
+  .pd-kicker .v-link { display: inline-block; padding: 12px 0; margin: -12px 0; }   /* the kicker's own row: nothing above or below it within reach */
+  .pd-facts .v-link { display: inline-flex; align-items: center; min-height: 44px; }
+  .pd-info { min-width: 44px; min-height: 44px; }
+  .pd-match-list { gap: 8px; }
+  .pd-match, .pd-strength { min-height: 44px; }
+  .pd-topics { gap: 8px; }
+  .pd-topics .badge-group-edit { min-height: 44px; padding-right: 0; }
+  .pd-topics .badge-group-edit .group-remove, .pd-topics .badge-group-edit:hover .group-remove { flex-shrink: 0; width: 44px; height: 44px; max-width: 44px; margin: -3px 0 -3px 2px; }
+  .pd-topics .group-add-btn { height: 44px; }
+  .interest-actions { gap: 8px; }
+  .btn-approve, .btn-reject { min-height: 44px; padding: 0 18px; font-size: 13px; }
+  .hide-foot button { min-height: 44px; padding: 0 4px; }
+  .pencil-mode button { width: 44px; height: 44px; }
+  .save-dd { width: 240px; }
+  .save-dd-input { font-size: 16px; min-height: 44px; }
+  .save-dd-item { min-height: 44px; }
 }
 </style>
 </head>
@@ -2184,11 +2264,15 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
     </div>
   </div>
   <section class="cr-strip" id="crStrip" aria-label="Continue reading" hidden></section>
-  <div class="tok-bar" id="tokBar"></div>
-  <div class="tok-mini-progress" id="tokMiniProgress"></div>
-  <div class="tok-wrap" id="tokWrap">
-    <div class="tok-cues"><span class="tok-cue star" id="tokCueStar">&#9733; Star</span><span class="tok-cue read" id="tokCueRead">&#10003; Mark read</span></div>
-    <div class="tok" id="tokFeed"></div>
+  <div class="deck-wrap" id="deckWrap">
+    <div class="deck-head" id="deckHead">
+      <div class="deck-bar" id="deckBar"></div>
+      <div class="deck-actions" id="deckActions" role="toolbar" aria-label="Decide on this paper"></div>
+      <div class="deck-strip" id="deckStrip" role="region" aria-label="Why you passed" aria-live="polite"></div>
+    </div>
+    <button class="deck-top" id="deckTop" onclick="deckImmersive(false)" aria-label="Show the menu and the filters"><span class="deck-progress" id="deckProgress"></span></button>
+    <div class="deck-cues" aria-hidden="true"><span class="deck-cue yes" id="deckCueYes">&#9733; Interested</span><span class="deck-cue no" id="deckCueNo">&#10005; Pass</span></div>
+    <div class="deck" id="deck"></div>
   </div>
   <div id="papersContent">
     <div class="top-papers" id="topStories"></div>
@@ -2371,6 +2455,17 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
       <dt class="owner-only"><kbd>&#8984;</kbd> <kbd>Enter</kbd></dt><dd class="owner-only">Save the note or comment you&rsquo;re writing</dd>
       <dt class="owner-only"><kbd>[[</kbd></dt><dd class="owner-only">In a note: cite one of your highlights</dd>
       <dt><kbd>Esc</kbd></dt><dd>Close a comment, clear the selection, or close the reader</dd>
+      <dt><kbd>?</kbd></dt><dd>Show this list</dd>
+    </dl>
+    <dl class="keys-deck">
+      <dt class="owner-only"><kbd>s</kbd></dt><dd class="owner-only">Interested: star it and add it to To read</dd>
+      <dt class="owner-only"><kbd>x</kbd></dt><dd class="owner-only">Pass: it leaves For you and stays in your library</dd>
+      <dt class="owner-only"><kbd>1</kbd>&ndash;<kbd>4</kbd> <kbd>r</kbd></dt><dd class="owner-only">After a pass: why (hides it, and teaches your recommendations); r to say it in your words</dd>
+      <dt class="owner-only"><kbd>u</kbd></dt><dd class="owner-only">Undo the last decision</dd>
+      <dt><kbd>o</kbd> <kbd>Enter</kbd></dt><dd>Read the paper</dd>
+      <dt><kbd>Space</kbd> <kbd>&darr;</kbd> <kbd>&uarr;</kbd></dt><dd>Scroll the paper</dd>
+      <dt><kbd>l</kbd></dt><dd>Open its page in a new tab</dd>
+      <dt><kbd>Esc</kbd></dt><dd>Close the reasons</dd>
       <dt><kbd>?</kbd></dt><dd>Show this list</dd>
     </dl>
     <dl class="keys-site">
@@ -2670,8 +2765,7 @@ function lockPrivate(state = 'required', detail) {
   // without fades whose callbacks belong to the revoked authorization.
   closeAbsPopup(); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeRelevancePopup(); closeVenueTooltip();
   _absBtn = null; _dismissTap = null; clearTimeout(_relPopupTimer); _relPopupTimer = null;
-  const tokMenu = document.getElementById('tokMenu');
-  if (tokMenu) { clearTimeout(tokMenu._leaveT); if (tokMenu._btn) tokMenu._btn.setAttribute('aria-expanded', 'false'); tokMenu._btn = null; tokMenu.remove(); }
+  deckTeardown();
   const askSelection = document.getElementById('chatAskSel'); if (askSelection) askSelection.remove();
   const readerMenu = document.getElementById('readerMenu'); if (readerMenu) { clearTimeout(readerMenu._leaveT); readerMenu.classList.remove('open', 'glide', 'leaving'); }
   const readerMore = document.getElementById('readerMore'); if (readerMore) readerMore.setAttribute('aria-expanded', 'false');
@@ -2688,8 +2782,7 @@ function lockPrivate(state = 'required', detail) {
   _libPapers = {}; _libSent = ''; _paperTextCache.clear(); _relIndex = null; _relIndexKey = null; _interestCounts = _interestCountsKey = null; _colorSlots = null; _colorKey = ''; _kbKey = null;
   clearTimeout(AddPaper.poll); clearTimeout(TopicTag.poll); clearTimeout(Pinch.timer); clearTimeout(_reader.panelT); clearTimeout(_reader.leaveT);
   Object.assign(AddPaper, { open: false, job: null, poll: 0, text: '', star: false }); Object.assign(TopicTag, { job: null, poll: 0, afterSave: new Set() });
-  if (_tokGesture) clearTimeout(_tokGesture.hold);
-  _libPanel = null; _tokGesture = null; _lastSearchQ = ''; _searchFilters = { rel: 'all', unread: false, topic: null, year: null }; Pinch.active = false; Pinch.anchor = null;
+  _libPanel = null; _lastSearchQ = ''; _searchFilters = { rel: 'all', unread: false, topic: null, year: null }; Pinch.active = false; Pinch.anchor = null;
   _collapsedGroups.clear(); _venuesOpen.clear();
   for (const task of Private.renderTasks) { try { task.cancel(); } catch (e) {} } Private.renderTasks.clear();
   for (const task of Private.pdfTasks) { try { Promise.resolve(task.destroy()).catch(() => {}); } catch (e) {} } Private.pdfTasks.clear();
@@ -2703,17 +2796,17 @@ function lockPrivate(state = 'required', detail) {
   _acId = _acPending = _acOrigin = _selPending = _citeCtx = _mentionCtx = _pendingJump = null; _chatApplied.clear();
   Object.assign(Chat, { token: '', pid: null, messages: [], history: [], draft: { quotes: [], images: [], mentions: [] }, draftText: '', loadedFor: null, streaming: '', tool: '', error: '', running: false, refreshing: false, pairCode: '', status: 'setup' });
   for (const key of Object.keys(PanelLayout)) delete PanelLayout[key]; _panelTab = 'notes'; _rnSort = 'page'; _listOrder = 'best';
-  Pencil.mode = 'read'; Ink.on = false; Ink.undo = []; _tokPapers = []; _tokTopic = ''; _tokNewOnly = false; _tokShown = 0; _fyInterests = new Set(); _fyTopics = new Set(); _fyNewOnly = false; _fyShown = FY_BATCH; _navList = null; _listKey = null; _listQuery = ''; _paperFromList = null; _crShown = null;
+  Pencil.mode = 'read'; Ink.on = false; Ink.undo = []; _fyInterests = new Set(); _fyTopics = new Set(); _fyNewOnly = false; _fyShown = FY_BATCH; _navList = null; _listKey = null; _listQuery = ''; _paperFromList = null; _crShown = null;
   _openLibGroups = new Set(['progress']); _draggedGroup = null;
   _paperViewActive = _searchActive = _listViewActive = false;
   // Keep the static papersContent structure so Retry can render into its leaves.
-  for (const id of ['interestsBadge', 'igBadgeGroups', 'igBadgeInterests', 'syncStatus', 'saveBarTitle', 'saveBarSub', 'topicsGrid', 'topicJump', 'libraryContent', 'venuesContent', 'venuesJump', 'venuesFilter', 'venuesNote', 'briefingDate', 'briefingNote', 'weekPulse', 'globalSearchResults', 'libAdd', 'lpTools', 'lpBarTitle', 'lpEyebrow', 'inkBar', 'genericTitle', 'genericSub', 'genericInput', 'genericError', 'genericBtns', 'vaultTitle', 'vaultSub', 'vaultErr', 'vaultGo', 'vaultPat', 'vaultPw', 'vaultPw2', 'lpFilter', 'laInput', 'ppLink', 'stat-all', 'stat-def', 'stat-mild', 'stat-prob', 'topStories', 'allPapersGrid', 'groupSections', 'venuesMain', 'libraryMain', 'interestsMain', 'paperDetail', 'lpBody', 'lpTitle', 'lpSub', 'lpStats', 'lpChips', 'lpRail', 'readerTitle', 'readerBody', 'readerPageNo', 'notesPane', 'chatPane', 'pdfModalBody', 'selBar', 'annoCard', 'citeDD', 'tokBar', 'tokFeed', 'tokCount', 'tokProgress', 'tokMiniProgress', 'searchResults', 'searchInput', 'crStrip', 'crPhone', 'toast', 'hideSheet']) {
+  for (const id of ['interestsBadge', 'igBadgeGroups', 'igBadgeInterests', 'syncStatus', 'saveBarTitle', 'saveBarSub', 'topicsGrid', 'topicJump', 'libraryContent', 'venuesContent', 'venuesJump', 'venuesFilter', 'venuesNote', 'briefingDate', 'briefingNote', 'weekPulse', 'globalSearchResults', 'libAdd', 'lpTools', 'lpBarTitle', 'lpEyebrow', 'inkBar', 'genericTitle', 'genericSub', 'genericInput', 'genericError', 'genericBtns', 'vaultTitle', 'vaultSub', 'vaultErr', 'vaultGo', 'vaultPat', 'vaultPw', 'vaultPw2', 'lpFilter', 'laInput', 'ppLink', 'stat-all', 'stat-def', 'stat-mild', 'stat-prob', 'topStories', 'allPapersGrid', 'groupSections', 'venuesMain', 'libraryMain', 'interestsMain', 'paperDetail', 'lpBody', 'lpTitle', 'lpSub', 'lpStats', 'lpChips', 'lpRail', 'readerTitle', 'readerBody', 'readerPageNo', 'notesPane', 'chatPane', 'pdfModalBody', 'selBar', 'annoCard', 'citeDD', 'deckBar', 'deck', 'deckActions', 'deckStrip', 'searchResults', 'searchInput', 'crStrip', 'crPhone', 'toast', 'hideSheet']) {
     const el = document.getElementById(id); if (el) { el.innerHTML = ''; el.textContent = ''; if ('value' in el) el.value = ''; }
   }
   for (const id of ['reader', 'pdfModal', 'vaultOverlay', 'genericOverlay', 'annoCard', 'selBar', 'saveBar', 'hideSheet']) { const el = document.getElementById(id); if (el) el.classList.remove('open', 'show', 'visible'); }
   for (const id of ['vaultGo', 'btnPushGH']) { const el = document.getElementById(id); if (el) el.disabled = false; }
   const pushButton = document.getElementById('btnPushGH'); if (pushButton) pushButton.textContent = 'Push';
-  for (const id of ['tokProgress', 'tokMiniProgress']) { const el = document.getElementById(id); if (el) el.style.width = ''; }
+  _papersColumns = null;
   const listFilter = document.getElementById('lpFilter'); if (listFilter) listFilter.placeholder = '';
   const genericInput = document.getElementById('genericInput'); if (genericInput) { genericInput.placeholder = ''; genericInput.onkeydown = null; }
   for (const id of ['interestsBadge', 'igBadgeGroups', 'igBadgeInterests']) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
@@ -3105,7 +3198,11 @@ function flushStateToCSV() {
    closed tab doesn't lose them: only the fields people edit are stored for papers, so papers a
    digest run added in the meantime still come through when the backup is re-applied. */
 const LOCAL_BACKUP_KEY = 'scholar_unpushed_v1';
-const EDITABLE_FIELDS = ['is_read', 'is_starred', 'user_lists', 'user_notes', 'theme_groups', 'is_hidden', 'pdf_url', 'match_strengths', 'topics_removed', 'pdf_removed', 'hide_reason'];
+const EDITABLE_FIELDS = ['is_read', 'is_starred', 'user_lists', 'user_notes', 'theme_groups', 'is_hidden', 'pdf_url', 'match_strengths', 'topics_removed', 'pdf_removed', 'hide_reason', 'is_passed'];
+/* Columns that join the papers file only with their schema, added by the worker: topics_removed and pdf_removed (2),
+   hide_reason (3), is_passed (4). Until the file has one, an edit to it is never sent: it stays pending here, backed up
+   and unacknowledged, and lands with the first save after the column arrives. */
+const SCHEMA_FIELDS = ['topics_removed', 'pdf_removed', 'hide_reason', 'is_passed'];
 let _loadedPaperFields = new Map();              // id -> editable fields as loaded, to diff against
 let _loadedInterestNames = [], _loadedGroupNames = [];
 let _loadedGroupFields = new Map();              // topic -> its row as loaded, so a save keeps what the worker wrote since
@@ -3195,6 +3292,7 @@ window.addEventListener('beforeunload', e => {
   // a note being written isn't saved yet: ask before leaving
   const noteUnsaved = typeof draftUnsaved === 'function' && draftUnsaved();
   if (!noteUnsaved && (_refreshing || !anyDirty())) return;   // a refresh keeps unsaved changes (the backup)
+  if (!noteUnsaved && heldOnly()) { writeBackup(); return; }   // passes waiting for the library update are backed up
   if (anyDirty()) writeBackup();
   e.preventDefault();
   e.returnValue = '';
@@ -3314,19 +3412,19 @@ function isOlder(a, b) { return a.latest < b.latest; }
 function applyPapers(rows, text) {
   if (anyDirty()) writeBackup();   // edits made meanwhile are re-applied by restorePapersFromBackup
   allPapers = rows; _hiddenPapers = [];
-  _papersText = text;
+  _papersText = text; _papersColumns = papersHeader(text);
   _papersFresh = freshnessOf(rows);
   restorePapersFromBackup();
   splitHidden();
   bootstrapStateFromCSV();
   updateLibraryBadge();
+  deckObserve();
 }
 /* Swapping data under someone mid-scroll or mid-read is jarring; only do it quietly at the top */
 function quietSwapOK() {
   if (_paperViewActive || _searchActive || _listViewActive) return false;
   if (document.getElementById('mainScroll').scrollTop > 40) return false;
-  const feed = document.getElementById('tokFeed');
-  return !(document.body.classList.contains('tok-mode') && feed && feed.scrollTop > 40);
+  return !(document.body.classList.contains('deck-mode') && deckBusy());
 }
 let _emptyPapersCandidate = null;
 function receivePapers(text, fromGitHub) {
@@ -3396,8 +3494,7 @@ function rerenderForMetadata() {
   }
   if (_listViewActive) { renderListPage(); return; }
   if (['all','email'].includes(currentTab)) {
-    const feed = document.getElementById('tokFeed');
-    if (document.body.classList.contains('tok-mode') && feed && feed.scrollTop > 40) return;   // don't move a phone reader
+    if (deckActive() && Deck.mounted && deckBusy()) { deckRefresh(); return; }   // never move a card being read
     applyFilters();
   } else if (currentTab === 'venues') renderVenues();
   else if (currentTab === 'library') renderLibrary();
@@ -3719,7 +3816,7 @@ function showGlobalSearch(q, fromHash) {
   document.getElementById('sec-interests').classList.remove('active');
   document.getElementById('sec-paper').classList.remove('active');
   document.getElementById('sec-search').classList.add('active');
-  document.body.classList.remove('tok-mode');
+  deckOff();
   _paperViewActive = false;
   // Deactivate tab highlight
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -3837,7 +3934,7 @@ function switchTab(tab, fromHash) {
   document.getElementById('sec-paper').classList.remove('active');
   _paperViewActive = false;
   if (paperTabs.includes(tab)) applyFilters();
-  else { document.body.classList.remove('tok-mode'); }
+  else deckOff();
   if (tab === 'library') renderLibrary();
   else if (tab === 'venues') renderVenues();
   else if (tab === 'interests') renderInterests();
@@ -3909,14 +4006,7 @@ function applyFilters() {
   const content = document.getElementById('papersContent');
   if (content && content.classList) content.classList.toggle('fy-on', forYou);
 
-  if (phoneFeedOn()) {
-    if (forYou) { const pool = forYouPool(); renderTok(forYouFeed(pool), pool); return; }
-    let feed = papers;
-    if (_tokTopic) feed = feed.filter(p => groupsOfPaper(p).includes(_tokTopic));
-    if (_tokNewOnly) feed = feed.filter(isNewSinceVisit);
-    renderTok(sortForFeed(feed.slice()), papers);
-    return;
-  }
+  if (deckOn()) { renderDeck(); return; }
   if (forYou) { renderForYou(forYouPool()); return; }
   renderPapers(papers, counted.slice());
 }
@@ -3929,7 +4019,7 @@ function applyFilters() {
 const FY_BATCH = 30;
 let _fyInterests = new Set(), _fyTopics = new Set(), _fyNewOnly = false, _fyShown = FY_BATCH;
 function forYouPool() {
-  return allPapers.filter(p => !readSet.has(paperKey(p)) && scoreParts(p).matches.length);
+  return allPapers.filter(p => !readSet.has(paperKey(p)) && !isPassed(p) && !p._goneRemote && scoreParts(p).matches.length);
 }
 function forYouRank(papers, chosen) {
   if (!chosen || !chosen.size) return byTopScore(papers.slice());
@@ -3961,7 +4051,7 @@ function forYouChips(pool, phone) {
   pool.forEach(p => scoreParts(p).matches.forEach(m => counts.set(m.name, (counts.get(m.name) || 0) + 1)));
   const names = allInterests.filter(i => i.status === 'confirmed' && (counts.get(i.interest_name) || _fyInterests.has(i.interest_name))).map(i => i.interest_name);
   const newN = pool.filter(isNewSinceVisit).length;
-  const chip = (on, label, n, call, name, dot) => `<button class="${phone ? 'tok-pill' : 'pill'}${on ? ' active' : ''}" aria-pressed="${on}" onclick="${call}"${name === undefined ? '' : ` data-n="${dataAttr(name)}"`}>${dot || ''}${esc(label)} <span class="pill-count">${n}</span></button>`;
+  const chip = (on, label, n, call, name, dot) => `<button class="${phone ? 'deck-pill' : 'pill'}${on ? ' active' : ''}" aria-pressed="${on}" onclick="${call}"${name === undefined ? '' : ` data-n="${dataAttr(name)}"`}>${dot || ''}${esc(label)} <span class="pill-count">${n}</span></button>`;
   const newChip = newN || _fyNewOnly ? chip(_fyNewOnly, 'New', newN, 'fyNew()') : '';
   const interests = (phone ? newChip : '') + chip(!_fyInterests.size, 'All', pool.length, 'fyAll()')
     + names.map(n => chip(_fyInterests.has(n), n, counts.get(n) || 0, 'fyInterest(this.dataset.n)', n)).join('') + (phone ? '' : newChip);
@@ -4016,165 +4106,12 @@ function renderForYou(pool) {
     : !pool.length ? 'Nothing unread matches a confirmed interest. Papers that match none are in Library.'
     : 'No paper here matches the chips you chose.';
   box.innerHTML = `<div class="for-you">
-    <div class="fy-chips"><div class="fy-row" role="group" aria-label="Filter by interest">${c.interests}</div>${c.topics ? `<div class="fy-row fy-topics" role="group" aria-label="Filter by topic">${c.topics}</div>` : ''}</div>
+    <div class="fy-chips"><div class="fy-row" role="group" aria-label="Filter by interest">${c.interests}${deckLayout() === 'laptop' ? fyModeHTML() : ''}</div>${c.topics ? `<div class="fy-row fy-topics" role="group" aria-label="Filter by topic">${c.topics}</div>` : ''}</div>
     ${shown.length ? `<div class="top-side fy-list">${shown.map(p => feedItemHTML(p, { topics: true, fit: fitLineHTML(p, _fyInterests) })).join('')}</div>` : `<div class="empty-state">${empty}</div>`}
     ${list.length > shown.length ? `<button class="pill fy-more" onclick="fyMore()">Show more <span class="pill-count">${list.length - shown.length}</span></button>` : ''}
   </div>`;
 }
 
-/* ===== PHONE FEED (one paper per screen) ===== */
-/* Newest first: latest digest on top, then by relevance, then by publication date */
-function sortForFeed(arr) {
-  return arr.sort((a, b) => (b.date_found || '').localeCompare(a.date_found || '')
-    || (REL_ORDER[dynamicRelevance(a)] ?? 9) - (REL_ORDER[dynamicRelevance(b)] ?? 9)
-    || pubKey(b) - pubKey(a));
-}
-const TOK_BATCH = 12;
-let _tokPapers = [], _tokShown = 0, _tokLock = false, _tokHinted = false, _tokScrollTop = 0;
-let _tokTopic = '', _tokNewOnly = false;
-function setTokTopic(v) { _tokTopic = v; applyFilters(); }
-function toggleTokNew() { _tokNewOnly = !_tokNewOnly; applyFilters(); }
-function phoneFeedOn() {
-  const on = window.matchMedia('(max-width: 700px)').matches && ['all','email'].includes(currentTab) && !_paperViewActive && !_searchActive && !_listViewActive;
-  document.body.classList.toggle('tok-mode', on);
-  if (!on) document.body.classList.remove('tok-immersive');
-  return on;
-}
-/* Measure the floating nav + filter bar so cards can pad their tops by exactly that much */
-function tokMeasureBars() {
-  if (!document.body.classList.contains('tok-mode')) return;
-  const nav = document.querySelector('.navbar').getBoundingClientRect().height;
-  const bar = document.getElementById('tokBar').getBoundingClientRect().height;
-  document.body.style.setProperty('--nav-h', nav + 'px');
-  document.body.style.setProperty('--tok-top', (nav + bar) + 'px');
-}
-/* The cards start below the bars whatever changes their height (the Continue reading strip arriving or leaving,
-   fonts loading, the phone turning, iOS's safe area): measured whenever either bar resizes, not only at the moments
-   that were remembered to call it */
-if (window.ResizeObserver) document.addEventListener('DOMContentLoaded', () => {
-  const ro = new ResizeObserver(() => tokMeasureBars());
-  ['.navbar', '#tokBar'].forEach(sel => { const el = document.querySelector(sel); if (el) ro.observe(el); });
-});
-window.addEventListener('pageshow', () => requestAnimationFrame(privateCallback(tokMeasureBars)));
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(privateCallback(() => tokMeasureBars()));
-/* Swiping forward tucks the bars away; swiping back (or reaching the first card) brings them back */
-let _tokLastTop = 0;
-function tokImmersive(on) { document.body.classList.toggle('tok-immersive', on); }
-function renderTok(papers, unfiltered) {
-  _tokPapers = papers; _tokShown = 0;
-  const feed = document.getElementById('tokFeed');
-  const pool = unfiltered || papers;
-  document.getElementById('tokBar').innerHTML = `${tokPillsHTML(pool)}
-    <span class="tok-count" id="tokCount"></span>
-    <span class="tok-progress" id="tokProgress"></span>${crPhoneHTML()}`;
-  if (document.getElementById('crPhone')) markNewcomers([document.getElementById('crPhone')]);
-  feed.innerHTML = papers.length ? '' : '<div class="tok-empty">No papers match your filters. Try another filter above.</div>';
-  if (!papers.length) { document.getElementById('tokCount').textContent = ''; return; }
-  tokAppend();
-  // Coming back from a paper: render enough cards to land where the reader left off
-  const back = _tokScrollTop; _tokScrollTop = 0;
-  feed.scrollTop = 0;
-  if (back > 0) {
-    let guard = 0;
-    while (feed.scrollHeight < back + feed.clientHeight && _tokShown < _tokPapers.length && guard++ < 200) tokAppend();
-    feed.scrollTop = back;
-  }
-  if (!feed._hooked) { feed.addEventListener('scroll', () => tokOnScroll(), { passive: true }); tokBindGestures(feed); feed._hooked = true; }
-  tokImmersive(false);
-  _tokLastTop = feed.scrollTop;
-  requestAnimationFrame(privateCallback(tokMeasureBars));
-  tokOnScroll();
-}
-/* The feed's filter pills: For you's interest chips (then its topic chips) on the home tab; the topic picker and
-   relevance pills on the email tab */
-function tokPillsHTML(pool) {
-  if (currentTab === 'all') {
-    const c = forYouChips(pool, true);
-    return `<div class="tok-chiprows"><div class="tok-pills" role="group" aria-label="Filter by interest">${c.interests}</div>${c.topics ? `<div class="tok-pills" role="group" aria-label="Filter by topic">${c.topics}</div>` : ''}</div>`;
-  }
-  const newN = pool.filter(isNewSinceVisit).length;
-  const tCounts = {};
-  pool.forEach(p => groupsOfPaper(p).forEach(g => tCounts[g] = (tCounts[g] || 0) + 1));
-  const topics = GROUP_ORDER.filter(g => tCounts[g]);
-  return `
-    <div class="tok-pills">
-      ${newN || _tokNewOnly ? `<button class="tok-pill tok-new ${_tokNewOnly?'active':''}" onclick="toggleTokNew()" aria-pressed="${_tokNewOnly}">New ${newN}</button>` : ''}
-      <select class="tok-pill tok-select ${_tokTopic?'active':''}" aria-label="Topic" onchange="setTokTopic(this.value)"><option value="">All topics</option>${topics.map(g => `<option value="${esc(g)}" ${_tokTopic===g?'selected':''}>${esc(g)} (${tCounts[g]})</option>`).join('')}</select>
-      ${[['all','All'],['definitely','Must read'],['probably','Interesting'],['mildly','Tangential']].map(([r,label]) =>
-        `<button class="tok-pill ${currentRel===r?'active':''}" onclick="toggleRel('${r}')">${label}</button>`).join('')}
-    </div>`;
-}
-/* On For you a card marked read or hidden leaves the feed where it is: no re-render, which would lose the reader's
-   place. The next card moves up into its slot and the chips' counts follow. Undo puts it back in its place in the
-   current order; a card coming back above the one on screen keeps that one on screen. */
-function tokForYou() {
-  return currentTab === 'all' && document.body.classList.contains('tok-mode') && !_paperViewActive && !_listViewActive && !_searchActive;
-}
-function tokIndex() {
-  const feed = document.getElementById('tokFeed');
-  return feed.clientHeight ? Math.round(feed.scrollTop / feed.clientHeight) : 0;
-}
-function tokRefreshPills() {
-  const rows = document.querySelector('#tokBar .tok-chiprows');
-  if (rows) rows.outerHTML = tokPillsHTML(forYouPool());
-}
-function tokRemove(k) {
-  const i = _tokPapers.findIndex(p => paperKey(p) === k);
-  if (i < 0) return;
-  const feed = document.getElementById('tokFeed'), at = tokIndex();
-  _tokPapers.splice(i, 1);
-  if (i < _tokShown) {
-    _tokShown--;
-    const card = [...feed.querySelectorAll('.tok-card')].find(c => c.dataset.key === k);
-    if (card) card.remove();
-    if (i < at) jumpScroll(feed, feed.scrollTop - feed.clientHeight);
-  }
-  if (!_tokPapers.length) feed.innerHTML = '<div class="tok-empty">Nothing left here. Try another chip above.</div>';
-  tokRefreshPills();
-  tokOnScroll();
-}
-function tokRestore(k) {
-  const p = allPapers.find(x => paperKey(x) === k);
-  if (!p || _tokPapers.includes(p)) return;
-  tokRefreshPills();
-  const order = forYouFeed(forYouPool()), j = order.indexOf(p);
-  if (j < 0) return;   // the chips chosen now leave it out
-  const ahead = new Set(order.slice(0, j)), at = _tokPapers.filter(x => ahead.has(x)).length;
-  const feed = document.getElementById('tokFeed'), now = tokIndex();
-  if (!_tokPapers.length) feed.innerHTML = '';
-  _tokPapers.splice(at, 0, p);
-  if (at < _tokShown) {
-    const cards = feed.querySelectorAll('.tok-card'), html = tokCardHTML(p, at);
-    if (cards[at]) cards[at].insertAdjacentHTML('beforebegin', html); else feed.insertAdjacentHTML('beforeend', html);
-    _tokShown++;
-    if (at < now) jumpScroll(feed, feed.scrollTop + feed.clientHeight);
-  }
-  tokOnScroll();   // a card past the rendered ones is appended in its turn
-}
-function tokAppend() {
-  const feed = document.getElementById('tokFeed');
-  const next = _tokPapers.slice(_tokShown, _tokShown + TOK_BATCH);
-  feed.insertAdjacentHTML('beforeend', next.map((p, i) => tokCardHTML(p, _tokShown + i)).join(''));
-  _tokShown += next.length;
-}
-function tokOnScroll() {
-  const feed = document.getElementById('tokFeed');
-  const i = feed.clientHeight ? Math.round(feed.scrollTop / feed.clientHeight) : 0;
-  const dy = feed.scrollTop - _tokLastTop;
-  if (Math.abs(dy) > 12) {
-    tokImmersive(dy > 0 && i > 0);
-    _tokLastTop = feed.scrollTop;
-  }
-  if (i === 0 && feed.scrollTop < 20) tokImmersive(false);
-  const mini = document.getElementById('tokMiniProgress');
-  if (mini) mini.style.width = _tokPapers.length ? `${(Math.min(i + 1, _tokPapers.length) / _tokPapers.length) * 100}%` : '0';
-  const total = _tokPapers.length;
-  const count = document.getElementById('tokCount'), bar = document.getElementById('tokProgress');
-  if (count) count.textContent = total ? `${Math.min(i + 1, total)} / ${total}` : '';
-  if (bar) bar.style.width = total ? `${(Math.min(i + 1, total) / total) * 100}%` : '0';
-  if (i > 0 && !_tokHinted) { _tokHinted = true; document.querySelectorAll('.tok-hint').forEach(h => h.remove()); document.querySelectorAll('.tok-card.has-hint').forEach(c => c.classList.remove('has-hint')); }
-  if (_tokShown < total && i >= _tokShown - 4) tokAppend();
-}
 /* The glow at the top of a card spans all of the paper's topics, left to right in order: each colour holds the
    middle of its share of the width and blends into the next (two topics meet in the centre) */
 function topicGlow(groups) {
@@ -4183,197 +4120,663 @@ function topicGlow(groups) {
   const n = cs.length;
   return `linear-gradient(to right, ${cs.map((c, i) => `${c} ${((i + 0.5) / n * 100).toFixed(1)}%`).join(', ')})`;
 }
-function tokCardHTML(p, idx) {
-  const k = paperKey(p), ka = escAttr(k), ir = readSet.has(k);
-  const groups = groupsOfPaper(p);
-  const rel = dynamicRelevance(p);
-  const body = hasText(p.summary) ? p.summary : (hasText(p.abstract) ? p.abstract : '');
-  const showTitle = hasText(p.headline) && p.headline.trim() !== (p.title||'').trim();
-  const hint = idx === 0 && !_tokHinted;
-  return `<article class="tok-card ${hint?'has-hint':''} ${ir?'is-read':''}" data-key="${ka}" style="--gc:${groups.length ? groupColor(groups[0]) : 'var(--accent)'};--gbg:${topicGlow(groups)}">
-    <div class="tok-topics"><div class="tok-chips">${groups.map(g => `<button class="tok-topic" onclick="openGroup('${escAttr(g)}')" title="All ${escAttr(g)} papers">${gdot(g)}${esc(g)}</button>`).join('')}</div><button class="tok-more" onclick="tokMenu(event, this, '${ka}')" aria-label="Actions" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div>
-    <h2 class="tok-head" onclick="openPaper('${ka}', event)">${esc(p.headline || p.title)}</h2>
-    ${showTitle ? `<div class="tok-title">${esc(p.title)}</div>` : ''}
-    ${hasText(p.authors) ? `<div class="tok-authors">${esc(p.authors)}</div>` : ''}
-    ${body ? `<p class="tok-summary" onclick="openPaper('${ka}', event)">${esc(body)}</p>` : '<div class="tok-summary"></div>'}
-    ${currentTab === 'all' ? fitLineHTML(p, _fyInterests, 'tok-fit', true) : ''}
-    <div class="tok-foot">
-      ${isNewSinceVisit(p) ? '<span class="f-new">New</span>' : ''}
-      <span class="f-rel rel-${rel}"><i></i>${relLabel(rel)}</span>
-      ${hasText(p.venue) ? `<span>${esc(rowVenueLabel(p))}</span>` : ''}
-      ${displayDate(p) ? `<span>${esc(displayDate(p))}</span>` : ''}
-    </div>
-    <button class="tok-open" onclick="${pdfSourceOf(p) ? `openReader('${ka}')` : `openPaper('${ka}', event)`}">Read full paper</button>
-    ${hint ? `<div class="tok-hint">${isOwner() ? 'Swipe up for next &middot; right to star &middot; left to mark read' : 'Swipe up for the next paper'}</div>` : ''}
-  </article>`;
+/* ===== THE DECK: For you, one paper at a time =====
+   On a phone (and a phone turned sideways) For you is a deck: the paper's whole page on a card, read by scrolling the
+   card. Right, or Interested, stars the paper and adds it to To read; left, or Pass, sets is_passed, so it leaves For
+   you on every device and stays in the library. After a pass a strip offers the hide reasons for that paper only: one
+   tap turns the pass into a reasoned hide, which teaches the Judge. A decision brings the next paper; Undo takes back
+   the last decision, value for value. On the laptop For you has a List and a Deck mode, the deck worked by keys. A
+   card is the paper page itself (paperPageHTML), never a second copy of it. */
+const TO_READ = 'To read';
+const FY_MODE_KEY = 'scholar_fy_mode';
+const DECK_PHONE = '(max-width: 700px)', DECK_LAND = '(pointer: coarse) and (hover: none) and (max-height: 500px)';
+const DECK_SWIPE_RATIO = 1 / 3;   // of the card width
+const DECK_FLING = 0.6, DECK_FLING_MIN = 60;   // a fling: px per ms over the last 100 ms, and the travel it needs
+const DECK_STRIP_MS = 8000;
+const Deck = { keys: [], key: null, last: null, strip: null, seq: 0, tally: { interested: 0, passed: 0, hidden: 0, read: 0 }, gesture: null, swallow: 0, mounted: false, scroll: null, noted: false, layout: null };
+function isPassed(p) { return !!p && p.is_passed === 'true'; }
+/* The deck holds For you's papers less the starred ones: a star is already a liked example, so a second look at it
+   teaches nothing. Being in a list alone decides nothing (three of the lists are the machine's). */
+function deckPool() { return forYouPool().filter(p => !starSet.has(paperKey(p))); }
+function deckPaper(k) { return k ? allPapers.find(x => paperKey(x) === k) || null : null; }
+function deckEligible(k) {
+  const p = deckPaper(k);
+  return !!p && !p._goneRemote && !readSet.has(k) && !starSet.has(k) && !isPassed(p) && scoreParts(p).matches.length > 0;
 }
-/* ---- sideways gestures: right stars, left marks read, hold saves to a list ---- */
-const TOK_SWIPE_RATIO = 1 / 3;   // of the card width
-const TOK_HOLD_MS = 500;
-let _tokGesture = null;
-function tokBindGestures(feed) {
-  feed.addEventListener('pointerdown', tokDown);
-  feed.addEventListener('pointermove', tokMove);
-  feed.addEventListener('pointerup', tokUp);
-  feed.addEventListener('pointercancel', tokUp);
-  // iOS starts a vertical scroll as soon as a swipe has any vertical part, then cancels the swipe halfway
-  // (the card jerks back and the feed jiggles). Once a drag is clearly sideways, the page claims it.
-  feed.addEventListener('touchmove', e => {
-    const g = _tokGesture, t = e.touches[0];
-    if (!g || !t || e.touches.length > 1) return;
-    const dx = t.clientX - g.x0, dy = t.clientY - g.y0;
-    if (!g.axis && tokIsSideways(dx, dy)) { g.axis = 'x'; clearTimeout(g.hold); }
-    if (g.axis === 'x' && e.cancelable) e.preventDefault();
-  }, { passive: false });
+function deckNextKey(after) { const i = Deck.keys.indexOf(after); return Deck.keys.slice(i + 1).find(deckEligible) || null; }
+/* phone: up to 700 px wide; land: a phone turned sideways (coarse pointer, no hover, at most 500 px tall); laptop */
+function deckLayout() { return matchMedia(DECK_PHONE).matches ? 'phone' : matchMedia(DECK_LAND).matches ? 'land' : 'laptop'; }
+function fyMode() { try { return localStorage.getItem(FY_MODE_KEY) === 'deck' ? 'deck' : 'list'; } catch (e) { return 'list'; } }
+function setFyMode(mode) {
+  try { checkedStorageSet(FY_MODE_KEY, mode === 'deck' ? 'deck' : 'list'); } catch (e) {}
+  jumpScroll(document.getElementById('mainScroll'), 0);
+  applyFilters();
 }
-function tokIsSideways(dx, dy) { return Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy) * 1.2; }   // decided before iOS starts a scroll (~10px)
-function tokDown(e) {
-  if (!isOwner()) return;   // swipes star or mark read, holding saves to a list: yours only
-  if (e.pointerType === 'mouse' && e.button !== 0) return;
-  if (e.target.closest('button, a')) return;          // rail and "Read full paper" keep their taps
-  const card = e.target.closest('.tok-card');
-  if (!card) return;
-  card.classList.remove('snapback');
-  _tokGesture = {
-    card, id: e.pointerId, x0: e.clientX, y0: e.clientY, dx: 0, axis: null,
-    hold: setTimeout(privateCallback(() => {
-      if (!_tokGesture || _tokGesture.axis) return;
-      const g = _tokGesture; _tokGesture = null;
-      tokReset(g.card);
-      // the click that ends the hold would hit the document handler that closes the picker
-      const dismiss = e => { e.stopPropagation(); e.preventDefault(); close(); };
-      const close = privateTeardown(() => document.removeEventListener('click', dismiss, true));
-      document.addEventListener('click', dismiss, { capture: true, once: true });
-      openSaveDD(g.card.querySelector('.tok-more'), g.card.dataset.key);
-      if (navigator.vibrate) navigator.vibrate(12);
-    }), TOK_HOLD_MS)
-  };
+function fyModeHTML() {
+  const m = fyMode();
+  return `<span class="fy-mode" role="group" aria-label="Show For you as">${[['list', 'List'], ['deck', 'Deck']].map(([v, l]) => `<button class="${m === v ? 'on' : ''}" aria-pressed="${m === v}" onclick="setFyMode('${v}')">${l}</button>`).join('')}</span>`;
 }
-function tokMove(e) {
-  const g = _tokGesture;
-  if (!g || e.pointerId !== g.id) return;
-  const dx = e.clientX - g.x0, dy = e.clientY - g.y0;
-  if (!g.axis) {
-    if (tokIsSideways(dx, dy)) { g.axis = 'x'; clearTimeout(g.hold); }   // same rule as the touchmove claim
-    else if (Math.abs(dx) > 10 || Math.abs(dy) > 10) { clearTimeout(g.hold); _tokGesture = null; return; }  // let it scroll
-    else return;
+/* Whether For you shows as the deck now; sets the body classes the deck's CSS keys off */
+function deckOn() {
+  const layout = deckLayout();
+  const on = currentTab === 'all' && !_paperViewActive && !_searchActive && !_listViewActive && (layout !== 'laptop' || fyMode() === 'deck');
+  if (!on) { deckOff(); return false; }
+  const b = document.body.classList;
+  b.add('deck-mode');
+  ['phone', 'land', 'laptop'].forEach(l => b.toggle('deck-' + l, layout === l));
+  Deck.layout = layout;
+  return true;
+}
+/* Leaving the deck (another tab, a paper, search, a list), or opening the reader over it: a swipe in progress, the
+   strip with its reasons, and the menu end here */
+function deckLeave() { deckAbort(); deckStripClose(); closeDeckMenu(); }
+function deckOff() {
+  document.body.classList.remove('deck-mode', 'deck-phone', 'deck-land', 'deck-laptop', 'deck-immersive', 'deck-dragging');
+  deckLeave();
+}
+/* Someone is reading or deciding: the current card is scrolled, or a decision can still be undone */
+function deckBusy() { const c = document.querySelector('#deck .deck-card.cur'); return !!Deck.last || !!(c && c.scrollTop > 40); }
+function deckActive() {
+  return currentTab === 'all' && document.body.classList.contains('deck-mode') && !_paperViewActive && !_listViewActive && !_searchActive;
+}
+/* The whole deck, drawn again: the keys from the chips, in For you's order, landing on the paper that was showing if
+   it is still undecided. Between renders the keys only shrink, so a decision never reorders what comes next. */
+function renderDeck() {
+  const pool = deckPool();
+  Deck.keys = forYouFeed(pool).map(paperKey);
+  if (!Deck.keys.includes(Deck.key)) Deck.key = Deck.keys.find(deckEligible) || null;
+  Deck.mounted = true;
+  document.getElementById('deckBar').innerHTML = deckBarHTML(pool);
+  deckActionsRender();
+  deckMountCards();
+  deckStripRender();
+  deckBind();
+  if (Deck.layout === 'land') deckImmersive(true);
+  else if (!Deck.last) deckImmersive(false);
+  requestAnimationFrame(privateCallback(deckMeasureBars));
+}
+function deckBarHTML(pool) {
+  const laptop = Deck.layout === 'laptop', c = forYouChips(pool, !laptop);
+  return `<div class="deck-chips"><div class="deck-pills" role="group" aria-label="Filter by interest">${c.interests}</div>${c.topics ? `<div class="deck-pills" role="group" aria-label="Filter by topic">${c.topics}</div>` : ''}</div>
+    <span class="deck-count" id="deckCount">${deckCountText()}</span>${laptop ? fyModeHTML() : ''}
+    ${laptop && isOwner() ? '<div class="deck-legend"><kbd>S</kbd> interested <kbd>X</kbd> pass <kbd>1</kbd>&ndash;<kbd>4</kbd> reason <kbd>R</kbd> other reason <kbd>U</kbd> undo <kbd>O</kbd> read <kbd>Space</kbd> scroll <kbd>?</kbd> all keys</div>' : ''}`;
+}
+function deckCountText() {
+  const n = Deck.keys.filter(deckEligible).length;
+  if (!n) return '';
+  return isOwner() ? `${n} to go` : `${Deck.keys.indexOf(Deck.key) + 1} / ${Deck.keys.length}`;
+}
+/* The actions under the card (a phone), at its side (sideways) or in the top strip (laptop), always with words */
+function deckActionsHTML() {
+  const has = !!Deck.key;
+  if (!isOwner()) return has && deckNextAfter() ? `<button class="da da-next" onclick="deckNext()"><span class="da-l">Next</span><span class="da-i" aria-hidden="true">&rsaquo;</span></button>` : '';
+  const off = has ? '' : ' disabled';
+  return `<button class="da da-no" onclick="deckPass()" aria-keyshortcuts="x"${off}><span class="da-i" aria-hidden="true">&#10005;</span><span class="da-l">Pass</span><kbd>X</kbd></button>`
+    + `<button class="da da-undo" onclick="deckUndo()" aria-keyshortcuts="u"${Deck.last ? '' : ' disabled'}><span class="da-i" aria-hidden="true">&#8630;</span><span class="da-l">Undo</span><kbd>U</kbd></button>`
+    + `<button class="da da-yes" onclick="deckInterested()" aria-keyshortcuts="s"${off}><span class="da-i" aria-hidden="true">&#9733;</span><span class="da-l">Interested</span><kbd>S</kbd></button>`
+    + `<button class="da da-more" onclick="deckMenu(event, this)" aria-haspopup="menu" aria-expanded="false"${off}><span class="da-i" aria-hidden="true">&#8943;</span><span class="da-l">More</span></button>`;
+}
+function deckActionsRender() { const el = document.getElementById('deckActions'); if (el) el.innerHTML = deckActionsHTML(); }
+function deckCounts() {
+  const bar = document.getElementById('deckBar');
+  if (bar) bar.innerHTML = deckBarHTML(deckPool());
+  deckProgress();
+}
+function deckProgress() {
+  const el = document.getElementById('deckProgress');
+  const t = Deck.tally, done = t.interested + t.passed + t.read, left = Deck.keys.filter(deckEligible).length;
+  if (el) el.style.width = done + left ? `${(done / (done + left)) * 100}%` : '0';
+}
+function deckCardHTML(k, role) {
+  const p = deckPaper(k);
+  if (!p) return '';
+  const page = paperPageHTML(p, { deck: true });
+  return `<article class="deck-card ${role}" data-key="${escAttr(k)}"${role === 'cur' ? '' : ' aria-hidden="true" inert'} style="--gbg:${page.glow}"><div class="pd deck-pd">${page.article}</div></article>`;
+}
+/* The current card and the next one beneath it, nothing more; or the end card */
+function deckMountCards() {
+  const deck = document.getElementById('deck');
+  const cur = Deck.key, next = cur ? deckNextKey(cur) : null;
+  deck.innerHTML = cur ? deckCardHTML(cur, 'cur') + (next ? deckCardHTML(next, 'next') : '') : deckEndHTML();
+  deck.querySelectorAll('.deck-card').forEach(c => paperPostRender(c, deckPaper(c.dataset.key)));
+  const s = Deck.scroll, card = deck.querySelector('.deck-card.cur');
+  Deck.scroll = null;
+  if (card && s && s.key === cur) card.scrollTop = s.top;
+  deckProgress();
+}
+/* Before a paper page, a list or the reader opens over the deck: where the reader was in the current card */
+function deckRememberScroll() {
+  const c = document.querySelector('#deck .deck-card.cur');
+  if (c && document.body.classList.contains('deck-mode')) Deck.scroll = { key: c.dataset.key, top: c.scrollTop };
+}
+function deckEndHTML() {
+  const pool = deckPool(), chosen = _fyInterests.size || _fyTopics.size || _fyNewOnly;
+  const t = Deck.tally, done = t.interested + t.passed + t.read, toRead = (libraryLists[TO_READ] || []).length;
+  const parts = [`${t.interested} interested`, `${t.passed} passed`, t.hidden && `${t.hidden} hidden`, t.read && `${t.read} marked read`].filter(Boolean);
+  return `<div class="deck-end" role="status"><h2>${chosen ? 'Nothing left under these chips' : 'You’re through For you'}</h2>
+    ${done ? `<p>This session: ${parts.join(', ')}.</p>` : ''}
+    <div class="deck-end-acts">${chosen && pool.length ? `<button class="ui-btn" onclick="fyAll()">Show all ${pool.length}</button>` : ''}${toRead && isOwner() ? `<button class="ui-btn" onclick="deckOpenToRead()">Open ${TO_READ} (${toRead})</button>` : ''}${Deck.last && isOwner() ? '<button class="ui-btn" onclick="deckUndo()">Undo</button>' : ''}${Deck.layout === 'laptop' ? `<button class="ui-btn" onclick="setFyMode('list')">Back to the list</button>` : ''}</div></div>`;
+}
+function deckOpenToRead() { _openLibGroups.add('list-' + TO_READ); location.hash = '#library'; }
+/* After an edit made elsewhere (a related paper starred, a topic removed, a save that brought a change): the counts,
+   and the mounted cards drawn again where they are. The keys stay; a card that is no longer undecided gives way. */
+function deckRefresh() {
+  if (!Deck.mounted) return;
+  if (!Deck.keys.length) { renderDeck(); return; }   // drawn before the data (or the interests) arrived: draw it now
+  if (Deck.key && !deckEligible(Deck.key)) {
+    const i = Deck.keys.indexOf(Deck.key);
+    Deck.keys.splice(i, 1);
+    Deck.key = Deck.keys.slice(Math.max(0, i)).find(deckEligible) || Deck.keys.find(deckEligible) || null;
+    deckMountCards();
+  } else if (Deck.key) {
+    deckRepaint(Deck.key);
+    const want = deckNextKey(Deck.key), waiting = document.querySelector('#deck .deck-card.next');
+    if ((waiting ? waiting.dataset.key : null) !== want) {
+      if (waiting) waiting.remove();
+      if (want) deckMountNext(want);
+    } else if (want) deckRepaint(want);
   }
-  g.dx = dx;
-  const progress = Math.min(Math.abs(dx) / (g.card.clientWidth * TOK_SWIPE_RATIO), 1);
-  g.card.style.transform = `translateX(${dx}px) rotate(${dx * 0.015}deg)`;
-  tokCue(dx > 0 ? 'star' : 'read', progress);
+  deckCounts();
+  deckActionsRender();
 }
-function tokUp(e) {
-  const g = _tokGesture;
-  if (!g) return;
-  clearTimeout(g.hold);
-  _tokGesture = null;
-  if (g.axis !== 'x') { tokReset(g.card); return; }
-  if (Math.abs(g.dx) >= g.card.clientWidth * TOK_SWIPE_RATIO) tokCommit(g.card, g.dx > 0 ? 'star' : 'read');
-  else tokReset(g.card);
+function deckMountNext(k) {
+  const deck = document.getElementById('deck');
+  deck.insertAdjacentHTML('beforeend', deckCardHTML(k, 'next'));
+  const c = deck.lastElementChild;
+  if (c) paperPostRender(c, deckPaper(k));
 }
-function tokCue(which, progress) {
-  const star = document.getElementById('tokCueStar'), read = document.getElementById('tokCueRead');
-  if (!star || !read) return;
-  const armed = progress >= 1;
-  star.style.opacity = which === 'star' ? progress : 0;
-  read.style.opacity = which === 'read' ? progress : 0;
-  star.classList.toggle('armed', armed && which === 'star');
-  read.classList.toggle('armed', armed && which === 'read');
-}
-function tokReset(card) {
-  card.classList.add('snapback');
-  card.style.transform = '';
-  tokCue('star', 0); tokCue('read', 0);
-  privateDelay(() => card.classList.remove('snapback'), 240);
-}
-function tokCommit(card, action) {
-  const k = card.dataset.key;
-  const apply = () => {
-    _tokLock = true;
-    if (action === 'star') {
-      toggleStar(k, null);
-      const on = starSet.has(k);
-      _tokLock = false;
-      return on ? 'Starred' : 'Unstarred';
-    }
-    toggleRead(k, null);
-    const on = readSet.has(k);
-    if (tokForYou()) { if (on) tokRemove(k); else tokRestore(k); }   // For you holds unread papers only
-    else card.classList.toggle('is-read', on);
-    _tokLock = false;
-    return on ? 'Marked read' : 'Marked unread';
-  };
-  const leaves = action === 'read' && tokForYou();
-  const msg = apply();
-  toast(msg, () => apply());
-  tokReset(card);
-  if (!leaves) tokNext();   // on For you the next card has already moved up into this one's place
-}
-function tokNext() {
-  const feed = document.getElementById('tokFeed');
-  const h = feed.clientHeight;
-  const i = Math.round(feed.scrollTop / h);
-  if (i + 1 >= _tokShown && _tokShown < _tokPapers.length) tokAppend();
-  if (i + 1 >= _tokPapers.length) return;
-  const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  feed.scrollTo({ top: (i + 1) * h, behavior: smooth ? 'smooth' : 'auto' });
+/* A mounted card drawn again from the paper as it is now, keeping where its reader was */
+function deckRepaint(k) {
+  document.querySelectorAll('#deck .deck-card').forEach(card => {
+    if (card.dataset.key !== k) return;
+    const p = deckPaper(k);
+    if (!p) return;
+    const top = card.scrollTop, page = paperPageHTML(p, { deck: true });
+    card.style.setProperty('--gbg', page.glow);
+    card.innerHTML = `<div class="pd deck-pd">${page.article}</div>`;
+    paperPostRender(card, p);
+    card.scrollTop = top;
+  });
 }
 
-/* Act on a card without re-rendering the feed, which would lose the reader's place */
-/* The card's actions: star, read, save to a list, open the paper's page */
-function tokMenu(ev, btn, k) {
+/* ---- decisions ----
+   Each decision is a record: an id, the paper, and the values it changed, before and after. Undo restores the before
+   values, and only while the paper still has the after values (a later edit, here or on another device, wins). Only
+   the last decision can be undone; an older toast's Undo does nothing. */
+function deckRecord(kind, k, before, after) { return { id: ++Deck.seq, kind, key: k, before, after, hide: null, stale: false }; }
+function deckInterested(k) {
+  requireOwner();
+  k = k || Deck.key;
+  if (!k || k !== Deck.key || !deckEligible(k)) return;   // decisions act on the card on screen
+  const list = libraryLists[TO_READ] || [];
+  const rec = deckRecord('interested', k, { starred: starSet.has(k), inToRead: list.includes(k) }, { starred: true, inToRead: true });
+  starSet.add(k);
+  if (!libraryLists[TO_READ]) libraryLists[TO_READ] = [];
+  if (!libraryLists[TO_READ].includes(k)) libraryLists[TO_READ].push(k);
+  persistStars(); persistLists(); updateLibraryBadge();
+  Deck.tally.interested++;
+  deckAdvance(rec, 'right');
+  toast(`Starred and saved to ${TO_READ}`, () => deckUndo(rec.id));
+}
+function deckPass(k) {
+  requireOwner();
+  k = k || Deck.key;
+  const p = deckPaper(k);
+  if (!p || k !== Deck.key || !deckEligible(k)) return;
+  const rec = deckRecord('pass', k, { is_passed: p.is_passed || '' }, { is_passed: 'true' });
+  flushStateToCSV();
+  p.is_passed = 'true';
+  _stateDirty = true; showSaveBar();
+  Deck.tally.passed++;
+  deckAdvance(rec, 'left');
+  deckStripOpen(rec);
+  if (!passKept() && !Deck.noted) { Deck.noted = true; toast('Passed. Passes reach your other devices once the library is updated.', null, { duration: 6000 }); }
+}
+function deckMarkRead(k) {
+  requireOwner();
+  if (!k || k !== Deck.key || !deckEligible(k)) return;
+  const rec = deckRecord('read', k, { read: false }, { read: true });
+  readSet.add(k);
+  persistRead();
+  Deck.tally.read++;
+  deckAdvance(rec, 'left');
+  toast('Marked read', () => deckUndo(rec.id));
+}
+/* hidePaper calls this for the card on screen (the menu's Hide…): a hide is a decision too */
+function deckHidden(k, before, after, title) {
+  const rec = deckRecord('hide', k, before, after);
+  Deck.tally.hidden++;
+  deckAdvance(rec, 'left');
+  toast(`Hidden "${esc(title)}"`, () => deckUndo(rec.id));
+}
+/* A reason from the strip: only for the pass the strip belongs to, never for the card now on screen */
+function deckReason(id, reason) {
+  requireOwner();
+  const rec = Deck.last, s = Deck.strip;
+  if (!rec || !s || rec.id !== id || s.id !== id || rec.kind !== 'pass' || rec.hide) return;
+  deckObserve();   // a change not seen yet counts too
+  if (rec.stale) { deckStripClose(); return; }   // the pass changed since, here or on GitHub: no reason for it any more
+  const p = everyPaper().find(x => paperKey(x) === rec.key), text = hideReasonText(reason);
+  if (!text) return;   // no hide without a reason comes out of the strip: the pass stands
+  if (!p || !isPassed(p) || isHiddenRow(p)) { deckStripClose(); return; }
+  const before = { is_hidden: p.is_hidden || '', hide_reason: p.hide_reason || '' };
+  flushStateToCSV();
+  p.is_hidden = 'true';
+  if (hideReasonsKept()) p.hide_reason = text;
+  splitHidden();
+  _stateDirty = true; showSaveBar();
+  rec.hide = { before, after: { is_hidden: 'true', hide_reason: p.hide_reason || '' } };   // the pass and its reason undo together
+  Deck.tally.hidden++;
+  deckStripClose();
+  deckRefresh();
+  toast(`Hidden: ${esc(text)}`, () => deckUndo(rec.id));
+}
+function deckOther(id) {
+  requireOwner();
+  const s = Deck.strip;
+  if (!s || s.id !== id) return;
+  deckStripHold('sheet', true);
+  askHide(s.key, { deck: id });
+}
+/* The values a record owns, as they are now, against the ones it left */
+function deckStillAsLeft(rec, p) {
+  if (p._goneRemote) return false;   // deleted on GitHub since
+  const k = rec.key, a = rec.after;
+  if (rec.kind === 'interested') return starSet.has(k) === a.starred && (rec.before.inToRead || (libraryLists[TO_READ] || []).includes(k) === a.inToRead);   // To read only if it added it
+  if (rec.kind === 'read') return readSet.has(k) === a.read;
+  if (rec.kind === 'hide') return (p.is_hidden || '') === a.is_hidden && (p.hide_reason || '') === a.hide_reason;
+  if ((p.is_passed || '') !== a.is_passed) return false;
+  return !rec.hide || ((p.is_hidden || '') === rec.hide.after.is_hidden && (p.hide_reason || '') === rec.hide.after.hide_reason);
+}
+/* An edit seen since the decision, made here or brought from GitHub, that changed a value the record owns ends its
+   Undo for good: setting the value back later does not bring the Undo back. Edits to anything else, and saves that
+   only acknowledge the decision, leave it. Called on every edit (showSaveBar) and whenever GitHub's values arrive. */
+function deckObserve() {
+  const rec = Deck.last;
+  if (!rec || rec.stale) return;
+  const p = everyPaper().find(x => paperKey(x) === rec.key);
+  if (p && deckStillAsLeft(rec, p)) return;
+  rec.stale = true;
+  // a pass that is no longer this one takes no reason: its strip goes, and an Other sheet opened from it
+  if (Deck.strip && Deck.strip.id === rec.id) {
+    const sheet = document.getElementById('hideSheet');
+    if (sheet && Number(sheet.dataset.deck || 0) === rec.id) closeHideSheet();
+    deckStripClose();
+  }
+}
+function deckUndo(id) {
+  requireOwner();
+  const rec = Deck.last;
+  if (!rec || (id !== undefined && id !== rec.id)) return;   // only the last decision
+  deckObserve();   // an edit made since and not seen yet counts too
+  const p = everyPaper().find(x => paperKey(x) === rec.key), k = rec.key;
+  Deck.last = null;
+  deckStripClose();
+  if (!p || rec.stale) {   // the row is gone, or a value it owns changed since: nothing to put back (and no row is rebuilt)
+    deckActionsRender();
+    toast(p ? 'That paper changed since, so there is nothing to undo.' : 'That paper is no longer in the library.');
+    return;
+  }
+  flushStateToCSV();
+  const unhide = h => { p.is_hidden = h.is_hidden; if (h.hide_reason || 'hide_reason' in p) p.hide_reason = h.hide_reason; };
+  if (rec.kind === 'interested') {
+    if (!rec.before.starred) starSet.delete(k);
+    if (!rec.before.inToRead && libraryLists[TO_READ]) libraryLists[TO_READ] = libraryLists[TO_READ].filter(x => x !== k);
+    Deck.tally.interested--;
+  } else if (rec.kind === 'read') {
+    if (!rec.before.read) readSet.delete(k);
+    Deck.tally.read--;
+  } else if (rec.kind === 'hide') {
+    unhide(rec.before);
+    Deck.tally.hidden--;
+  } else {
+    p.is_passed = rec.before.is_passed;
+    if (rec.hide) { unhide(rec.hide.before); Deck.tally.hidden--; }
+    Deck.tally.passed--;
+  }
+  if (rec.kind === 'hide' || rec.hide) {
+    splitHidden();
+    if (p.is_read === 'true') readSet.add(k); else readSet.delete(k);
+    if (p.is_starred === 'true') starSet.add(k); else starSet.delete(k);
+    (p.user_lists || '').split('|').filter(Boolean).forEach(name => { (libraryLists[name] = libraryLists[name] || []).includes(k) || libraryLists[name].push(k); });
+  }
+  flushStateToCSV();
+  _stateDirty = true; showSaveBar();
+  if (rec.kind === 'interested') touchListMeta();
+  if (!deckEligible(k)) {   // starred or read since (from a related paper, the menu, another device): the values are back, the card stays out
+    deckRefresh();
+    toast('Undone. The paper stays out of the deck, as it changed since.');
+    return;
+  }
+  // the card comes back as the current one; the one that was current becomes the next
+  const at = Deck.key ? Deck.keys.indexOf(Deck.key) : Deck.keys.length;
+  Deck.keys.splice(Math.max(0, at), 0, k);
+  Deck.key = k;
+  deckMountCards();
+  deckCounts();
+  deckActionsRender();
+}
+/* Signed out (a public library): Next only moves through the deck; nothing is decided */
+function deckNextAfter() { const i = Deck.keys.indexOf(Deck.key); return Deck.keys.slice(i + 1).find(deckEligible) || null; }
+function deckNext() {
+  const n = deckNextAfter();
+  if (!n) return;
+  Deck.key = n;
+  deckMountCards(); deckCounts(); deckActionsRender();
+}
+/* The decided card leaves; the one beneath it was drawn already and becomes the current one; a new one goes beneath */
+function deckAdvance(rec, dir) {
+  Deck.last = rec;
+  if (Deck.strip && Deck.strip.id !== rec.id) deckStripClose();
+  const i = Deck.keys.indexOf(rec.key);
+  if (i >= 0) Deck.keys.splice(i, 1);
+  Deck.key = Deck.keys.slice(Math.max(0, i)).find(deckEligible) || Deck.keys.find(deckEligible) || null;
+  const deck = document.getElementById('deck');
+  const out = deck.querySelector('.deck-card.cur');
+  if (out) {
+    out.classList.remove('cur', 'snapback');
+    out.style.transform = '';   // from where the finger left it to off the screen
+    out.classList.add('leaving', dir === 'right' ? 'to-right' : 'to-left');
+    out.setAttribute('aria-hidden', 'true'); out.setAttribute('inert', '');
+    if (reduceMotion()) out.remove();
+    else setTimeout(privateCallback(() => out.remove()), 280);
+  }
+  const waiting = deck.querySelector('.deck-card.next');
+  if (Deck.key && waiting && waiting.dataset.key === Deck.key) {
+    waiting.classList.remove('next'); waiting.classList.add('cur');
+    waiting.removeAttribute('aria-hidden'); waiting.removeAttribute('inert');
+    waiting.scrollTop = 0;
+  } else {
+    if (waiting) waiting.remove();
+    if (Deck.key) {
+      deck.insertAdjacentHTML('beforeend', deckCardHTML(Deck.key, 'cur'));
+      paperPostRender(deck.lastElementChild, deckPaper(Deck.key));
+    }
+  }
+  if (!Deck.key) deck.insertAdjacentHTML('beforeend', deckEndHTML());
+  const nk = Deck.key ? deckNextKey(Deck.key) : null;
+  if (nk) deckMountNext(nk);
+  deckCue(null);
+  deckActionsRender();
+  deckCounts();
+  const acts = document.getElementById('deckActions');   // keys keep working after a click on an action
+  if (acts && acts.contains(document.activeElement)) document.activeElement.blur();
+  if (Deck.layout === 'phone') deckImmersive(true);
+  if (Deck.layout === 'laptop') { const ms = document.getElementById('mainScroll'), wrap = document.getElementById('deckWrap'); if (ms && wrap && ms.scrollTop > wrap.offsetTop) jumpScroll(ms, wrap.offsetTop); }
+}
+
+/* ---- the reason strip: after a pass, for that paper only ---- */
+function deckStripOpen(rec) {
+  deckStripClose();
+  Deck.strip = { id: rec.id, key: rec.key, timer: 0, holds: new Set() };
+  deckStripRender();
+  deckStripArm();
+}
+function deckStripRender() {
+  const el = document.getElementById('deckStrip'), s = Deck.strip;
+  if (!el) return;
+  if (!s || !isOwner()) { el.classList.remove('open'); el.innerHTML = ''; return; }
+  const p = everyPaper().find(x => paperKey(x) === s.key), t = p ? (p.headline || p.title || '') : '';
+  el.dataset.rec = String(s.id);
+  el.innerHTML = `<div class="ds-head"><span class="ds-what">Passed <i>${esc(t.length > 40 ? t.slice(0, 39) + '…' : t)}</i></span><button class="ds-undo" onclick="deckUndo(${s.id})">Undo</button></div>
+    <div class="ds-why"><span class="ds-q">Why? A reason teaches your recommendations.</span>${HIDE_REASONS.map((r, i) => `<button class="ds-chip" data-reason="${dataAttr(r)}" onclick="deckReason(${s.id}, this.dataset.reason)"><kbd>${i + 1}</kbd>${esc(r)}</button>`).join('')}<button class="ds-chip" onclick="deckOther(${s.id})"><kbd>R</kbd>Other&hellip;</button></div>`;
+  el.classList.add('open');
+  deckMeasureBars();
+}
+/* The strip leaves after DECK_STRIP_MS untouched, never while a finger is on it, focus is in it or its sheet is open */
+function deckStripArm() {
+  const s = Deck.strip;
+  if (!s) return;
+  clearTimeout(s.timer);
+  if (s.holds.size) return;
+  const id = s.id;
+  s.timer = setTimeout(privateCallback(() => { const now = Deck.strip; if (now && now.id === id && !now.holds.size) deckStripClose(); }), DECK_STRIP_MS);
+}
+function deckStripHold(why, on) {
+  const s = Deck.strip;
+  if (!s) return;
+  if (on) { s.holds.add(why); clearTimeout(s.timer); }
+  else if (s.holds.delete(why)) deckStripArm();
+}
+function deckStripClose() {
+  const s = Deck.strip;
+  if (s) clearTimeout(s.timer);
+  Deck.strip = null;
+  const el = document.getElementById('deckStrip');
+  if (el) { el.classList.remove('open'); el.innerHTML = ''; delete el.dataset.rec; }
+  deckMeasureBars();
+}
+
+/* ---- chrome: the bars give way while deciding on a phone; a tap on the top line brings them back ---- */
+function deckImmersive(on) { document.body.classList.toggle('deck-immersive', !!on); requestAnimationFrame(privateCallback(deckMeasureBars)); }
+function deckMeasureBars() {
+  const b = document.body;
+  if (!b.classList.contains('deck-mode') || b.classList.contains('deck-laptop')) return;
+  const nav = document.querySelector('.navbar'), bar = document.getElementById('deckBar'), acts = document.getElementById('deckActions');
+  const navH = nav ? nav.getBoundingClientRect().height : 0, barH = bar ? bar.getBoundingClientRect().height : 0;
+  b.style.setProperty('--nav-h', navH + 'px');
+  b.style.setProperty('--deck-top', (b.classList.contains('deck-immersive') ? 0 : navH + barH) + 'px');
+  b.style.setProperty('--deck-bottom', (acts && b.classList.contains('deck-phone') ? acts.getBoundingClientRect().height : 0) + 'px');
+  const strip = document.getElementById('deckStrip');
+  b.style.setProperty('--deck-strip-h', (strip && strip.classList.contains('open') ? strip.getBoundingClientRect().height + 8 : 0) + 'px');
+}
+if (window.ResizeObserver) document.addEventListener('DOMContentLoaded', () => {
+  const ro = new ResizeObserver(() => deckMeasureBars());
+  ['.navbar', '#deckBar', '#deckActions'].forEach(sel => { const el = document.querySelector(sel); if (el) ro.observe(el); });
+});
+window.addEventListener('pageshow', () => requestAnimationFrame(privateCallback(deckMeasureBars)));
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(privateCallback(() => deckMeasureBars()));
+
+/* ---- gestures: right is Interested, left is Pass ----
+   The card scrolls up and down by itself (touch-action: pan-y). A drag is decided as sideways early, before iOS
+   starts a scroll (about 10 px), and the page then claims it; otherwise it belongs to the scroll for good. It decides
+   only on the release of the finger that started it, still mostly sideways then, past a third of the card or as a
+   fling. A second finger, a cancel, navigation or a turn of the phone ends it with nothing decided. */
+const DECK_INTERACTIVE = 'button, a, input, select, textarea, label, summary, details, [contenteditable="true"], [onclick], [role="button"], [role="menu"], .group-remove, .group-add-wrap, .pd-match-row, .feed-item, .md';
+function deckInteractive(el) { return !!(el && el.closest && el.closest(DECK_INTERACTIVE)); }
+function deckDominant(dx, dy) { return Math.abs(dx) > Math.abs(dy) * 1.2; }
+function deckIsSideways(dx, dy) { return Math.abs(dx) > 6 && deckDominant(dx, dy); }
+function deckBind() {
+  const deck = document.getElementById('deck');
+  if (!deck || deck._hooked) return;
+  deck._hooked = true;
+  deck.addEventListener('pointerdown', deckDown);
+  deck.addEventListener('pointermove', deckMove);
+  deck.addEventListener('pointerup', deckUp);
+  deck.addEventListener('pointercancel', deckCancel);
+  deck.addEventListener('touchmove', e => {
+    const g = Deck.gesture, t = e.touches[0];
+    if (!g || !t) return;
+    if (e.touches.length > 1) { deckAbort(); return; }
+    if (!g.axis && deckIsSideways(t.clientX - g.x0, t.clientY - g.y0)) g.axis = 'x';
+    if (g.axis === 'x' && e.cancelable) e.preventDefault();
+  }, { passive: false });
+  // the click that ends a drag opens nothing
+  deck.addEventListener('click', e => { if (performance.now() < Deck.swallow) { e.preventDefault(); e.stopPropagation(); Deck.swallow = 0; } }, true);
+  const strip = document.getElementById('deckStrip');
+  strip.addEventListener('pointerdown', () => deckStripHold('pointer', true));
+  strip.addEventListener('focusin', () => deckStripHold('focus', true));
+  strip.addEventListener('focusout', e => { if (!strip.contains(e.relatedTarget)) deckStripHold('focus', false); });
+}
+document.addEventListener('pointerup', () => deckStripHold('pointer', false), true);
+document.addEventListener('pointercancel', () => deckStripHold('pointer', false), true);
+['hashchange', 'resize', 'orientationchange', 'blur'].forEach(ev => window.addEventListener(ev, () => deckAbort()));
+document.addEventListener('visibilitychange', () => deckAbort());
+/* A second finger anywhere on the screen (the navbar, the action row, the strip) ends a swipe at once, before the
+   page under it sees the touch; the first finger's release then decides nothing */
+function deckSecondContact(e) {
+  const g = Deck.gesture;
+  if (g && (e.touches ? e.touches.length > 1 : e.pointerId !== g.id)) deckAbort();
+}
+document.addEventListener('pointerdown', deckSecondContact, true);
+document.addEventListener('touchstart', deckSecondContact, { capture: true, passive: true });
+function deckDown(e) {
+  if (Deck.gesture) { if (e.pointerId !== Deck.gesture.id) deckAbort(); return; }   // a second finger ends the swipe
+  Deck.swallow = 0;   // a new touch: the click a drag can end with has come or never will, so this tap's click counts
+  if (!e.isPrimary || !isOwner() || !deckActive()) return;
+  if (e.pointerType === 'mouse' && (e.button !== 0 || Deck.layout === 'laptop')) return;
+  if (deckInteractive(e.target)) return;
+  const card = e.target.closest && e.target.closest('.deck-card.cur');
+  if (!card || !Deck.key || card.dataset.key !== Deck.key) return;
+  card.classList.remove('snapback');
+  Deck.gesture = { card, key: Deck.key, id: e.pointerId, x0: e.clientX, y0: e.clientY, axis: null, track: [[e.timeStamp, e.clientX]] };
+}
+function deckMove(e) {
+  const g = Deck.gesture;
+  if (!g || e.pointerId !== g.id) return;
+  const dx = e.clientX - g.x0, dy = e.clientY - g.y0;
+  g.track.push([e.timeStamp, e.clientX]);
+  if (g.track.length > 12) g.track.shift();
+  if (!g.axis) {
+    if (deckIsSideways(dx, dy)) g.axis = 'x';
+    else if (Math.abs(dx) > 10 || Math.abs(dy) > 10) { Deck.gesture = null; return; }   // a scroll: the card's for good
+    else return;
+  }
+  g.card.style.transform = `translateX(${dx}px) rotate(${dx * 0.012}deg)`;
+  document.body.classList.add('deck-dragging');
+  deckCue(dx > 0 ? 'yes' : 'no', deckDominant(dx, dy) ? Math.min(Math.abs(dx) / (g.card.clientWidth * DECK_SWIPE_RATIO), 1) : 0);
+}
+function deckVelocity(track, e) {
+  const recent = track.filter(([t]) => e.timeStamp - t <= 100);
+  if (!recent.length) return 0;
+  const [t0, x0] = recent[0], dt = e.timeStamp - t0;
+  return dt > 0 ? (e.clientX - x0) / dt : 0;
+}
+function deckUp(e) {
+  const g = Deck.gesture;
+  if (!g || e.pointerId !== g.id) return;   // another finger's release decides nothing
+  Deck.gesture = null;
+  document.body.classList.remove('deck-dragging');
+  if (g.axis !== 'x') { deckSnap(g.card); return; }
+  Deck.swallow = performance.now() + 450;
+  const dx = e.clientX - g.x0, dy = e.clientY - g.y0, v = deckVelocity(g.track, e);
+  const far = Math.abs(dx) >= g.card.clientWidth * DECK_SWIPE_RATIO;
+  const fling = Math.abs(v) >= DECK_FLING && Math.abs(dx) >= DECK_FLING_MIN && Math.sign(v) === Math.sign(dx);
+  if (!deckDominant(dx, dy) || !(far || fling) || g.key !== Deck.key || !g.card.isConnected) { deckSnap(g.card); return; }
+  if (dx > 0) deckInterested(g.key); else deckPass(g.key);
+}
+function deckCancel(e) { const g = Deck.gesture; if (g && e.pointerId === g.id) deckAbort(); }
+function deckAbort() {
+  const g = Deck.gesture;
+  Deck.gesture = null;
+  document.body.classList.remove('deck-dragging');
+  if (g) deckSnap(g.card);
+}
+function deckSnap(card) {
+  deckCue(null);
+  if (!card) return;
+  card.classList.add('snapback');
+  card.style.transform = '';
+  setTimeout(privateCallback(() => card.classList.remove('snapback')), 240);
+}
+function deckCue(which, progress) {
+  const yes = document.getElementById('deckCueYes'), no = document.getElementById('deckCueNo');
+  if (!yes || !no) return;
+  yes.style.opacity = which === 'yes' ? progress : 0;
+  no.style.opacity = which === 'no' ? progress : 0;
+  yes.classList.toggle('armed', which === 'yes' && progress >= 1);
+  no.classList.toggle('armed', which === 'no' && progress >= 1);
+}
+function deckScroll(dir, page) {
+  const box = Deck.layout === 'laptop' ? document.getElementById('mainScroll') : document.querySelector('#deck .deck-card.cur');
+  if (box) box.scrollBy({ top: dir * (page ? box.clientHeight * 0.85 : 80), behavior: reduceMotion() ? 'auto' : 'smooth' });
+}
+function deckRead() {
+  const p = deckPaper(Deck.key);
+  if (p && (isOwner() || pdfSourceOf(p))) openReader(Deck.key);
+}
+
+/* ---- keys: the deck's own, inert anywhere else ----
+   The same exclusions as the list keys: not in a field, on a button or link, on a focused row, with a dialog, the
+   reader or a pop-up open, or with a modifier. A held key decides once. */
+const DECK_KEYS = {
+  s: { decide: true, run: () => deckInterested() }, x: { decide: true, run: () => deckPass() },
+  1: { decide: true, run: () => Deck.strip && deckReason(Deck.strip.id, HIDE_REASONS[0]) },
+  2: { decide: true, run: () => Deck.strip && deckReason(Deck.strip.id, HIDE_REASONS[1]) },
+  3: { decide: true, run: () => Deck.strip && deckReason(Deck.strip.id, HIDE_REASONS[2]) },
+  4: { decide: true, run: () => Deck.strip && deckReason(Deck.strip.id, HIDE_REASONS[3]) },
+  r: { decide: true, run: () => Deck.strip && deckOther(Deck.strip.id) },
+  u: { decide: true, run: () => deckUndo() }, z: { decide: true, run: () => deckUndo() },
+  o: { run: () => deckRead() }, Enter: { run: () => deckRead() },
+  l: { run: () => { if (Deck.key) window.open(APP_ROOT + location.search + '#paper/' + encodeURIComponent(Deck.key), '_blank', 'noopener'); } },
+  n: { run: () => { if (!isOwner()) deckNext(); } },
+  ' ': { run: e => deckScroll(e.shiftKey ? -1 : 1, true) }, PageDown: { run: () => deckScroll(1, true) }, PageUp: { run: () => deckScroll(-1, true) },
+  ArrowDown: { run: () => deckScroll(1) }, ArrowUp: { run: () => deckScroll(-1) },
+  Escape: { run: () => deckStripClose() },
+};
+document.addEventListener('keydown', e => {
+  if (!deckActive() || e.defaultPrevented || e.isComposing || e.keyCode === 229 || e.metaKey || e.ctrlKey || e.altKey) return;
+  const t = e.target;
+  if (t && (/^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t.tagName) || t.isContentEditable)) return;
+  if (t && t.hasAttribute && t.hasAttribute('onclick') && t.tabIndex >= 0) return;   // a focused row's Enter and Space are its own
+  if (document.querySelector('.auth-overlay.open, .reader.open, .hide-sheet.open, .keys-help.open, .vault-overlay.open, ' + POPOVERS)) return;
+  const act = DECK_KEYS[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+  if (!act || (e.key === 'Escape' && !Deck.strip)) return;
+  e.preventDefault();
+  if (e.repeat && act.decide) return;
+  act.run(e);
+});
+
+/* ---- the card's menu: Read, Mark read, Save to a list, Hide, the paper's own page ---- */
+function deckMenu(ev, btn) {
   ev.stopPropagation();
-  let m = document.getElementById('tokMenu');
-  if (m && m.classList.contains('open') && m.dataset.key === k) { closeTokMenu(); return; }
-  if (!m) { m = document.createElement('div'); m.id = 'tokMenu'; m.className = 'tok-menu'; m.setAttribute('role', 'menu'); m.onclick = e => e.stopPropagation(); document.body.appendChild(m); }
-  closeTokMenu();
-  const p = allPapers.find(x => paperKey(x) === k), st = starSet.has(k), rd = readSet.has(k), ka = escAttr(k);
+  const k = Deck.key;
+  let m = document.getElementById('deckMenu');
+  if (m && m.classList.contains('open') && m.dataset.key === k) { closeDeckMenu(); return; }
+  if (!k) return;
+  if (!m) { m = document.createElement('div'); m.id = 'deckMenu'; m.className = 'deck-menu'; m.setAttribute('role', 'menu'); m.onclick = e => e.stopPropagation(); document.body.appendChild(m); }
+  closeDeckMenu();
+  const p = deckPaper(k);
   m.dataset.key = k;
-  m.innerHTML = (isOwner() ? `<button role="menuitem" class="${st ? 'on-star' : ''}" onclick="tokMenuAct('star')"><i>&#9733;</i>${st ? 'Unstar' : 'Star'}</button>`
-    + `<button role="menuitem" class="${rd ? 'on-read' : ''}" onclick="tokMenuAct('read')"><i>&#10003;</i>${rd ? 'Mark unread' : 'Mark read'}</button>`
-    + `<button role="menuitem" class="${paperInAnyList(k) ? 'on-list' : ''}" onclick="tokMenuAct('list')"><i>&#9776;</i>Save to a list…</button>`
-    + `<button role="menuitem" onclick="tokMenuAct('hide')"><i>&#8856;</i>Hide…</button>` : '')
-    + (p && p.url ? `<a role="menuitem" href="${esc(p.url)}" target="_blank" rel="noopener" onclick="closeTokMenu()"><i><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></i>Open the paper's page</a>` : '');
+  m.innerHTML = (p && (isOwner() || pdfSourceOf(p)) ? `<button role="menuitem" onclick="deckMenuAct('readpdf')"><i>&#128214;</i>${pdfSourceOf(p) ? 'Read the paper here' : 'Add a PDF to read it here'}</button>` : '')
+    + (isOwner() ? `<button role="menuitem" onclick="deckMenuAct('read')"><i>&#10003;</i>Mark read</button>`
+      + `<button role="menuitem" class="${paperInAnyList(k) ? 'on-list' : ''}" onclick="deckMenuAct('list')"><i>&#9776;</i>Save to a list&hellip;</button>`
+      + `<button role="menuitem" onclick="deckMenuAct('hide')"><i>&#8856;</i>Hide&hellip;</button>` : '')
+    + (p && p.url ? `<a role="menuitem" href="${esc(p.url)}" target="_blank" rel="noopener" onclick="closeDeckMenu()"><i><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></i>Open the paper's page</a>` : '');
   const r = btn.getBoundingClientRect();
-  m.style.top = (r.bottom + 6) + 'px'; m.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
+  if (r.top > window.innerHeight / 2) { m.style.top = ''; m.style.bottom = (window.innerHeight - r.top + 6) + 'px'; }
+  else { m.style.bottom = ''; m.style.top = (r.bottom + 6) + 'px'; }
+  m.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
   m._btn = btn; btn.setAttribute('aria-expanded', 'true');
   popIn(m);
 }
-function closeTokMenu() {
-  const m = document.getElementById('tokMenu');
+function closeDeckMenu() {
+  const m = document.getElementById('deckMenu');
   if (!m) return;
   if (m._btn) m._btn.setAttribute('aria-expanded', 'false');
   fadeAway(m);
 }
-function tokMenuAct(what) {
-  const m = document.getElementById('tokMenu'), k = m.dataset.key, btn = m._btn;
-  closeTokMenu();
+function deckMenuAct(what) {
+  const m = document.getElementById('deckMenu');
+  if (!m) return;
+  const k = m.dataset.key, btn = m._btn;
+  closeDeckMenu();
+  if (k !== Deck.key) return;   // the card it was opened for has gone
+  if (what === 'readpdf') { deckRead(); return; }
   if (what === 'list') { openSaveDD(btn, k); return; }
   if (what === 'hide') { askHide(k); return; }
-  const card = btn && btn.closest('.tok-card');
-  const apply = () => {   // the same as a swipe, with the same Undo
-    _tokLock = true;
-    if (what === 'star') toggleStar(k, null);
-    else {
-      toggleRead(k, null);
-      if (tokForYou()) { if (readSet.has(k)) tokRemove(k); else tokRestore(k); }
-      else if (card) card.classList.toggle('is-read', readSet.has(k));
-    }
-    _tokLock = false;
-    return what === 'star' ? (starSet.has(k) ? 'Starred' : 'Unstarred') : (readSet.has(k) ? 'Marked read' : 'Marked unread');
-  };
-  toast(apply(), () => apply());
+  if (what === 'read') deckMarkRead(k);
 }
-document.addEventListener('scroll', () => closeTokMenu(), true);
+document.addEventListener('scroll', () => closeDeckMenu(), true);
+/* Lock or a new target: every piece of the deck's state goes, with its timers */
+function deckTeardown() {
+  if (Deck.strip) clearTimeout(Deck.strip.timer);
+  Object.assign(Deck, { keys: [], key: null, last: null, strip: null, gesture: null, swallow: 0, mounted: false, scroll: null, noted: false, layout: null, tally: { interested: 0, passed: 0, hidden: 0, read: 0 } });
+  for (const id of ['deck', 'deckBar', 'deckActions', 'deckStrip']) { const el = document.getElementById(id); if (el) { el.innerHTML = ''; el.classList.remove('open'); } }
+  const m = document.getElementById('deckMenu');
+  if (m) { clearTimeout(m._leaveT); if (m._btn) m._btn.setAttribute('aria-expanded', 'false'); m._btn = null; m.remove(); }
+  const bar = document.getElementById('deckProgress'); if (bar) bar.style.width = '';
+  document.body.classList.remove('deck-mode', 'deck-phone', 'deck-land', 'deck-laptop', 'deck-immersive', 'deck-dragging');
+  deckCue(null);
+}
 /* ===== MENUS AND PICKERS: a tap outside only closes them =====
    While one is open, a tap anywhere else closes it and does nothing more: it never also opens the paper, presses
    the button or starts the swipe underneath (as on iOS). Scrolling outside still closes it and scrolls. Short-lived
    hints (the venue tooltip) don't count. */
-const POPOVERS = '#tokMenu.open, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup, #chatHist';
+const POPOVERS = '#deckMenu.open, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup, #chatHist';
 let _dismissTap = null;
 function closePopovers() {
-  closeTokMenu(); toggleReaderMenu(false); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeAbsPopup(); closeRelevancePopup();
+  closeDeckMenu(); toggleReaderMenu(false); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeAbsPopup(); closeRelevancePopup();
   const h = document.getElementById('chatHist'); if (h) { if (h._close) h._close(); else h.remove(); }
 }
 document.addEventListener('pointerdown', e => {
@@ -4594,7 +4997,7 @@ function fitTopPapers() {
   if (lead) { lead.querySelectorAll('.lead-authors, .lead-title, .lead-summary, .lead-why').forEach(el => { el.hidden = false; }); const hl = lead.querySelector('.lead-headline'); if (hl) hl.classList.remove('clamp2'); }
   items.forEach((it, i) => { it.hidden = i >= MAX_TOP_CARDS - 1; });
   const ms = document.getElementById('mainScroll');
-  if (document.body.classList.contains('tok-mode') || !ts.offsetParent) return 1 + items.filter(it => !it.hidden).length;
+  if (document.body.classList.contains('deck-mode') || !ts.offsetParent) return 1 + items.filter(it => !it.hidden).length;
   const top = feat.getBoundingClientRect().top - ms.getBoundingClientRect().top + ms.scrollTop;
   const h = Math.floor(ms.clientHeight - top - 24);
   if (h < 300) return 1 + items.filter(it => !it.hidden).length;
@@ -4832,15 +5235,30 @@ function openSaveDD(btn, key) {
   dd.onclick = e => e.stopPropagation();
   dd.innerHTML = `<input class="save-dd-input" type="text" placeholder="Create list" data-key="${dataAttr(key)}" onclick="event.stopPropagation()">
     <div class="save-dd-list">${buildDDItems(key)}</div>`;
-  dd.style.top = (rect.bottom + 4) + 'px';
-  dd.style.left = (rect.right - 210) + 'px';
   document.body.appendChild(dd);
-  _activeSaveDD = { el: dd, key };
+  const place = () => placeSaveDD(dd, btn.isConnected ? btn.getBoundingClientRect() : rect), vv = window.visualViewport;
+  place();
+  if (vv) { vv.addEventListener('resize', place); vv.addEventListener('scroll', place); }   // a keyboard opening or closing
+  _activeSaveDD = { el: dd, key, done: () => { if (vv) { vv.removeEventListener('resize', place); vv.removeEventListener('scroll', place); } } };
   const input = dd.querySelector('.save-dd-input');
-  input.focus();
+  if (!matchMedia('(pointer: coarse)').matches) input.focus();   // touch: the lists first, the keyboard only when you tap Create list
   input.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); createListFromDD(input, key); }
   });
+}
+/* Inside what shows of the screen, above an on-screen keyboard too: below the button when it fits there or there is
+   more room below, else above it (the deck's More sits at the bottom). The lists scroll when there are more than fit. */
+function placeSaveDD(dd, rect) {
+  const vv = window.visualViewport, top = vv ? vv.offsetTop : 0, left = vv ? vv.offsetLeft : 0;
+  const h = vv ? vv.height : window.innerHeight, w = vv ? vv.width : window.innerWidth, pad = 8, gap = 4;
+  const first = top + pad, last = top + h - pad;   // what shows; a button under the keyboard counts as at its edge
+  const under = Math.max(rect.bottom + gap, first), over = Math.min(rect.top - gap, last);
+  dd.style.maxHeight = '';
+  const want = dd.offsetHeight, below = last - under, above = over - first;
+  const down = want <= below || below >= above, room = Math.max(96, down ? below : above);
+  dd.style.maxHeight = room + 'px';
+  dd.style.top = (down ? under : Math.max(first, over - Math.min(want, room))) + 'px';
+  dd.style.left = Math.max(left + pad, Math.min(rect.right - dd.offsetWidth, left + w - pad - dd.offsetWidth)) + 'px';
 }
 function buildDDItems(key) {
   const names = Object.keys(libraryLists);
@@ -4882,7 +5300,7 @@ function updateListIcon(key) {
   if (btn) { btn.style.color = inAny ? 'var(--list)' : ''; btn.classList.toggle('done', inAny); }
 }
 function closeSaveDD() {
-  if (_activeSaveDD) { _activeSaveDD.el.remove(); _activeSaveDD = null; }
+  if (_activeSaveDD) { if (_activeSaveDD.done) _activeSaveDD.done(); _activeSaveDD.el.remove(); _activeSaveDD = null; }
 }
 document.addEventListener('click', () => { closeSaveDD(); closeAbsPopup(); closeVenueTooltip(); closeRelevancePopup(); });
 document.getElementById('mainScroll').addEventListener('scroll', () => { closeSaveDD(); closeAbsPopup(); closeVenueTooltip(); closeRelevancePopup(); }, { passive: true });
@@ -4911,15 +5329,17 @@ function hidePaper(k, reason) {
   const p = allPapers.find(x => paperKey(x) === k);
   if (!p) return;
   closeSaveDD();
+  const onDeck = deckActive() && Deck.key === k, before = { is_hidden: p.is_hidden || '', hide_reason: p.hide_reason || '' };
   flushStateToCSV();
   p.is_hidden = 'true';
   if (hideReasonsKept()) p.hide_reason = reason || '';
   splitHidden();
   _stateDirty = true; showSaveBar();
+  if (onDeck) { deckHidden(k, before, { is_hidden: 'true', hide_reason: p.hide_reason || '' }, p.headline || p.title); return; }   // the card on screen: a decision
   toast(`Hidden "${esc(p.headline || p.title)}"`, () => unhidePaper(k));
-  if (tokForYou()) { tokRemove(k); return; }   // the phone feed keeps the reader's place
   refresh();
 }
+/* Library's Restore: the hide and its reason go; a pass stays (the paper stays out of For you) */
 function unhidePaper(k) {
   const p = _hiddenPapers.find(x => paperKey(x) === k);
   if (!p) return;
@@ -4931,31 +5351,50 @@ function unhidePaper(k) {
   (p.user_lists || '').split('|').filter(Boolean).forEach(name => { (libraryLists[name] = libraryLists[name] || []).includes(k) || libraryLists[name].push(k); });
   _stateDirty = true; showSaveBar();
   toast(`Restored "${esc(p.headline || p.title)}"`);
-  if (tokForYou()) { tokRestore(k); return; }
   refresh();
 }
+/* A passed paper back into For you (Library's Passed group, the paper page): only is_passed changes */
+function unpassPaper(k) {
+  requireOwner();
+  const p = everyPaper().find(x => paperKey(x) === k);
+  if (!isPassed(p)) return;
+  flushStateToCSV();
+  p.is_passed = '';
+  _stateDirty = true; showSaveBar();
+  toast(`Put back "${esc(p.headline || p.title)}" in For you`);
+  refresh();
+}
+/* The papers file's columns, as the last copy read or saved has them: a column the worker adds (hide_reason with
+   schema 3, is_passed with schema 4) counts once a fresh copy shows it */
+let _papersColumns = null;
+function papersHeader(text) {
+  text = text || ''; const end = text.search(/\r?\n/), head = end < 0 ? text : text.slice(0, end);
+  return head.replace(/^\uFEFF/, '').split(',').map(c => c.trim().replace(/^"(.*)"$/, '$1'));
+}
+function papersHas(column) { return (_papersColumns || papersHeader(_papersText)).includes(column); }
 /* hide_reason is a column from schema 3 on; until the worker adds it to the file a reason has nowhere to go, and the
    hide works as before */
-function hideReasonsKept() {
-  const text = _papersText || '', end = text.search(/\r?\n/), head = end < 0 ? text : text.slice(0, end);
-  return head.replace(/^\uFEFF/, '').split(',').some(c => c.trim().replace(/^"(.*)"$/, '$1') === 'hide_reason');
-}
+function hideReasonsKept() { return papersHas('hide_reason'); }
+/* is_passed comes with schema 4; until then a pass waits in this browser (passes that can't be saved yet) */
+function passKept() { return papersHas('is_passed'); }
 /* Hiding asks why first, in one tap. Enter or Hide saves what was typed; Escape hides without a reason; a tap outside
    or Cancel keeps the paper. Undo on the toast brings it back and clears the reason. */
 const HIDE_REASONS = ['Not my field', 'Too far from my work', 'Know it already', 'Not a research paper'];
-function askHide(k) {
+function askHide(k, opts) {
   const p = allPapers.find(x => paperKey(x) === k);
   if (!p) return;
-  closeSaveDD(); closeTokMenu();
+  const deck = opts && opts.deck ? opts.deck : 0;   // the strip's pass this sheet gives a reason for
+  closeSaveDD(); closeDeckMenu();
   let s = document.getElementById('hideSheet');
   if (!s) {
     s = document.createElement('div'); s.id = 'hideSheet'; s.className = 'hide-sheet';
     s.setAttribute('role', 'dialog'); s.setAttribute('aria-modal', 'true'); s.setAttribute('aria-labelledby', 'hideSheetTitle');
     s.onclick = e => { if (e.target === s) closeHideSheet(); };
-    s.onkeydown = e => { if (e.key === 'Escape') { e.preventDefault(); confirmHide(''); } };
+    s.onkeydown = e => { if (e.key === 'Escape') { e.preventDefault(); if (s.dataset.deck) closeHideSheet(); else confirmHide(''); } };
     document.body.appendChild(s);
   }
   s.dataset.key = k;
+  if (deck) s.dataset.deck = String(deck); else delete s.dataset.deck;
   s._from = document.activeElement;
   s.innerHTML = `<div class="hide-box">
     <h3 id="hideSheetTitle">Hide this paper</h3>
@@ -4966,7 +5405,7 @@ function askHide(k) {
       <input name="reason" class="pp-input" maxlength="200" autocomplete="off" enterkeyhint="done" placeholder="Or say why in a few words" aria-label="Why isn't it for you">
       <button class="pp-btn" type="submit">Hide</button>
     </form>
-    <div class="hide-foot"><button type="button" onclick="confirmHide('')">Hide without a reason</button><button type="button" onclick="closeHideSheet()">Cancel</button></div>
+    <div class="hide-foot">${deck ? '<button type="button" onclick="closeHideSheet()">Leave it passed</button>' : `<button type="button" onclick="confirmHide('')">Hide without a reason</button><button type="button" onclick="closeHideSheet()">Cancel</button>`}</div>
   </div>`;
   s.classList.add('open');
   const first = s.querySelector('.hide-reason');
@@ -4978,13 +5417,15 @@ function hideReasonText(text) {   // one line of at most 200 characters, no cont
 function confirmHide(reason) {
   const s = document.getElementById('hideSheet');
   if (!s || !s.classList.contains('open')) return;
-  const k = s.dataset.key;
+  const k = s.dataset.key, deck = Number(s.dataset.deck || 0), text = hideReasonText(reason);
+  if (deck) { closeHideSheet(); if (text) deckReason(deck, text); return; }   // from the strip: no reason leaves the pass
   closeHideSheet(true);
-  hidePaper(k, hideReasonText(reason));
+  hidePaper(k, text);
 }
 function closeHideSheet(hidden) {
   const s = document.getElementById('hideSheet');
   if (!s) return;
+  if (s.dataset.deck) { delete s.dataset.deck; deckStripHold('sheet', false); }
   const from = s._from;
   s.classList.remove('open'); s.innerHTML = ''; s._from = null;
   if (!hidden && from && from.isConnected && from.focus) from.focus();   // Cancel: back where the reader was
@@ -4993,8 +5434,8 @@ function closeHideSheet(hidden) {
 function refresh() {
   // A list page stays live (a paper marked read leaves it, stars show); the page underneath redraws on the way back
   if (_listViewActive) { renderListPage(); return; }
-  if (_tokLock) return;  // a phone-feed action already updated its own card
-  if (['all','email'].includes(currentTab)) applyFilters();
+  if (deckActive() && Deck.mounted) deckRefresh();   // the deck keeps its cards and the reader's place in them
+  else if (['all','email'].includes(currentTab)) applyFilters();
   else if (currentTab === 'library') renderLibrary();
   requestAnimationFrame(privateCallback(markTruncatedVenues));
 }
@@ -5229,7 +5670,7 @@ function showList(key) {
   if (entering && !returning) {
     if (!_leftPaper) {   // from a tab or search: remember its place for Back
       if (!_searchActive) _tabScroll[currentTab] = ms.scrollTop;
-      if (document.body.classList.contains('tok-mode')) _tokScrollTop = document.getElementById('tokFeed').scrollTop;
+      deckRememberScroll();
     }
     _listBackLabel = _leftPaper ? 'Back' : _searchActive ? 'Search results' : (TAB_NAMES[currentTab] || 'Back');
   }
@@ -5239,7 +5680,7 @@ function showList(key) {
   _listViewActive = true;
   ['sec-papers', 'sec-library', 'sec-venues', 'sec-interests', 'sec-search', 'sec-paper'].forEach(id => document.getElementById(id).classList.remove('active'));
   document.getElementById('sec-list').classList.add('active');
-  document.body.classList.remove('tok-mode', 'tok-immersive');
+  deckOff();
   renderListPage(changed || entering);
   if (!returning) { jumpScroll(ms, 0); requestAnimationFrame(privateCallback(() => jumpScroll(ms, 0))); }   // after the router's restore for the paper page it left
   if (!_leftPaper && (entering || changed)) pageIn(document.getElementById('sec-list'));   // (leaving a paper page, the router fades it in)
@@ -5480,7 +5921,7 @@ function kbRows() {
   if (_listViewActive) scope = document.getElementById('lpBody');
   else if (_searchActive) scope = document.getElementById('sec-search');
   else if (currentTab === 'library') scope = document.getElementById('sec-library');
-  else if (['all', 'email'].includes(currentTab) && !document.body.classList.contains('tok-mode')) scope = document.getElementById('papersContent');
+  else if (['all', 'email'].includes(currentTab) && !document.body.classList.contains('deck-mode')) scope = document.getElementById('papersContent');
   if (!scope) return [];
   return [...scope.querySelectorAll('.top-row[data-key], .feed-item[data-key], .top-lead[data-key], .lp-row[data-key]')].filter(e => e.offsetParent !== null);
 }
@@ -5505,6 +5946,7 @@ document.addEventListener('keydown', e => {
     }
     return;
   }
+  if (deckActive()) return;   // the deck has its own keys
   if (!['j', 'k', 'o', 'Enter', 'x', 's'].includes(e.key)) return;
   const rows = kbRows();
   if (!rows.length) return;
@@ -5547,6 +5989,7 @@ function toggleKeysHelp(force) {
   const el = document.getElementById('keysHelp');
   const open = typeof force === 'boolean' ? force : !el.classList.contains('open');
   el.classList.toggle('in-reader', !!document.querySelector('.reader.open'));   // the keys that work where you are
+  el.classList.toggle('in-deck', deckActive());
   el.classList.toggle('open', open);
   if (open) el.querySelector('button').focus();
 }
@@ -5737,6 +6180,8 @@ function renderLibrary() {
     else if (isOwner() && !Vault.key && vaultSupported() && Vault.meta) html += `<div class="lib-hint"><strong>Notes &amp; highlights</strong> are encrypted. <button class="lib-hint-btn" onclick="vaultReady().then(ok => ok && renderLibrary())">Unlock notes</button> to list the papers you annotated.</div>`;
     if (read.length) html += libGroupHTML('read', '&#10003;', 'Read', read);
     if (isOwner() && _hiddenPapers.length) html += libGroupHTML('hidden', '&#8856;', 'Hidden', sortPapers(_hiddenPapers.slice()));
+    const passed = isOwner() ? allPapers.filter(isPassed) : [];   // out of For you; each paper's page puts it back
+    if (passed.length) html += libGroupHTML('passed', '&#10005;', 'Passed', sortPapers(passed));
     const MON = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
     function pubDateVal(p) {
       const s = (p.publishing_date||'').trim().toLowerCase();
@@ -6377,7 +6822,7 @@ function setMatchStrength(key, name, value) {
     p.match_strengths = strengthText(rest);
   }
   _stateDirty = true; showSaveBar();
-  if (_paperViewActive) renderPaperDetail(p);
+  repaintPaper(p);
   refresh();
   const rel = dynamicRelevance(p), now = effStrengths(p)[canonicalInterest(name)] || STRENGTH_DEFAULT;
   toast(`\u201c${name}\u201d: ${STRENGTH_NAME[now].toLowerCase()} \u00b7 score ${paperScore(p).toFixed(1)}${rel !== beforeRel ? ', now ' + relLabel(rel) : ''}`, () => setMatchStrength(key, name, prev));
@@ -6488,6 +6933,7 @@ function _doToastUndo() {
 
 function showSaveBar() {
   _editGen++;
+  deckObserve();   // every edit passes here: one that changed what a deck decision set ends that decision's Undo
   document.getElementById('saveBar').classList.add('visible');
   scheduleBackup();
   if (_pushing) return;
@@ -6603,6 +7049,8 @@ function updateSyncStatus() {
   let last = null; try { last = parseInt(localStorage.getItem(LAST_SAVED_KEY)) || null; } catch (e) {}
   if (!hasPAT()) {
     el.innerHTML = `<span class="sync-dot off"></span>Changes stay in this browser until you push <button class="sync-btn" onclick="connectGitHub()">Connect GitHub</button>`;
+  } else if (heldOnly() && !_pushing) {
+    el.innerHTML = `<span class="sync-dot warn"></span>Passes wait in this browser until the library is updated`;
   } else if (_pushing || (anyDirty() && _autoPushTimer)) {
     el.innerHTML = `<span class="sync-dot busy"></span>Saving to GitHub\u2026`;
   } else if (anyDirty()) {
@@ -6639,6 +7087,16 @@ async function disconnectGitHub() { const _authEpoch = capturePrivateEpoch();
   try { sessionStorage.setItem('owner_toast', 'out'); } catch (e) { checkPrivateEpoch(_authEpoch);}
   location.reload();   // read-only from here
 }
+/* Papers with an edit the file has no column for (SCHEMA_FIELDS): kept here until the worker adds it. While they are
+   all that is left, a save is tried every HELD_RECHECK; it reads a fresh copy and writes only once it can carry them. */
+const HELD_RECHECK = 10 * 60 * 1000;
+function heldPapers() {
+  const missing = SCHEMA_FIELDS.filter(f => !papersHas(f));
+  return !!missing.length && everyPaper().some(p => { const b = _loadedPaperFields.get(p.id) || {}; return missing.some(f => (p[f] || '') !== (b[f] || '')); });
+}
+/* Rows deleted on GitHub that are kept for an edit made here that never reached it (papersSaved) */
+function goneKept() { return everyPaper().some(p => p._goneRemote); }
+function heldOnly() { return _stateDirty && !_interestsDirty && !_groupsDirty && heldPapers() && everyPaper().every(p => { const b = _loadedPaperFields.get(p.id) || {}; return EDITABLE_FIELDS.every(f => SCHEMA_FIELDS.includes(f) && !papersHas(f) || (p[f] || '') === (b[f] || '')); }); }
 function scheduleAutoPush(delay) {
   if (!isOwner()) return; requireOwner();
   clearTimeout(_autoPushTimer);
@@ -6682,6 +7140,7 @@ async function _ghMergePush(headers, filename, merge, message) { const _authEpoc
   for (let attempt = 0; ; attempt++) {
     const { sha, text } = await privateAwait(_ghGetFile(headers, filename), _authEpoch);
     requireOwner(); const out = merge(text);
+    if (out.unchanged) return out;   // GitHub already has every edit this save could carry: nothing to write
     try { await privateAwait(_ghPutFile(headers, filename, out.csv, sha, message), _authEpoch); requireOwner(); return out; }
     catch (e) { checkPrivateEpoch(_authEpoch); if (!e.conflict || attempt >= 2) throw e; }
   }
@@ -6697,19 +7156,26 @@ function mergePapers(text, canon) {
   const r = Papa.parse(text, { header: true, skipEmptyLines: true });   // line endings detected
   const fields = r.meta.fields.slice();
   flushStateToCSV();
-  const mine = new Map(everyPaper().map(p => [p.id, p])), sent = new Map();
+  const mine = new Map(everyPaper().map(p => [p.id, p])), sent = new Map(), merges = [];
+  const onGitHub = new Set(r.data.map(row => row.id));
+  const deleted = new Map([...mine].filter(([id]) => _loadedPaperFields.has(id) && !onGitHub.has(id)));   // loaded, then deleted on GitHub
   const rows = r.data.filter(row => {
     const p = row.id && mine.get(row.id);
     if (!p) return !(row.id && _loadedPaperFields.has(row.id));   // deleted here: drop; new on GitHub: keep
-    const now = paperFields(p), theirs = paperFields(row), merged = mergedPaperFields(now, _loadedPaperFields.get(row.id) || {}, theirs, canon);
-    EDITABLE_FIELDS.forEach(f => { if (merged[f] !== theirs[f]) row[f] = merged[f]; });
+    const now = paperFields(p), was = _loadedPaperFields.get(row.id) || {}, theirs = paperFields(row), merged = mergedPaperFields(now, was, theirs, canon);
+    merges.push([row, merged, theirs, now, was]);
     sent.set(row.id, { p, now });
     return true;
   });
-  // a column people edit joins the file when first used; topics_removed and pdf_removed come only with schema 2,
-  // hide_reason only with schema 3
-  EDITABLE_FIELDS.forEach(f => { if (!fields.includes(f) && !['topics_removed', 'pdf_removed', 'hide_reason'].includes(f) && rows.some(x => x[f])) fields.push(f); });
-  return { csv: toCSV(rows, { columns: fields }), rows, sent, canon };
+  // a column people edit joins the file when first used; the schema's own columns (SCHEMA_FIELDS) only once the
+  // worker has added them. A field the file has no column for is not carried: papersSaved leaves it pending.
+  EDITABLE_FIELDS.forEach(f => { if (!fields.includes(f) && !SCHEMA_FIELDS.includes(f) && merges.some(([, m]) => m[f])) fields.push(f); });
+  let changed = fields.length !== r.meta.fields.length || rows.length !== r.data.length;
+  merges.forEach(([row, merged, theirs]) => EDITABLE_FIELDS.forEach(f => { if (fields.includes(f) && merged[f] !== theirs[f]) { row[f] = merged[f]; changed = true; } }));
+  // unchanged: no edit pending in a column the file has, and nothing to write (only edits waiting for a column, if
+  // any): no PUT. An edit GitHub already agrees with is still written, so its save is acknowledged as before.
+  const pending = merges.some(([, , , now, was]) => EDITABLE_FIELDS.some(f => fields.includes(f) && (now[f] || '') !== (was[f] || '')));
+  return { csv: toCSV(rows, { columns: fields }), rows, sent, deleted, canon, columns: fields, unchanged: !changed && !pending };
 }
 /* The papers save landed: the edits it carried are done. Each paper takes its saved row, which becomes its baseline,
    and an edit made here since the merge stays pending on top of it. A field changed on GitHub but not here (a digest
@@ -6717,17 +7183,35 @@ function mergePapers(text, canon) {
 function papersSaved(out) {
   flushStateToCSV();
   const saved = new Map(out.rows.filter(x => x.id).map(x => [x.id, paperFields(x)])), sent = out.sent, base = new Map();
-  let adopted = false;
+  const unsent = EDITABLE_FIELDS.filter(f => !(out.columns || EDITABLE_FIELDS).includes(f));   // no column in the file yet
+  const deleted = out.deleted || new Map(), drop = new Set();
+  let adopted = false, conflicts = 0;
   everyPaper().forEach(p => {
-    const m = saved.get(p.id), s = sent.get(p.id);
-    if (!m) { base.set(p.id, paperFields(p)); return; }
+    const m = saved.get(p.id), s = sent.get(p.id), old = _loadedPaperFields.get(p.id) || {};
+    const keep = b => { unsent.forEach(f => { b[f] = old[f] || ''; }); return b; };   // an unsent field stays pending
+    if (!m && deleted.get(p.id) === p) {
+      // Deleted on GitHub (another device, or the worker) after it was loaded: it goes here too. An edit made to it
+      // here that never reached GitHub is not taken as saved: the row stays, out of For you and the deck, with the
+      // edit pending and in the backup, and the person is told.
+      adopted = true;
+      if (EDITABLE_FIELDS.some(f => (p[f] || '') !== (old[f] || ''))) { if (!p._goneRemote) conflicts++; p._goneRemote = true; base.set(p.id, old); }
+      else drop.add(p.id);
+      return;
+    }
+    if (!m) { base.set(p.id, keep(paperFields(p))); return; }   // from a newer load during the save: as loaded
+    if (p._goneRemote) delete p._goneRemote;   // on GitHub again
     // since the merge, or for a copy loaded while the save was out, its own pending edits (sent again, to no effect)
-    const now = paperFields(p), was = s && s.p === p ? s.now : _loadedPaperFields.get(p.id) || {}, merged = mergedPaperFields(now, was, m, out.canon);
+    const now = paperFields(p), was = s && s.p === p ? s.now : old, merged = mergedPaperFields(now, was, m, out.canon);
+    unsent.forEach(f => { merged[f] = now[f]; });
     EDITABLE_FIELDS.forEach(f => { if (merged[f] !== now[f]) { p[f] = merged[f]; adopted = true; } });
-    base.set(p.id, pendingBase(now, was, m, out.canon));
+    base.set(p.id, keep(pendingBase(now, was, m, out.canon)));
   });
   _loadedPaperFields = base;
+  if (drop.size) { allPapers = allPapers.filter(p => !drop.has(p.id)); _hiddenPapers = _hiddenPapers.filter(p => !drop.has(p.id)); }
+  if (out.columns) _papersColumns = out.columns.slice();
   if (adopted) { splitHidden(); bootstrapStateFromCSV(); refresh(); }
+  if (conflicts) toast(conflicts === 1 ? 'A paper you changed was deleted from the library on GitHub. Your change to it is kept in this browser, not saved.' : `${conflicts} papers you changed were deleted from the library on GitHub. Your changes to them are kept in this browser, not saved.`, null, { duration: 9000 });
+  deckObserve();   // GitHub's values, taken in, count as edits too
 }
 /* One paper's edits laid onto another copy of it: a field changed here (now against was) wins, any other takes theirs.
    Topics and removed topics merge as sets: the names added and removed here, applied to theirs, so a topic the worker
@@ -6736,7 +7220,7 @@ function mergedPaperFields(now, was, theirs, canon) {
   const out = {};
   EDITABLE_FIELDS.forEach(f => {
     const n = now[f] || '', w = was[f] || '', t = theirs[f] || '';
-    out[f] = n === w ? t : f === 'theme_groups' || f === 'topics_removed' ? topicsDelta(w, n, t) : f === 'match_strengths' ? strengthsDelta(w, n, t, canon) : n;
+    out[f] = n === w ? t : f === 'theme_groups' || f === 'topics_removed' ? topicsDelta(w, n, t) : f === 'user_lists' ? listsDelta(w, n, t) : f === 'match_strengths' ? strengthsDelta(w, n, t, canon) : n;
   });
   return out;
 }
@@ -6747,9 +7231,18 @@ function pendingBase(now, was, theirs, canon) {
   const out = {};
   EDITABLE_FIELDS.forEach(f => {
     const n = now[f] || '', w = was[f] || '', t = theirs[f] || '';
-    out[f] = n === w ? t : f === 'theme_groups' || f === 'topics_removed' ? topicsDelta(n, w, t) : f === 'match_strengths' ? strengthsDelta(n, w, t, canon) : w;
+    out[f] = n === w ? t : f === 'theme_groups' || f === 'topics_removed' ? topicsDelta(n, w, t) : f === 'user_lists' ? listsDelta(n, w, t) : f === 'match_strengths' ? strengthsDelta(n, w, t, canon) : w;
   });
   return out;
+}
+/* A paper's lists as a set: the lists it joined or left here (now against was), applied to theirs; every other list
+   theirs has stays (one added on another device). Names are kept exactly as written. When the result is the same set
+   as now, now's order is kept, so a save brings back no change in order alone. */
+function listsDelta(was, now, theirs) {
+  const list = v => v.split('|').filter(Boolean), before = new Set(list(was)), after = new Set(list(now));
+  const out = list(theirs).filter(n => after.has(n) || !before.has(n));
+  list(now).forEach(n => { if (!before.has(n) && !out.includes(n)) out.push(n); });
+  return out.length === after.size && out.every(n => after.has(n)) ? now : out.join('|');
 }
 function topicsDelta(was, now, theirs) {
   const list = s => s.split('|').map(g => g.trim()).filter(Boolean);
@@ -6890,11 +7383,12 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
     requireOwner(); updateInterestsBadge();
     if (_interestsDirty || _groupsDirty) renderInterests();
     if (_editGen === gen && !_pushAgain) {
-      _stateDirty = false; _interestsDirty = false; _groupsDirty = false;
-      clearBackup();
+      const held = heldPapers() || goneKept();   // edits to a column the file doesn't have yet, or to a row deleted there: still pending, still backed up
+      _stateDirty = held; _interestsDirty = false; _groupsDirty = false;
+      if (held) { writeBackup(); scheduleAutoPush(HELD_RECHECK); } else clearBackup();
       hideSaveBar();
       privateSet(LAST_SAVED_KEY, String(Date.now()));
-      if (!auto) toast('Saved to GitHub ✓');
+      if (!auto) toast(heldPapers() ? 'Saved to GitHub. Passes wait for the library update.' : held ? 'Saved to GitHub, except changes to a paper deleted there.' : 'Saved to GitHub ✓');
     } else {
       scheduleAutoPush();
     }
@@ -7148,7 +7642,7 @@ function readerDark() { try { return localStorage.getItem(READER_DARK_KEY) === '
    The reader is the one place notes are written; the paper page's note buttons come here. */
 function openReader(key, notes) {
   requireTarget(); if (!_ownerDecisionDone) return;
-  if (document.body.classList.contains('tok-mode')) _tokScrollTop = document.getElementById('tokFeed').scrollTop;
+  deckRememberScroll();
   _reader.under = location.hash.slice(1);   // Back returns to this view, which stays rendered underneath
   _reader.pendingNotes = notes ? { key, action: notes } : null;
   location.hash = '#read/' + encodeURIComponent(key) + (notes ? '/notes' : '');
@@ -7188,6 +7682,7 @@ async function showReader(id) { const _authEpoch = capturePrivateEpoch();
   requireTarget(); if (!_ownerDecisionDone) return;
   const p = findPaper(id);
   if (!p) { location.hash = '#all'; return; }
+  deckLeave();   // the reader covers the deck: its strip and pending reasons end, as with any other way out
   noteRecentRead(p.id);
   const el = document.getElementById('reader');
   if (_reader.paper !== p) { _rnFilter = { colors: new Set(), comments: false, notes: false, q: '' }; endDraft('discard'); endInk(); }
@@ -7631,12 +8126,7 @@ let _crShown = null;   // the papers the row and strip showed last, so a newcome
 /* Wherever Continue reading shows, draw it again (a paper closed, removed, or read on another device) */
 function refreshContinueReading() {
   if (currentTab === 'all' && !_paperViewActive && !_listViewActive && !_searchActive) {
-    if (document.body.classList.contains('tok-mode')) {
-      const old = document.getElementById('crPhone'), html = crPhoneHTML(), bar = document.getElementById('tokBar');
-      if (old) old.outerHTML = html; else if (html && bar) bar.insertAdjacentHTML('beforeend', html);
-      const now = document.getElementById('crPhone'); if (now) markNewcomers([now]);
-      tokMeasureBars();
-    } else { renderContinueReading(); fitTopPapers(); }
+    if (!document.body.classList.contains('deck-mode')) { renderContinueReading(); fitTopPapers(); }   // the deck shows the paper alone
   }
   if (currentTab === 'library' && !_paperViewActive && !_listViewActive && !_searchActive) renderLibrary();
 }
@@ -8067,6 +8557,7 @@ async function ghNoteWrite(name, env, sha) { const _authEpoch = capturePrivateEp
 }
 /* Private candidates are checked before replacing a saved copy. Unknown fields remain compatible. */
 function privateEventCurrent() {
+  if (isPrivate() && !Private.authorized) return false;   // not signed in yet (the sign-in is still being checked) or locked already: an event does nothing, and locks nothing (as privateCallback)
   try { capturePrivateEpoch(); return true; } catch (e) { if (!e.privateAuth && !e.target) throw e; return false; }
 }
 function vaultGeneration() { return isPrivate() ? Vault.generation : null; }
@@ -8491,7 +8982,7 @@ async function resetLocalVault(newMeta) { const _authEpoch = capturePrivateEpoch
   hideSelBar();
   if (_reader.paper) { redrawAnnoLayers(); setRnState('ready'); }
   if (currentTab === 'library') renderLibrary();
-  if (_paperViewActive) { const p = allPapers.find(x => location.hash === '#paper/' + encodeURIComponent(x.id)); if (p) renderPaperDetail(p); }
+  repaintShownPapers();
   toast(newMeta ? 'Your notes were given a new password on another device. Unlock them with it.' : 'Your notes were reset. Set a password to start again.', null, { duration: 6000 });
 }
 async function loadPrivateIndex(key, generation) {
@@ -8531,7 +9022,7 @@ async function afterUnlock(candidateKey) { const _authEpoch = capturePrivateEpoc
   refreshContinueReading();
   scheduleNotesPush(500);   // anything left unpushed from an earlier session
   if (currentTab === 'library') renderLibrary();
-  if (_paperViewActive) { const p = allPapers.find(x => location.hash === '#paper/' + encodeURIComponent(x.id)); if (p) renderPaperDetail(p); }
+  repaintShownPapers();
   setTimeout(privateCallback(() => reconcileNotesIndex().catch(privateCallback(() => {}))), 3000);   // after the page has what it needs
 }
 async function lockNotes() { const _authEpoch = capturePrivateEpoch(); requireOwner();
@@ -8540,10 +9031,19 @@ async function lockNotes() { const _authEpoch = capturePrivateEpoch(); requireOw
   await privateAwait(finishNotesEdit(), _authEpoch); requireOwner(); checkVaultGeneration(generation);
   endDraft('discard');
   invalidateVaultWork(); Vault.key = null; Vault.index = null; Vault.cache.clear(); _rn = null; _acPending = null;
-  await privateAwait(notesDB('keys', 'readwrite', st => st.delete('k')), _authEpoch); requireOwner();
+  // Off the screen first, everywhere (the reader, paper pages, deck cards, the hidden ones too): forgetting the
+  // remembered key below can take a while or fail, and the notes must be gone either way.
   hideSelBar();
   if (_reader.paper) { renderReaderPanel(); redrawAnnoLayers(); }
   if (currentTab === 'library') renderLibrary();
+  repaintShownPapers();
+  try { await privateAwait(notesDB('keys', 'readwrite', st => st.delete('k')), _authEpoch); }
+  catch (e) {
+    checkPrivateEpoch(_authEpoch); requireOwner();
+    toastError('Notes locked on this page, but this browser could not forget their key: they may open again without the password next time. Reset notes to remove it.');
+    return;
+  }
+  requireOwner();
   toast('Notes locked');
 }
 function hlLabel(c) { if (c === 'yellow') c = 'orange'; const cs = (Vault.index && Vault.index.colors) || {}; return cs[c] || (c === 'orange' && cs.yellow) || HL_DEFAULT_LABELS[c]; }
@@ -8618,7 +9118,7 @@ async function revalidatePaperNotes(id, seen) { const _authEpoch = capturePrivat
   if (_rn && _rn === cur && (_rnEditing || _acId || _acPending)) return;   // never swap under someone typing; the next save merges instead
   Vault.cache.set(id, obj); noteSeen(id + '.json', rec.env);
   if (_rn && _rn === cur) { _rn = obj; redrawAnnoLayers(); renderReaderPanel(); }
-  if (_paperViewActive && location.hash === '#paper/' + encodeURIComponent(id)) { const p = allPapers.find(x => x.id === id); if (p) renderPaperDetail(p); }
+  repaintPaper(allPapers.find(x => x.id === id));
 }
 /* What the index says about a paper: counts of highlights, comments and notes (chats and citation anchors don't count) */
 function indexCounts(obj) {
@@ -11084,7 +11584,9 @@ async function renderNotesMarkdown(el, text, notesObj) { const _authEpoch = capt
   const wire = () => el.querySelectorAll('.cite-chip[data-anno]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); citeClick(b.dataset.anno, notesObj); }));
   // readable right away (citations as pills), formatted once the Markdown libraries arrive; stays like this offline
   el.innerHTML = pillsHTML(String(text), notesObj, false); wire();
+  const generation = vaultGeneration();
   try { await privateAwait(loadMdLibs(), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch); return; }
+  if (generation !== vaultGeneration()) return;   // the notes were locked or reset meanwhile: nothing goes back in
   const slots = [];
   const slot = html => `@@SLOT${slots.push(html) - 1}@@`;
   let src = text
@@ -11169,7 +11671,7 @@ let _paperViewActive = false;
 /* Previous/next on the paper page follow the list the paper was opened from */
 let _navList = null;   // { keys: [...], label }
 function captureNavList(fromEl) {
-  const scope = fromEl && fromEl.closest && fromEl.closest('.paper-list, #papersContent, .pd-rel-grid, .tok, #lpBody');
+  const scope = fromEl && fromEl.closest && fromEl.closest('.paper-list, #papersContent, .pd-rel-grid, #lpBody');
   if (!scope) return;
   const keys = [...new Set([...scope.querySelectorAll('[data-key]')].map(e => e.dataset.key))];
   let label;
@@ -11201,8 +11703,8 @@ function showPaperDetail(id) {
   // Save the list's scroll position, but not when stepping from one paper to the next; opened from a list page,
   // Back returns to that page at the same place
   if (!_paperViewActive) { _savedScrollTop = document.getElementById('mainScroll').scrollTop; _paperFromList = _listViewActive ? _listKey : null; }
+  deckRememberScroll();
   _paperViewActive = true;
-  if (document.body.classList.contains('tok-mode')) _tokScrollTop = document.getElementById('tokFeed').scrollTop;
   leaveListView();
 
   // Hide all other sections
@@ -11212,7 +11714,7 @@ function showPaperDetail(id) {
   document.getElementById('sec-interests').classList.remove('active');
   document.getElementById('sec-search').classList.remove('active');
   document.getElementById('sec-paper').classList.add('active');
-  document.body.classList.remove('tok-mode');
+  deckOff();
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   jumpScroll(document.getElementById('mainScroll'), 0);   // straight to the top (the page's smooth scrolling would glide there from the list's place)
 
@@ -11222,20 +11724,23 @@ function showPaperDetail(id) {
 /* A view that replaces another arrives with one short fade, already at its place (no scroll animation) */
 function pageIn(el) { if (el && !reduceMotion()) replay(el, 'page-in'); }
 
-function renderPaperDetail(p) {
+/* The paper's page as HTML: { bar, article, glow }. Nothing here touches the document, so the same page is the paper
+   view and a card in the deck. opts.deck: a card, without the sticky bar (the deck's own actions take its place) or
+   the "Next in" card, and with a Read row under the heading. paperPostRender does what needs the page in place. */
+function paperPageHTML(p, opts) {
+  opts = opts || {};
   const k = paperKey(p), ka = escAttr(k);
   const ir = readSet.has(k), isStar = starSet.has(k), inAny = paperInAnyList(k);
   const vn = Vault.key && Vault.cache.get(p.id);
   const ix = Vault.index && Vault.index.papers[p.id];
   const hasNotes = !!(vn && (vn.entries || []).length);
-  if (Vault.key && !Vault.cache.has(p.id) && ix) paperNotes(p.id).then(privateCallback(() => { if (_paperViewActive && location.hash === '#paper/' + encodeURIComponent(p.id)) renderPaperDetail(p); }));
   const rel = dynamicRelevance(p);
   const v = venueOf(p);
   const why = parseWhy(p);
   const again = `renderPaperDetail(allPapers.find(pp=>paperKey(pp)==='${ka}'))`;
   const showBack = history.length > 1;
   // previous / next within the list this paper was opened from
-  const nav = _navList && _navList.keys.includes(k) ? _navList : null;
+  const nav = !opts.deck && _navList && _navList.keys.includes(k) ? _navList : null;
   const ni = nav ? nav.keys.indexOf(k) : -1;
   const prevK = ni > 0 ? nav.keys[ni - 1] : null, nextK = nav && ni < nav.keys.length - 1 ? nav.keys[ni + 1] : null;
   const nextP = nextK ? allPapers.find(pp => paperKey(pp) === nextK) : null;
@@ -11261,6 +11766,7 @@ function renderPaperDetail(p) {
       <button class="pd-act ${ir?'on-read':''}" onclick="toggleRead('${ka}',this);${again}" title="${ir?'Mark unread':'Mark as read'}" aria-label="${ir?'Mark unread':'Mark as read'}">&#10003;<span class="pd-act-label"><span>${ir?'Read':'Mark read'}</span></span></button>
       <span class="save-anchor"><button class="pd-act ${inAny?'on-list':''}" onclick="event.stopPropagation();openSaveDD(this,'${ka}')" title="Add to list" aria-label="Add to list">&#9776;<span class="pd-act-label"><span>${inAny?'In a list':'Save'}</span></span></button></span>
       <button class="pd-act" onclick="${isHiddenRow(p) ? 'unhidePaper' : 'hidePaper'}('${ka}');${again}" title="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper (restore it from Library)'}" aria-label="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper'}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${isHiddenRow(p) ? '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg><span class="pd-act-label"><span>${isHiddenRow(p) ? 'Restore' : 'Hide'}</span></span></button>
+      ${isOwner() && isPassed(p) ? `<button class="pd-act pd-passed" onclick="unpassPaper('${ka}');${again}" title="You passed on it in For you. Put it back there" aria-label="Passed. Put it back in For you">&#10005;<span class="pd-act-label"><span>Passed &middot; Put back</span></span></button>` : ''}
       ${isOwner() || pdfSourceOf(p) ? `<button class="pd-read" onclick="openReader('${ka}')" title="${pdfSourceOf(p) ? 'Read the PDF here' : 'Add a PDF to read it here'}"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>${readLabelHTML(p)}</button>` : ''}
       ${p.url ? `<a class="pd-open" href="${esc(p.url)}" target="_blank" rel="noopener" title="Open the paper's page" aria-label="Open paper"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}
     </div>
@@ -11280,6 +11786,7 @@ function renderPaperDetail(p) {
     ${dek}
     ${hasText(p.authors) ? `<div class="pd-authors">${esc(p.authors)}</div>` : ''}
     ${parseWhy(p) ? `<div class="pd-why"><span class="pd-why-label">Why it's here</span>${whyHTML(p)}</div>` : ''}
+    ${opts.deck && (isOwner() || pdfSourceOf(p) || p.url) ? `<div class="pd-deck-acts">${isOwner() || pdfSourceOf(p) ? `<button class="pd-read" onclick="openReader('${ka}')" title="${pdfSourceOf(p) ? 'Read the PDF here' : 'Add a PDF to read it here'}"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>${readLabelHTML(p)}</button>` : ''}${p.url ? `<a class="pd-open" href="${esc(p.url)}" target="_blank" rel="noopener" title="Open the paper's page" aria-label="Open paper"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}</div>` : ''}
   </header>`;
 
   // Reading column
@@ -11334,21 +11841,52 @@ function renderPaperDetail(p) {
   }).join('');
   if (topicLinks) related += `<div class="pd-rel-more"><span>More in</span>${topicLinks}</div>`;
 
-  document.getElementById('paperDetail').innerHTML = `<div class="pd" style="--gbg:${glowGroups.length ? topicGlow(glowGroups) : 'transparent'}">${bar}
-    <article class="pd-article">
+  return { bar: opts.deck ? '' : bar, glow: glowGroups.length ? topicGlow(glowGroups) : 'transparent', article: `<article class="pd-article" data-pid="${escAttr(p.id)}">
       ${head}
       <div class="pd-body"><div class="pd-main">${main}</div>${aside}</div>
-      ${nextCard}
+      ${opts.deck ? '' : nextCard}
       ${related ? `<section class="pd-related"><h2>Related papers</h2>${related}</section>` : ''}
-    </article>
+    </article>` };
+}
+function renderPaperDetail(p) {
+  const page = paperPageHTML(p), box = document.getElementById('paperDetail');
+  box.innerHTML = `<div class="pd" style="--gbg:${page.glow}">${page.bar}
+    ${page.article}
   </div>`;
-
-  if (hasNotes) document.querySelectorAll('[data-pdnote]').forEach(el => { const e = vn.entries.find(x => x.id === el.dataset.pdnote); if (e) renderNotesMarkdown(el, e.text, vn); });
+  paperPostRender(box, p);
   if (!renderPaperDetail._scrollHooked) {
     document.getElementById('mainScroll').addEventListener('scroll', () => updatePaperBar(), { passive: true });
     renderPaperDetail._scrollHooked = true;
   }
   updatePaperBar();
+}
+/* What a drawn paper page needs once it is in the document, for the paper view and a deck card alike: its notes,
+   rendered into this page (root) and only where it shows this paper, and a load of the notes that draws the page
+   again when they arrive, wherever it still shows. */
+function paperPostRender(root, p) {
+  if (!root || !p) return;
+  const vn = Vault.key && Vault.cache.get(p.id), ix = Vault.index && Vault.index.papers[p.id];
+  if (Vault.key && !Vault.cache.has(p.id) && ix) paperNotes(p.id).then(privateCallback(() => repaintPaper(p)));
+  if (!vn || !(vn.entries || []).length) return;
+  root.querySelectorAll('[data-pdnote]').forEach(el => {
+    const page = el.closest('[data-pid]');
+    if (!page || page.dataset.pid !== p.id) return;
+    const e = vn.entries.find(x => x.id === el.dataset.pdnote);
+    if (e) renderNotesMarkdown(el, e.text, vn);
+  });
+}
+/* After an edit to a paper: its page drawn again wherever it shows, the paper view or a card in the deck */
+function repaintPaper(p) {
+  if (!p) return;
+  if (_paperViewActive && location.hash === '#paper/' + encodeURIComponent(p.id)) renderPaperDetail(p);
+  if (Deck.mounted && deckActive()) deckRepaint(paperKey(p));
+}
+/* The notes unlocked, locked or were reset: every paper page in the document, on screen or not (under the reader, or
+   left behind by another view), and every deck card, the one beneath included */
+function repaintShownPapers() {
+  const page = document.querySelector('#paperDetail [data-pid]');
+  if (page) { const p = everyPaper().find(x => x.id === page.dataset.pid); if (p) renderPaperDetail(p); }
+  if (Deck.mounted) document.querySelectorAll('#deck .deck-card').forEach(c => deckRepaint(c.dataset.key));
 }
 /* Show the title in the sticky bar once the page heading has scrolled under it */
 function updatePaperBar() {
@@ -11364,7 +11902,7 @@ function removeGroupFromPaper(key, groupName) {
   if (!p) return;
   setPaperTopic(p, groupName, false);
   _stateDirty = true; showSaveBar(); refresh();
-  renderPaperDetail(p);
+  repaintPaper(p);
 }
 
 function addGroupToPaper(key, groupName) {
@@ -11373,7 +11911,7 @@ function addGroupToPaper(key, groupName) {
   if (effTopics(p).includes(groupName)) return;
   setPaperTopic(p, groupName, true);
   _stateDirty = true; showSaveBar(); refresh();
-  renderPaperDetail(p);
+  repaintPaper(p);
 }
 /* "Imported (relevant)" for a paper a seed import added: source_ref is import:<run>:<lane> */
 function importLabel(p) {
@@ -11556,6 +12094,7 @@ function applyHash() {
     const under = _reader.under; _reader.under = null;
     if (under !== null && hash === under) {   // back to the view underneath, which is still rendered
       if (hash.startsWith('paper/')) { const pp = allPapers.find(x => x.id === decodeURIComponent(hash.slice(6))); if (pp) renderPaperDetail(pp); }   // notes may have changed
+      else if (deckActive()) document.querySelectorAll('#deck .deck-card').forEach(c => deckRepaint(c.dataset.key));   // on the cards too
       return;
     }
   }
@@ -11667,16 +12206,20 @@ function backFromList() {
 }
 window.addEventListener('hashchange', () => applyHash());
 
-/* Re-render when crossing the phone/desktop breakpoint */
-let _wasPhone = window.matchMedia('(max-width: 700px)').matches;
-window.addEventListener('resize', () => { requestAnimationFrame(privateCallback(tokMeasureBars)); }, { passive: true });
-window.addEventListener('resize', () => {
-  const isPhone = window.matchMedia('(max-width: 700px)').matches;
-  if (isPhone === _wasPhone) return;
-  _wasPhone = isPhone;
-  if (['all','email'].includes(currentTab) && !_paperViewActive) applyFilters();
-  else phoneFeedOn();
-}, { passive: true });
+/* Re-render when the deck's layout changes: the phone/desktop line, a phone turned sideways (height), a pointer or
+   hover change (an iPad's keyboard attached) */
+let _wasLayout = deckLayout();
+window.addEventListener('resize', () => { requestAnimationFrame(privateCallback(deckMeasureBars)); }, { passive: true });
+function relayout() {
+  const layout = deckLayout();
+  if (layout === _wasLayout) return;
+  _wasLayout = layout;
+  if (['all','email'].includes(currentTab) && !_paperViewActive && !_listViewActive && !_searchActive) { deckRememberScroll(); applyFilters(); }
+  else deckOn();
+}
+// through privateCallback: a resize while the sign-in is still being checked (a page just loaded) does nothing, and locks nothing
+window.addEventListener('resize', privateCallback(() => relayout()), { passive: true });
+[DECK_PHONE, DECK_LAND].forEach(q => { const mq = matchMedia(q); if (mq.addEventListener) mq.addEventListener('change', privateCallback(() => relayout())); });
 
 function startApp() { requireTarget(); if (isPrivate()) return loadPrivateLibrary(); loadPapers(); loadInterests(); loadGroups(); }
 async function bootstrapApp() {
@@ -11722,7 +12265,8 @@ Config.startup = bootstrapApp();
 (function () {
   const views = ['applyPapers', 'switchTab', 'applyHash', 'backFromList', 'refresh', 'applyFilters', 'toggleRel', 'setListSort',
     'showGlobalSearch', 'hideGlobalSearch', 'renderGlobalSearch', 'setSearchFilter', 'setSearchSelect', 'clearSearchFilters',
-    'setTokTopic', 'toggleTokNew', 'renderTok', 'renderPapers', 'renderEmailPapers', 'renderWeekPulse', 'renderTopPapers', 'tokDown', 'tokMove', 'tokUp', 'tokMenu', 'tokNext', 'tokAppend', 'tokOnScroll',
+    'renderDeck', 'deckRefresh', 'deckMountCards', 'deckRepaint', 'deckNext', 'deckMenu', 'deckDown', 'deckMove', 'deckUp', 'setFyMode', 'relayout', 'repaintPaper', 'repaintShownPapers',
+    'renderPapers', 'renderEmailPapers', 'renderWeekPulse', 'renderTopPapers',
     'openLatestDigest', 'openAlert', 'openGroup', 'openVenue', 'setVenueYear', 'openTopList', 'showList',
     'renderVenues', 'renderListPage', 'renderListRail', 'renderListTools', 'renderListBody', 'setListOrder', 'setListRel', 'setListQuery',
     'openListSearch', 'updateListBar', 'toggleLibGroup', 'toggleLibPanel', 'renderAddPaper', 'renderLibrary',
@@ -11761,7 +12305,9 @@ Config.startup = bootstrapApp();
   const ALWAYS = ['toggleStar', 'toggleRead', 'persistStars', 'persistRead', 'persistLists', 'openSaveDD', 'toggleListItem', 'createListFromDD',
     'hidePaper', 'unhidePaper', 'addGroupToPaper', 'removeGroupFromPaper', 'toggleGroupAddDD', 'createNewList', 'renameList', 'deleteList',
     'showCopyDD', 'doCopyList', 'doCopyNew', 'updateI', 'updateG', 'updateInterestField', 'toggleInterestDropdown', 'gDragStart', 'gDrop',
-    'resetChanges', 'pushToGitHub', 'showSaveBar', 'openStrengthDD', 'setMatchStrength', 'scheduleAutoPush', 'disconnectGitHub', 'submitPdfLink', 'pinPdfVersion', 'tokMenuAct',
+    'resetChanges', 'pushToGitHub', 'showSaveBar', 'openStrengthDD', 'setMatchStrength', 'scheduleAutoPush', 'disconnectGitHub', 'submitPdfLink', 'pinPdfVersion',
+    // the deck's decisions, the strip's reasons, Undo, and putting a passed paper back
+    'deckInterested', 'deckPass', 'deckMarkRead', 'deckReason', 'deckOther', 'deckUndo', 'deckMenuAct', 'unpassPaper',
     // notes and their password
     'vaultReady', 'openVaultModal', 'submitVault', 'unlockFromPanel', 'loadReaderNotes', 'lockNotes', 'nfSave', 'savePaperNotes', 'scheduleNotesPush', 'pushNotes',
     'reconcileNotesIndex', 'renameHlColor', 'createAnno', 'deleteAnno', 'editAnnoComment', 'setAnnoColor', 'citeAnno', 'citeSelection',
