@@ -756,9 +756,7 @@ body.deck-phone #sec-papers .briefing, body.deck-land #sec-papers .briefing { di
 .deck-pill.active { background: var(--accent-dim); border-color: rgba(251,177,60,0.7); color: var(--accent); }
 .deck-pill .pill-count { opacity: 0.7; }
 .deck-count { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; white-space: nowrap; }
-.deck-legend { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 12px; color: var(--text-muted); }
-.deck-legend kbd, .da kbd, .ds-chip kbd { font: inherit; font-size: 11px; line-height: 1.4; padding: 0 5px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.04); color: var(--text-secondary); }
-.deck-legend kbd + kbd { margin-left: -2px; }
+.fy-pick kbd, .da kbd, .ds-chip kbd { font: inherit; font-size: 11px; line-height: 1.4; padding: 0 5px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.04); color: var(--text-secondary); }
 .fy-mode { display: inline-flex; flex-shrink: 0; margin-left: auto; padding: 2px; border: 1px solid rgba(255,255,255,0.16); border-radius: 999px; }
 .fy-mode button { min-height: 30px; padding: 0 14px; border: none; border-radius: 999px; background: none; color: var(--text-secondary); font: inherit; font-size: 13px; cursor: pointer; }
 .fy-mode button.on { background: rgba(255,255,255,0.1); color: var(--text); }
@@ -796,52 +794,79 @@ body.deck-phone .deck-cues, body.deck-land .deck-cues { display: block; position
 .deck-cue.armed { transform: translateY(-50%) scale(1.06); }
 /* the actions: always with words; under the card on a phone, a rail at its side sideways, the top strip on a laptop */
 .deck-actions { display: flex; gap: 6px; }
-.da { flex: 1 1 0; min-width: 0; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 10px; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; background: rgba(255,255,255,0.05); color: var(--text); font: inherit; font-size: 14.5px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: background 0.15s, transform 0.1s; }
+/* a button is never narrower than its words (flex basis auto, no min-width), and spare room is shared */
+.da { flex: 1 1 auto; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 10px; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; background: rgba(255,255,255,0.05); color: var(--text); font: inherit; font-size: 14.5px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: background 0.15s, transform 0.1s; }
 .da:active:not(:disabled) { transform: scale(0.97); }
 .da:disabled { opacity: 0.4; cursor: default; }
 .da-i { font-size: 16px; line-height: 1; }
+.da-i svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; vertical-align: -3px; }
 .da-yes { flex-grow: 1.6; background: var(--accent); border-color: transparent; color: #1a1406; font-weight: 600; }
 .da-no .da-i { color: #ef8a8a; }
-.da-undo, .da-more { flex-grow: 0.8; }
+.da-undo, .da-save { flex-grow: 0.8; }
+.da-save.on .da-i { color: var(--accent); }
+.da-save.on .da-i svg { fill: currentColor; }
+/* Interested in project mode: its name, and where it adds on a small second line, the only text here that may be cut */
+.da-lw { display: flex; flex-direction: column; align-items: center; min-width: min-content; line-height: 1.15; }
+.da-lw.to { flex: 1 1 auto; }
+.da-to { width: 0; min-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: 11.5px; font-weight: 500; opacity: 0.85; text-align: center; }
 .da kbd, .ds-chip kbd { display: none; }
+.deck-help { display: none; }
 body.deck-phone .deck-actions, body.deck-land .deck-actions { position: fixed; z-index: 95; background: rgba(17,17,17,0.96); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
 body.deck-phone .deck-actions { left: 0; right: 0; bottom: 0; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border); }
 body.deck-land .deck-actions { top: 0; bottom: 0; right: 0; width: 112px; flex-direction: column; justify-content: center; padding: 10px calc(10px + env(safe-area-inset-right, 0px)) 10px 10px; border-left: 1px solid var(--border); }
 body.deck-land .da { flex: none; flex-direction: column; gap: 2px; min-height: 58px; font-size: 13px; }
+body.deck-land .da-lw.to { flex: none; align-self: stretch; }
+body.deck-land .da-to { font-size: 11px; }
 body.deck-land .deck-card { padding-right: 120px; padding-bottom: calc(var(--deck-bottom, 0px) + 24px); }
 body.deck-land .deck-bar { right: 112px; }
 body.deck-land .deck-cue.no { right: 126px; }
-@media (max-width: 360px) { .da { gap: 4px; padding: 0 6px; font-size: 13px; } }
-.da-l { min-width: 0; overflow: hidden; text-overflow: ellipsis; }   /* a long project name on Interested */
-/* the project row: the picker's pill, then a chip per project. Each button is its own 44 px target with the visible
-   pill inside it, so neighbours never share a point; the chips scroll sideways under a fade. Above the actions on a
-   phone, along the bottom left of the rail sideways, under the actions on the laptop. */
-.deck-proj { display: none; }
-body.deck-mode .deck-proj.on { display: flex; align-items: center; min-width: 0; }
-.pj-pill, .pj-chip { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: 0; padding: 0 3px; border: none; background: none; color: inherit; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.pj-pill > span, .pj-chip > span { display: inline-flex; align-items: center; gap: 6px; max-width: 180px; min-height: 34px; padding: 0 12px; border: 1px solid transparent; border-radius: 999px; background: rgba(255,255,255,0.055); color: var(--text-secondary); font-size: 13px; white-space: nowrap; }
-.pj-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
-.pj-pill > span { border-color: rgba(255,255,255,0.18); color: var(--text); }
-.pj-pill.on > span { background: var(--accent-dim); border-color: rgba(251,177,60,0.7); color: var(--accent); }
-.pj-pill i { font-style: normal; font-size: 11px; opacity: 0.85; }
-.pj-chips { display: flex; flex: 1; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; padding-right: 16px; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); }
-.pj-chips::-webkit-scrollbar { display: none; }
-.pj-tick { width: 10px; font-style: normal; text-align: center; color: var(--text-muted); }
-.pj-chip.cur > span { border-color: rgba(251,177,60,0.55); }
-.pj-chip.in > span { background: rgba(251,177,60,0.16); color: var(--text); }
-.pj-chip.in .pj-tick { color: var(--accent); }
-.pj-chip:disabled { cursor: default; opacity: 0.45; }
-.pj-pill:focus-visible > span, .pj-chip:focus-visible > span { outline: 2px solid var(--accent); outline-offset: 1px; }
-body.deck-phone .deck-proj.on, body.deck-land .deck-proj.on { position: fixed; z-index: 95; left: 0; border-top: 1px solid var(--border); background: rgba(17,17,17,0.96); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
-body.deck-phone .deck-proj.on { right: 0; bottom: var(--deck-acts-h, 65px); padding: 2px 7px 0; }
-body.deck-phone.deck-proj-on .deck-actions { border-top-color: transparent; }
-body.deck-land .deck-proj.on { right: 112px; bottom: 0; padding: 2px 8px env(safe-area-inset-bottom, 0px) calc(8px + env(safe-area-inset-left, 0px)); }
-body.deck-laptop .deck-proj.on { margin: 0 -3px; }
+@media (max-width: 360px) { .da { gap: 4px; padding: 0 6px; font-size: 13px; } .da-no .da-i, .da-undo .da-i, .da-save .da-i { display: none; } }
+/* the feed picker at the start of the filter row: For you, or the project the deck is in */
+.fy-pick { align-self: flex-start; max-width: 50%; color: var(--text); border-color: rgba(255,255,255,0.18); }
+.fy-pick .pj-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+.fy-pick i { font-style: normal; font-size: 11px; opacity: 0.85; }
+.fy-pick.on { background: var(--accent-dim); border-color: rgba(251,177,60,0.7); color: var(--accent); }
+.fy-pick kbd { display: none; }
+body.deck-laptop .fy-pick kbd { display: inline-block; }
+/* the card's own actions: Read and Open paper, and for the owner Mark read and Hide */
+.pd-deck-acts .pd-act2 { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; background: none; color: var(--text-secondary); font: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.pd-deck-acts .pd-act2:active { background: rgba(255,255,255,0.06); }
+/* the save sheet: a sheet from the bottom on a touch screen, a popover under Save on the laptop. Names show whole and
+   wrap; every row is a 44 px target, its tick a fixed box so a toggle moves nothing. */
+.save-sheet { display: none; }
+.save-sheet.open { display: block; position: fixed; inset: 0; z-index: 455; background: rgba(0,0,0,0.45); }
+.sh-panel { position: absolute; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 560px; max-height: 70vh; display: flex; flex-direction: column; background: #1d1d20; border: 1px solid rgba(255,255,255,0.14); border-bottom: none; border-radius: 16px 16px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.sh-head { position: relative; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 16px 6px 6px 18px; }
+.sh-grip { position: absolute; top: 6px; left: 50%; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: rgba(255,255,255,0.25); }
+.sh-what { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.sh-what b { font-size: 15px; font-weight: 600; color: var(--text); }
+.sh-what span { font-size: 12.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sh-done { flex-shrink: 0; min-width: 44px; min-height: 44px; padding: 0 14px; border: none; border-radius: 10px; background: none; color: var(--accent); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.sh-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 8px 12px; }
+.sh-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 10px; border: none; border-radius: 10px; background: none; color: var(--text); font: inherit; font-size: 15px; text-align: left; cursor: pointer; }
+.sh-row:active:not(:disabled) { background: rgba(255,255,255,0.08); }
+.sh-row:disabled { opacity: 0.4; cursor: default; }
+.sh-row:focus-visible, .sh-done:focus-visible, .sh-add:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.sh-tick { flex: none; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 6px; font-style: normal; font-size: 14px; line-height: 1; }
+.sh-row.in .sh-tick { background: var(--accent); border-color: var(--accent); color: #1a1406; }
+.sh-n { flex: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; line-height: 1.3; }
+.sh-div { height: 1px; margin: 6px 10px; background: var(--border); }
+.sh-new { color: var(--accent); }
+.sh-new .sh-tick { border-style: dashed; border-color: rgba(251,177,60,0.6); }
+.sh-edit { display: flex; align-items: center; gap: 8px; padding: 4px 2px; }
+.sh-input { flex: 1; min-width: 0; min-height: 44px; padding: 0 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; background: rgba(255,255,255,0.05); color: var(--text); font: inherit; font-size: 16px; }
+.sh-add { flex-shrink: 0; min-width: 64px; min-height: 44px; padding: 0 14px; border: none; border-radius: 10px; background: var(--accent); color: #1a1406; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.sh-msg { margin: 6px 10px 0; font-size: 13px; color: #ef8a8a; }
+.sh-msg:empty { display: none; }
+body.deck-laptop .save-sheet.open { inset: auto; width: 320px; display: flex; flex-direction: column; background: none; }
+body.deck-laptop .sh-panel { position: static; flex: 1 1 auto; min-height: 0; max-width: none; max-height: none; border: 1px solid rgba(255,255,255,0.14); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.55); padding-bottom: 0; }
+body.deck-laptop .sh-grip { display: none; }
+body.deck-laptop .sh-head { padding-top: 8px; }
 /* the picker: For you, the projects, a new one; inside what shows of the screen, its list scrolling */
 .pj-menu { min-width: 240px; overflow-y: auto; overscroll-behavior: contain; transform-origin: 0 100%; }
 .pj-menu > * { flex-shrink: 0; }
-.pj-menu .pj-mi { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pj-menu small { margin-left: 6px; font-size: 12px; color: var(--text-muted); }
+.pj-menu .pj-mi { flex: 1; min-width: 0; padding: 10px 0; white-space: normal; overflow-wrap: anywhere; line-height: 1.3; }   /* names whole, wrapping */
+.pj-menu small { display: block; margin-top: 2px; font-size: 12px; color: var(--text-muted); }
 .pj-menu .pill-count { flex-shrink: 0; font-size: 13px; color: var(--text-muted); }
 .pj-menu [aria-checked="true"] { color: var(--accent); }
 .pj-menu [aria-checked="true"] i { color: var(--accent); }
@@ -870,6 +895,8 @@ body.deck-laptop .deck-bar { flex-wrap: wrap; }
 body.deck-laptop .deck-actions { gap: 8px; }
 body.deck-laptop .da { flex: none; min-height: 40px; padding: 0 16px; font-size: 14px; }
 body.deck-laptop .da kbd, body.deck-laptop .ds-chip kbd { display: inline-block; }
+body.deck-laptop .deck-help { display: inline-flex; align-items: center; justify-content: center; margin-left: auto; width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.16); border-radius: 999px; background: none; color: var(--text-secondary); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+body.deck-laptop #sec-papers .briefing { display: none; }
 body.deck-laptop .deck-card.next { display: none; }
 body.deck-laptop .deck-card.leaving { display: none; }
 /* the end of the deck */
@@ -2307,7 +2334,6 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
     <div class="deck-head" id="deckHead">
       <div class="deck-bar" id="deckBar"></div>
       <div class="deck-actions" id="deckActions" role="toolbar" aria-label="Decide on this paper"></div>
-      <div class="deck-proj" id="deckProj" role="group" aria-label="Projects"></div>
       <div class="deck-strip" id="deckStrip" role="region" aria-label="Why you passed" aria-live="polite"></div>
     </div>
     <button class="deck-top" id="deckTop" onclick="deckImmersive(false)" aria-label="Show the menu and the filters"><span class="deck-progress" id="deckProgress"></span></button>
@@ -2502,6 +2528,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
       <dt class="owner-only"><kbd>x</kbd></dt><dd class="owner-only">Pass: it leaves For you and stays in your library</dd>
       <dt class="owner-only"><kbd>1</kbd>&ndash;<kbd>4</kbd> <kbd>r</kbd></dt><dd class="owner-only">After a pass: why (hides it, and teaches your recommendations); r to say it in your words</dd>
       <dt class="owner-only"><kbd>u</kbd></dt><dd class="owner-only">Undo the last decision</dd>
+      <dt class="owner-only"><kbd>b</kbd></dt><dd class="owner-only">Save: tick the projects and To read this paper goes in</dd>
       <dt class="owner-only"><kbd>p</kbd></dt><dd class="owner-only">Choose a project: its papers&rsquo; neighbours come first, and Interested adds to it</dd>
       <dt class="owner-only"><kbd>Shift</kbd> <kbd>p</kbd></dt><dd class="owner-only">Leave the project, back to For you</dd>
       <dt><kbd>o</kbd> <kbd>Enter</kbd></dt><dd>Read the paper</dd>
@@ -3220,7 +3247,9 @@ function bootstrapStateFromCSV() {
     });
   });
   adoptListMeta();
-  projectReconcile(true);   // the lists as they arrived: project mode restored, or ended if its project went elsewhere
+  listsReconcile(true);     // the lists as they arrived: one that went elsewhere is no place to save to
+  projectReconcile(true);   // project mode restored, or ended if its project went elsewhere
+  sheetReconcile(); saveSheetSync();   // and every list an open save sheet offers
 }
 
 /* Write current readSet/starSet/libraryLists back into allPapers rows */
@@ -4181,7 +4210,7 @@ const DECK_SWIPE_RATIO = 1 / 3;   // of the card width
 const DECK_FLING = 0.6, DECK_FLING_MIN = 60;   // a fling: px per ms over the last 100 ms, and the travel it needs
 const DECK_STRIP_MS = 8000;
 const Deck = { keys: [], key: null, last: null, strip: null, seq: 0, tally: { interested: 0, passed: 0, hidden: 0, read: 0 }, gesture: null, swallow: 0, mounted: false, scroll: null, noted: false, layout: null,
-  project: null, switched: false, ranked: null, chips: [], near: null };
+  project: null, switched: false, ranked: null, near: null, sheet: null };
 function isPassed(p) { return !!p && p.is_passed === 'true'; }
 /* The deck holds For you's papers less the starred ones: a star is already a liked example, so a second look at it
    teaches nothing. Being in a list alone decides nothing (three of the lists are the machine's). */
@@ -4217,7 +4246,7 @@ function deckOn() {
 }
 /* Leaving the deck (another tab, a paper, search, a list), or opening the reader over it: a swipe in progress, the
    strip with its reasons, and the menu end here */
-function deckLeave() { deckAbort(); deckStripClose(); closeDeckMenu(); closeProjectMenu(); }
+function deckLeave() { deckAbort(); deckStripClose(); closeProjectMenu(); closeSaveSheet(); }
 function deckOff() {
   document.body.classList.remove('deck-mode', 'deck-phone', 'deck-land', 'deck-laptop', 'deck-immersive', 'deck-dragging');
   deckLeave();
@@ -4229,19 +4258,15 @@ function deckActive() {
 }
 /* The whole deck, drawn again: the keys from the chips, in For you's order (a project's order in project mode), landing
    on the paper that was showing if it is still undecided; a project chosen or left starts its order from the front.
-   Between renders the keys only shrink, so a decision never reorders what comes next. The project chips' order is
-   fixed here too, until the next render. */
+   Between renders the keys only shrink, so a decision never reorders what comes next. */
 function renderDeck() {
   const pool = deckPool(), switched = Deck.switched;
   Deck.switched = false;
   Deck.keys = deckOrder(pool);
   Deck.ranked = projectMode() ? Deck.project : null;
   if (switched || !Deck.keys.includes(Deck.key)) Deck.key = Deck.keys.find(deckEligible) || null;
-  Deck.chips = isOwner() ? projectNames() : [];
-  if (Deck.ranked) Deck.chips = [Deck.ranked].concat(Deck.chips.filter(n => n !== Deck.ranked));
   Deck.mounted = true;
   document.getElementById('deckBar').innerHTML = deckBarHTML(pool);
-  projectRowRender();
   deckCueLabel();
   deckActionsRender();
   deckMountCards();
@@ -4251,32 +4276,44 @@ function renderDeck() {
   else if (!Deck.last) deckImmersive(false);
   requestAnimationFrame(privateCallback(deckMeasureBars));
 }
+/* The bar above the card: the feed picker, then the interest chips (the topic chips under them once an interest is
+   chosen). On the laptop also how many are left and the List / Deck switch; the keys are on the buttons and behind ? */
 function deckBarHTML(pool) {
   const laptop = Deck.layout === 'laptop', c = forYouChips(pool, !laptop);
-  return `<div class="deck-chips"><div class="deck-pills" role="group" aria-label="Filter by interest">${c.interests}</div>${c.topics ? `<div class="deck-pills" role="group" aria-label="Filter by topic">${c.topics}</div>` : ''}</div>
-    <span class="deck-count" id="deckCount">${deckCountText()}</span>${laptop ? fyModeHTML() : ''}
-    ${laptop && isOwner() ? `<div class="deck-legend"><kbd>S</kbd> ${projectMode() ? `add to ${esc(shortName(Deck.project, 24))}` : 'interested'} <kbd>X</kbd> pass <kbd>1</kbd>&ndash;<kbd>4</kbd> reason <kbd>R</kbd> other reason <kbd>U</kbd> undo <kbd>O</kbd> read <kbd>Space</kbd> scroll <kbd>P</kbd> project <kbd>?</kbd> all keys</div>` : ''}`;
+  return `${feedPillHTML()}<div class="deck-chips"><div class="deck-pills" role="group" aria-label="Filter by interest">${c.interests}</div>${c.topics ? `<div class="deck-pills" role="group" aria-label="Filter by topic">${c.topics}</div>` : ''}</div>${laptop ? `<span class="deck-count" id="deckCount">${deckCountText()}</span>${fyModeHTML()}` : ''}`;
 }
-function shortName(n, max) { n = String(n || ''); return n.length > max ? n.slice(0, max - 1) + '\u2026' : n; }
+/* The feed picker, where the deck's papers come from: For you, or a project (project mode). Owner only, also with no
+   project yet (it offers a new one). The full name is in its label; the pill may cut a long one short. */
+function feedPillHTML() {
+  if (!isOwner()) return '';
+  const cur = projectMode() ? Deck.project : null;
+  return `<button class="deck-pill fy-pick${cur ? ' on' : ''}" id="feedPill" onclick="openProjectMenu(event, this)" aria-haspopup="menu" aria-expanded="false" aria-keyshortcuts="p" aria-label="${cur ? `Project ${dataAttr(cur)}: choose what the deck shows` : 'For you: choose what the deck shows'}"><i aria-hidden="true">&#9670;</i><span class="pj-n">${cur ? esc(cur) : 'For you'}</span><i aria-hidden="true">&#9662;</i><kbd>P</kbd></button>`;
+}
+function shortName(n, max) { n = String(n || ''); return n.length > max ? n.slice(0, max - 1) + '…' : n; }
+/* How many are left (the laptop's bar), and in project mode how many the project put first */
 function deckCountText() {
   const n = Deck.keys.filter(deckEligible).length;
   if (!n) return '';
   if (!isOwner()) return `${Deck.keys.indexOf(Deck.key) + 1} / ${Deck.keys.length}`;
   if (!Deck.ranked || !projectMode()) return `${n} to go`;
-  const near = Deck.near ? Deck.keys.filter(k => Deck.near.has(k) && deckEligible(k)).length : 0, name = esc(shortName(Deck.ranked, 14));
+  const near = projectNearCount(), name = esc(shortName(Deck.ranked, 14));
   return `${n} to go &middot; ${near ? `${near} near ${name}` : `nothing near ${name} yet`}`;
 }
-/* The actions under the card (a phone), at its side (sideways) or in the top strip (laptop), always with words */
+function projectNearCount() { return Deck.near ? Deck.keys.filter(k => Deck.near.has(k) && deckEligible(k)).length : 0; }
+/* One bar of four, always with words: Pass, Undo, Interested and Save. In project mode Interested keeps its name and
+   says where it adds on a small second line. Save opens the save sheet, and is filled when the paper is in a list. Under
+   the card on a phone, a rail at its side sideways, the top strip on a laptop (with ? for the keys). */
 function deckActionsHTML() {
   const has = !!Deck.key;
   if (!isOwner()) return has && deckNextAfter() ? `<button class="da da-next" onclick="deckNext()"><span class="da-l">Next</span><span class="da-i" aria-hidden="true">&rsaquo;</span></button>` : '';
-  const off = has ? '' : ' disabled', proj = projectMode() ? Deck.project : null;   // in project mode Interested names it
+  const off = has ? '' : ' disabled', proj = projectMode() ? Deck.project : null, saved = has && paperInAnyList(Deck.key);
   return `<button class="da da-no" onclick="deckPass()" aria-keyshortcuts="x"${off}><span class="da-i" aria-hidden="true">&#10005;</span><span class="da-l">Pass</span><kbd>X</kbd></button>`
     + `<button class="da da-undo" onclick="deckUndo()" aria-keyshortcuts="u"${Deck.last ? '' : ' disabled'}><span class="da-i" aria-hidden="true">&#8630;</span><span class="da-l">Undo</span><kbd>U</kbd></button>`
-    + `<button class="da da-yes" onclick="deckInterested()" aria-keyshortcuts="s"${proj ? ` aria-label="Star and add to ${dataAttr(proj)}"` : ''}${off}><span class="da-i" aria-hidden="true">&#9733;</span><span class="da-l">${proj ? esc(proj) : 'Interested'}</span><kbd>S</kbd></button>`
-    + `<button class="da da-more" onclick="deckMenu(event, this)" aria-haspopup="menu" aria-expanded="false"${off}><span class="da-i" aria-hidden="true">&#8943;</span><span class="da-l">More</span></button>`;
+    + `<button class="da da-yes" onclick="deckInterested()" aria-keyshortcuts="s"${proj ? ` aria-label="Interested: star and add to ${dataAttr(proj)}"` : ''}${off}><span class="da-i" aria-hidden="true">&#9733;</span><span class="da-lw${proj ? ' to' : ''}"><span class="da-l">Interested</span>${proj ? `<span class="da-to">&rarr; ${esc(proj)}</span>` : ''}</span><kbd>S</kbd></button>`
+    + `<button class="da da-save${saved ? ' on' : ''}" id="deckSave" onclick="openSaveSheet(event, this)" aria-keyshortcuts="b" aria-haspopup="dialog" aria-expanded="${Deck.sheet ? 'true' : 'false'}"${off}><span class="da-i" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-6-4.2-6 4.2z"/></svg></span><span class="da-l">Save</span><kbd>B</kbd></button>`
+    + (Deck.layout === 'laptop' ? '<button class="deck-help" onclick="toggleKeysHelp(true)" aria-label="Keyboard shortcuts" title="Keyboard shortcuts">?</button>' : '');
 }
-function deckActionsRender() { const el = document.getElementById('deckActions'); if (el) el.innerHTML = deckActionsHTML(); projectRowSync(); }
+function deckActionsRender() { const el = document.getElementById('deckActions'); if (el) el.innerHTML = deckActionsHTML(); saveSheetSync(); }
 function deckCounts() {
   const bar = document.getElementById('deckBar');
   if (bar) bar.innerHTML = deckBarHTML(deckPool());
@@ -4637,20 +4674,17 @@ function deckImmersive(on) { document.body.classList.toggle('deck-immersive', !!
 function deckMeasureBars() {
   const b = document.body;
   if (!b.classList.contains('deck-mode') || b.classList.contains('deck-laptop')) return;
-  const nav = document.querySelector('.navbar'), bar = document.getElementById('deckBar'), acts = document.getElementById('deckActions'), proj = document.getElementById('deckProj');
+  const nav = document.querySelector('.navbar'), bar = document.getElementById('deckBar'), acts = document.getElementById('deckActions');
   const navH = nav ? nav.getBoundingClientRect().height : 0, barH = bar ? bar.getBoundingClientRect().height : 0;
-  const actsH = acts ? acts.getBoundingClientRect().height : 0, projH = proj && proj.classList.contains('on') ? proj.getBoundingClientRect().height : 0;
   b.style.setProperty('--nav-h', navH + 'px');
   b.style.setProperty('--deck-top', (b.classList.contains('deck-immersive') ? 0 : navH + barH) + 'px');
-  // what is fixed along the bottom: the actions and the project row above them (a phone), the row (sideways)
-  b.style.setProperty('--deck-acts-h', actsH + 'px');
-  b.style.setProperty('--deck-bottom', (b.classList.contains('deck-phone') ? actsH + projH : projH) + 'px');
+  b.style.setProperty('--deck-bottom', (acts && b.classList.contains('deck-phone') ? acts.getBoundingClientRect().height : 0) + 'px');
   const strip = document.getElementById('deckStrip');
   b.style.setProperty('--deck-strip-h', (strip && strip.classList.contains('open') ? strip.getBoundingClientRect().height + 8 : 0) + 'px');
 }
 if (window.ResizeObserver) document.addEventListener('DOMContentLoaded', () => {
   const ro = new ResizeObserver(() => deckMeasureBars());
-  ['.navbar', '#deckBar', '#deckActions', '#deckProj'].forEach(sel => { const el = document.querySelector(sel); if (el) ro.observe(el); });
+  ['.navbar', '#deckBar', '#deckActions'].forEach(sel => { const el = document.querySelector(sel); if (el) ro.observe(el); });
 });
 window.addEventListener('pageshow', () => requestAnimationFrame(privateCallback(deckMeasureBars)));
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(privateCallback(() => deckMeasureBars()));
@@ -4790,6 +4824,7 @@ const DECK_KEYS = {
   l: { run: () => { if (Deck.key) window.open(APP_ROOT + location.search + '#paper/' + encodeURIComponent(Deck.key), '_blank', 'noopener'); } },
   n: { run: () => { if (!isOwner()) deckNext(); } },
   p: { once: true, run: e => { if (e.shiftKey) setProject(null); else openProjectMenu(null, null); } },   // the listener lowercases: Shift says which
+  b: { once: true, run: () => openSaveSheet(null, null) },
   ' ': { run: e => deckScroll(e.shiftKey ? -1 : 1, true) }, PageDown: { run: () => deckScroll(1, true) }, PageUp: { run: () => deckScroll(-1, true) },
   ArrowDown: { run: () => deckScroll(1) }, ArrowUp: { run: () => deckScroll(-1) },
   Escape: { run: () => deckStripClose() },
@@ -4807,47 +4842,283 @@ document.addEventListener('keydown', e => {
   act.run(e);
 });
 
-/* ---- the card's menu: Read, Mark read, Save to a list, Hide, the paper's own page ---- */
-function deckMenu(ev, btn) {
-  ev.stopPropagation();
-  const k = Deck.key;
-  let m = document.getElementById('deckMenu');
-  if (m && m.classList.contains('open') && m.dataset.key === k) { closeDeckMenu(); return; }
-  if (!k) return;
-  if (!m) { m = document.createElement('div'); m.id = 'deckMenu'; m.className = 'deck-menu'; m.setAttribute('role', 'menu'); m.onclick = e => e.stopPropagation(); document.body.appendChild(m); }
-  closeDeckMenu();
-  const p = deckPaper(k);
-  m.dataset.key = k;
-  m.innerHTML = (p && (isOwner() || pdfSourceOf(p)) ? `<button role="menuitem" onclick="deckMenuAct('readpdf')"><i>&#128214;</i>${pdfSourceOf(p) ? 'Read the paper here' : 'Add a PDF to read it here'}</button>` : '')
-    + (isOwner() ? `<button role="menuitem" onclick="deckMenuAct('read')"><i>&#10003;</i>Mark read</button>`
-      + `<button role="menuitem" class="${paperInAnyList(k) ? 'on-list' : ''}" onclick="deckMenuAct('list')"><i>&#9776;</i>Save to a list&hellip;</button>`
-      + `<button role="menuitem" onclick="deckMenuAct('hide')"><i>&#8856;</i>Hide&hellip;</button>` : '')
-    + (p && p.url ? `<a role="menuitem" href="${esc(p.url)}" target="_blank" rel="noopener" onclick="closeDeckMenu()"><i><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></i>Open the paper's page</a>` : '');
-  const r = btn.getBoundingClientRect();
-  if (r.top > window.innerHeight / 2) { m.style.top = ''; m.style.bottom = (window.innerHeight - r.top + 6) + 'px'; }
-  else { m.style.bottom = ''; m.style.top = (r.bottom + 6) + 'px'; }
-  m.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
-  m._btn = btn; btn.setAttribute('aria-expanded', 'true');
-  popIn(m);
-}
-function closeDeckMenu() {
-  const m = document.getElementById('deckMenu');
-  if (!m) return;
-  if (m._btn) m._btn.setAttribute('aria-expanded', 'false');
-  fadeAway(m);
-}
-function deckMenuAct(what) {
-  const m = document.getElementById('deckMenu');
-  if (!m) return;
-  const k = m.dataset.key, btn = m._btn;
-  closeDeckMenu();
-  if (k !== Deck.key) return;   // the card it was opened for has gone
-  if (what === 'readpdf') { deckRead(); return; }
-  if (what === 'list') { openSaveDD(btn, k); return; }
-  if (what === 'hide') { askHide(k); return; }
+/* ---- the card's own actions: Read, Mark read, Hide, Open paper ----
+   Mark read and Hide are decisions with Undo, as Pass is. They act only for the card they are on, while it is the one
+   on screen and undecided; a Hide asked from the card is checked again when its reason is given (confirmHide). */
+function deckCardAct(ev, btn, what) {
+  requireOwner();
+  const card = btn && btn.closest ? btn.closest('.deck-card') : null, k = card ? card.dataset.key : null;
+  if (!k || k !== Deck.key || !deckEligible(k)) return;
   if (what === 'read') deckMarkRead(k);
+  else if (what === 'hide') askHide(k, { card: true });
 }
-document.addEventListener('scroll', () => closeDeckMenu(), true);
+
+/* ---- presses on the deck's own controls ----
+   Save, the card's Mark read and Hide, and everything in the save sheet bind each press when it begins (a pointer or a
+   finger down, or Enter or Space) to the paper on screen, the sheet open then and the control it is on: one record per
+   pointer. Its click goes through only if, when it comes, the same control (what it is, not which element: a bar drawn
+   again keeps its Save) is under it, the paper is still on screen and undecided, the sheet is the same one, and a row's
+   list can still be saved to. Otherwise the release and the click are swallowed, so a press that began on one paper
+   never acts on the next one, on a sheet opened since, or on the bar under a sheet that closed. */
+const Presses = new Map();
+function pressControl(t) {
+  if (!t || !t.closest) return null;
+  return t.closest('#deckSave, .pd-deck-acts [data-act], #saveSheet [data-guard]') || t.closest('.sh-panel') || t.closest('#saveSheet');
+}
+function pressIdent(el) {
+  if (!el || !el.closest) return '';
+  if (el.id === 'deckSave') return 'save';
+  if (el.dataset.act) { const c = el.closest('.deck-card'); return `card:${c ? c.dataset.key : ''}:${el.dataset.act}`; }
+  const s = el.closest('#saveSheet');
+  if (!s) return '';
+  return `sheet:${s.dataset.sheet || ''}:${el === s ? 'shade' : el.dataset.guard ? `${el.dataset.guard}:${el.dataset.n || ''}` : 'panel'}`;
+}
+function pressBegin(id, el) {
+  const n = el.dataset.guard === 'row' ? el.dataset.n : null;   // a row: and whether its paper was in that list then
+  Presses.set(id, { ident: pressIdent(el), key: Deck.key, sheet: Deck.sheet ? Deck.sheet.id : 0, n, on: n === null ? null : sheetHas(n, Deck.key), up: 0, dead: false });
+}
+/* What a press was bound to still holds: the paper on screen and undecided, the same sheet, and for a row its list
+   still a place to save to with the paper in it or not, as when the press began (another device ticking or unticking
+   that row meanwhile would turn the tap around) */
+function pressStill(pr) {
+  if (pr.key !== Deck.key || (pr.key && !deckEligible(pr.key))) return false;
+  if (pr.sheet !== (Deck.sheet ? Deck.sheet.id : 0)) return false;
+  return pr.n === null || (sheetDestOK(pr.n) && sheetHas(pr.n, pr.key) === pr.on);
+}
+function pressReconcile() { Presses.forEach(pr => { if (!pr.dead && !pressStill(pr)) pr.dead = true; }); }   // once it stops holding, for good
+function pressHolds(pr, el) { return !!pr && !!el && !pr.dead && pressIdent(el) === pr.ident && pressStill(pr); }
+function pressDown(e) { const el = pressControl(e.target); if (el) pressBegin(e.pointerId, el); else Presses.delete(e.pointerId); }
+function pressUp(e) {
+  const pr = Presses.get(e.pointerId);
+  if (!pr) return;
+  pr.up = e.timeStamp;
+  if (!pressHolds(pr, pressControl(e.target))) e.stopPropagation();   // the release of a press that no longer holds reaches nothing
+}
+function pressCancel(e) { Presses.delete(e.pointerId); }   // it became a scroll: no click comes
+function pressKey(e) {
+  if ((e.key !== 'Enter' && e.key !== ' ') || e.isComposing || e.metaKey || e.ctrlKey || e.altKey || !e.target || e.target.tagName !== 'BUTTON') return;
+  const el = pressControl(e.target);
+  if (!el) return;
+  if (e.repeat) { e.preventDefault(); return; }   // a held key acts once
+  pressBegin('key', el);
+}
+function pressKeyUp(e) { const pr = Presses.get('key'); if (pr && (e.key === 'Enter' || e.key === ' ')) pr.up = e.timeStamp; }
+function pressOfClick(e) {
+  if (e.detail === 0) { const pr = Presses.get('key'); return pr && (!pr.up || e.timeStamp - pr.up < 250) ? ['key', pr] : [null, null]; }
+  if (e.pointerId !== undefined && e.pointerId >= 0 && Presses.has(e.pointerId)) return [e.pointerId, Presses.get(e.pointerId)];
+  let best = [null, null];   // a click that names no pointer: the press released last, a moment ago
+  Presses.forEach((pr, id) => { if (id !== 'key' && pr.up && e.timeStamp - pr.up < 1000 && (!best[1] || pr.up > best[1].up)) best = [id, pr]; });
+  return best;
+}
+function pressClick(e) {
+  const [id, pr] = pressOfClick(e);
+  if (!pr) return;
+  Presses.delete(id);
+  if (pressHolds(pr, pressControl(e.target))) return;
+  e.preventDefault(); e.stopPropagation();
+}
+document.addEventListener('pointerdown', pressDown, true);
+document.addEventListener('pointerup', pressUp, true);
+document.addEventListener('pointercancel', pressCancel, true);
+document.addEventListener('keydown', pressKey, true);
+document.addEventListener('keyup', pressKeyUp, true);
+document.addEventListener('click', pressClick, true);
+
+/* ---- the save sheet: the projects and To read, ticked for the paper on screen ----
+   Save (or b) opens it for the paper on screen: a sheet from the bottom on a touch screen, a popover under Save on the
+   laptop. The rows are the projects in the order they had when it opened, then To read; never a machine lane. A tap
+   ticks or unticks one list for that paper and the sheet stays open; nothing is decided, and an Undo leaves it unless
+   its own decision added that membership. The last row makes a new project with the paper in it. When the paper
+   leaves the screen (a pass, a star or a hide from another device, a decision, leaving the deck) the sheet closes
+   having written nothing more. Every list it offers follows the lists as project mode does (projectReconcile): one
+   that had papers and has none in what arrives from GitHub (renamed, deleted or emptied elsewhere) is off for good in
+   this sheet, even if this browser's list times or a later copy bring the name back; one emptied here stays. */
+let _sheetSeq = 0;
+function openSaveSheet(ev, btn) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  requireOwner();
+  if (Deck.sheet) { closeSaveSheet(); return; }   // Save or b again: it closes
+  const k = Deck.key;
+  if (!k || !deckEligible(k) || !deckActive()) return;
+  closeProjectMenu(); hideToast();
+  const names = projectNames(), keyed = !ev || ev.detail === 0, from = document.activeElement;
+  Deck.sheet = { id: ++_sheetSeq, key: k, names, dead: new Set(), from: keyed && from && from !== document.body ? from : null };
+  let s = document.getElementById('saveSheet');
+  if (!s) {
+    s = document.createElement('div'); s.id = 'saveSheet'; s.className = 'save-sheet';
+    s.onclick = e => { if (e.target === s) closeSaveSheet(); };   // a tap on the shade around it
+    s.onkeydown = sheetKey;
+    document.body.appendChild(s);
+  }
+  s.dataset.sheet = String(Deck.sheet.id);
+  s.innerHTML = saveSheetHTML();
+  popIn(s);
+  const save = document.getElementById('deckSave'); if (save) save.setAttribute('aria-expanded', 'true');
+  saveSheetSync();
+  placeSheet();
+  const vv = window.visualViewport;
+  if (vv && !s._vv) { s._vv = () => placeSheet(); vv.addEventListener('resize', s._vv); vv.addEventListener('scroll', s._vv); }   // a keyboard opening or closing
+  const first = s.querySelector('.sh-row');
+  if (first) first.focus({ preventScroll: true });
+}
+function saveSheetHTML() {
+  const sh = Deck.sheet, p = deckPaper(sh.key), t = p ? (p.headline || p.title || '') : '';
+  return `<div class="sh-panel" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+    <div class="sh-head"><span class="sh-grip" aria-hidden="true"></span><div class="sh-what"><b id="shTitle">Save to</b><span>${esc(shortName(t, 60))}</span></div><button type="button" class="sh-done" data-guard="done" onclick="closeSaveSheet()">Done</button></div>
+    <div class="sh-list">${sh.names.map(sheetRowHTML).join('')}<div class="sh-div" role="separator"></div>${sheetRowHTML(TO_READ)}<div class="sh-newbox">${sheetNewRowHTML()}</div></div>
+  </div>`;
+}
+function sheetRowHTML(n) { return `<button type="button" class="sh-row" data-guard="row" data-n="${dataAttr(n)}" onclick="sheetTap(this)" aria-pressed="false"><i class="sh-tick" aria-hidden="true"></i><span class="sh-n">${esc(n)}</span></button>`; }
+function sheetNewRowHTML() { return `<button type="button" class="sh-row sh-new" data-guard="new" onclick="sheetEdit()"><i class="sh-tick" aria-hidden="true">+</i><span class="sh-n">New project&hellip;</span></button>`; }
+/* The marks, for the paper the sheet is for, changed in place; a list that cannot be saved to any more is off where it
+   stands. The paper no longer on screen and undecided, or the deck gone: the sheet closes. */
+function saveSheetSync() {
+  pressReconcile();   // every change passes here: a press it turned stale stays stale
+  const sh = Deck.sheet;
+  if (!sh) return;
+  const s = document.getElementById('saveSheet');
+  if (!s || !isOwner() || sh.key !== Deck.key || !deckEligible(sh.key) || !deckActive()) { closeSaveSheet(); return; }
+  s.querySelectorAll('.sh-row').forEach(b => {
+    if (b.dataset.guard !== 'row') return;
+    const n = b.dataset.n, on = sheetHas(n, sh.key);
+    b.setAttribute('aria-pressed', String(on)); b.classList.toggle('in', on); b.disabled = !sheetDestOK(n);
+    const t = b.querySelector('.sh-tick'); if (t) t.textContent = on ? '✓' : '';
+  });
+  const save = document.getElementById('deckSave'); if (save) save.classList.toggle('on', paperInAnyList(sh.key));
+}
+function sheetHas(n, k) { return hasList(n) && libraryLists[n].includes(k); }
+function sheetDestOK(n) {
+  const sh = Deck.sheet;
+  if (!sh || sh.dead.has(n)) return false;
+  if (n === TO_READ) return true;   // made by its first add when it is not there yet
+  return sh.names.includes(n) && isProjectName(n) && hasList(n) && !listGone(n);
+}
+/* A list the open sheet offers that went (listGone) or is gone from the page is off in this sheet for good, where it
+   stands; a later copy that brings the name back does not bring back a press made on it */
+function sheetReconcile() {
+  const sh = Deck.sheet;
+  if (!sh) return;
+  sh.names.forEach(n => { if (!hasList(n) || listGone(n)) sh.dead.add(n); });
+}
+function sheetTap(btn) { const s = btn.closest('#saveSheet'); sheetToggle(btn.dataset.n, s ? Number(s.dataset.sheet) : 0); }
+/* One list ticked or unticked for the sheet's paper: only in the sheet it was pressed in, while that paper is on screen
+   and undecided and the list can be saved to. To read is made by its first add. Returns whether it wrote. */
+function sheetToggle(n, sid) {
+  requireOwner();
+  const sh = Deck.sheet;
+  if (!sh || sh.id !== sid || sh.key !== Deck.key || !deckEligible(sh.key) || !sheetDestOK(n)) return false;
+  const k = sh.key, on = !(hasList(n) && libraryLists[n].includes(k));
+  if (on) (hasList(n) ? libraryLists[n] : (libraryLists[n] = [])).push(k);
+  else libraryLists[n] = libraryLists[n].filter(x => x !== k);
+  persistLists(); updateLibraryBadge();
+  saveSheetSync();
+  return true;
+}
+/* + New project: the row becomes a field in place, in the sheet's scrolling list, so it and its message stay in reach
+   with a keyboard up. The field's keys are its own: letters (b too), Space, the caret keys and Tab. Enter adds, once
+   and not while composing; Escape gives the row back and leaves the sheet open. */
+function sheetEdit() {
+  const s = document.getElementById('saveSheet'), box = s && s.querySelector('.sh-newbox');
+  if (!Deck.sheet || !box) return;
+  box.innerHTML = `<div class="sh-edit"><input class="sh-input" type="text" maxlength="200" autocomplete="off" enterkeyhint="done" placeholder="Project name" aria-label="New project name"><button type="button" class="sh-add" data-guard="add" onclick="sheetNewSubmit()">Add</button></div><p class="sh-msg" role="status" aria-live="polite"></p>`;
+  const input = box.querySelector('.sh-input');
+  box.querySelector('.sh-edit').onkeydown = sheetEditKey;   // the field and Add: the editor's keys are its own
+  input.focus();
+  placeSheet();
+  sheetReveal(box);
+}
+function sheetReveal(el) { if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' }); }
+function sheetEditEnd(focusRow) {
+  const s = document.getElementById('saveSheet'), box = s && s.querySelector('.sh-newbox');
+  if (!box) return;
+  box.innerHTML = sheetNewRowHTML();
+  if (focusRow) box.querySelector('.sh-new').focus();
+}
+function sheetEditKey(e) {
+  e.stopPropagation();
+  const onAdd = e.target && e.target.classList && e.target.classList.contains('sh-add');
+  if (e.key === 'Escape') { e.preventDefault(); sheetEditEnd(true); }
+  else if (e.key === 'Enter' && !onAdd) { e.preventDefault(); if (!e.repeat && !e.isComposing && e.keyCode !== 229) sheetNewSubmit(); }
+  else if (e.key === 'Tab' && !e.shiftKey && onAdd) { e.preventDefault(); const i = e.target.closest('.sh-edit').querySelector('.sh-input'); if (i) i.focus(); }   // round to the field
+}   // Enter or Space on Add is the button's own (once: pressKey holds a repeat back); Tab and Shift+Tab move as usual
+/* A new project with the sheet's paper in it, or nothing at all: the same sheet still open, the paper still on screen
+   and undecided, and a name the shared check takes (not taken, not kept, no "|", no name every object has). It goes
+   above To read, ticked; the sheet stays open and the mode does not change. */
+function sheetNewSubmit() {
+  requireOwner();
+  const sh = Deck.sheet, s = document.getElementById('saveSheet'), input = s && s.querySelector('.sh-input'), msg = s && s.querySelector('.sh-msg');
+  if (!sh || !input || !s.classList.contains('open') || Number(s.dataset.sheet) !== sh.id) return false;
+  const say = m => { if (msg) msg.innerHTML = m; sheetReveal(msg); };
+  if (sh.key !== Deck.key || !deckEligible(sh.key)) { say('That paper left the deck, so nothing was made.'); return false; }
+  if (!input.value.trim()) { say('Type a name for the project.'); input.focus(); return false; }
+  const typed = input.value.trim();
+  if (listGone(typed) || sh.dead.has(typed)) { say(goneMessage(typed)); input.focus(); return false; }   // its old rows stay off, and so does the name
+  const name = checkListName(input.value, { say });
+  if (!name) { input.focus(); return false; }
+  libraryLists[name] = [sh.key];
+  sh.names.push(name);
+  s.querySelector('.sh-div').insertAdjacentHTML('beforebegin', sheetRowHTML(name));
+  sheetEditEnd(false);
+  persistLists(); updateLibraryBadge();
+  saveSheetSync();
+  const row = [...s.querySelectorAll('.sh-row')].find(b => b.dataset.n === name);
+  if (row) { row.focus({ preventScroll: true }); sheetReveal(row); }
+  return true;
+}
+/* The sheet's keys: arrows, Home and End move; Enter and Space act once (never the button's own click as well);
+   Escape, b and Tab close it; ? closes it and lets the keys list open */
+function sheetKey(e) {
+  if (e.target && e.target.closest && e.target.closest('.sh-edit')) { sheetEditKey(e); return; }   // the new project's field and Add: the editor's keys
+  if (e.metaKey || e.ctrlKey || e.altKey || e.isComposing) return;
+  const s = document.getElementById('saveSheet');
+  if (!s || !Deck.sheet) return;
+  const items = [...s.querySelectorAll('button')].filter(b => !b.disabled), i = items.indexOf(document.activeElement);
+  const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  if (k === 'ArrowDown' || k === 'ArrowUp') { const d = k === 'ArrowDown' ? 1 : -1; if (items.length) items[(Math.max(i, d > 0 ? -1 : 0) + d + items.length) % items.length].focus(); }
+  else if (k === 'Home' || k === 'End') { if (items.length) items[k === 'Home' ? 0 : items.length - 1].focus(); }
+  else if (k === 'Enter' || k === ' ') { if (!e.repeat && i >= 0) sheetPress(items[i]); }
+  else if (k === 'Escape' || k === 'b' || k === 'Tab') closeSaveSheet();
+  else { if (k === '?') closeSaveSheet(); return; }
+  e.preventDefault(); e.stopPropagation();
+}
+function sheetPress(b) {
+  const sid = Number(document.getElementById('saveSheet').dataset.sheet), g = b.dataset.guard;
+  if (g === 'row') sheetToggle(b.dataset.n, sid);
+  else if (g === 'new') sheetEdit();
+  else if (g === 'add') sheetNewSubmit();
+  else if (g === 'done') closeSaveSheet();
+}
+/* A bottom sheet held to the bottom of what shows (above an on-screen keyboard), at most 70% of it but room for its
+   head and a few rows; on the laptop a popover under Save */
+function placeSheet() {
+  const s = document.getElementById('saveSheet');
+  if (!s || !Deck.sheet || !s.classList.contains('open')) return;
+  if (Deck.layout === 'laptop') { const save = document.getElementById('deckSave'); if (save) placePopover(s, save); return; }
+  const panel = s.querySelector('.sh-panel'), vv = window.visualViewport;
+  if (!panel) return;
+  const h = vv ? vv.height : window.innerHeight, top = vv ? vv.offsetTop : 0;
+  panel.style.bottom = Math.max(0, window.innerHeight - (top + h)) + 'px';
+  panel.style.maxHeight = Math.round(Math.max(Math.min(h - 8, 280), h * 0.7)) + 'px';
+}
+function closeSaveSheet() {
+  const sh = Deck.sheet, s = document.getElementById('saveSheet');
+  Deck.sheet = null;
+  const save = document.getElementById('deckSave'); if (save) save.setAttribute('aria-expanded', 'false');
+  if (!s) return;
+  if (s._vv && window.visualViewport) { window.visualViewport.removeEventListener('resize', s._vv); window.visualViewport.removeEventListener('scroll', s._vv); }
+  s._vv = null;
+  const inside = s.contains(document.activeElement);
+  if (inside) document.activeElement.blur();   // the deck's keys work again
+  s.classList.remove('open'); s.innerHTML = ''; delete s.dataset.sheet;
+  if (sh && sh.from && inside) { const to = sh.from.isConnected ? sh.from : sh.from.id === 'deckSave' ? document.getElementById('deckSave') : null; if (to) to.focus(); }   // opened by a key: back where it was
+}
+/* A toast still showing goes, with its timer and its Undo, so nothing lies over the sheet; the bar keeps Undo */
+function hideToast() {
+  const t = document.getElementById('toast');
+  if (t) t.classList.remove('show');
+  if (_toastTimer) { clearTimeout(_toastTimer); _toastTimer = null; }
+  _toastUndo = null;
+}
 /* ---- projects: a list of yours, a mode of the deck, and a chip on the card ----
    A project is any list but the four in NOT_PROJECTS, by its exact name; it has no other record. In project mode
    (Deck.project, remembered in this browser with whether it had papers) Interested stars the paper and adds it to the
@@ -4856,8 +5127,8 @@ document.addEventListener('scroll', () => closeDeckMenu(), true);
    nothing, and Undo never touches it. */
 function isProjectName(n) { return typeof n === 'string' && n !== '' && !n.includes('|') && !NOT_PROJECTS.includes(n); }
 function hasList(n) { return Object.prototype.hasOwnProperty.call(libraryLists, n); }
-function projectNames() {   // last changed first, as Library's "Last updated"
-  const names = Object.keys(libraryLists).filter(isProjectName), at = new Map(names.map(n => [n, listDates(n).updated || '']));
+function projectNames() {   // last changed first, as Library's "Last updated"; a list that went elsewhere is not one
+  const names = Object.keys(libraryLists).filter(n => isProjectName(n) && !listGone(n)), at = new Map(names.map(n => [n, listDates(n).updated || '']));
   return names.sort((a, b) => at.get(b).localeCompare(at.get(a)) || a.localeCompare(b));
 }
 function projectMode() { return isOwner() && isProjectName(Deck.project) && hasList(Deck.project); }
@@ -4871,6 +5142,59 @@ function projectStore(name, filled) {
 /* Whether a row still names the project (hidden rows count: their lists are real). A row deleted on GitHub and kept
    here only for an edit not saved yet (_goneRemote) is not evidence that the project lives on. */
 function projectInRows(name) { return everyPaper().some(p => !p._goneRemote && (p.user_lists || '').split('|').includes(name)); }
+/* ---- what this device knows of each list: whether it had papers, and whether it went elsewhere ----
+   Project mode's evidence rule (projectReconcile, scholar_project_v1), for every list. A list whose rows had papers
+   and that has none in a copy that arrives from GitHub (renamed, deleted or emptied on another device; rows deleted
+   there and kept here for an edit not saved yet are no evidence) has gone: no sheet or picker offers it, nothing is
+   saved to it from the deck, and a new project of that name is refused, even when this browser's list times bring the
+   name back as an empty list. One made here and still empty, or emptied here, has not gone. A name that went is a
+   list again when a copy from GitHub carries papers in it, when a paper is put in it outside the deck, or when it is
+   made again in Library. Kept in this browser (scholar_list_evidence_v1), so a reload does not forget a name that went.
+   A name that arrives with no papers and that the record does not know (no record kept, or none for it: only this
+   browser's list times keep it) counts as gone too, since nothing says it was left empty on purpose. A write the
+   browser refuses removes the old record, says so once per page load, and is tried again at the next reconcile. */
+const LIST_EVIDENCE_KEY = 'scholar_list_evidence_v1';
+let _listEv = null, _listEvUnsaved = false, _listEvWarned = false;
+function listEv() {
+  if (!_listEv) {
+    _listEv = new Map();
+    if (isOwner()) try { Object.entries(JSON.parse(localStorage.getItem(LIST_EVIDENCE_KEY) || '{}')).forEach(([n, r]) => { if (r && typeof r === 'object') _listEv.set(n, { filled: r.filled === true, gone: r.gone === true }); }); } catch (e) {}
+  }
+  return _listEv;
+}
+function listEvSave() {
+  try { privateSet(LIST_EVIDENCE_KEY, JSON.stringify(Object.fromEntries(listEv()))); _listEvUnsaved = false; }
+  catch (e) {
+    _listEvUnsaved = true;   // tried again at the next reconcile
+    try { privateRemove(LIST_EVIDENCE_KEY); } catch (e2) {}   // an old record could call a list that went an empty one; with none, the deck leaves lists with no papers alone
+    if (!_listEvWarned) { _listEvWarned = true; toast('This browser could not save the deck\'s record of your lists. It will try again with your next change.', null, { error: true }); }
+  }
+}
+function listGone(n) { const r = isProjectName(n) ? listEv().get(n) : null; return !!(r && r.gone); }
+function listEvForget(n) { if (isOwner() && listEv().delete(n)) listEvSave(); }   // made, renamed or deleted in Library: a new start
+function namesInRows() {
+  const out = new Set();
+  everyPaper().forEach(p => { if (!p._goneRemote) (p.user_lists || '').split('|').forEach(n => { if (n) out.add(n); }); });
+  return out;
+}
+/* `received`: the lists were just read from the papers (a load, or a save that took GitHub's values in) */
+function listsReconcile(received) {
+  if (!isOwner()) return;
+  const ev = listEv(), inRows = namesInRows(), lists = new Set(Object.keys(libraryLists).filter(isProjectName));
+  let changed = false;
+  const put = (n, r) => { const was = ev.get(n); if (!was || was.filled !== r.filled || was.gone !== r.gone) { ev.set(n, r); changed = true; } };
+  for (const [n, r] of [...ev]) {
+    if (inRows.has(n)) put(n, { filled: true, gone: false });   // papers in it: a list, whatever it was
+    else if (received && (r.filled || r.gone)) put(n, { filled: false, gone: true });   // it had papers, and what arrived has none
+    else if (!r.gone) put(n, { filled: false, gone: false });   // emptied here, or never filled
+    if (!lists.has(n) && !ev.get(n).gone) { ev.delete(n); changed = true; }   // no list, nothing to remember
+  }
+  lists.forEach(n => {   // first seen: with papers, a list; arriving with none (only the list times keep it), not known to be one; made here just now, a list
+    if (!ev.has(n)) put(n, inRows.has(n) ? { filled: true, gone: false } : { filled: false, gone: !!received });
+  });
+  if (changed || _listEvUnsaved) listEvSave();
+}
+function goneMessage(n) { return `"${esc(n)}" was renamed or deleted on another device, or this browser has no record of it. To use the name again, make it in Library.`; }
 /* The project's papers that seed its order: live and visible, not hidden and not deleted on GitHub */
 function projectSeeds(name) {
   const byKey = new Map(allPapers.filter(p => !p._goneRemote).map(p => [paperKey(p), p]));
@@ -4886,14 +5210,14 @@ function projectReconcile(received) {
   const s = projectStored(), name = Deck.project || (received && s ? s.name : null);
   if (!name) return;
   const filled = projectInRows(name), mine = s && s.name === name;
-  if (!isProjectName(name) || !hasList(name) || (received && !filled && mine && s.filled)) { projectDrop(name); return; }
+  if (!isProjectName(name) || !hasList(name) || listGone(name) || (received && !filled && mine && s.filled)) { projectDrop(name); return; }   // listGone: whatever another tab left remembered
   Deck.project = name;
   if (!mine || s.filled !== filled) projectStore(name, filled);
 }
 function projectDrop(name) {
   const s = projectStored();
   if (s && s.name === name) projectStore(null);
-  if (Deck.project === name) { Deck.project = null; deckAbort(); closeProjectMenu(); }   // a swipe on its way there lands nowhere
+  if (Deck.project === name) { Deck.project = null; deckAbort(); closeProjectMenu(); closeSaveSheet(); }   // a swipe on its way there lands nowhere
   toast(`"${esc(name)}" is no longer one of your lists, so the deck is For you again.`);
   if (deckActive() && Deck.mounted) { deckRememberScroll(); renderDeck(); }   // the card on screen stays, where its reader was
 }
@@ -4902,16 +5226,16 @@ function setProject(name) {
   requireOwner();
   closeProjectMenu();
   name = name || null;
-  if (name && !(isProjectName(name) && hasList(name))) return;
+  if (name && !(isProjectName(name) && hasList(name) && !listGone(name))) return;
   if (name === Deck.project) return;
   Deck.project = name; Deck.switched = true;
   projectStore(name, name && projectInRows(name));
   deckLeave();
-  if (deckActive() && Deck.mounted) renderDeck();
-  toast(name ? `Project ${esc(name)}: Interested now stars a paper and adds it here.` : 'For you again: Interested adds to To read.');
+  if (deckActive() && Deck.mounted) renderDeck();   // the pill, Interested's second line and the cue say where things go now
 }
 async function newProject() { const _authEpoch = capturePrivateEpoch();
   const raw = await privateAwait(showPrompt('New project', 'A list of yours. Interested adds papers to it while it is chosen.', 'Project name'), _authEpoch);
+  if (listGone(String(raw == null ? '' : raw).trim())) { toast(goneMessage(String(raw).trim())); return; }   // the deck does not bring back a name that went
   const name = checkListName(raw);
   if (!name) return;
   libraryLists[name] = [];
@@ -4961,78 +5285,6 @@ function deckCueLabel() {
   const yes = document.getElementById('deckCueYes');
   if (yes) yes.textContent = '★ ' + (Deck.ranked ? shortName(Deck.ranked, 22) : 'Interested');
 }
-/* The row: the picker's pill, then a chip per project in the order this render fixed (Deck.chips), so no chip moves
-   under a finger. A tap changes only its chip's mark; the row is drawn anew only with the deck. */
-function projectRowHTML() {
-  if (!isOwner()) return '';
-  const cur = projectMode() ? Deck.project : null;
-  const pill = `<button class="pj-pill${cur ? ' on' : ''}" id="projectPill" onclick="openProjectMenu(event, this)" aria-haspopup="menu" aria-expanded="false" aria-keyshortcuts="p" aria-label="${cur ? `Project ${dataAttr(cur)}: choose another` : 'Choose a project'}"><span><i aria-hidden="true">&#9670;</i><b class="pj-n">${cur ? esc(cur) : 'Project'}</b><i aria-hidden="true">&#9662;</i></span></button>`;
-  const chips = Deck.chips.map(n => `<button class="pj-chip${n === cur ? ' cur' : ''}" data-n="${dataAttr(n)}" onclick="projectChip(event, this)" aria-pressed="false"><span><i class="pj-tick" aria-hidden="true">+</i><b class="pj-n">${esc(n)}</b></span></button>`).join('');
-  return pill + (chips ? `<div class="pj-chips" role="group" aria-label="Add this paper to a project">${chips}</div>` : '');
-}
-function projectRowRender() {
-  const el = document.getElementById('deckProj');
-  if (!el) return;
-  if (!el._hooked) {   // where a press on a chip begins: a finger, a pointer, or Enter or Space on it
-    el._hooked = true;
-    for (const t of ['pointerdown', 'touchstart', 'keydown']) el.addEventListener(t, projectArm, { capture: true, passive: t === 'touchstart' });
-    for (const t of ['pointercancel', 'touchcancel']) el.addEventListener(t, e => { const b = projectChipOf(e.target); if (b) b._arm = null; }, true);
-  }
-  el.innerHTML = projectRowHTML();
-  el.classList.toggle('on', isOwner());
-  document.body.classList.toggle('deck-proj-on', isOwner());
-  projectRowSync();
-}
-/* Each chip's mark for the paper on screen, changed in place (the row's scroll and focus stay). No paper on screen
-   (the end of the deck), or a project gone since: the chip does nothing. */
-function projectRowSync() {
-  const el = document.getElementById('deckProj');
-  if (!el) return;
-  const k = Deck.key;
-  el.dataset.key = k || '';
-  el.querySelectorAll('.pj-chip').forEach(b => {
-    const n = b.dataset.n, live = hasList(n), on = !!k && live && libraryLists[n].includes(k);
-    b.setAttribute('aria-pressed', String(on));
-    b.classList.toggle('in', on);
-    b.disabled = !k || !live;
-    const t = b.querySelector('.pj-tick');
-    if (t) t.textContent = on ? '✓' : '+';
-  });
-}
-/* A press on a chip is bound to the paper and the project when it begins. The card can change before it ends (a pass,
-   a star or a hide arriving from another device moves the deck on, and the same chip then shows the next paper):
-   the press then saves nothing, rather than saving the paper that took its place. A held Enter or Space acts once. */
-function projectChipOf(el) { return el && el.closest ? el.closest('.pj-chip') : null; }
-function projectArm(e) {
-  const b = projectChipOf(e.target);
-  if (!b) return;
-  if (e.type === 'keydown') {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    if (e.repeat) { e.preventDefault(); return; }
-  }
-  const row = document.getElementById('deckProj');
-  b._arm = { key: row ? row.dataset.key : null, name: b.dataset.n };
-}
-function projectChip(ev, btn) {
-  const row = document.getElementById('deckProj'), arm = btn._arm;
-  btn._arm = null;
-  const k = arm ? arm.key : row ? row.dataset.key : null;   // a click with no start seen (assistive technology): the paper shown now
-  if (!toggleProject(arm ? arm.name : btn.dataset.n, k) && arm && k && k !== Deck.key) toast('That paper left the deck before the tap ended, so nothing was saved.');
-  if (ev && ev.detail) btn.blur();   // a click or a tap: the deck's keys work again at once (a key press keeps focus here)
-}
-/* A chip: the paper on screen into the project or out of it, only while it is still on screen and undecided and the
-   project still exists. Not a decision: no advance, no record; a later Undo of Interested leaves it. Returns whether
-   it wrote. */
-function toggleProject(name, k) {
-  requireOwner();
-  if (!k || k !== Deck.key || !deckEligible(k) || !isProjectName(name) || !hasList(name)) return false;
-  const on = !libraryLists[name].includes(k);
-  if (on) libraryLists[name].push(k); else libraryLists[name] = libraryLists[name].filter(x => x !== k);
-  persistLists(); updateLibraryBadge();
-  projectRowSync();
-  toast(on ? `Added to ${esc(name)}` : `Removed from ${esc(name)}`);
-  return true;
-}
 /* ---- the picker: For you, each project with its papers, a new one. Focus moves into it; arrows, Enter, Esc; p
    closes it and Shift+P leaves the project from here too. Inside what shows of the screen on both axes. ---- */
 function openProjectMenu(ev, btn) {
@@ -5040,19 +5292,19 @@ function openProjectMenu(ev, btn) {
   requireOwner();
   let m = document.getElementById('projectMenu');
   if (m && m.classList.contains('open')) { closeProjectMenu(); return; }
-  btn = btn || document.getElementById('projectPill');
+  btn = btn || document.getElementById('feedPill');
   if (!btn || !btn.isConnected || !deckActive()) return;
-  closeDeckMenu();
+  closeSaveSheet();
   if (!m) {
     m = document.createElement('div'); m.id = 'projectMenu'; m.className = 'deck-menu pj-menu';
     m.setAttribute('role', 'menu'); m.setAttribute('aria-label', 'Project');
     m.onclick = e => e.stopPropagation(); m.onkeydown = projectMenuKey; m.onkeyup = e => { if (e.key === ' ') e.preventDefault(); };
     document.body.appendChild(m);
   }
-  const cur = projectMode() ? Deck.project : null, live = new Set(allPapers.map(paperKey));
+  const cur = projectMode() ? Deck.project : null, live = new Set(allPapers.map(paperKey)), near = cur && Deck.ranked === cur ? projectNearCount() : 0;
   const item = (n, on, body) => `<button role="menuitemradio" aria-checked="${on}" data-n="${dataAttr(n)}" onclick="projectMenuPick(this)"><i aria-hidden="true">${on ? '&#10003;' : ''}</i>${body}</button>`;
-  m.innerHTML = item('', !cur, '<span class="pj-mi">For you<small>no project</small></span>')
-    + projectNames().map(n => item(n, n === cur, `<span class="pj-mi">${esc(n)}</span><span class="pill-count">${libraryLists[n].filter(k => live.has(k)).length}</span>`)).join('')
+  m.innerHTML = item('', !cur, '<span class="pj-mi">For you<small>every paper, no project</small></span>')   // names whole, wrapping
+    + projectNames().map(n => item(n, n === cur, `<span class="pj-mi">${esc(n)}${n === cur ? `<small>${near ? `${near} near it first` : 'nothing near it yet'}</small>` : ''}</span><span class="pill-count">${libraryLists[n].filter(k => live.has(k)).length}</span>`)).join('')
     + '<button role="menuitem" class="pj-new" onclick="projectMenuPick(this, true)"><i aria-hidden="true">+</i><span class="pj-mi">New project&hellip;</span></button>';
   m._btn = btn; btn.setAttribute('aria-expanded', 'true');
   popIn(m);
@@ -5062,12 +5314,12 @@ function openProjectMenu(ev, btn) {
   const items = [...m.querySelectorAll('button')];
   (items.find(b => b.getAttribute('aria-checked') === 'true') || items[0]).focus();
 }
-/* Over the pill when there is more room there (a phone's row is at the bottom), else under it, from its left edge;
-   with hardly any room either side (a keyboard up), over all that shows. The list scrolls inside. */
-function placeProjectMenu() {
-  const m = document.getElementById('projectMenu');
-  if (!m || !m.classList.contains('open') || !m._btn) return;
-  const r = m._btn.getBoundingClientRect(), vv = window.visualViewport;
+function placeProjectMenu() { const m = document.getElementById('projectMenu'); if (m && m.classList.contains('open') && m._btn) placePopover(m, m._btn); }
+/* A popover from its button, inside what shows of the screen on both axes, above an on-screen keyboard too: under the
+   button when it fits there or there is more room there, else over it, from its left edge; with hardly any room either
+   side (a keyboard up), over all that shows. Its list scrolls inside. */
+function placePopover(m, anchor) {
+  const r = anchor.getBoundingClientRect(), vv = window.visualViewport;
   const top = vv ? vv.offsetTop : 0, left = vv ? vv.offsetLeft : 0, h = vv ? vv.height : window.innerHeight, w = vv ? vv.width : window.innerWidth, pad = 8, gap = 6;
   const first = top + pad, last = top + h - pad;
   m.style.maxWidth = Math.max(0, w - 2 * pad) + 'px'; m.style.maxHeight = ''; m.style.top = first + 'px'; m.style.left = (left + pad) + 'px';
@@ -5105,16 +5357,17 @@ function projectMenuPick(btn, isNew) {
   closeProjectMenu();
   if (isNew) newProject(); else setProject(btn.dataset.n || null);
 }
-document.addEventListener('scroll', e => { const m = document.getElementById('projectMenu'); if (m && !m.contains(e.target)) closeProjectMenu(); }, true);
-window.addEventListener('resize', () => placeProjectMenu());
+document.addEventListener('scroll', e => { const m = document.getElementById('projectMenu'); if (m && !m.contains(e.target)) closeProjectMenu(); }, true);   // the save sheet stays: Save does not move
+window.addEventListener('resize', () => { placeProjectMenu(); placeSheet(); });
 /* Lock or a new target: every piece of the deck's state goes, with its timers */
 function deckTeardown() {
   if (Deck.strip) clearTimeout(Deck.strip.timer);
   Object.assign(Deck, { keys: [], key: null, last: null, strip: null, gesture: null, swallow: 0, mounted: false, scroll: null, noted: false, layout: null, tally: { interested: 0, passed: 0, hidden: 0, read: 0 },
-    project: null, switched: false, ranked: null, chips: [], near: null });
-  _projectNear = { sig: null, rows: null, map: null };
-  for (const id of ['deck', 'deckBar', 'deckActions', 'deckStrip', 'deckProj']) { const el = document.getElementById(id); if (el) { el.innerHTML = ''; el.classList.remove('open', 'on'); } }
-  for (const id of ['deckMenu', 'projectMenu']) {
+    project: null, switched: false, ranked: null, near: null, sheet: null });
+  _projectNear = { sig: null, rows: null, map: null }; _listEv = null;
+  Presses.clear();
+  for (const id of ['deck', 'deckBar', 'deckActions', 'deckStrip']) { const el = document.getElementById(id); if (el) { el.innerHTML = ''; el.classList.remove('open'); } }
+  for (const id of ['projectMenu', 'saveSheet']) {
     const m = document.getElementById(id);
     if (!m) continue;
     clearTimeout(m._leaveT); if (m._btn) m._btn.setAttribute('aria-expanded', 'false'); m._btn = null;
@@ -5122,17 +5375,17 @@ function deckTeardown() {
     m.remove();
   }
   const bar = document.getElementById('deckProgress'); if (bar) bar.style.width = '';
-  document.body.classList.remove('deck-mode', 'deck-phone', 'deck-land', 'deck-laptop', 'deck-immersive', 'deck-dragging', 'deck-proj-on');
+  document.body.classList.remove('deck-mode', 'deck-phone', 'deck-land', 'deck-laptop', 'deck-immersive', 'deck-dragging');
   deckCue(null);
 }
 /* ===== MENUS AND PICKERS: a tap outside only closes them =====
    While one is open, a tap anywhere else closes it and does nothing more: it never also opens the paper, presses
    the button or starts the swipe underneath (as on iOS). Scrolling outside still closes it and scrolls. Short-lived
    hints (the venue tooltip) don't count. */
-const POPOVERS = '#deckMenu.open, #projectMenu.open, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup, #chatHist';
+const POPOVERS = '#saveSheet.open, #projectMenu.open, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup, #chatHist';
 let _dismissTap = null;
 function closePopovers() {
-  closeDeckMenu(); closeProjectMenu(); toggleReaderMenu(false); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeAbsPopup(); closeRelevancePopup();
+  closeSaveSheet(); closeProjectMenu(); toggleReaderMenu(false); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeAbsPopup(); closeRelevancePopup();
   const h = document.getElementById('chatHist'); if (h) { if (h._close) h._close(); else h.remove(); }
 }
 document.addEventListener('pointerdown', e => {
@@ -5739,7 +5992,7 @@ function askHide(k, opts) {
   const p = allPapers.find(x => paperKey(x) === k);
   if (!p) return;
   const deck = opts && opts.deck ? opts.deck : 0;   // the strip's pass this sheet gives a reason for
-  closeSaveDD(); closeDeckMenu();
+  closeSaveDD(); closeSaveSheet();
   let s = document.getElementById('hideSheet');
   if (!s) {
     s = document.createElement('div'); s.id = 'hideSheet'; s.className = 'hide-sheet';
@@ -5750,6 +6003,7 @@ function askHide(k, opts) {
   }
   s.dataset.key = k;
   if (deck) s.dataset.deck = String(deck); else delete s.dataset.deck;
+  if (opts && opts.card) s.dataset.card = '1'; else delete s.dataset.card;   // asked from the deck's card
   s._from = document.activeElement;
   s.innerHTML = `<div class="hide-box">
     <h3 id="hideSheetTitle">Hide this paper</h3>
@@ -5774,6 +6028,7 @@ function confirmHide(reason) {
   if (!s || !s.classList.contains('open')) return;
   const k = s.dataset.key, deck = Number(s.dataset.deck || 0), text = hideReasonText(reason);
   if (deck) { closeHideSheet(); if (text) deckReason(deck, text); return; }   // from the strip: no reason leaves the pass
+  if (s.dataset.card && (k !== Deck.key || !deckEligible(k) || !deckActive())) { closeHideSheet(); toast('That paper left the deck, so nothing was hidden.'); return; }
   closeHideSheet(true);
   hidePaper(k, text);
 }
@@ -5781,6 +6036,7 @@ function closeHideSheet(hidden) {
   const s = document.getElementById('hideSheet');
   if (!s) return;
   if (s.dataset.deck) { delete s.dataset.deck; deckStripHold('sheet', false); }
+  delete s.dataset.card;
   const from = s._from;
   s.classList.remove('open'); s.innerHTML = ''; s._from = null;
   if (!hidden && from && from.isConnected && from.focus) from.focus();   // Cancel: back where the reader was
@@ -6561,15 +6817,16 @@ function renderLibrary() {
    a new project): trimmed; not empty; no "|" (a paper's lists are stored joined by it); not a list there already (the
    save picker takes an existing one as that list; a rename may keep its own); not one of the names kept for the
    machine's lanes and To read; and not a name every object already has (constructor, toString, __proto__), which
-   other maps of names in the page would take for their own. Says what is wrong and returns null, else the name. */
+   other maps of names in the page would take for their own. Says what is wrong (through opts.say, else a toast) and
+   returns null, else the name. */
 function checkListName(raw, opts) {
   opts = opts || {};
-  const name = String(raw == null ? '' : raw).trim();
+  const name = String(raw == null ? '' : raw).trim(), say = opts.say || toast;
   if (!name) return null;
-  if (name.includes('|')) { toast('List name cannot contain "|"'); return null; }
+  if (name.includes('|')) { say('List name cannot contain "|"'); return null; }
   if (opts.except !== undefined && name === opts.except) return name;
-  if (hasList(name)) { if (opts.existing) return name; toast('A list with that name already exists'); return null; }
-  if (NOT_PROJECTS.includes(name) || name in Object.prototype) { toast(`"${esc(name)}" is kept for a list of the page's own; choose another name`); return null; }
+  if (hasList(name)) { if (opts.existing) return name; say('A list with that name already exists'); return null; }
+  if (NOT_PROJECTS.includes(name) || name in Object.prototype) { say(`"${esc(name)}" is kept for a list of the page's own; choose another name`); return null; }
   return name;
 }
 /* A rename or a delete reaches hidden papers too: their lists stay on their rows (the lists are read from the visible
@@ -6587,6 +6844,7 @@ async function createNewList() { const _authEpoch = capturePrivateEpoch();
   const name = await privateAwait(showPrompt('New list', null, 'List name'), _authEpoch);
   const trimmed = checkListName(name);
   if (!trimmed) return;
+  listEvForget(trimmed);   // made again here: a list, even if a list of that name went elsewhere
   libraryLists[trimmed] = [];
   persistLists(); updateLibraryBadge();
   toast(`Created "${esc(trimmed)}"`);
@@ -6598,10 +6856,10 @@ async function renameList(oldName) { const _authEpoch = capturePrivateEpoch();
   libraryLists[newName] = libraryLists[oldName];
   delete libraryLists[oldName];
   renameInHidden(oldName, newName);
+  listEvForget(oldName); listEvForget(newName);
   const was = projectStored();   // the chosen project stays chosen under its new name, here and as remembered
   if (Deck.project === oldName) { Deck.project = newName; if (Deck.ranked === oldName) Deck.ranked = newName; }
   if (Deck.project === newName || (was && was.name === oldName)) projectStore(newName, projectInRows(oldName) || projectInRows(newName));
-  Deck.chips = Deck.chips.map(n => n === oldName ? newName : n);
   const d = listDates(oldName), now = new Date().toISOString();
   saveListMeta({ [oldName]: { deleted: true, at: now }, [newName]: { created: d.created || now, at: now } });   // renamed, not new
   if (_listSig) { _listSig[newName] = _listSig[oldName]; delete _listSig[oldName]; }
@@ -6614,6 +6872,7 @@ async function deleteList(name) { const _authEpoch = capturePrivateEpoch();
   if (!ok) return;
   delete libraryLists[name];
   renameInHidden(name, null);
+  listEvForget(name);
   const was = projectStored();   // a deleted project is chosen no longer
   if (Deck.project === name) Deck.project = null;
   if (was && was.name === name) projectStore(null);
@@ -6657,6 +6916,7 @@ async function doCopyNew(srcName) { const _authEpoch = capturePrivateEpoch();
   const name = await privateAwait(showPrompt('New list name', null, 'List name'), _authEpoch);
   const trimmed = checkListName(name);   // a new list, never one there already
   if (!trimmed) return;
+  listEvForget(trimmed);
   libraryLists[trimmed] = [];
   const added = libraryLists[srcName].filter(k => !libraryLists[trimmed].includes(k));
   libraryLists[trimmed].push(...added);
@@ -7319,7 +7579,9 @@ function _doToastUndo() {
 function showSaveBar() {
   _editGen++;
   deckObserve();   // every edit passes here: one that changed what a deck decision set ends that decision's Undo
+  listsReconcile(false);     // what this device knows of each list
   projectReconcile(false);   // and one that deleted the chosen project ends project mode
+  sheetReconcile(); saveSheetSync();
   document.getElementById('saveBar').classList.add('visible');
   scheduleBackup();
   if (_pushing) return;
@@ -12172,7 +12434,7 @@ function paperPageHTML(p, opts) {
     ${dek}
     ${hasText(p.authors) ? `<div class="pd-authors">${esc(p.authors)}</div>` : ''}
     ${parseWhy(p) ? `<div class="pd-why"><span class="pd-why-label">Why it's here</span>${whyHTML(p)}</div>` : ''}
-    ${opts.deck && (isOwner() || pdfSourceOf(p) || p.url) ? `<div class="pd-deck-acts">${isOwner() || pdfSourceOf(p) ? `<button class="pd-read" onclick="openReader('${ka}')" title="${pdfSourceOf(p) ? 'Read the PDF here' : 'Add a PDF to read it here'}"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>${readLabelHTML(p)}</button>` : ''}${p.url ? `<a class="pd-open" href="${esc(p.url)}" target="_blank" rel="noopener" title="Open the paper's page" aria-label="Open paper"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}</div>` : ''}
+    ${opts.deck && (isOwner() || pdfSourceOf(p) || p.url) ? `<div class="pd-deck-acts">${isOwner() || pdfSourceOf(p) ? `<button class="pd-read" onclick="openReader('${ka}')" title="${pdfSourceOf(p) ? 'Read the PDF here' : 'Add a PDF to read it here'}"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>${readLabelHTML(p)}</button>` : ''}${p.url ? `<a class="pd-open" href="${esc(p.url)}" target="_blank" rel="noopener" title="Open the paper's page" aria-label="Open paper"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}${isOwner() ? `<button class="pd-act2" data-act="read" onclick="deckCardAct(event, this, 'read')"><span aria-hidden="true">&#10003;</span> Mark read</button><button class="pd-act2" data-act="hide" onclick="deckCardAct(event, this, 'hide')"><span aria-hidden="true">&#8856;</span> Hide&hellip;</button>` : ''}</div>` : ''}
   </header>`;
 
   // Reading column
@@ -12651,7 +12913,7 @@ Config.startup = bootstrapApp();
 (function () {
   const views = ['applyPapers', 'switchTab', 'applyHash', 'backFromList', 'refresh', 'applyFilters', 'toggleRel', 'setListSort',
     'showGlobalSearch', 'hideGlobalSearch', 'renderGlobalSearch', 'setSearchFilter', 'setSearchSelect', 'clearSearchFilters',
-    'renderDeck', 'deckRefresh', 'deckMountCards', 'deckRepaint', 'deckNext', 'deckMenu', 'deckDown', 'deckMove', 'deckUp', 'setFyMode', 'relayout', 'repaintPaper', 'repaintShownPapers',
+    'renderDeck', 'deckRefresh', 'deckMountCards', 'deckRepaint', 'deckNext', 'openSaveSheet', 'deckDown', 'deckMove', 'deckUp', 'setFyMode', 'relayout', 'repaintPaper', 'repaintShownPapers',
     'renderPapers', 'renderEmailPapers', 'renderWeekPulse', 'renderTopPapers',
     'openLatestDigest', 'openAlert', 'openGroup', 'openVenue', 'setVenueYear', 'openTopList', 'showList',
     'renderVenues', 'renderListPage', 'renderListRail', 'renderListTools', 'renderListBody', 'setListOrder', 'setListRel', 'setListQuery',
@@ -12693,9 +12955,9 @@ Config.startup = bootstrapApp();
     'showCopyDD', 'doCopyList', 'doCopyNew', 'updateI', 'updateG', 'updateInterestField', 'toggleInterestDropdown', 'gDragStart', 'gDrop',
     'resetChanges', 'pushToGitHub', 'showSaveBar', 'openStrengthDD', 'setMatchStrength', 'scheduleAutoPush', 'disconnectGitHub', 'submitPdfLink', 'pinPdfVersion',
     // the deck's decisions, the strip's reasons, Undo, and putting a passed paper back
-    'deckInterested', 'deckPass', 'deckMarkRead', 'deckReason', 'deckOther', 'deckUndo', 'deckMenuAct', 'unpassPaper',
+    'deckInterested', 'deckPass', 'deckMarkRead', 'deckReason', 'deckOther', 'deckUndo', 'deckCardAct', 'unpassPaper',
     // projects: choosing one, making one, a chip
-    'setProject', 'newProject', 'openProjectMenu', 'toggleProject',
+    'setProject', 'newProject', 'openProjectMenu', 'openSaveSheet', 'sheetToggle', 'sheetNewSubmit',
     // notes and their password
     'vaultReady', 'openVaultModal', 'submitVault', 'unlockFromPanel', 'loadReaderNotes', 'lockNotes', 'nfSave', 'savePaperNotes', 'scheduleNotesPush', 'pushNotes',
     'reconcileNotesIndex', 'renameHlColor', 'createAnno', 'deleteAnno', 'editAnnoComment', 'setAnnoColor', 'citeAnno', 'citeSelection',
