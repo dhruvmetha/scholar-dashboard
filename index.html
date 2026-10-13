@@ -808,15 +808,54 @@ body.deck-phone .deck-actions, body.deck-land .deck-actions { position: fixed; z
 body.deck-phone .deck-actions { left: 0; right: 0; bottom: 0; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border); }
 body.deck-land .deck-actions { top: 0; bottom: 0; right: 0; width: 112px; flex-direction: column; justify-content: center; padding: 10px calc(10px + env(safe-area-inset-right, 0px)) 10px 10px; border-left: 1px solid var(--border); }
 body.deck-land .da { flex: none; flex-direction: column; gap: 2px; min-height: 58px; font-size: 13px; }
-body.deck-land .deck-card { padding-right: 120px; padding-bottom: 24px; }
+body.deck-land .deck-card { padding-right: 120px; padding-bottom: calc(var(--deck-bottom, 0px) + 24px); }
 body.deck-land .deck-bar { right: 112px; }
 body.deck-land .deck-cue.no { right: 126px; }
 @media (max-width: 360px) { .da { gap: 4px; padding: 0 6px; font-size: 13px; } }
+.da-l { min-width: 0; overflow: hidden; text-overflow: ellipsis; }   /* a long project name on Interested */
+/* the project row: the picker's pill, then a chip per project. Each button is its own 44 px target with the visible
+   pill inside it, so neighbours never share a point; the chips scroll sideways under a fade. Above the actions on a
+   phone, along the bottom left of the rail sideways, under the actions on the laptop. */
+.deck-proj { display: none; }
+body.deck-mode .deck-proj.on { display: flex; align-items: center; min-width: 0; }
+.pj-pill, .pj-chip { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: 0; padding: 0 3px; border: none; background: none; color: inherit; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.pj-pill > span, .pj-chip > span { display: inline-flex; align-items: center; gap: 6px; max-width: 180px; min-height: 34px; padding: 0 12px; border: 1px solid transparent; border-radius: 999px; background: rgba(255,255,255,0.055); color: var(--text-secondary); font-size: 13px; white-space: nowrap; }
+.pj-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+.pj-pill > span { border-color: rgba(255,255,255,0.18); color: var(--text); }
+.pj-pill.on > span { background: var(--accent-dim); border-color: rgba(251,177,60,0.7); color: var(--accent); }
+.pj-pill i { font-style: normal; font-size: 11px; opacity: 0.85; }
+.pj-chips { display: flex; flex: 1; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; padding-right: 16px; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); }
+.pj-chips::-webkit-scrollbar { display: none; }
+.pj-tick { width: 10px; font-style: normal; text-align: center; color: var(--text-muted); }
+.pj-chip.cur > span { border-color: rgba(251,177,60,0.55); }
+.pj-chip.in > span { background: rgba(251,177,60,0.16); color: var(--text); }
+.pj-chip.in .pj-tick { color: var(--accent); }
+.pj-chip:disabled { cursor: default; opacity: 0.45; }
+.pj-pill:focus-visible > span, .pj-chip:focus-visible > span { outline: 2px solid var(--accent); outline-offset: 1px; }
+body.deck-phone .deck-proj.on, body.deck-land .deck-proj.on { position: fixed; z-index: 95; left: 0; border-top: 1px solid var(--border); background: rgba(17,17,17,0.96); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+body.deck-phone .deck-proj.on { right: 0; bottom: var(--deck-acts-h, 65px); padding: 2px 7px 0; }
+body.deck-phone.deck-proj-on .deck-actions { border-top-color: transparent; }
+body.deck-land .deck-proj.on { right: 112px; bottom: 0; padding: 2px 8px env(safe-area-inset-bottom, 0px) calc(8px + env(safe-area-inset-left, 0px)); }
+body.deck-laptop .deck-proj.on { margin: 0 -3px; }
+/* the picker: For you, the projects, a new one; inside what shows of the screen, its list scrolling */
+.pj-menu { min-width: 240px; overflow-y: auto; overscroll-behavior: contain; transform-origin: 0 100%; }
+.pj-menu > * { flex-shrink: 0; }
+.pj-menu .pj-mi { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pj-menu small { margin-left: 6px; font-size: 12px; color: var(--text-muted); }
+.pj-menu .pill-count { flex-shrink: 0; font-size: 13px; color: var(--text-muted); }
+.pj-menu [aria-checked="true"] { color: var(--accent); }
+.pj-menu [aria-checked="true"] i { color: var(--accent); }
+.pj-menu .pj-new { border-top: 1px solid var(--border); border-radius: 0 0 8px 8px; color: var(--accent); }
+.pj-menu > *:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+/* on a card the project mode put first: why it is there */
+.deck-near { max-width: var(--pd-w); margin: 0 auto; padding: 12px 24px 0; font-size: 12.5px; color: var(--accent); }
+.deck-near i { font-style: italic; color: var(--text-secondary); }
+@media (max-width: 700px) { .deck-near { padding: 10px 16px 0; } }
 /* the reason strip, for the paper just passed */
 .deck-strip { display: none; }
 .deck-strip.open { display: block; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; background: #1d1d20; box-shadow: 0 10px 30px rgba(0,0,0,0.55); }
 body.deck-phone .deck-strip.open { position: fixed; left: 8px; right: 8px; bottom: calc(var(--deck-bottom, 64px) + 8px); z-index: 96; }
-body.deck-land .deck-strip.open { position: fixed; left: 8px; right: 120px; bottom: 8px; z-index: 96; }
+body.deck-land .deck-strip.open { position: fixed; left: 8px; right: 120px; bottom: calc(var(--deck-bottom, 0px) + 8px); z-index: 96; }
 .ds-head { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary); }
 .ds-what { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ds-what i { font-style: normal; color: var(--text); }
@@ -839,8 +878,8 @@ body.deck-phone .deck-end, body.deck-land .deck-end { position: absolute; inset:
 .deck-end h2 { font-family: var(--serif); font-size: 26px; font-weight: 500; color: var(--text); }
 .deck-end-acts { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .deck-end-acts .ui-btn { min-height: 44px; }
-/* the card's menu */
-.deck-menu { position: fixed; z-index: 120; display: none; flex-direction: column; min-width: 220px; padding: 4px; background: #1d1d20; border: 1px solid rgba(255,255,255,0.14); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.55); transform-origin: 100% 100%; }
+/* the card's menu, and the project picker: over a toast still showing (450), which would cover their lower rows */
+.deck-menu { position: fixed; z-index: 455; display: none; flex-direction: column; min-width: 220px; padding: 4px; background: #1d1d20; border: 1px solid rgba(255,255,255,0.14); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.55); transform-origin: 100% 100%; }
 .deck-menu.open { display: flex; animation: ui-pop 0.14s ease-out; }
 .deck-menu.leaving { display: flex; pointer-events: none; animation: ui-out 0.12s ease-in forwards; }
 .deck-menu > * { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 14px; border: none; border-radius: 8px; background: none; color: var(--text); font: inherit; font-size: 15px; text-align: left; text-decoration: none; cursor: pointer; }
@@ -852,9 +891,9 @@ body.deck-phone .deck-end, body.deck-land .deck-end { position: absolute; inset:
 body.deck-phone .save-bar { bottom: calc(var(--deck-bottom, 64px) + var(--deck-strip-h, 0px) + 10px); }
 body.deck-phone .toast { bottom: calc(var(--deck-bottom, 64px) + var(--deck-strip-h, 0px) + 12px); }
 body.deck-phone:has(.save-bar.visible) .toast { bottom: calc(var(--deck-bottom, 64px) + var(--deck-strip-h, 0px) + 60px); }
-body.deck-land .save-bar { left: 8px; bottom: calc(var(--deck-strip-h, 0px) + 10px); }
-body.deck-land .toast { left: calc(50% - 56px); bottom: calc(var(--deck-strip-h, 0px) + 12px); }
-body.deck-land:has(.save-bar.visible) .toast { bottom: calc(var(--deck-strip-h, 0px) + 60px); }
+body.deck-land .save-bar { left: 8px; bottom: calc(var(--deck-bottom, 0px) + var(--deck-strip-h, 0px) + 10px); }
+body.deck-land .toast { left: calc(50% - 56px); bottom: calc(var(--deck-bottom, 0px) + var(--deck-strip-h, 0px) + 12px); }
+body.deck-land:has(.save-bar.visible) .toast { bottom: calc(var(--deck-bottom, 0px) + var(--deck-strip-h, 0px) + 60px); }
 @media (prefers-reduced-motion: reduce) { .deck-progress, body.deck-phone .navbar, body.deck-land .navbar, .deck-bar, .deck-card, .deck-card.leaving, .da { transition: none; } .da:active:not(:disabled) { transform: none; } }
 
 /* "New since your last visit" marker */
@@ -2268,6 +2307,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
     <div class="deck-head" id="deckHead">
       <div class="deck-bar" id="deckBar"></div>
       <div class="deck-actions" id="deckActions" role="toolbar" aria-label="Decide on this paper"></div>
+      <div class="deck-proj" id="deckProj" role="group" aria-label="Projects"></div>
       <div class="deck-strip" id="deckStrip" role="region" aria-label="Why you passed" aria-live="polite"></div>
     </div>
     <button class="deck-top" id="deckTop" onclick="deckImmersive(false)" aria-label="Show the menu and the filters"><span class="deck-progress" id="deckProgress"></span></button>
@@ -2458,10 +2498,12 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
       <dt><kbd>?</kbd></dt><dd>Show this list</dd>
     </dl>
     <dl class="keys-deck">
-      <dt class="owner-only"><kbd>s</kbd></dt><dd class="owner-only">Interested: star it and add it to To read</dd>
+      <dt class="owner-only"><kbd>s</kbd></dt><dd class="owner-only">Interested: star it and add it to To read, or in a project to the project</dd>
       <dt class="owner-only"><kbd>x</kbd></dt><dd class="owner-only">Pass: it leaves For you and stays in your library</dd>
       <dt class="owner-only"><kbd>1</kbd>&ndash;<kbd>4</kbd> <kbd>r</kbd></dt><dd class="owner-only">After a pass: why (hides it, and teaches your recommendations); r to say it in your words</dd>
       <dt class="owner-only"><kbd>u</kbd></dt><dd class="owner-only">Undo the last decision</dd>
+      <dt class="owner-only"><kbd>p</kbd></dt><dd class="owner-only">Choose a project: its papers&rsquo; neighbours come first, and Interested adds to it</dd>
+      <dt class="owner-only"><kbd>Shift</kbd> <kbd>p</kbd></dt><dd class="owner-only">Leave the project, back to For you</dd>
       <dt><kbd>o</kbd> <kbd>Enter</kbd></dt><dd>Read the paper</dd>
       <dt><kbd>Space</kbd> <kbd>&darr;</kbd> <kbd>&uarr;</kbd></dt><dd>Scroll the paper</dd>
       <dt><kbd>l</kbd></dt><dd>Open its page in a new tab</dd>
@@ -2776,7 +2818,7 @@ function lockPrivate(state = 'required', detail) {
   if (Ink.cancelGesture) Ink.cancelGesture();
   _pushing = _pushAgain = Vault.pushing = Vault.pushAgain = false;
   allPapers = []; _hiddenPapers = []; allInterests = []; allGroups = []; GROUP_ORDER = [];
-  readSet.clear(); starSet.clear(); libraryLists = {}; _loadedPaperFields.clear(); _loadedInterestNames = []; _loadedGroupNames = []; _loadedGroupFields = new Map(); _loadedInterestFields = new Map();
+  readSet.clear(); starSet.clear(); libraryLists = Object.create(null); _loadedPaperFields.clear(); _loadedInterestNames = []; _loadedGroupNames = []; _loadedGroupFields = new Map(); _loadedInterestFields = new Map();
   _papersText = _papersFresh = _emptyPapersCandidate = null; _dataLoaded = false; _restoreAnnounced = false;
   _uploads = {}; _uploadObjs.clear(); _lastSeen = null; _listSig = null;
   _libPapers = {}; _libSent = ''; _paperTextCache.clear(); _relIndex = null; _relIndexKey = null; _interestCounts = _interestCountsKey = null; _colorSlots = null; _colorKey = ''; _kbKey = null;
@@ -3159,7 +3201,7 @@ let currentTab = 'all', currentRel = 'all', currentIStatus = 'suggested', curren
 const hideRead = true;   // papers you've read never show in the feeds and lists (Library keeps them)
 let readSet = new Set();
 let starSet = new Set();
-let libraryLists = {};
+let libraryLists = Object.create(null);   // list name -> paper keys; no prototype, so a list may be called constructor or toString
 let _dataLoaded = false;
 let _interestsDirty = false;
 let _groupsDirty = false;
@@ -3167,7 +3209,7 @@ let _stateDirty = false;
 
 /* Bootstrap state from papers CSV columns (called after allPapers is loaded) */
 function bootstrapStateFromCSV() {
-  readSet.clear(); starSet.clear(); libraryLists = {};
+  readSet.clear(); starSet.clear(); libraryLists = Object.create(null);
   allPapers.forEach(p => {
     const k = paperKey(p);
     if (p.is_read    === 'true') readSet.add(k);
@@ -3178,6 +3220,7 @@ function bootstrapStateFromCSV() {
     });
   });
   adoptListMeta();
+  projectReconcile(true);   // the lists as they arrived: project mode restored, or ended if its project went elsewhere
 }
 
 /* Write current readSet/starSet/libraryLists back into allPapers rows */
@@ -4128,12 +4171,17 @@ function topicGlow(groups) {
    the last decision, value for value. On the laptop For you has a List and a Deck mode, the deck worked by keys. A
    card is the paper page itself (paperPageHTML), never a second copy of it. */
 const TO_READ = 'To read';
+/* The lists that are not projects: the machine's three lanes and Interested's own. Every other list is a project, by
+   its exact name. The worker keeps the same four (ingest/ownership.NOT_PROJECTS), and a test compares them. */
+const NOT_PROJECTS = ['Starting set', 'Near misses', 'Random picks', 'To read'];
+const PROJECT_KEY = 'scholar_project_v1';
 const FY_MODE_KEY = 'scholar_fy_mode';
 const DECK_PHONE = '(max-width: 700px)', DECK_LAND = '(pointer: coarse) and (hover: none) and (max-height: 500px)';
 const DECK_SWIPE_RATIO = 1 / 3;   // of the card width
 const DECK_FLING = 0.6, DECK_FLING_MIN = 60;   // a fling: px per ms over the last 100 ms, and the travel it needs
 const DECK_STRIP_MS = 8000;
-const Deck = { keys: [], key: null, last: null, strip: null, seq: 0, tally: { interested: 0, passed: 0, hidden: 0, read: 0 }, gesture: null, swallow: 0, mounted: false, scroll: null, noted: false, layout: null };
+const Deck = { keys: [], key: null, last: null, strip: null, seq: 0, tally: { interested: 0, passed: 0, hidden: 0, read: 0 }, gesture: null, swallow: 0, mounted: false, scroll: null, noted: false, layout: null,
+  project: null, switched: false, ranked: null, chips: [], near: null };
 function isPassed(p) { return !!p && p.is_passed === 'true'; }
 /* The deck holds For you's papers less the starred ones: a star is already a liked example, so a second look at it
    teaches nothing. Being in a list alone decides nothing (three of the lists are the machine's). */
@@ -4169,7 +4217,7 @@ function deckOn() {
 }
 /* Leaving the deck (another tab, a paper, search, a list), or opening the reader over it: a swipe in progress, the
    strip with its reasons, and the menu end here */
-function deckLeave() { deckAbort(); deckStripClose(); closeDeckMenu(); }
+function deckLeave() { deckAbort(); deckStripClose(); closeDeckMenu(); closeProjectMenu(); }
 function deckOff() {
   document.body.classList.remove('deck-mode', 'deck-phone', 'deck-land', 'deck-laptop', 'deck-immersive', 'deck-dragging');
   deckLeave();
@@ -4179,14 +4227,22 @@ function deckBusy() { const c = document.querySelector('#deck .deck-card.cur'); 
 function deckActive() {
   return currentTab === 'all' && document.body.classList.contains('deck-mode') && !_paperViewActive && !_listViewActive && !_searchActive;
 }
-/* The whole deck, drawn again: the keys from the chips, in For you's order, landing on the paper that was showing if
-   it is still undecided. Between renders the keys only shrink, so a decision never reorders what comes next. */
+/* The whole deck, drawn again: the keys from the chips, in For you's order (a project's order in project mode), landing
+   on the paper that was showing if it is still undecided; a project chosen or left starts its order from the front.
+   Between renders the keys only shrink, so a decision never reorders what comes next. The project chips' order is
+   fixed here too, until the next render. */
 function renderDeck() {
-  const pool = deckPool();
-  Deck.keys = forYouFeed(pool).map(paperKey);
-  if (!Deck.keys.includes(Deck.key)) Deck.key = Deck.keys.find(deckEligible) || null;
+  const pool = deckPool(), switched = Deck.switched;
+  Deck.switched = false;
+  Deck.keys = deckOrder(pool);
+  Deck.ranked = projectMode() ? Deck.project : null;
+  if (switched || !Deck.keys.includes(Deck.key)) Deck.key = Deck.keys.find(deckEligible) || null;
+  Deck.chips = isOwner() ? projectNames() : [];
+  if (Deck.ranked) Deck.chips = [Deck.ranked].concat(Deck.chips.filter(n => n !== Deck.ranked));
   Deck.mounted = true;
   document.getElementById('deckBar').innerHTML = deckBarHTML(pool);
+  projectRowRender();
+  deckCueLabel();
   deckActionsRender();
   deckMountCards();
   deckStripRender();
@@ -4199,24 +4255,28 @@ function deckBarHTML(pool) {
   const laptop = Deck.layout === 'laptop', c = forYouChips(pool, !laptop);
   return `<div class="deck-chips"><div class="deck-pills" role="group" aria-label="Filter by interest">${c.interests}</div>${c.topics ? `<div class="deck-pills" role="group" aria-label="Filter by topic">${c.topics}</div>` : ''}</div>
     <span class="deck-count" id="deckCount">${deckCountText()}</span>${laptop ? fyModeHTML() : ''}
-    ${laptop && isOwner() ? '<div class="deck-legend"><kbd>S</kbd> interested <kbd>X</kbd> pass <kbd>1</kbd>&ndash;<kbd>4</kbd> reason <kbd>R</kbd> other reason <kbd>U</kbd> undo <kbd>O</kbd> read <kbd>Space</kbd> scroll <kbd>?</kbd> all keys</div>' : ''}`;
+    ${laptop && isOwner() ? `<div class="deck-legend"><kbd>S</kbd> ${projectMode() ? `add to ${esc(shortName(Deck.project, 24))}` : 'interested'} <kbd>X</kbd> pass <kbd>1</kbd>&ndash;<kbd>4</kbd> reason <kbd>R</kbd> other reason <kbd>U</kbd> undo <kbd>O</kbd> read <kbd>Space</kbd> scroll <kbd>P</kbd> project <kbd>?</kbd> all keys</div>` : ''}`;
 }
+function shortName(n, max) { n = String(n || ''); return n.length > max ? n.slice(0, max - 1) + '\u2026' : n; }
 function deckCountText() {
   const n = Deck.keys.filter(deckEligible).length;
   if (!n) return '';
-  return isOwner() ? `${n} to go` : `${Deck.keys.indexOf(Deck.key) + 1} / ${Deck.keys.length}`;
+  if (!isOwner()) return `${Deck.keys.indexOf(Deck.key) + 1} / ${Deck.keys.length}`;
+  if (!Deck.ranked || !projectMode()) return `${n} to go`;
+  const near = Deck.near ? Deck.keys.filter(k => Deck.near.has(k) && deckEligible(k)).length : 0, name = esc(shortName(Deck.ranked, 14));
+  return `${n} to go &middot; ${near ? `${near} near ${name}` : `nothing near ${name} yet`}`;
 }
 /* The actions under the card (a phone), at its side (sideways) or in the top strip (laptop), always with words */
 function deckActionsHTML() {
   const has = !!Deck.key;
   if (!isOwner()) return has && deckNextAfter() ? `<button class="da da-next" onclick="deckNext()"><span class="da-l">Next</span><span class="da-i" aria-hidden="true">&rsaquo;</span></button>` : '';
-  const off = has ? '' : ' disabled';
+  const off = has ? '' : ' disabled', proj = projectMode() ? Deck.project : null;   // in project mode Interested names it
   return `<button class="da da-no" onclick="deckPass()" aria-keyshortcuts="x"${off}><span class="da-i" aria-hidden="true">&#10005;</span><span class="da-l">Pass</span><kbd>X</kbd></button>`
     + `<button class="da da-undo" onclick="deckUndo()" aria-keyshortcuts="u"${Deck.last ? '' : ' disabled'}><span class="da-i" aria-hidden="true">&#8630;</span><span class="da-l">Undo</span><kbd>U</kbd></button>`
-    + `<button class="da da-yes" onclick="deckInterested()" aria-keyshortcuts="s"${off}><span class="da-i" aria-hidden="true">&#9733;</span><span class="da-l">Interested</span><kbd>S</kbd></button>`
+    + `<button class="da da-yes" onclick="deckInterested()" aria-keyshortcuts="s"${proj ? ` aria-label="Star and add to ${dataAttr(proj)}"` : ''}${off}><span class="da-i" aria-hidden="true">&#9733;</span><span class="da-l">${proj ? esc(proj) : 'Interested'}</span><kbd>S</kbd></button>`
     + `<button class="da da-more" onclick="deckMenu(event, this)" aria-haspopup="menu" aria-expanded="false"${off}><span class="da-i" aria-hidden="true">&#8943;</span><span class="da-l">More</span></button>`;
 }
-function deckActionsRender() { const el = document.getElementById('deckActions'); if (el) el.innerHTML = deckActionsHTML(); }
+function deckActionsRender() { const el = document.getElementById('deckActions'); if (el) el.innerHTML = deckActionsHTML(); projectRowSync(); }
 function deckCounts() {
   const bar = document.getElementById('deckBar');
   if (bar) bar.innerHTML = deckBarHTML(deckPool());
@@ -4231,7 +4291,7 @@ function deckCardHTML(k, role) {
   const p = deckPaper(k);
   if (!p) return '';
   const page = paperPageHTML(p, { deck: true });
-  return `<article class="deck-card ${role}" data-key="${escAttr(k)}"${role === 'cur' ? '' : ' aria-hidden="true" inert'} style="--gbg:${page.glow}"><div class="pd deck-pd">${page.article}</div></article>`;
+  return `<article class="deck-card ${role}" data-key="${escAttr(k)}"${role === 'cur' ? '' : ' aria-hidden="true" inert'} style="--gbg:${page.glow}"><div class="pd deck-pd">${deckNearHTML(k)}${page.article}</div></article>`;
 }
 /* The current card and the next one beneath it, nothing more; or the end card */
 function deckMountCards() {
@@ -4252,17 +4312,20 @@ function deckRememberScroll() {
 function deckEndHTML() {
   const pool = deckPool(), chosen = _fyInterests.size || _fyTopics.size || _fyNewOnly;
   const t = Deck.tally, done = t.interested + t.passed + t.read, toRead = (libraryLists[TO_READ] || []).length;
+  const proj = projectMode() ? Deck.project : null, inProj = proj ? libraryLists[proj].length : 0;
   const parts = [`${t.interested} interested`, `${t.passed} passed`, t.hidden && `${t.hidden} hidden`, t.read && `${t.read} marked read`].filter(Boolean);
   return `<div class="deck-end" role="status"><h2>${chosen ? 'Nothing left under these chips' : 'You’re through For you'}</h2>
     ${done ? `<p>This session: ${parts.join(', ')}.</p>` : ''}
-    <div class="deck-end-acts">${chosen && pool.length ? `<button class="ui-btn" onclick="fyAll()">Show all ${pool.length}</button>` : ''}${toRead && isOwner() ? `<button class="ui-btn" onclick="deckOpenToRead()">Open ${TO_READ} (${toRead})</button>` : ''}${Deck.last && isOwner() ? '<button class="ui-btn" onclick="deckUndo()">Undo</button>' : ''}${Deck.layout === 'laptop' ? `<button class="ui-btn" onclick="setFyMode('list')">Back to the list</button>` : ''}</div></div>`;
+    <div class="deck-end-acts">${chosen && pool.length ? `<button class="ui-btn" onclick="fyAll()">Show all ${pool.length}</button>` : ''}${proj ? (inProj ? `<button class="ui-btn" data-n="${dataAttr(proj)}" onclick="deckOpenProject(this.dataset.n)">Open ${esc(proj)} (${inProj})</button>` : '') : toRead && isOwner() ? `<button class="ui-btn" onclick="deckOpenToRead()">Open ${TO_READ} (${toRead})</button>` : ''}${Deck.last && isOwner() ? '<button class="ui-btn" onclick="deckUndo()">Undo</button>' : ''}${Deck.layout === 'laptop' ? `<button class="ui-btn" onclick="setFyMode('list')">Back to the list</button>` : ''}</div></div>`;
 }
 function deckOpenToRead() { _openLibGroups.add('list-' + TO_READ); location.hash = '#library'; }
+function deckOpenProject(name) { _openLibGroups.add('list-' + name); location.hash = '#library'; }
 /* After an edit made elsewhere (a related paper starred, a topic removed, a save that brought a change): the counts,
    and the mounted cards drawn again where they are. The keys stay; a card that is no longer undecided gives way. */
 function deckRefresh() {
   if (!Deck.mounted) return;
   if (!Deck.keys.length) { renderDeck(); return; }   // drawn before the data (or the interests) arrived: draw it now
+  if (Deck.switched || Deck.ranked !== (projectMode() ? Deck.project : null)) { renderDeck(); return; }   // in or out of a project since
   if (Deck.key && !deckEligible(Deck.key)) {
     const i = Deck.keys.indexOf(Deck.key);
     Deck.keys.splice(i, 1);
@@ -4293,7 +4356,7 @@ function deckRepaint(k) {
     if (!p) return;
     const top = card.scrollTop, page = paperPageHTML(p, { deck: true });
     card.style.setProperty('--gbg', page.glow);
-    card.innerHTML = `<div class="pd deck-pd">${page.article}</div>`;
+    card.innerHTML = `<div class="pd deck-pd">${deckNearHTML(k)}${page.article}</div>`;
     paperPostRender(card, p);
     card.scrollTop = top;
   });
@@ -4304,10 +4367,29 @@ function deckRepaint(k) {
    values, and only while the paper still has the after values (a later edit, here or on another device, wins). Only
    the last decision can be undone; an older toast's Undo does nothing. */
 function deckRecord(kind, k, before, after) { return { id: ++Deck.seq, kind, key: k, before, after, hide: null, stale: false }; }
-function deckInterested(k) {
+/* In project mode Interested stars the paper and adds it to the project, and To read is left alone. The destination is
+   checked again just before anything is written: a project gone since (renamed or deleted, here or elsewhere) decides
+   nothing at all, not even To read, and the mode ends. `project`: the mode a swipe began in; a swipe that began in
+   another decides nothing. Returns whether it decided. */
+function deckInterested(k, project) {
   requireOwner();
   k = k || Deck.key;
-  if (!k || k !== Deck.key || !deckEligible(k)) return;   // decisions act on the card on screen
+  if (!k || k !== Deck.key || !deckEligible(k)) return false;   // decisions act on the card on screen
+  if (project !== undefined && project !== Deck.project) return false;
+  const name = Deck.project;
+  if (name) {
+    projectReconcile(false);
+    if (Deck.project !== name || !projectMode() || k !== Deck.key || !deckEligible(k)) return false;
+    const members = libraryLists[name];
+    const rec = deckRecord('interested', k, { starred: starSet.has(k), project: name, inProject: members.includes(k) }, { starred: true, project: name, inProject: true });
+    starSet.add(k);
+    if (!members.includes(k)) members.push(k);
+    persistStars(); persistLists(); updateLibraryBadge();
+    Deck.tally.interested++;
+    deckAdvance(rec, 'right');
+    toast(`Starred and added to ${esc(name)}`, () => deckUndo(rec.id));
+    return true;
+  }
   const list = libraryLists[TO_READ] || [];
   const rec = deckRecord('interested', k, { starred: starSet.has(k), inToRead: list.includes(k) }, { starred: true, inToRead: true });
   starSet.add(k);
@@ -4317,6 +4399,7 @@ function deckInterested(k) {
   Deck.tally.interested++;
   deckAdvance(rec, 'right');
   toast(`Starred and saved to ${TO_READ}`, () => deckUndo(rec.id));
+  return true;
 }
 function deckPass(k) {
   requireOwner();
@@ -4382,6 +4465,7 @@ function deckOther(id) {
 function deckStillAsLeft(rec, p) {
   if (p._goneRemote) return false;   // deleted on GitHub since
   const k = rec.key, a = rec.after;
+  if (rec.kind === 'interested' && 'project' in a) return starSet.has(k) === a.starred && (rec.before.inProject || (Object.prototype.hasOwnProperty.call(libraryLists, a.project) && libraryLists[a.project].includes(k)));   // the project it recorded, and only if it added the paper: a rename or a delete took it away
   if (rec.kind === 'interested') return starSet.has(k) === a.starred && (rec.before.inToRead || (libraryLists[TO_READ] || []).includes(k) === a.inToRead);   // To read only if it added it
   if (rec.kind === 'read') return readSet.has(k) === a.read;
   if (rec.kind === 'hide') return (p.is_hidden || '') === a.is_hidden && (p.hide_reason || '') === a.hide_reason;
@@ -4420,8 +4504,9 @@ function deckUndo(id) {
   flushStateToCSV();
   const unhide = h => { p.is_hidden = h.is_hidden; if (h.hide_reason || 'hide_reason' in p) p.hide_reason = h.hide_reason; };
   if (rec.kind === 'interested') {
+    const n = 'project' in rec.after ? rec.after.project : TO_READ, added = 'project' in rec.after ? !rec.before.inProject : !rec.before.inToRead;
     if (!rec.before.starred) starSet.delete(k);
-    if (!rec.before.inToRead && libraryLists[TO_READ]) libraryLists[TO_READ] = libraryLists[TO_READ].filter(x => x !== k);
+    if (added && Object.prototype.hasOwnProperty.call(libraryLists, n)) libraryLists[n] = libraryLists[n].filter(x => x !== k);   // the list it recorded, whatever project is chosen now
     Deck.tally.interested--;
   } else if (rec.kind === 'read') {
     if (!rec.before.read) readSet.delete(k);
@@ -4552,17 +4637,20 @@ function deckImmersive(on) { document.body.classList.toggle('deck-immersive', !!
 function deckMeasureBars() {
   const b = document.body;
   if (!b.classList.contains('deck-mode') || b.classList.contains('deck-laptop')) return;
-  const nav = document.querySelector('.navbar'), bar = document.getElementById('deckBar'), acts = document.getElementById('deckActions');
+  const nav = document.querySelector('.navbar'), bar = document.getElementById('deckBar'), acts = document.getElementById('deckActions'), proj = document.getElementById('deckProj');
   const navH = nav ? nav.getBoundingClientRect().height : 0, barH = bar ? bar.getBoundingClientRect().height : 0;
+  const actsH = acts ? acts.getBoundingClientRect().height : 0, projH = proj && proj.classList.contains('on') ? proj.getBoundingClientRect().height : 0;
   b.style.setProperty('--nav-h', navH + 'px');
   b.style.setProperty('--deck-top', (b.classList.contains('deck-immersive') ? 0 : navH + barH) + 'px');
-  b.style.setProperty('--deck-bottom', (acts && b.classList.contains('deck-phone') ? acts.getBoundingClientRect().height : 0) + 'px');
+  // what is fixed along the bottom: the actions and the project row above them (a phone), the row (sideways)
+  b.style.setProperty('--deck-acts-h', actsH + 'px');
+  b.style.setProperty('--deck-bottom', (b.classList.contains('deck-phone') ? actsH + projH : projH) + 'px');
   const strip = document.getElementById('deckStrip');
   b.style.setProperty('--deck-strip-h', (strip && strip.classList.contains('open') ? strip.getBoundingClientRect().height + 8 : 0) + 'px');
 }
 if (window.ResizeObserver) document.addEventListener('DOMContentLoaded', () => {
   const ro = new ResizeObserver(() => deckMeasureBars());
-  ['.navbar', '#deckBar', '#deckActions'].forEach(sel => { const el = document.querySelector(sel); if (el) ro.observe(el); });
+  ['.navbar', '#deckBar', '#deckActions', '#deckProj'].forEach(sel => { const el = document.querySelector(sel); if (el) ro.observe(el); });
 });
 window.addEventListener('pageshow', () => requestAnimationFrame(privateCallback(deckMeasureBars)));
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(privateCallback(() => deckMeasureBars()));
@@ -4619,7 +4707,7 @@ function deckDown(e) {
   const card = e.target.closest && e.target.closest('.deck-card.cur');
   if (!card || !Deck.key || card.dataset.key !== Deck.key) return;
   card.classList.remove('snapback');
-  Deck.gesture = { card, key: Deck.key, id: e.pointerId, x0: e.clientX, y0: e.clientY, axis: null, track: [[e.timeStamp, e.clientX]] };
+  Deck.gesture = { card, key: Deck.key, project: Deck.project, id: e.pointerId, x0: e.clientX, y0: e.clientY, axis: null, track: [[e.timeStamp, e.clientX]] };
 }
 function deckMove(e) {
   const g = Deck.gesture;
@@ -4653,7 +4741,8 @@ function deckUp(e) {
   const far = Math.abs(dx) >= g.card.clientWidth * DECK_SWIPE_RATIO;
   const fling = Math.abs(v) >= DECK_FLING && Math.abs(dx) >= DECK_FLING_MIN && Math.sign(v) === Math.sign(dx);
   if (!deckDominant(dx, dy) || !(far || fling) || g.key !== Deck.key || !g.card.isConnected) { deckSnap(g.card); return; }
-  if (dx > 0) deckInterested(g.key); else deckPass(g.key);
+  if (dx > 0) { if (!deckInterested(g.key, g.project)) deckSnap(g.card); }   // a destination gone since: nothing, the card back
+  else deckPass(g.key);
 }
 function deckCancel(e) { const g = Deck.gesture; if (g && e.pointerId === g.id) deckAbort(); }
 function deckAbort() {
@@ -4700,6 +4789,7 @@ const DECK_KEYS = {
   o: { run: () => deckRead() }, Enter: { run: () => deckRead() },
   l: { run: () => { if (Deck.key) window.open(APP_ROOT + location.search + '#paper/' + encodeURIComponent(Deck.key), '_blank', 'noopener'); } },
   n: { run: () => { if (!isOwner()) deckNext(); } },
+  p: { once: true, run: e => { if (e.shiftKey) setProject(null); else openProjectMenu(null, null); } },   // the listener lowercases: Shift says which
   ' ': { run: e => deckScroll(e.shiftKey ? -1 : 1, true) }, PageDown: { run: () => deckScroll(1, true) }, PageUp: { run: () => deckScroll(-1, true) },
   ArrowDown: { run: () => deckScroll(1) }, ArrowUp: { run: () => deckScroll(-1) },
   Escape: { run: () => deckStripClose() },
@@ -4713,7 +4803,7 @@ document.addEventListener('keydown', e => {
   const act = DECK_KEYS[e.key.length === 1 ? e.key.toLowerCase() : e.key];
   if (!act || (e.key === 'Escape' && !Deck.strip)) return;
   e.preventDefault();
-  if (e.repeat && act.decide) return;
+  if (e.repeat && (act.decide || act.once)) return;
   act.run(e);
 });
 
@@ -4758,25 +4848,291 @@ function deckMenuAct(what) {
   if (what === 'read') deckMarkRead(k);
 }
 document.addEventListener('scroll', () => closeDeckMenu(), true);
+/* ---- projects: a list of yours, a mode of the deck, and a chip on the card ----
+   A project is any list but the four in NOT_PROJECTS, by its exact name; it has no other record. In project mode
+   (Deck.project, remembered in this browser with whether it had papers) Interested stars the paper and adds it to the
+   project instead of To read, and the deck puts first the papers QuickRead found near the project's papers, then those
+   the related index puts near them. A chip adds the paper on screen to a project and takes it out again; it decides
+   nothing, and Undo never touches it. */
+function isProjectName(n) { return typeof n === 'string' && n !== '' && !n.includes('|') && !NOT_PROJECTS.includes(n); }
+function hasList(n) { return Object.prototype.hasOwnProperty.call(libraryLists, n); }
+function projectNames() {   // last changed first, as Library's "Last updated"
+  const names = Object.keys(libraryLists).filter(isProjectName), at = new Map(names.map(n => [n, listDates(n).updated || '']));
+  return names.sort((a, b) => at.get(b).localeCompare(at.get(a)) || a.localeCompare(b));
+}
+function projectMode() { return isOwner() && isProjectName(Deck.project) && hasList(Deck.project); }
+function projectStored() {
+  if (!isOwner()) return null;
+  try { const v = JSON.parse(localStorage.getItem(PROJECT_KEY) || 'null'); return v && typeof v.name === 'string' ? { name: v.name, filled: v.filled === true } : null; } catch (e) { return null; }
+}
+function projectStore(name, filled) {
+  try { if (name) privateSet(PROJECT_KEY, JSON.stringify({ name, filled: !!filled })); else if (localStorage.getItem(PROJECT_KEY) !== null) privateRemove(PROJECT_KEY); } catch (e) {}
+}
+/* Whether a row still names the project (hidden rows count: their lists are real). A row deleted on GitHub and kept
+   here only for an edit not saved yet (_goneRemote) is not evidence that the project lives on. */
+function projectInRows(name) { return everyPaper().some(p => !p._goneRemote && (p.user_lists || '').split('|').includes(name)); }
+/* The project's papers that seed its order: live and visible, not hidden and not deleted on GitHub */
+function projectSeeds(name) {
+  const byKey = new Map(allPapers.filter(p => !p._goneRemote).map(p => [paperKey(p), p]));
+  return [...new Set(libraryLists[name] || [])].map(k => byKey.get(k)).filter(Boolean);
+}
+/* Project mode follows the lists. `received`: they were just read from the papers (a load, or a save that took GitHub's
+   values in). A project that had papers and has none in what arrived was renamed or deleted elsewhere, even when this
+   browser's list times bring its name back as an empty list (adoptListMeta): the mode ends, and is not restored. One
+   made here and still empty stays. Any other time the mode ends only when the list is gone, and notes whether the
+   project has papers now. The remembered mode is restored here, once the lists are read. */
+function projectReconcile(received) {
+  if (!isOwner()) return;
+  const s = projectStored(), name = Deck.project || (received && s ? s.name : null);
+  if (!name) return;
+  const filled = projectInRows(name), mine = s && s.name === name;
+  if (!isProjectName(name) || !hasList(name) || (received && !filled && mine && s.filled)) { projectDrop(name); return; }
+  Deck.project = name;
+  if (!mine || s.filled !== filled) projectStore(name, filled);
+}
+function projectDrop(name) {
+  const s = projectStored();
+  if (s && s.name === name) projectStore(null);
+  if (Deck.project === name) { Deck.project = null; deckAbort(); closeProjectMenu(); }   // a swipe on its way there lands nowhere
+  toast(`"${esc(name)}" is no longer one of your lists, so the deck is For you again.`);
+  if (deckActive() && Deck.mounted) { deckRememberScroll(); renderDeck(); }   // the card on screen stays, where its reader was
+}
+/* Choosing a project, or For you (null): the deck starts the new order from its front */
+function setProject(name) {
+  requireOwner();
+  closeProjectMenu();
+  name = name || null;
+  if (name && !(isProjectName(name) && hasList(name))) return;
+  if (name === Deck.project) return;
+  Deck.project = name; Deck.switched = true;
+  projectStore(name, name && projectInRows(name));
+  deckLeave();
+  if (deckActive() && Deck.mounted) renderDeck();
+  toast(name ? `Project ${esc(name)}: Interested now stars a paper and adds it here.` : 'For you again: Interested adds to To read.');
+}
+async function newProject() { const _authEpoch = capturePrivateEpoch();
+  const raw = await privateAwait(showPrompt('New project', 'A list of yours. Interested adds papers to it while it is chosen.', 'Project name'), _authEpoch);
+  const name = checkListName(raw);
+  if (!name) return;
+  libraryLists[name] = [];
+  persistLists(); updateLibraryBadge();
+  setProject(name);
+  toast(`Made ${esc(name)}. It reaches your other devices with its first paper.`);
+}
+/* The deck's order. Without a project, For you's. In project mode, inside For you's selection: (A) papers QuickRead
+   found near a paper now in the project, (B) papers the related index puts among the ten nearest of the project's
+   papers, by how many of them and then how near, (C) the rest; For you's order inside each. Deck.near keeps A and B
+   for the count and the cards. */
+function deckOrder(pool) {
+  const feed = forYouFeed(pool);
+  Deck.near = null;
+  if (!projectMode()) return feed.map(paperKey);
+  const seeds = projectSeeds(Deck.project), members = new Set(seeds.map(paperKey)), near = projectNear(seeds), rank = new Map();
+  feed.forEach((p, i) => {
+    const k = paperKey(p), o = quickreadOrigin(p), n = near.get(k);
+    rank.set(k, o && (o.kind === 'near' || o.kind === 'star') && members.has(o.ref) ? [0, 0, 0, i] : n ? [1, -n.count, n.best, i] : [2, 0, 0, i]);
+  });
+  const keys = feed.map(paperKey).sort((a, b) => { const x = rank.get(a), y = rank.get(b); return x[0] - y[0] || x[1] - y[1] || x[2] - y[2] || x[3] - y[3]; });
+  Deck.near = new Map(keys.filter(k => rank.get(k)[0] < 2).map(k => [k, rank.get(k)[0] === 0 ? 'found' : near.get(k).count]));
+  return keys;
+}
+/* For each paper, how many of the project's papers (its seeds, projectSeeds) have it among their ten most related, and
+   its best place there; kept until the seeds or the papers change. relatedTo is used as it is. */
+let _projectNear = { sig: null, rows: null, map: null };
+function projectNear(seeds) {
+  const sig = [_editGen, ...seeds.map(paperKey).sort()].join('|');
+  if (_projectNear.sig === sig && _projectNear.rows === allPapers) return _projectNear.map;
+  const map = new Map();
+  seeds.forEach(q => relatedTo(q, 10).forEach((r, i) => {
+    const k = paperKey(r), m = map.get(k);
+    if (m) { m.count++; m.best = Math.min(m.best, i); } else map.set(k, { count: 1, best: i });
+  }));
+  _projectNear = { sig, rows: allPapers, map };
+  return map;
+}
+/* On a card the project put first, why: QuickRead found it near a paper in the project, or it is like papers there */
+function deckNearHTML(k) {
+  const how = Deck.near && Deck.ranked && projectMode() ? Deck.near.get(k) : undefined;
+  if (how === undefined) return '';
+  const name = esc(Deck.ranked), found = how === 'found' ? foundHTML(deckPaper(k) || {}) : '';
+  return `<p class="deck-near"><span aria-hidden="true">&#9670;</span> ${found ? `${found.charAt(0).toUpperCase() + found.slice(1)} &middot; in ${name}` : `Like ${how === 1 ? 'a paper' : how + ' papers'} in ${name}`}</p>`;
+}
+function deckCueLabel() {
+  const yes = document.getElementById('deckCueYes');
+  if (yes) yes.textContent = '★ ' + (Deck.ranked ? shortName(Deck.ranked, 22) : 'Interested');
+}
+/* The row: the picker's pill, then a chip per project in the order this render fixed (Deck.chips), so no chip moves
+   under a finger. A tap changes only its chip's mark; the row is drawn anew only with the deck. */
+function projectRowHTML() {
+  if (!isOwner()) return '';
+  const cur = projectMode() ? Deck.project : null;
+  const pill = `<button class="pj-pill${cur ? ' on' : ''}" id="projectPill" onclick="openProjectMenu(event, this)" aria-haspopup="menu" aria-expanded="false" aria-keyshortcuts="p" aria-label="${cur ? `Project ${dataAttr(cur)}: choose another` : 'Choose a project'}"><span><i aria-hidden="true">&#9670;</i><b class="pj-n">${cur ? esc(cur) : 'Project'}</b><i aria-hidden="true">&#9662;</i></span></button>`;
+  const chips = Deck.chips.map(n => `<button class="pj-chip${n === cur ? ' cur' : ''}" data-n="${dataAttr(n)}" onclick="projectChip(event, this)" aria-pressed="false"><span><i class="pj-tick" aria-hidden="true">+</i><b class="pj-n">${esc(n)}</b></span></button>`).join('');
+  return pill + (chips ? `<div class="pj-chips" role="group" aria-label="Add this paper to a project">${chips}</div>` : '');
+}
+function projectRowRender() {
+  const el = document.getElementById('deckProj');
+  if (!el) return;
+  if (!el._hooked) {   // where a press on a chip begins: a finger, a pointer, or Enter or Space on it
+    el._hooked = true;
+    for (const t of ['pointerdown', 'touchstart', 'keydown']) el.addEventListener(t, projectArm, { capture: true, passive: t === 'touchstart' });
+    for (const t of ['pointercancel', 'touchcancel']) el.addEventListener(t, e => { const b = projectChipOf(e.target); if (b) b._arm = null; }, true);
+  }
+  el.innerHTML = projectRowHTML();
+  el.classList.toggle('on', isOwner());
+  document.body.classList.toggle('deck-proj-on', isOwner());
+  projectRowSync();
+}
+/* Each chip's mark for the paper on screen, changed in place (the row's scroll and focus stay). No paper on screen
+   (the end of the deck), or a project gone since: the chip does nothing. */
+function projectRowSync() {
+  const el = document.getElementById('deckProj');
+  if (!el) return;
+  const k = Deck.key;
+  el.dataset.key = k || '';
+  el.querySelectorAll('.pj-chip').forEach(b => {
+    const n = b.dataset.n, live = hasList(n), on = !!k && live && libraryLists[n].includes(k);
+    b.setAttribute('aria-pressed', String(on));
+    b.classList.toggle('in', on);
+    b.disabled = !k || !live;
+    const t = b.querySelector('.pj-tick');
+    if (t) t.textContent = on ? '✓' : '+';
+  });
+}
+/* A press on a chip is bound to the paper and the project when it begins. The card can change before it ends (a pass,
+   a star or a hide arriving from another device moves the deck on, and the same chip then shows the next paper):
+   the press then saves nothing, rather than saving the paper that took its place. A held Enter or Space acts once. */
+function projectChipOf(el) { return el && el.closest ? el.closest('.pj-chip') : null; }
+function projectArm(e) {
+  const b = projectChipOf(e.target);
+  if (!b) return;
+  if (e.type === 'keydown') {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.repeat) { e.preventDefault(); return; }
+  }
+  const row = document.getElementById('deckProj');
+  b._arm = { key: row ? row.dataset.key : null, name: b.dataset.n };
+}
+function projectChip(ev, btn) {
+  const row = document.getElementById('deckProj'), arm = btn._arm;
+  btn._arm = null;
+  const k = arm ? arm.key : row ? row.dataset.key : null;   // a click with no start seen (assistive technology): the paper shown now
+  if (!toggleProject(arm ? arm.name : btn.dataset.n, k) && arm && k && k !== Deck.key) toast('That paper left the deck before the tap ended, so nothing was saved.');
+  if (ev && ev.detail) btn.blur();   // a click or a tap: the deck's keys work again at once (a key press keeps focus here)
+}
+/* A chip: the paper on screen into the project or out of it, only while it is still on screen and undecided and the
+   project still exists. Not a decision: no advance, no record; a later Undo of Interested leaves it. Returns whether
+   it wrote. */
+function toggleProject(name, k) {
+  requireOwner();
+  if (!k || k !== Deck.key || !deckEligible(k) || !isProjectName(name) || !hasList(name)) return false;
+  const on = !libraryLists[name].includes(k);
+  if (on) libraryLists[name].push(k); else libraryLists[name] = libraryLists[name].filter(x => x !== k);
+  persistLists(); updateLibraryBadge();
+  projectRowSync();
+  toast(on ? `Added to ${esc(name)}` : `Removed from ${esc(name)}`);
+  return true;
+}
+/* ---- the picker: For you, each project with its papers, a new one. Focus moves into it; arrows, Enter, Esc; p
+   closes it and Shift+P leaves the project from here too. Inside what shows of the screen on both axes. ---- */
+function openProjectMenu(ev, btn) {
+  if (ev) ev.stopPropagation();
+  requireOwner();
+  let m = document.getElementById('projectMenu');
+  if (m && m.classList.contains('open')) { closeProjectMenu(); return; }
+  btn = btn || document.getElementById('projectPill');
+  if (!btn || !btn.isConnected || !deckActive()) return;
+  closeDeckMenu();
+  if (!m) {
+    m = document.createElement('div'); m.id = 'projectMenu'; m.className = 'deck-menu pj-menu';
+    m.setAttribute('role', 'menu'); m.setAttribute('aria-label', 'Project');
+    m.onclick = e => e.stopPropagation(); m.onkeydown = projectMenuKey; m.onkeyup = e => { if (e.key === ' ') e.preventDefault(); };
+    document.body.appendChild(m);
+  }
+  const cur = projectMode() ? Deck.project : null, live = new Set(allPapers.map(paperKey));
+  const item = (n, on, body) => `<button role="menuitemradio" aria-checked="${on}" data-n="${dataAttr(n)}" onclick="projectMenuPick(this)"><i aria-hidden="true">${on ? '&#10003;' : ''}</i>${body}</button>`;
+  m.innerHTML = item('', !cur, '<span class="pj-mi">For you<small>no project</small></span>')
+    + projectNames().map(n => item(n, n === cur, `<span class="pj-mi">${esc(n)}</span><span class="pill-count">${libraryLists[n].filter(k => live.has(k)).length}</span>`)).join('')
+    + '<button role="menuitem" class="pj-new" onclick="projectMenuPick(this, true)"><i aria-hidden="true">+</i><span class="pj-mi">New project&hellip;</span></button>';
+  m._btn = btn; btn.setAttribute('aria-expanded', 'true');
+  popIn(m);
+  placeProjectMenu();
+  const vv = window.visualViewport;
+  if (vv && !m._vv) { m._vv = () => placeProjectMenu(); vv.addEventListener('resize', m._vv); vv.addEventListener('scroll', m._vv); }   // a keyboard opening or closing
+  const items = [...m.querySelectorAll('button')];
+  (items.find(b => b.getAttribute('aria-checked') === 'true') || items[0]).focus();
+}
+/* Over the pill when there is more room there (a phone's row is at the bottom), else under it, from its left edge;
+   with hardly any room either side (a keyboard up), over all that shows. The list scrolls inside. */
+function placeProjectMenu() {
+  const m = document.getElementById('projectMenu');
+  if (!m || !m.classList.contains('open') || !m._btn) return;
+  const r = m._btn.getBoundingClientRect(), vv = window.visualViewport;
+  const top = vv ? vv.offsetTop : 0, left = vv ? vv.offsetLeft : 0, h = vv ? vv.height : window.innerHeight, w = vv ? vv.width : window.innerWidth, pad = 8, gap = 6;
+  const first = top + pad, last = top + h - pad;
+  m.style.maxWidth = Math.max(0, w - 2 * pad) + 'px'; m.style.maxHeight = ''; m.style.top = first + 'px'; m.style.left = (left + pad) + 'px';
+  const want = m.offsetHeight, under = Math.max(r.bottom + gap, first), over = Math.min(r.top - gap, last), below = last - under, above = over - first;
+  const down = want <= below || below >= above;
+  let room = down ? below : above, y = down ? under : over - Math.min(want, room);
+  if (room < 132) { room = last - first; y = first; }
+  m.style.maxHeight = Math.max(0, room) + 'px';
+  m.style.top = y + 'px';
+  m.style.left = Math.max(left + pad, Math.min(r.left, left + w - pad - m.offsetWidth)) + 'px';
+}
+function closeProjectMenu() {
+  const m = document.getElementById('projectMenu');
+  if (!m) return;
+  if (m._btn) m._btn.setAttribute('aria-expanded', 'false');
+  if (m._vv && window.visualViewport) { window.visualViewport.removeEventListener('resize', m._vv); window.visualViewport.removeEventListener('scroll', m._vv); }
+  m._vv = null;
+  if (m.contains(document.activeElement)) document.activeElement.blur();   // the deck's keys work again
+  fadeAway(m);
+}
+function projectMenuKey(e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.isComposing) return;
+  const m = document.getElementById('projectMenu'), items = m ? [...m.querySelectorAll('button')] : [], i = items.indexOf(document.activeElement);
+  const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  if (!items.length) return;
+  if (k === 'ArrowDown' || k === 'ArrowUp') { const d = k === 'ArrowDown' ? 1 : -1; items[(Math.max(i, d > 0 ? -1 : 0) + d + items.length) % items.length].focus(); }
+  else if (k === 'Home' || k === 'End') items[k === 'Home' ? 0 : items.length - 1].focus();
+  else if (k === 'Enter' || k === ' ') { if (!e.repeat && i >= 0) items[i].click(); }   // a held key chooses once
+  else if (k === 'Escape') closeProjectMenu();
+  else if (k === 'p') { if (!e.repeat) { if (e.shiftKey) setProject(null); else closeProjectMenu(); } }
+  else { if (k === 'Tab' || k === '?') closeProjectMenu(); return; }   // focus moving on, or the keys' list opening
+  e.preventDefault(); e.stopPropagation();
+}
+function projectMenuPick(btn, isNew) {
+  closeProjectMenu();
+  if (isNew) newProject(); else setProject(btn.dataset.n || null);
+}
+document.addEventListener('scroll', e => { const m = document.getElementById('projectMenu'); if (m && !m.contains(e.target)) closeProjectMenu(); }, true);
+window.addEventListener('resize', () => placeProjectMenu());
 /* Lock or a new target: every piece of the deck's state goes, with its timers */
 function deckTeardown() {
   if (Deck.strip) clearTimeout(Deck.strip.timer);
-  Object.assign(Deck, { keys: [], key: null, last: null, strip: null, gesture: null, swallow: 0, mounted: false, scroll: null, noted: false, layout: null, tally: { interested: 0, passed: 0, hidden: 0, read: 0 } });
-  for (const id of ['deck', 'deckBar', 'deckActions', 'deckStrip']) { const el = document.getElementById(id); if (el) { el.innerHTML = ''; el.classList.remove('open'); } }
-  const m = document.getElementById('deckMenu');
-  if (m) { clearTimeout(m._leaveT); if (m._btn) m._btn.setAttribute('aria-expanded', 'false'); m._btn = null; m.remove(); }
+  Object.assign(Deck, { keys: [], key: null, last: null, strip: null, gesture: null, swallow: 0, mounted: false, scroll: null, noted: false, layout: null, tally: { interested: 0, passed: 0, hidden: 0, read: 0 },
+    project: null, switched: false, ranked: null, chips: [], near: null });
+  _projectNear = { sig: null, rows: null, map: null };
+  for (const id of ['deck', 'deckBar', 'deckActions', 'deckStrip', 'deckProj']) { const el = document.getElementById(id); if (el) { el.innerHTML = ''; el.classList.remove('open', 'on'); } }
+  for (const id of ['deckMenu', 'projectMenu']) {
+    const m = document.getElementById(id);
+    if (!m) continue;
+    clearTimeout(m._leaveT); if (m._btn) m._btn.setAttribute('aria-expanded', 'false'); m._btn = null;
+    if (m._vv && window.visualViewport) { window.visualViewport.removeEventListener('resize', m._vv); window.visualViewport.removeEventListener('scroll', m._vv); }
+    m.remove();
+  }
   const bar = document.getElementById('deckProgress'); if (bar) bar.style.width = '';
-  document.body.classList.remove('deck-mode', 'deck-phone', 'deck-land', 'deck-laptop', 'deck-immersive', 'deck-dragging');
+  document.body.classList.remove('deck-mode', 'deck-phone', 'deck-land', 'deck-laptop', 'deck-immersive', 'deck-dragging', 'deck-proj-on');
   deckCue(null);
 }
 /* ===== MENUS AND PICKERS: a tap outside only closes them =====
    While one is open, a tap anywhere else closes it and does nothing more: it never also opens the paper, presses
    the button or starts the swipe underneath (as on iOS). Scrolling outside still closes it and scrolls. Short-lived
    hints (the venue tooltip) don't count. */
-const POPOVERS = '#deckMenu.open, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup, #chatHist';
+const POPOVERS = '#deckMenu.open, #projectMenu.open, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup, #chatHist';
 let _dismissTap = null;
 function closePopovers() {
-  closeDeckMenu(); toggleReaderMenu(false); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeAbsPopup(); closeRelevancePopup();
+  closeDeckMenu(); closeProjectMenu(); toggleReaderMenu(false); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeAbsPopup(); closeRelevancePopup();
   const h = document.getElementById('chatHist'); if (h) { if (h._close) h._close(); else h.remove(); }
 }
 document.addEventListener('pointerdown', e => {
@@ -5269,10 +5625,9 @@ function buildDDItems(key) {
   }).join('');
 }
 function createListFromDD(input, key) {
-  const name = input.value.trim();
-  if (!name) return;
-  if (name.includes('|')) { toast('List name cannot contain "|"'); input.select(); return; }
-  if (!libraryLists[name]) libraryLists[name] = [];
+  const name = checkListName(input.value, { existing: true });   // the name of a list there already adds to it
+  if (!name) { if (input.value.trim()) input.select(); return; }
+  if (!hasList(name)) libraryLists[name] = [];
   if (!libraryLists[name].includes(key)) libraryLists[name].push(key);
   persistLists(); updateLibraryBadge();
   input.value = '';
@@ -6202,24 +6557,51 @@ function renderLibrary() {
 }
 
 /* Library list management */
+/* Every new list name, and a list's new name (Library's New, Rename and Duplicate to a new list, the save picker,
+   a new project): trimmed; not empty; no "|" (a paper's lists are stored joined by it); not a list there already (the
+   save picker takes an existing one as that list; a rename may keep its own); not one of the names kept for the
+   machine's lanes and To read; and not a name every object already has (constructor, toString, __proto__), which
+   other maps of names in the page would take for their own. Says what is wrong and returns null, else the name. */
+function checkListName(raw, opts) {
+  opts = opts || {};
+  const name = String(raw == null ? '' : raw).trim();
+  if (!name) return null;
+  if (name.includes('|')) { toast('List name cannot contain "|"'); return null; }
+  if (opts.except !== undefined && name === opts.except) return name;
+  if (hasList(name)) { if (opts.existing) return name; toast('A list with that name already exists'); return null; }
+  if (NOT_PROJECTS.includes(name) || name in Object.prototype) { toast(`"${esc(name)}" is kept for a list of the page's own; choose another name`); return null; }
+  return name;
+}
+/* A rename or a delete reaches hidden papers too: their lists stay on their rows (the lists are read from the visible
+   ones), and a paper restored later would bring the old name back. Their other fields stay as they are. */
+function renameInHidden(oldName, newName) {
+  _hiddenPapers.forEach(p => {
+    const names = (p.user_lists || '').split('|').filter(Boolean);
+    if (!names.includes(oldName)) return;
+    const out = [];
+    names.forEach(n => { const m = n === oldName ? newName : n; if (m && !out.includes(m)) out.push(m); });
+    p.user_lists = out.join('|');
+  });
+}
 async function createNewList() { const _authEpoch = capturePrivateEpoch();
   const name = await privateAwait(showPrompt('New list', null, 'List name'), _authEpoch);
-  if (!name) return;
-  const trimmed = name.trim();
+  const trimmed = checkListName(name);
   if (!trimmed) return;
-  if (trimmed.includes('|')) { toast('List name cannot contain "|"'); return; }
-  if (libraryLists[trimmed]) { toast('A list with that name already exists'); return; }
   libraryLists[trimmed] = [];
   persistLists(); updateLibraryBadge();
   toast(`Created "${esc(trimmed)}"`);
   renderLibrary();
 }
 async function renameList(oldName) { const _authEpoch = capturePrivateEpoch();
-  const newName = await privateAwait(showPrompt('Rename list', null, 'List name', oldName), _authEpoch);
-  if (!newName || newName === oldName) return;
-  if (libraryLists[newName]) { toast('A list with that name already exists'); return; }
+  const newName = checkListName(await privateAwait(showPrompt('Rename list', null, 'List name', oldName), _authEpoch), { except: oldName });
+  if (!newName || newName === oldName || !hasList(oldName)) return;
   libraryLists[newName] = libraryLists[oldName];
   delete libraryLists[oldName];
+  renameInHidden(oldName, newName);
+  const was = projectStored();   // the chosen project stays chosen under its new name, here and as remembered
+  if (Deck.project === oldName) { Deck.project = newName; if (Deck.ranked === oldName) Deck.ranked = newName; }
+  if (Deck.project === newName || (was && was.name === oldName)) projectStore(newName, projectInRows(oldName) || projectInRows(newName));
+  Deck.chips = Deck.chips.map(n => n === oldName ? newName : n);
   const d = listDates(oldName), now = new Date().toISOString();
   saveListMeta({ [oldName]: { deleted: true, at: now }, [newName]: { created: d.created || now, at: now } });   // renamed, not new
   if (_listSig) { _listSig[newName] = _listSig[oldName]; delete _listSig[oldName]; }
@@ -6231,6 +6613,10 @@ async function deleteList(name) { const _authEpoch = capturePrivateEpoch();
   const ok = await privateAwait(showConfirm(`Delete "${name}"?`, `Papers won't be removed from the database.`, 'Delete', true), _authEpoch);
   if (!ok) return;
   delete libraryLists[name];
+  renameInHidden(name, null);
+  const was = projectStored();   // a deleted project is chosen no longer
+  if (Deck.project === name) Deck.project = null;
+  if (was && was.name === name) projectStore(null);
   persistLists(); updateLibraryBadge();
   toast(`Deleted "${esc(name)}"`);
   renderLibrary();
@@ -6269,10 +6655,9 @@ function doCopyList(srcName, targetName) {
 async function doCopyNew(srcName) { const _authEpoch = capturePrivateEpoch();
   closeCopyDD();
   const name = await privateAwait(showPrompt('New list name', null, 'List name'), _authEpoch);
-  if (!name) return;
-  const trimmed = name.trim();
-  if (trimmed.includes('|')) { toast('List name cannot contain "|"'); return; }
-  if (!libraryLists[trimmed]) libraryLists[trimmed] = [];
+  const trimmed = checkListName(name);   // a new list, never one there already
+  if (!trimmed) return;
+  libraryLists[trimmed] = [];
   const added = libraryLists[srcName].filter(k => !libraryLists[trimmed].includes(k));
   libraryLists[trimmed].push(...added);
   persistLists(); updateLibraryBadge();
@@ -6934,6 +7319,7 @@ function _doToastUndo() {
 function showSaveBar() {
   _editGen++;
   deckObserve();   // every edit passes here: one that changed what a deck decision set ends that decision's Undo
+  projectReconcile(false);   // and one that deleted the chosen project ends project mode
   document.getElementById('saveBar').classList.add('visible');
   scheduleBackup();
   if (_pushing) return;
@@ -12308,6 +12694,8 @@ Config.startup = bootstrapApp();
     'resetChanges', 'pushToGitHub', 'showSaveBar', 'openStrengthDD', 'setMatchStrength', 'scheduleAutoPush', 'disconnectGitHub', 'submitPdfLink', 'pinPdfVersion',
     // the deck's decisions, the strip's reasons, Undo, and putting a passed paper back
     'deckInterested', 'deckPass', 'deckMarkRead', 'deckReason', 'deckOther', 'deckUndo', 'deckMenuAct', 'unpassPaper',
+    // projects: choosing one, making one, a chip
+    'setProject', 'newProject', 'openProjectMenu', 'toggleProject',
     // notes and their password
     'vaultReady', 'openVaultModal', 'submitVault', 'unlockFromPanel', 'loadReaderNotes', 'lockNotes', 'nfSave', 'savePaperNotes', 'scheduleNotesPush', 'pushNotes',
     'reconcileNotesIndex', 'renameHlColor', 'createAnno', 'deleteAnno', 'editAnnoComment', 'setAnnoColor', 'citeAnno', 'citeSelection',
