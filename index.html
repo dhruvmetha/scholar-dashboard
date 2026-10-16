@@ -783,6 +783,10 @@ body.feed-mode #sec-papers .top-papers { max-width: none; padding: 0; }   /* the
 .tabs-msg:empty { display: none; }
 /* a post: the paper in brief, then its icons */
 .post { position: relative; display: block; padding: 14px 16px 2px; border-bottom: 1px solid var(--border); cursor: pointer; }
+/* Phase 15 (A4): the browser skips layout and paint for posts that are off screen. Until one has been drawn, it counts
+   as the height given here; after that, as the height it last had. Not Library rows: renderLibrary draws them anew,
+   so they would lose the heights they had and a restored scroll position would land on another paper. */
+.post { content-visibility: auto; contain-intrinsic-size: auto 160px; }
 html:not(.no-hover) .post:hover { background: rgba(255,255,255,0.02); }
 .post.kb-sel { box-shadow: inset 3px 0 0 var(--accent); background: rgba(255,255,255,0.025); }   /* the post the keys act on */
 .post:focus-visible { outline: none; }   /* (kb-sel marks it) */
@@ -2621,6 +2625,9 @@ async function targetFetch(url, options) {
    22.4 MB, 224 s at GH_SLOW_BPS, plus the headers. The byte caps, the abort on lock and the epoch checks stay as they
    are: the budget only says how long the bytes may take. */
 const GH_META_MS = 8000, GH_SLOW_BPS = 100000, GH_TRANSFER_MIN_MS = 15000, GH_TRANSFER_MAX_MS = 240000;
+/* Phase 15 (A2): GitHub's media type for a blob as its raw bytes, documented for GET /repos/{owner}/{repo}/git/blobs/{sha}
+   ("application/vnd.github.raw+json: Returns the raw blob data") */
+const GH_RAW = 'application/vnd.github.raw+json';
 function transferBudgetMs(bytes) {
   const need = Math.ceil(Math.max(0, Number(bytes) || 0) / GH_SLOW_BPS * 1000) + GH_META_MS;
   return Math.min(GH_TRANSFER_MAX_MS, Math.max(GH_TRANSFER_MIN_MS, need));
@@ -2755,6 +2762,7 @@ function savePatVerification(pat, saveToken) {
 /* Schema 2 authorization lives only in memory. Every boot verifies the exact
    token and target; fingerprints remain schema-1 compatibility metadata. */
 const Private = { enabled: false, epoch: 0, authorized: false, token: null, state: 'required', viewDepth: 0, controllers: new Set(), transactions: new Set(), waiters: new Set(), pdfTasks: new Set(), pdfDocuments: new Set(), renderTasks: new Set(), uiTeardowns: new Set(), interactionResets: new Set(), verificationBinding: null, verifying: null };
+const Synced = new Map();   // Phase 15 (A3): each library CSV's last SHA and text pair, by file (syncedKeep)
 function isPrivate() { return Private.enabled; }
 function privateError(message) { const e = new Error(message); e.privateAuth = true; return e; }
 function privateBinding() {
@@ -2879,7 +2887,7 @@ function lockPrivate(state = 'required', detail) {
   _pushing = _pushAgain = Vault.pushing = Vault.pushAgain = false;
   allPapers = []; _hiddenPapers = []; allInterests = []; allGroups = []; GROUP_ORDER = []; rowIndexClear(); _listsRead = false;
   readSet.clear(); starSet.clear(); libraryLists = Object.create(null); _loadedPaperFields.clear(); _loadedInterestNames = []; _loadedGroupNames = []; _loadedGroupFields = new Map(); _loadedInterestFields = new Map();
-  _papersText = _papersFresh = _emptyPapersCandidate = null; _dataLoaded = false; _restoreAnnounced = false;
+  _papersText = _papersFresh = _emptyPapersCandidate = null; _dataLoaded = false; _restoreAnnounced = false; Synced.clear(); _searchText = new WeakMap();
   _uploads = {}; _uploadObjs.clear(); _lastSeen = null; _listSig = null;
   _libPapers = {}; _libSent = ''; _paperTextCache.clear(); _relIndex = null; _relIndexKey = null; _interestCounts = _interestCountsKey = null; _colorSlots = null; _colorKey = ''; _kbKey = null;
   clearTimeout(AddPaper.poll); clearTimeout(TopicTag.poll); clearTimeout(Pinch.timer); clearTimeout(_reader.panelT); clearTimeout(_reader.leaveT);
@@ -2927,13 +2935,16 @@ function checkPrivateRequest(binding) {
   if (binding.epoch !== Private.epoch) throw privateError('Private authorization changed');
   if (token !== binding.storedToken) { lockPrivate(token ? 'rejected' : 'required'); throw privateError('Private authorization changed'); }
 }
-async function privateJSON(url, cap, binding, optional404 = false, budget = GH_META_MS) {   // budget: the deadline for headers and body (a file's blob gets transferBudgetMs)
+/* One authenticated GitHub read, streamed under its byte cap: the response's bytes, or null for a 404 that the caller
+   allows (optional404). budget: the deadline for headers and body (a file's blob gets transferBudgetMs). accept: the
+   media type asked for (a blob's raw bytes: GH_RAW). */
+async function privateBytes(url, cap, binding, optional404 = false, budget = GH_META_MS, accept = 'application/vnd.github+json') {
   const parsed = new URL(url);
   if (parsed.origin !== 'https://api.github.com' || parsed.username || parsed.password) throw new Error('Invalid private API host');
   checkPrivateRequest(binding);
   const ctl = new AbortController(); Private.controllers.add(ctl); let timer, reader;
   const work = (async () => {
-    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + binding.token, Accept: 'application/vnd.github+json' }, cache: 'no-store', credentials: 'omit', redirect: 'error', signal: ctl.signal });
+    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + binding.token, Accept: accept }, cache: 'no-store', credentials: 'omit', redirect: 'error', signal: ctl.signal });
     checkPrivateRequest(binding);
     if (!res || res.redirected || (res.url && new URL(res.url).href !== parsed.href)) throw new Error('Unexpected private API response host');
     if (res.status === 404 && optional404) { if (res.body) await res.body.cancel(); checkPrivateRequest(binding); return null; }
@@ -2949,8 +2960,7 @@ async function privateJSON(url, cap, binding, optional404 = false, budget = GH_M
     }
     const bytes = new Uint8Array(size); let offset = 0;
     for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
-    const body = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes); checkPrivateRequest(binding);
-    const json = JSON.parse(body); checkPrivateRequest(binding); return json;
+    return bytes;
   })();
   try {
     return await Promise.race([work, new Promise((_, reject) => { timer = setTimeout(() => { ctl.abort(); if (reader) { try { Promise.resolve(reader.cancel()).catch(() => {}); } catch (e) {} } reject(new Error('Private verification/request timed out')); }, budget); })]);
@@ -2958,6 +2968,18 @@ async function privateJSON(url, cap, binding, optional404 = false, budget = GH_M
     clearTimeout(timer); ctl.abort(); Private.controllers.delete(ctl);
     if (reader) { try { Promise.resolve(reader.cancel()).catch(() => {}); reader.releaseLock(); } catch (e) {} }
   }
+}
+async function privateJSON(url, cap, binding, optional404 = false, budget = GH_META_MS) {
+  const bytes = await privateBytes(url, cap, binding, optional404, budget);
+  if (bytes === null) return null;
+  const body = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes); checkPrivateRequest(binding);
+  const json = JSON.parse(body); checkPrivateRequest(binding); return json;
+}
+/* The Git blob SHA-1 of some bytes, as hex: what GitHub names a file's contents by */
+async function gitBlobSha(bytes) {
+  const head = new TextEncoder().encode('blob ' + bytes.length + '\0'), all = new Uint8Array(head.length + bytes.length);
+  all.set(head); all.set(bytes, head.length);
+  return [...new Uint8Array(await crypto.subtle.digest('SHA-1', all))].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 async function verifyPrivate(pat, candidate = false, reread = false) {
   requireTarget();
@@ -3003,8 +3025,12 @@ function privatePathCap(path) {
   throw new Error('Private repository path is not allowed');
 }
 /* superseded: for a load, true once a newer result was accepted or staged since it began. Its failures then neither
-   lock (privateJSON) nor reverify here; the load drops them. */
-async function privateReadFile(path, optional = false, superseded = null) {
+   lock (privateBytes) nor reverify here; the load drops them. held: a save's last pair for this file (syncedHeld), used
+   in place of the blob when the Contents SHA is still its SHA.
+   The blob comes as its raw bytes (Phase 15, A2), no more than the size the Contents answer gave, and is taken only when
+   it is exactly that size and its Git blob SHA-1 is the SHA the file was fetched by. That replaces Phase 5A's strict
+   base64 checks with a check that the bytes are the blob the SHA names. */
+async function privateReadFile(path, optional = false, superseded = null, held = null) {
   const epoch = capturePrivateEpoch(), cap = privatePathCap(path);
   if (optional && !path.startsWith('annotations/') && !path.startsWith('briefs/')) throw new Error('Required private CSV cannot be optional');
   const binding = { epoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token, superseded };
@@ -3025,8 +3051,9 @@ async function privateReadFile(path, optional = false, superseded = null) {
     return null;
   }
   if (info.type !== 'file' || info.path !== path || !/^[0-9a-f]{40}$/.test(info.sha) || !Number.isSafeInteger(info.size) || info.size < 0 || info.size > cap) throw new Error('Invalid private Contents metadata');
-  let blob;
-  try { blob = await privateJSON(ghApiBase() + '/git/blobs/' + info.sha, Math.ceil(cap * 1.5) + 262144, binding, false, transferBudgetMs(Math.ceil(info.size * 4 / 3) + 4096)); }   // the file as base64, with its JSON around it
+  if (held && held.sha === info.sha && held.epoch === epoch && held.target === binding.target && held.token === binding.token) return { sha: info.sha, text: held.text };   // unchanged since this page read or wrote it
+  let bytes;
+  try { bytes = await privateBytes(ghApiBase() + '/git/blobs/' + info.sha, info.size, binding, false, transferBudgetMs(info.size + 4096), GH_RAW); }   // the file's bytes, with room for the headers
   catch (e) {
     if (e.status === 404 && !dropped()) {
       if (!(await privateAwait(verifyPrivate(binding.token, false, true), epoch))) throw privateError('Private authorization is required');
@@ -3035,14 +3062,30 @@ async function privateReadFile(path, optional = false, superseded = null) {
     throw e;  // A missing blob never establishes that the file is absent.
   }
   checkPrivateEpoch(epoch);
-  if (blob.sha !== info.sha || blob.encoding !== 'base64' || blob.size !== info.size || typeof blob.content !== 'string') throw new Error('Invalid private blob metadata');
-  const encoded = blob.content.replace(/\n/g, '');
-  if (encoded.length > Math.ceil(cap / 3) * 4 || encoded.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)) throw new Error('Invalid private blob base64');
-  const bin = atob(encoded); checkPrivateEpoch(epoch);
-  if (bin.length !== info.size || bin.length > cap || btoa(bin) !== encoded) throw new Error('Private blob size/base64 mismatch');
-  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  if (!(bytes instanceof Uint8Array) || bytes.length !== info.size) throw new Error('Private blob size mismatch');
+  const sha = await gitBlobSha(bytes); checkPrivateEpoch(epoch);   // the digest is asynchronous: a lock may have come meanwhile
+  if (sha !== info.sha) throw new Error('Private blob does not match its SHA');
   const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes); checkPrivateEpoch(epoch);
+  syncedKeep(path, info.sha, text, binding.token);
   return { sha: info.sha, text };
+}
+/* Phase 15 (A3): the last copy of each library CSV that this page read from GitHub or wrote to it, as one pair: a blob
+   SHA and the text that SHA names. A save that finds GitHub's SHA unchanged merges onto that text instead of
+   downloading the file again. A pair comes whole from one validated read (privateReadFile) or one acknowledged PUT
+   whose SHA is the Git blob SHA of the bytes sent, never from two operations, never from the rows on the page, and
+   never from a public or local copy. It holds only for the target, token and authorization epoch it was made under;
+   a lock clears them all (Synced is declared beside Private). Private libraries only: a public one reads its file
+   before every save, as before. */
+const SYNCED_FILES = ['papers_database.csv', 'interests_database.csv', 'groups_database.csv'];
+function syncedKeep(file, sha, text, token) {
+  if (!isPrivate() || !SYNCED_FILES.includes(file) || !/^[0-9a-f]{40}$/.test(sha) || typeof text !== 'string' || !token || token !== Private.token) return;
+  Synced.set(file, Object.freeze({ sha, text, target: _acceptedTarget, epoch: Private.epoch, token }));
+}
+function syncedHeld(file) {
+  const pair = Synced.get(file);
+  if (!pair) return null;
+  if (!isPrivate() || pair.target !== _acceptedTarget || pair.epoch !== Private.epoch || !Private.token || pair.token !== Private.token) { Synced.delete(file); return null; }
+  return pair;
 }
 function restorePreferences() {
   try { _listOrder = localStorage.getItem('scholar_list_order') || 'best'; _rnSort = localStorage.getItem('scholar_rn_sort') || 'page'; _panelTab = localStorage.getItem(PANEL_TAB_KEY) === 'chat' ? 'chat' : 'notes'; Object.assign(PanelLayout, JSON.parse(localStorage.getItem(PANEL_LAYOUT_KEY)) || {}); } catch (e) {}
@@ -3351,7 +3394,24 @@ function rowIndex() {
   a.forEach(p => vis.set(paperKey(p), p)); h.forEach(p => hid.set(paperKey(p), p));
   return _rowIndex = { a, h, na: a.length, nh: h.length, vis, hid };
 }
-function rowIndexClear() { _rowIndex = null; }
+function rowIndexClear() { _rowIndex = null; _idIndex = null; }
+/* findPaper's answer by key (Phase 15 fix round), for listDates, which a sort calls for every comparison: the first
+   paper on the page with that id, else the first hidden one, else an upload. The index is built like rowIndex's, once
+   until allPapers or _hiddenPapers is another array or another length, but keeps the first of two rows with one id,
+   as findPaper's search does. An id that is not a nonempty string goes to findPaper itself. */
+let _idIndex = null;
+function paperById(id) {
+  if (typeof id !== 'string' || !id) return findPaper(id);
+  const a = allPapers, h = _hiddenPapers;
+  let m = _idIndex;
+  if (!m || m.a !== a || m.h !== h || m.na !== a.length || m.nh !== h.length) {
+    const ids = new Map();
+    for (const p of a) if (!ids.has(p.id)) ids.set(p.id, p);
+    for (const p of h) if (!ids.has(p.id)) ids.set(p.id, p);
+    m = _idIndex = { a, h, na: a.length, nh: h.length, ids };
+  }
+  return m.ids.get(id) || uploadById(id);
+}
 function hiddenRowOf(k) { return k ? rowIndex().hid.get(k) || null : null; }
 function rowLists(p) { return (p.user_lists || '').split('|').filter(Boolean); }
 /* A paper's marks as its buttons draw them: a hidden paper's from its own row (the sets hold the papers that show), any
@@ -3538,7 +3598,7 @@ function touchListMeta() {
 function listDates(name) {
   const all = listMetaAll(), m = hasOwn(all, name) ? all[name] : null;
   if (m && !m.deleted && m.created) return { created: m.created, updated: m.at || m.created };
-  const ds = (libraryLists[name] || []).map(k => (findPaper(k) || {}).date_found).filter(Boolean).sort();   // from before: its papers' dates
+  const ds = (libraryLists[name] || []).map(k => (paperById(k) || {}).date_found).filter(Boolean).sort();   // from before: its papers' dates
   return { created: ds[0] || '', updated: ds[ds.length - 1] || '' };
 }
 /* after the lists are read from the papers: remember them as they are, and bring back lists that are still empty */
@@ -3635,7 +3695,7 @@ function applyPapers(rows, text) {   // its callers hold the notices it raises (
   if (anyDirty()) writeBackup();   // edits made meanwhile are re-applied by restorePapersFromBackup
   const kept = goneRows(rows), bases = new Map(kept.map(p => [p.id, _loadedPaperFields.get(p.id)]));
   _listsRead = false;
-  allPapers = rows; _hiddenPapers = [];
+  allPapers = rows; _hiddenPapers = []; _searchText = new WeakMap();
   _papersText = text; _papersColumns = papersHeader(text);
   _papersFresh = freshnessOf(rows);
   const b = restorePapersFromBackup(kept, bases);
@@ -4247,16 +4307,28 @@ function setSearchFilter(key, value) {
 }
 function setSearchSelect(key, v) { _searchFilters[key] = v === '' ? null : key === 'year' ? parseInt(v) : v; renderGlobalSearch(_lastSearchQ); }
 function clearSearchFilters() { _searchFilters = { rel: 'all', unread: false, topic: null, year: null }; renderGlobalSearch(_lastSearchQ); }
+/* Phase 15 (A7): each paper's lowercased search text, kept by row and used only while the row still has the strings
+   it was made from (a received change can replace them in the same row). Notes are lowercased on every search and
+   never kept: a save or a received change edits them in place. applyPapers and the lock drop every entry. */
+let _searchText = new WeakMap();
+function searchText(p) {
+  let e = _searchText.get(p);
+  if (!e || e.headline !== p.headline || e.title !== p.title || e.authors !== p.authors || e.venue !== p.venue || e.summary !== p.summary || e.abstract !== p.abstract) {
+    const low = v => (v || '').toLowerCase();
+    e = { headline: p.headline, title: p.title, authors: p.authors, venue: p.venue, summary: p.summary, abstract: p.abstract,
+      head: low(p.headline) + ' ' + low(p.title), auth: low(p.authors), ven: low(p.venue), body: low(p.summary) + ' ' + low(p.abstract) };
+    _searchText.set(p, e);
+  }
+  return e;
+}
 function searchScore(p, tokens) {
-  const low = v => (v || '').toLowerCase();
-  const head = low(p.headline) + ' ' + low(p.title), auth = low(p.authors), ven = low(p.venue);
-  const body = [p.summary, p.abstract, p.user_notes].map(low).join(' ');
+  const { head, auth, ven, body } = searchText(p), notes = (p.user_notes || '').toLowerCase();
   let score = 0;
-  for (const t of tokens) {
+  for (const t of tokens) {   // a token has no spaces, so it matches summary, abstract and notes joined only where it matches one of them
     if (head.includes(t)) score += 4;
     else if (auth.includes(t)) score += 3;
     else if (ven.includes(t)) score += 2;
-    else if (body.includes(t)) score += 1;
+    else if (body.includes(t) || notes.includes(t)) score += 1;
     else return 0;
   }
   return score;
@@ -6130,7 +6202,7 @@ function feedActionsHTML(p, withSummaryBtn, labelled) {
     ? `<span class="p-actions has-active lead-acts">${starBtn(p, true)} ${readBtn(p, true)} ${saveBtn(p, true)}<span class="lead-acts-sep"></span>${deleteBtn(p)}</span>`
     : `<span class="p-actions has-active">${starBtn(p)} ${readBtn(p)} ${saveBtn(p)} ${deleteBtn(p)}</span>`;
   return `<div class="p-action-row">${withSummaryBtn ? summaryBtn(p) : ''} ${absBtn(p)} ${linkBtn(p)} ${whyBtn(p)} ${acts}</div>
-    <div class="p-detail-panel" data-summary="${hasText(p.summary)?dataAttr(p.summary):''}" data-abstract="${hasText(p.abstract)?dataAttr(p.abstract):''}"></div>`;
+    <div class="p-detail-panel"></div>`;
 }
 
 /* Lead story: large headline with the summary shown inline */
@@ -6209,6 +6281,8 @@ function absBtn(p) {
   if (!p.abstract || !p.abstract.trim() || p.abstract === 'not specified') return '';
   return `<button class="btn-abs" data-detail="abstract" onclick="event.stopPropagation();toggleDetail(this,'abstract')" title="Show abstract">Abstract</button>`;
 }
+/* The paper a card, row or post shows, by its key: a paper on the page, a hidden one, or an uploaded one */
+function detailPaper(k) { if (!k) return null; const ix = rowIndex(); return ix.vis.get(k) || ix.hid.get(k) || uploadById(k) || null; }
 function toggleDetail(btn, type) {
   const card = btn.closest('.top-card, .topic-item, .lp-row');
   if (!card) return;
@@ -6228,7 +6302,9 @@ function toggleDetail(btn, type) {
       const p = allPapers.find(x => paperKey(x) === card.dataset.key);
       panel.innerHTML = p ? whyHTML(p) : '';
     } else {
-      panel.textContent = type === 'summary' ? panel.dataset.summary : panel.dataset.abstract;
+      // the text comes from the paper's row, looked up by the card's key (Phase 15, A6): rows no longer carry it
+      const p = detailPaper(card.dataset.key), text = p ? (type === 'summary' ? p.summary : p.abstract) : '';
+      panel.textContent = hasText(text) ? text : '';
     }
     panel.dataset.activeType = type;
     panel.classList.add('open');
@@ -7115,7 +7191,7 @@ function listRowHTML(p, n, m) {
       <div class="lp-more"><div>
         ${differs ? `<p class="lp-orig"><i>Paper</i>${esc(p.title)}</p>` : ''}
         <div class="p-action-row">${summaryBtn(p)} ${absBtn(p)} ${linkBtn(p)} <span class="p-actions has-active">${starBtn(p)} ${readBtn(p)} ${saveBtn(p)} ${deleteBtn(p)}</span></div>
-        <div class="p-detail-panel" data-summary="${hasText(p.summary) ? dataAttr(p.summary) : ''}" data-abstract="${hasText(p.abstract) ? dataAttr(p.abstract) : ''}"></div>
+        <div class="p-detail-panel"></div>
       </div></div>
     </div>
   </article>`;
@@ -7192,8 +7268,6 @@ document.addEventListener('DOMContentLoaded', () => document.getElementById('mai
 function topRowHTML(p, groups, o) {
   o = o || {};
   const k = paperKey(p), m = paperMarks(p), ir = m.read;   // a hidden paper's marks from its own row (P1-a)
-  const hasSummary = p.summary && p.summary.trim() && p.summary !== 'not specified';
-  const hasAbstract = p.abstract && p.abstract.trim() && p.abstract !== 'not specified';
   const showTitle = p.headline && p.headline.trim() && p.headline.trim() !== (p.title||'').trim();
   const venue = p.venue && p.venue !== 'not specified' ? p.venue : '';
   return `<article class="topic-item top-row ${ir?'is-read':''}" tabindex="0" data-key="${escAttr(k)}" onclick="openPaper('${escAttr(k)}', event)">
@@ -7211,7 +7285,7 @@ function topRowHTML(p, groups, o) {
     </div>
     <div class="tr-actions"><div>
       <div class="p-action-row">${summaryBtn(p)} ${absBtn(p)} ${linkBtn(p)} ${whyBtn(p)} <span class="p-actions has-active">${starBtn(p)} ${readBtn(p)} ${saveBtn(p)} ${deleteBtn(p)}</span></div>
-      <div class="p-detail-panel" data-summary="${hasSummary?dataAttr(p.summary):''}" data-abstract="${hasAbstract?dataAttr(p.abstract):''}"></div>
+      <div class="p-detail-panel"></div>
     </div></div>
   </article>`;
 }
@@ -8584,7 +8658,7 @@ function _ghFail(res, what) {
 /* The file as it is on GitHub now. The papers file is over 1 MB, which the contents endpoint
    won't inline, so the text comes from the blob its sha points at. */
 async function _ghGetFile(headers, filename) { const _authEpoch = capturePrivateEpoch(); requireOwner();
-  if (isPrivate()) return privateReadFile(filename);
+  if (isPrivate()) return privateReadFile(filename, false, null, syncedHeld(filename));
   const res = await privateAwait(ownerFetch(`${_ghFileUrl(filename)}?ref=${GH_BRANCH}&_=${Date.now()}`, { headers, cache: 'no-store' }), _authEpoch);
   if (!res.ok) throw _ghFail(res, `read of ${filename}`);
   const { sha } = await privateAwait(res.json(), _authEpoch); requireOwner();
@@ -8601,6 +8675,15 @@ async function _ghPutFile(headers, filename, content, sha, message) { const _aut
     body: JSON.stringify({ message, content: b64, sha, branch: GH_BRANCH })
   }), _authEpoch);
   if (!res.ok) throw _ghFail(res, `save of ${filename}`);
+  if (!isPrivate()) return;
+  // Phase 15 (A3): the new SHA, kept with the text sent only when it is the Git blob SHA of exactly those bytes. The
+  // save has landed either way; without the pair, the next save reads the file first, as before.
+  try {
+    const ack = await privateAwait(res.json(), _authEpoch), bytes = new TextEncoder().encode(content), put = ack && ack.content;
+    if (put && put.path === filename && typeof put.sha === 'string' && put.sha === await privateAwait(gitBlobSha(bytes), _authEpoch)) {
+      syncedKeep(filename, put.sha, new TextDecoder('utf-8', { fatal: true }).decode(bytes), Private.token);   // the text a read of those bytes gives
+    }
+  } catch (e) { checkPrivateEpoch(_authEpoch); }
 }
 /* Read, merge, write; if someone else wrote the file in between, merge again */
 async function _ghMergePush(headers, filename, merge, message) { const _authEpoch = capturePrivateEpoch(); requireOwner();
@@ -13383,7 +13466,7 @@ function repaintShownPapers() {
    A file counts only when its sha256 is the one its index entry gives (a mismatch reads the index again, once). Each
    await checks the authorization epoch and Brief.gen: a lock, a pull or a Retry moves the generation, so an answer
    that arrives late neither fills a cache nor touches the page. Uploaded papers never get the section or a read. */
-const BRIEF_RECIPE = 'brief-v1';
+const BRIEF_RECIPE = 'brief-v2';
 /* The ten labels, word for word as ingest/brief.py QUESTIONS has them (tests/phase14/test_page_brief.cjs checks they
    are equal). The index carries the worker's own list; this one labels the section before any index exists. */
 const BRIEF_QUESTIONS = [{ n: 1, key: 'problem', label: 'What problem does this paper solve? (The answer to this question should not include the solution—just the problem. Why should I care about this paper?)' }, { n: 2, key: 'audience', label: 'Who is the target audience? What sub-community will be interested in this work?' }, { n: 3, key: 'contributions', label: 'What are the core technical and conceptual contributions?' }, { n: 4, key: 'justification', label: 'What are the technical justifications for taking this approach?' }, { n: 5, key: 'benefits', label: "What can we now do that wasn't possible before? What are the benefits of this method?" }, { n: 6, key: 'prior', label: "What are some previous methods and why couldn't they do the same things?" }, { n: 7, key: 'experiments', label: 'For each contribution / benefit of the method(s), describe the experiment(s) that will showcase this benefit clearly.' }, { n: 8, key: 'reuse', label: 'Why would somebody else use this work or build on it?' }, { n: 9, key: 'limitations', label: 'What are the limitations of the work, and for each limitation, how will it be addressed?' }, { n: 10, key: 'takeaway', label: 'What is the single most important point that you want a reader to take away from this' }];
