@@ -1,7 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- full-bleed so Android can mask it to any shape; the glyph stays inside the central safe zone -->
-  <rect width="512" height="512" fill="#111111"/>
-  <g transform="translate(112 112) scale(12)">
-    <path fill="#fbb13c" d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
-  </g>
+  <!-- Scout: a spyglass on a short tripod, X blue on black. Full-bleed black so Android can mask it to any shape;
+       everything else sits inside radius 184, within the maskable safe circle. Fills only, no strokes: the tube and
+       its wide end are outlines cut out with evenodd, the legs are rounded bars. The four paths are the navbar
+       glyph (index.html .nav-brand), the same literals in the same order. -->
+  <rect width="512" height="512" fill="#000000"/>
+  <path fill="#1d9bf0" fill-rule="evenodd" d="M124.5 243.9L260.1 171.8C277.3 162.7 298.6 169.2 307.7 186.3L324.2 217.4C333.4 234.6 326.9 255.9 309.7 265L174.1 337.1C156.9 346.3 135.6 339.7 126.5 322.6L109.9 291.5C100.8 274.3 107.3 253 124.5 243.9ZM139.5 272.1L275.1 200C276.7 199.2 278.6 199.8 279.5 201.4L296 232.4C296.8 234 296.2 235.9 294.7 236.8L159 308.9C157.5 309.7 155.6 309.1 154.7 307.6L138.2 276.5C137.4 274.9 138 273 139.5 272.1Z"/>
+  <path fill="#1d9bf0" fill-rule="evenodd" d="M287.9 138.9L321.8 120.9C339.8 111.3 362.1 118.1 371.6 136.1L401.6 192.6C411.2 210.5 404.4 232.8 386.4 242.3L352.5 260.4C334.6 269.9 312.3 263.1 302.8 245.2L272.7 188.6C263.2 170.7 270 148.4 287.9 138.9ZM302.9 167.1L336.9 149.1C339.2 147.9 342.1 148.7 343.3 151.1L373.4 207.6C374.6 209.9 373.7 212.8 371.4 214.1L337.5 232.1C335.2 233.4 332.3 232.5 331 230.1L301 173.6C299.7 171.3 300.6 168.4 302.9 167.1Z"/>
+  <path fill="#1d9bf0" d="M219.4 285.3L171.4 374.9C167.2 382.6 170.2 392.3 177.9 396.5C185.7 400.7 195.4 397.8 199.6 390L247.6 300.4C251.8 292.6 248.8 282.9 241.1 278.7C233.3 274.5 223.6 277.5 219.4 285.3Z"/>
+  <path fill="#1d9bf0" d="M219.4 300.4L267.4 390C271.6 397.8 281.3 400.7 289.1 396.5C296.8 392.3 299.8 382.6 295.6 374.9L247.6 285.3C243.4 277.5 233.7 274.5 225.9 278.7C218.2 282.9 215.2 292.6 219.4 300.4Z"/>
 </svg>
