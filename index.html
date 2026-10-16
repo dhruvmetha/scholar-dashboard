@@ -2765,6 +2765,10 @@ function savePatVerification(pat, saveToken) {
    token and target; fingerprints remain schema-1 compatibility metadata. */
 const Private = { enabled: false, epoch: 0, authorized: false, token: null, state: 'required', viewDepth: 0, controllers: new Set(), transactions: new Set(), waiters: new Set(), pdfTasks: new Set(), pdfDocuments: new Set(), renderTasks: new Set(), uiTeardowns: new Set(), interactionResets: new Set(), verificationBinding: null, verifying: null };
 const Synced = new Map();   // Phase 15 (A3): each library CSV's last SHA and text pair, by file (syncedKeep)
+// Phase 15 (B2): the person's twelve fields in their own file, and the library's layout as last read (see "THE PERSON'S
+// FILE"). STATE_CAP is the worker's ownership.STATE_CSV_LIMIT.
+const STATE_FILE = 'papers_state.csv', STATE_CAP = 4 * 1024 * 1024;
+const Layout = { now: 4, stateText: null, orphans: [], orphanPending: new Map() };
 const LibCache = { db: null, opening: null, key: null, dead: null, txs: new Set(), erasing: null, fence: null, fenceDb: null, pending: null };   // Phase 15 (B1): this tab's handle on the encrypted copy
 function isPrivate() { return Private.enabled; }
 function privateError(message) { const e = new Error(message); e.privateAuth = true; return e; }
@@ -2891,7 +2895,7 @@ function lockPrivate(state = 'required', detail) {
   _pushing = _pushAgain = Vault.pushing = Vault.pushAgain = false;
   allPapers = []; _hiddenPapers = []; allInterests = []; allGroups = []; GROUP_ORDER = []; rowIndexClear(); _listsRead = false;
   readSet.clear(); starSet.clear(); libraryLists = Object.create(null); _loadedPaperFields.clear(); _loadedInterestNames = []; _loadedGroupNames = []; _loadedGroupFields = new Map(); _loadedInterestFields = new Map();
-  _papersText = _papersFresh = _emptyPapersCandidate = null; _dataLoaded = false; _restoreAnnounced = false; Synced.clear(); _searchText = new WeakMap();
+  _papersText = _papersFresh = _emptyPapersCandidate = null; _dataLoaded = false; _restoreAnnounced = false; Synced.clear(); _searchText = new WeakMap(); stateTeardown();
   _uploads = {}; _uploadObjs.clear(); _lastSeen = null; _listSig = null;
   _libPapers = {}; _libSent = ''; _paperTextCache.clear(); _relIndex = null; _relIndexKey = null; _interestCounts = _interestCountsKey = null; _colorSlots = null; _colorKey = ''; _kbKey = null;
   clearTimeout(AddPaper.poll); clearTimeout(TopicTag.poll); clearTimeout(Pinch.timer); clearTimeout(_reader.panelT); clearTimeout(_reader.leaveT);
@@ -3025,6 +3029,7 @@ async function reverifyPrivate() {
 function privatePathCap(path) {
   if (path === 'papers_database.csv') return 16 * 1024 * 1024;
   if (path === 'interests_database.csv' || path === 'groups_database.csv') return 2 * 1024 * 1024;
+  if (path === STATE_FILE) return STATE_CAP;   // Phase 15 (B2)
   if (/^annotations\/(?:_vault|_index|[A-Za-z0-9][A-Za-z0-9._-]{0,199})\.json$/.test(path) && !path.includes('..')) return 4 * 1024 * 1024;
   if (path === 'briefs/_index.json') return 2 * 1024 * 1024;   // Phase 14: the answers' index
   if (/^briefs\/[a-z0-9][a-z0-9-]{0,199}\.json$/.test(path) && !path.startsWith('briefs/up-')) return 64 * 1024;   // one paper's answers
@@ -3036,12 +3041,13 @@ function privatePathCap(path) {
    The blob comes as its raw bytes (Phase 15, A2), no more than the size the Contents answer gave, and is taken only when
    it is exactly that size and its Git blob SHA-1 is the SHA the file was fetched by. That replaces Phase 5A's strict
    base64 checks with a check that the bytes are the blob the SHA names. */
-async function privateReadFile(path, optional = false, superseded = null, held = null) {
+async function privateReadFile(path, optional = false, superseded = null, held = null, ref = null) {
   const epoch = capturePrivateEpoch(), cap = privatePathCap(path);
-  if (optional && !path.startsWith('annotations/') && !path.startsWith('briefs/')) throw new Error('Required private CSV cannot be optional');
+  // Phase 15 (B2): the state file is optional (a layout 4 library has none); ref pins a read to one commit
+  if (optional && !path.startsWith('annotations/') && !path.startsWith('briefs/') && path !== STATE_FILE) throw new Error('Required private CSV cannot be optional');
   const binding = { epoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token, superseded };
   const dropped = () => !!(superseded && superseded());
-  const url = ghApiBase() + '/contents/' + path.split('/').map(encodeURIComponent).join('/') + '?ref=' + encodeURIComponent(GH_BRANCH);
+  const url = ghApiBase() + '/contents/' + path.split('/').map(encodeURIComponent).join('/') + '?ref=' + encodeURIComponent(ref || GH_BRANCH);
   // GitHub puts a file under 1 MB inline in this response, as base64: its body can be a file transfer, so it gets a
   // budget for its byte cap at the slow rate (transferBudgetMs, about 26 s), not the metadata time. The repository
   // check (verifyPrivate) keeps GH_META_MS.
@@ -3101,20 +3107,44 @@ async function privateReadLibrary(superseded = null) {
   catch (e) { if (e.privateAuth || [401, 403].includes(e.status)) throw e; listing = null; }
   checkPrivateEpoch(epoch);
   const infos = libraryListing(listing);
-  if (!infos) return Promise.all(SYNCED_FILES.map(name => privateReadFile(name, false, superseded)));
-  return Promise.all(SYNCED_FILES.map((name, i) => privateBlobText(name, infos[i], binding, syncedHeld(name))));
+  if (!infos) return privateReadBundleByFile(superseded);   // Phase 15 (B2): still one snapshot without the listing
+  // Phase 15 (B2): papers_state.csv from the same listing, so the pair is one tree's; null when the tree has none
+  return Promise.all(LIBRARY_CSVS.map((name, i) => privateBlobText(name, infos[i], binding, syncedHeld(name)))
+    .concat([infos.state ? privateBlobText(STATE_FILE, infos.state, binding, syncedHeld(STATE_FILE)) : null]));
 }
-/* The three files' entries in a root listing (an array of {name, path, type, sha, size}), or null */
+/* The three files' entries in a root listing (an array of {name, path, type, sha, size}), or null. Phase 15 (B2): the
+   state file's entry as infos.state, null when the tree has none. Its rule depends on the layout: in layout 5 the
+   state file is required, in layout 4 it is not (libraryBundle applies it once the papers file's header is read, and
+   a layout 5 library without one is an error there, never a fallback here). An entry that is there must be valid. */
 function libraryListing(listing) {
   if (!Array.isArray(listing) || listing.length > 1000) return null;
   const infos = [];
-  for (const name of SYNCED_FILES) {
+  for (const name of LIBRARY_CSVS.concat([STATE_FILE])) {
     const rows = listing.filter(row => row && typeof row === 'object' && row.path === name), row = rows[0];
+    if (name === STATE_FILE && !rows.length) { infos.state = null; break; }
     if (rows.length !== 1 || row.type !== 'file' || row.name !== name || typeof row.sha !== 'string' || !/^[0-9a-f]{40}$/.test(row.sha) ||
         !Number.isSafeInteger(row.size) || row.size < 0 || row.size > privatePathCap(name)) return null;
-    infos.push({ type: 'file', path: name, sha: row.sha, size: row.size });
+    if (name === STATE_FILE) infos.state = { type: 'file', path: name, sha: row.sha, size: row.size };
+    else infos.push({ type: 'file', path: name, sha: row.sha, size: row.size });
   }
   return infos;
+}
+/* Phase 15 (B2): the library read file by file when there is no listing, still as one snapshot. Fix round (Sol's
+   finding 3): in every layout, all four files are read at the commit the branch names now, the state file too (null
+   when that commit has none), so a live or corrupt state file beside a legacy header is seen and refused. A file whose
+   SHA did not move comes from its held pair, without a download. */
+async function privateReadBundleByFile(superseded = null) {
+  const commit = await privateHeadCommit(superseded);
+  return Promise.all(LIBRARY_CSVS.map(name => privateReadFile(name, false, superseded, syncedHeld(name), commit))
+    .concat([privateReadFile(STATE_FILE, true, superseded, syncedHeld(STATE_FILE), commit)]));
+}
+/* The commit the branch names now (GET /git/ref/heads/{branch}), checked as a 40-hex commit SHA */
+async function privateHeadCommit(superseded = null) {
+  const epoch = capturePrivateEpoch(), binding = { epoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token, superseded };
+  const ref = await privateJSON(ghApiBase() + '/git/ref/heads/' + GH_BRANCH.split('/').map(encodeURIComponent).join('/'), 65536, binding); checkPrivateEpoch(epoch);
+  const object = ref && ref.object;
+  if (!object || object.type !== 'commit' || typeof object.sha !== 'string' || !/^[0-9a-f]{40}$/.test(object.sha)) throw new Error('Invalid branch reference');
+  return object.sha;
 }
 /* Phase 15 (A3): the last copy of each library CSV that this page read from GitHub or wrote to it, as one pair: a blob
    SHA and the text that SHA names. A save that finds GitHub's SHA unchanged merges onto that text instead of
@@ -3123,7 +3153,8 @@ function libraryListing(listing) {
    never from a public or local copy. It holds only for the target, token and authorization epoch it was made under;
    a lock clears them all (Synced is declared beside Private). Private libraries only: a public one reads its file
    before every save, as before. */
-const SYNCED_FILES = ['papers_database.csv', 'interests_database.csv', 'groups_database.csv'];
+const LIBRARY_CSVS = ['papers_database.csv', 'interests_database.csv', 'groups_database.csv'];
+const SYNCED_FILES = LIBRARY_CSVS.concat(['papers_state.csv']);   // Phase 15 (B2): the state file keeps its pair too (and is cached, LIBCACHE_FILES)
 function syncedKeep(file, sha, text, token) {
   if (!isPrivate() || !SYNCED_FILES.includes(file) || !/^[0-9a-f]{40}$/.test(sha) || typeof text !== 'string' || !token || token !== Private.token) return;
   Synced.set(file, Object.freeze({ sha, text, target: _acceptedTarget, epoch: Private.epoch, token }));
@@ -3427,12 +3458,12 @@ async function loadPrivateLibrary() {
   if (!_papersText) privateView('loading');
   try {
     const files = await privateReadLibrary(overtaken); checkPrivateEpoch(epoch);
-    const texts = files.map(file => normalizeNewlines(file.text));
+    const texts = files.map(file => file ? normalizeNewlines(file.text) : null);   // the fourth: papers_state.csv, or null
     if (_papersText) {
-      const out = refreshReceive({ req, saveGen, how: 'startup', texts: { papers: texts[0], interests: texts[1], groups: texts[2] } });
+      const out = refreshReceive({ req, saveGen, how: 'startup', texts: { papers: texts[0], interests: texts[1], groups: texts[2], state: texts[3] ?? null } });
       return out.status === 'accepted' || out.status === 'deferred';
     }
-    const papers = parsePapers(texts[0]);
+    const bundle = libraryBundle(texts[0], texts[3] ?? null), papers = bundle.rows;   // Phase 15 (B2): the pair, checked before anything is adopted
     const interests = parseMetaRows(texts[1], 'interest_name', ','); const groups = parseMetaRows(texts[2], 'group_name', '|');
     checkPrivateEpoch(epoch); restoreOwnerState();
     allInterests = interests; allGroups = groups; _interestsText = texts[1]; _groupsText = texts[2];
@@ -3444,7 +3475,7 @@ async function loadPrivateLibrary() {
     refreshHeld(() => {
       if (backup && backup.interests) { allInterests = mergeBackupRows(interests, backup.interests, 'interest_name'); _interestsDirty = true; announceRestore(backup); }
       if (backup && backup.groups) { allGroups = mergeBackupRows(groups, backup.groups, 'group_name'); _groupsDirty = true; announceRestore(backup); }
-      buildGroupOrder(); applyPapers(papers, texts[0]); _ownerDecisionDone = true;
+      buildGroupOrder(); applyPapers(papers, texts[0], bundle); _ownerDecisionDone = true;
       document.getElementById('privateAccess').hidden = true; document.documentElement.classList.remove('private-locked');
       applyHash();
     });
@@ -3760,6 +3791,210 @@ let _loadedPaperFields = new Map();              // id -> editable fields as loa
 let _loadedInterestNames = [], _loadedGroupNames = [];
 let _loadedGroupFields = new Map();              // topic -> its row as loaded, so a save keeps what the worker wrote since
 let _loadedInterestFields = new Map();           // interest -> its row as loaded, likewise (an owner confirmation from the CLI)
+
+/* ===== THE PERSON'S FILE (Phase 15, B2) =====
+   Layout 5 keeps the person's twelve fields (EDITABLE_FIELDS, in this order) in papers_state.csv, beside a papers file
+   that has every machine column and none of them. Layouts 1 to 4 keep them in the papers file. The page reads both and
+   joins them into the same rows; every save looks at the layout GitHub has now and writes the file that holds them.
+   - The file: the header id plus the twelve fields; one row per paper with a value that is not its declared default
+     ('' for every field, 'false' too for is_read and is_starred); rows sorted by id; CRLF; quoted as Papa quotes. A row
+     whose paper is gone (an orphan) is kept, never shown. A rollback leaves an archive of the orphans, with orphan_id
+     in place of id. The worker's ingest/ownership.py is the same contract; tests/phase15/state_cases.json holds the
+     cases both run.
+   - Layout 5 needs a valid live file; a missing, corrupt or archived one is an error, never default state. Layouts 1
+     to 4 take no file or an archive, never a live one.
+   - Layout.now: the layout of the last copy read or saved; Layout.stateText: that copy's state text (null in layout
+     4), so a pull that brings another device's star alone is new; Layout.orphanPending: edits from this browser's
+     backup to papers no longer in the papers file, saved as orphan rows in layout 5 and kept pending in layout 4. */
+const STATE_DEFAULT_FLAGS = ['is_read', 'is_starred'];
+const MACHINE_COLUMNS = ['arxiv_id', 'doi', 'source_ref', 'machine_strengths', 'machine_topics', 'machine_pdf_url'];
+const LIBRARY_FORMATS = 'library 4+5';   // shown on Library's save line: this page reads both layouts (the cutover's check)
+function stateHeader(archive) { return [archive ? 'orphan_id' : 'id'].concat(EDITABLE_FIELDS); }
+function stateDefault(f) { return STATE_DEFAULT_FLAGS.includes(f) ? 'false' : ''; }
+function stateIsDefault(f, v) { return v === '' || v === stateDefault(f); }
+function stateSparse(values) { return EDITABLE_FIELDS.some(f => !stateIsDefault(f, (values && values[f]) || '')); }
+/* The layout a papers header says: 5 with every machine column and none of the person's, else 4 (1 to 4 alike here) */
+function layoutOf(fields) {
+  return MACHINE_COLUMNS.every(c => fields.includes(c)) && !EDITABLE_FIELDS.some(f => fields.includes(f)) ? 5 : 4;
+}
+/* A state file's records, strictly: a quote inside an unquoted cell, text after a closing quote, an unclosed quote or
+   a bare carriage return is refused. Blank lines are skipped. */
+function stateRecords(text) {
+  const out = [], n = text.length, bad = what => { throw new Error('Invalid papers_state.csv: ' + what); };
+  let i = 0;
+  while (i < n) {
+    if (text[i] === '\n') { i++; continue; }
+    if (text[i] === '\r' && text[i + 1] === '\n') { i += 2; continue; }
+    const cells = [];
+    for (;;) {
+      if (text[i] === '"') {
+        let j = i + 1, cell = '';
+        for (;;) {
+          const k = text.indexOf('"', j);
+          if (k < 0) bad('an unclosed quote');
+          cell += text.slice(j, k);
+          if (text[k + 1] === '"') { cell += '"'; j = k + 2; continue; }
+          i = k + 1; break;
+        }
+        cells.push(cell);
+      } else {
+        let j = i;
+        while (j < n && text[j] !== ',' && text[j] !== '\r' && text[j] !== '\n') { if (text[j] === '"') bad('a quote inside an unquoted cell'); j++; }
+        cells.push(text.slice(i, j)); i = j;
+      }
+      if (i >= n) break;
+      if (text[i] === ',') { i++; continue; }
+      if (text[i] === '\n') { i++; break; }
+      if (text[i] === '\r' && text[i + 1] === '\n') { i += 2; break; }
+      bad('text after a closing quote or a bare carriage return');
+    }
+    out.push(cells);
+  }
+  return out;
+}
+/* A state file as { archive, rows: Map id -> the twelve values }: the complete live or archive header, every row exactly
+   as wide, unique non-empty ids, within STATE_CAP. Anything else throws (an "Invalid" error, as a bad papers file). */
+function parseStateText(text) {
+  if (typeof text !== 'string' || new TextEncoder().encode(text).length > STATE_CAP) throw new Error('Invalid papers_state.csv: missing or over its size limit');
+  if (text.includes('\u0000')) throw new Error('Invalid papers_state.csv: NUL');
+  const records = stateRecords(text.replace(/^\uFEFF/, '')), head = records[0] || [];
+  // the header record's cells, one by one: a quoted cell holding the whole header joined by commas is one cell
+  const isHeader = want => head.length === want.length && want.every((cell, i) => head[i] === cell);
+  const archive = isHeader(stateHeader(true));
+  if (!archive && !isHeader(stateHeader(false))) throw new Error('Invalid papers_state.csv: the header is not complete');
+  const rows = new Map();
+  records.slice(1).forEach((cells, k) => {
+    if (cells.length !== EDITABLE_FIELDS.length + 1) throw new Error(`Invalid papers_state.csv: record ${k + 2} has ${cells.length} cells`);
+    const id = cells[0];
+    if (!id || id !== id.trim() || rows.has(id)) throw new Error(`Invalid papers_state.csv: record ${k + 2} has an empty or repeated id`);
+    rows.set(id, Object.fromEntries(EDITABLE_FIELDS.map((f, j) => [f, cells[j + 1]])));
+  });
+  return { archive, rows };
+}
+function stateCell(v) { return /[",\r\n\uFEFF]/.test(v) || v[0] === ' ' || v[v.length - 1] === ' ' ? '"' + v.replace(/"/g, '""') + '"' : v; }
+/* The canonical file for a Map id -> values (ownership.state_bytes): sparse, sorted by id, CRLF, a default written empty */
+function serializeState(rows, archive) {
+  const lines = [stateHeader(archive).join(',')];
+  [...rows.keys()].sort((a, b) => a < b ? -1 : a > b ? 1 : 0).forEach(id => {
+    const v = rows.get(id);
+    if (stateSparse(v)) lines.push([id].concat(EDITABLE_FIELDS.map(f => stateIsDefault(f, (v && v[f]) || '') ? '' : v[f])).map(stateCell).join(','));
+  });
+  return lines.join('\r\n') + '\r\n';
+}
+/* The layout a papers header and a parsed state file (null: no file) make together, or an "Invalid library" error:
+   layout 5 needs a live state file; layouts 1 to 4 take no file or an archive, never a live one. Only a private
+   library is ever split, so a public page refuses a layout 5 papers file (root's ruling R1). */
+function bundleLayout(fields, state) {
+  const layout = layoutOf(fields);
+  if (layout === 5) {
+    if (!isPrivate()) throw new Error('Invalid library: the papers file is split (layout 5), which only a private library can be');
+    if (!state) throw new Error('Invalid library: papers_state.csv is missing');
+    if (state.archive) throw new Error('Invalid library: papers_state.csv is a rollback archive');
+  } else if (state && !state.archive) {
+    throw new Error(MACHINE_COLUMNS.every(c => fields.includes(c)) ? 'Invalid library: the papers file has regained a person’s column' : 'Invalid library: papers_state.csv is live but the papers file has the person’s columns');
+  }
+  return layout;
+}
+/* The library as one bundle: the papers text and the state text (null: no file) read from one snapshot, checked
+   together before anything is adopted. Returns { rows (joined), layout, stateText (null in layout 4), orphans }. */
+function libraryBundle(papersText, stateText) {
+  const rows = parsePapers(papersText), fields = papersHeader(papersText);
+  const state = stateText == null ? null : parseStateText(stateText);
+  const layout = bundleLayout(fields, state);
+  const ids = new Set(rows.map(p => p.id));
+  const orphans = state ? [...state.rows.keys()].filter(id => !ids.has(id)) : [];
+  if (layout === 5) rows.forEach(p => { const v = state.rows.get(p.id) || {}; EDITABLE_FIELDS.forEach(f => { p[f] = v[f] || stateDefault(f); }); });
+  return { rows, layout, stateText: layout === 5 ? stateText : null, orphans };
+}
+/* A bundle taken in: the layout and state text applyPapers adopts with its rows (none: the layout its header says) */
+function libraryTake(bundle, papersText) {
+  Layout.now = bundle ? bundle.layout : layoutOf(papersHeader(papersText));
+  Layout.stateText = bundle ? bundle.stateText : null;
+  Layout.orphans = bundle ? bundle.orphans : [];
+}
+function stateTeardown() { Layout.now = 4; Layout.stateText = null; Layout.orphans = []; Layout.orphanPending = new Map(); }
+/* Edits to papers no longer in the library, kept from this browser's backup (restorePapersFromBackup). Layout 5 saves
+   them as orphan rows; layout 4 has no row to put them on, so they stay pending and backed up. */
+function orphansHeld() { return Layout.orphanPending.size > 0; }
+/* The person's fields merged onto the state file as GitHub has it (text), as mergePapers does for the papers file:
+   only fields changed here are written, lists, topics and strengths as deltas (mergedPaperFields). The file is
+   written sparse, but the result carries every paper this page holds with all twelve merged values, defaults included,
+   and the values sent, so papersSaved acknowledges each one exactly (Sol's correction 4). A row for an id this page
+   does not hold is kept as it is; an edit to a paper whose metadata left GitHub becomes its orphan row. unchanged: no
+   edit pending and nothing to write. No columns: the papers file's header (_papersColumns) is not this file's. */
+function mergeState(text, canon) {
+  const st = parseStateText(text);
+  if (st.archive) throw new Error('Invalid papers_state.csv: a rollback archive');
+  flushStateToCSV();
+  const out = new Map([...st.rows].map(([id, v]) => [id, { ...v }])), sent = new Map(), rows = [], orphans = new Map();
+  const theirsOf = id => { const v = st.rows.get(id) || {}; return Object.fromEntries(EDITABLE_FIELDS.map(f => [f, v[f] || stateDefault(f)])); };
+  let changed = false, pending = false;
+  const lay = (id, now, was) => {
+    const theirs = theirsOf(id), merged = mergedPaperFields(now, was, theirs, canon);
+    if (EDITABLE_FIELDS.some(f => (now[f] || '') !== (was[f] || ''))) pending = true;
+    if (EDITABLE_FIELDS.some(f => merged[f] !== theirs[f])) { changed = true; out.set(id, merged); }
+    return merged;
+  };
+  everyPaper().forEach(p => {
+    const now = paperFields(p), merged = lay(p.id, now, _loadedPaperFields.get(p.id) || {});
+    rows.push({ id: p.id, ...merged }); sent.set(p.id, { p, now });
+  });
+  Layout.orphanPending.forEach((o, id) => { if (!sent.has(id)) { lay(id, o.now, o.was || {}); orphans.set(id, o); } });
+  const csv = serializeState(out, false);
+  if (csv !== serializeState(new Map(st.rows), false)) changed = true;
+  return { file: STATE_FILE, csv, rows, sent, deleted: new Map(), canon, orphans, unchanged: !changed && !pending };
+}
+/* A save's check of the pair it read: its layout, or a fatal error that keeps every edit pending here */
+function pairChecked(fields, stateText) {
+  try { return bundleLayout(fields, stateText == null ? null : parseStateText(stateText)); }
+  catch (e) { throw Object.assign(new Error(`The library\u2019s files disagree on GitHub (${e.message.replace(/^Invalid [^:]*: /, '')}), so nothing was saved. Your edits are kept in this browser.`), { fatal: true }); }
+}
+/* Fix round (Sol's finding 3): the pair as GitHub has it now, for one save attempt, checked as one bundle before the
+   save picks its file: { layout, papers: {sha, text}, state: {sha, text} or null }. A private page reads the papers
+   file, then the state file, in every layout, so a live or corrupt state file beside a legacy header stops the save as
+   well. Files whose SHA did not move come from their held pairs. The two reads are not one commit, and they need not
+   be: the save writes one of the two files, under its SHA, and a split or a rollback rewrites both files in one
+   commit. So a layout change after the reads fails the PUT, whose retry reads the pair again, and one between the two
+   reads gives a pair that disagrees, which stops the save with the edits kept. A public page reads its papers file
+   alone: only a private library is ever split, and a split papers file stops a public save (root's ruling R1). */
+async function paperFieldsPair(headers) { const _authEpoch = capturePrivateEpoch(); requireOwner();
+  const papers = await privateAwait(_ghGetFile(headers, 'papers_database.csv'), _authEpoch); requireOwner();
+  const got = isPrivate() ? await privateAwait(_ghGetFile(headers, STATE_FILE), _authEpoch) : null; requireOwner();
+  const state = got && got.text !== null ? got : null;
+  return { layout: pairChecked(papersHeader(papers.text), state ? state.text : null), papers, state };
+}
+/* The save of the person's fields: the state file in layout 5, the papers file in layouts 1 to 4. Every attempt, a
+   conflict retry included, first reads and checks the pair (paperFieldsPair), then merges onto the file that holds the
+   fields now: a split or a rollback met during a save moves the pending edits to the other file (Sol's correction 1),
+   the same deltas (now against was) merged onto that file's values. A split or a rollback rewrites both files in one
+   commit, so one that lands after the read fails the PUT's SHA check and the retry reads the pair again. Files that
+   disagree stop the save; the edits stay pending here. */
+async function savePaperFields(headers, canon) { const _authEpoch = capturePrivateEpoch(); requireOwner();
+  for (let attempt = 0; ; attempt++) {
+    const pair = await privateAwait(paperFieldsPair(headers), _authEpoch); requireOwner();
+    const file = pair.layout === 5 ? STATE_FILE : 'papers_database.csv', got = file === STATE_FILE ? pair.state : pair.papers;
+    Layout.now = pair.layout;   // the layout GitHub has now (papersHas reads it)
+    const out = file === STATE_FILE ? mergeState(got.text, canon) : Object.assign(mergePapers(got.text, canon), { file });
+    if (out.unchanged) return out;   // GitHub already has every edit this save could carry: nothing to write
+    try { await privateAwait(_ghPutFile(headers, file, out.csv, got.sha, `Update ${file} from dashboard`), _authEpoch); requireOwner(); return out; }
+    catch (e) { checkPrivateEpoch(_authEpoch); if (!e.conflict || attempt >= 2) throw e; }
+  }
+}
+/* A save of the person's fields landed. The papers file: papersSaved, as before. The state file: papersSaved too, with
+   the complete merged rows; then a paper whose metadata left GitHub, with nothing pending any more, leaves the page
+   (its edit is an orphan row now), and the backup's orphan edits that were sent are done. */
+function paperFieldsSaved(out) {
+  if (out.file !== STATE_FILE) { papersSaved(out); return; }
+  const gone = everyPaper().filter(p => p._goneRemote);
+  papersSaved(out);
+  const done = new Set(gone.filter(p => !pendingEdit(p)).map(p => p.id));
+  gone.forEach(p => { if (!done.has(p.id)) p._goneRemote = true; });
+  if (done.size) {
+    allPapers = allPapers.filter(p => !done.has(p.id)); _hiddenPapers = _hiddenPapers.filter(p => !done.has(p.id));
+    done.forEach(id => _loadedPaperFields.delete(id)); rowIndexClear(); refresh();
+  }
+  (out.orphans || new Map()).forEach((o, id) => { if (Layout.orphanPending.get(id) === o) Layout.orphanPending.delete(id); });
+}
 function rowSnapshot(rows, key, saved) {          // saved: a backup's own snapshot, which wins for the rows it names
   const m = new Map(rows.map(r => [r[key], { ...r }]));
   Object.entries(saved || {}).forEach(([k, v]) => m.set(k, v));
@@ -3785,6 +4020,8 @@ function writeBackup() {
         const now = paperFields(p), was = _loadedPaperFields.get(p.id);
         if (!was || JSON.stringify(now) !== JSON.stringify(was)) { papers[p.id] = now; if (was) loaded[p.id] = was; }
       });
+      // Phase 15 (B2): edits to papers that left the library, from an earlier backup, stay in it until saved
+      Layout.orphanPending.forEach((o, id) => { if (!present.has(id) && !papers[id]) { papers[id] = o.now; if (o.was) loaded[id] = o.was; } });
       b.papers = papers;
       b.loadedPapers = loaded;   // what each edit was made against, so a restore re-applies the edits, not the whole fields
       b.deleted = [..._loadedPaperFields.keys()].filter(id => !present.has(id));
@@ -3835,9 +4072,14 @@ function restorePapersFromBackup(kept = [], bases = new Map()) {
   }
   if (kept.length) _stateDirty = true;
   if (conflicts) refreshNotice(conflicts === 1 ? 'A paper you changed was deleted from the library on GitHub. Your change to it is kept in this browser, not saved.' : `${conflicts} papers you changed were deleted from the library on GitHub. Your changes to them are kept in this browser, not saved.`, 9000);
+  Layout.orphanPending = new Map();
   if (!b || (!b.papers && !b.deleted)) return null;
   const gone = new Set(b.deleted || []), base = b.loadedPapers || {};
   allPapers = allPapers.filter(p => !gone.has(p.id));
+  // Phase 15 (B2): a backed-up edit to a paper this copy no longer has (its metadata left GitHub between sessions) is
+  // kept, never dropped: an orphan row at the next save in layout 5, pending here in layout 4 (Sol's correction 4)
+  const present = new Set(everyPaper().map(p => p.id));
+  Object.entries(b.papers || {}).forEach(([id, o]) => { if (o && !present.has(id) && !gone.has(id)) Layout.orphanPending.set(id, { now: o, was: base[id] || null }); });
   // The saved edits onto the copy just loaded, still pending: a topic the worker added since stays, and a removal the
   // copy already agrees with is applied again at the next save (an older backup has no base)
   everyPaper().forEach(p => {
@@ -4007,12 +4249,13 @@ function isOlder(a, b) { return a.latest < b.latest; }
 /* The rows, then the backup's edits, then the hidden ones split off, then the sets and lists read from them; only then
    the restore is announced (its save bar reconciles the lists: see bootstrapStateFromCSV). A row the new copy lacks, with
    an edit pending here, is kept as a remote deletion conflict (goneRows); one with nothing pending goes with the copy. */
-function applyPapers(rows, text) {   // its callers hold the notices it raises (refreshHeld) until the restore is announced
+function applyPapers(rows, text, bundle) {   // its callers hold the notices it raises (refreshHeld) until the restore is announced
   if (anyDirty()) writeBackup();   // edits made meanwhile are re-applied by restorePapersFromBackup
   const kept = goneRows(rows), bases = new Map(kept.map(p => [p.id, _loadedPaperFields.get(p.id)]));
   _listsRead = false;
   allPapers = rows; _hiddenPapers = []; _searchText = new WeakMap();
   _papersText = text; _papersColumns = papersHeader(text);
+  libraryTake(bundle, text);   // Phase 15 (B2): rows already joined; the layout and the state text they came with
   _papersFresh = freshnessOf(rows);
   const b = restorePapersFromBackup(kept, bases);
   splitHidden();
@@ -4087,7 +4330,8 @@ function parseMetaRows(text, key, delimiter) {
 function parseLibrary(texts) {
   const out = {};
   if (texts.papers !== null) {
-    out.papers = parsePapers(texts.papers);
+    out.bundle = libraryBundle(texts.papers, texts.state ?? null);   // Phase 15 (B2): the pair, as one bundle
+    out.papers = out.bundle.rows;
     if (!out.papers.length) throw new Error('Invalid papers CSV: no papers');
     out.fresh = freshnessOf(out.papers);
   }
@@ -4101,11 +4345,13 @@ async function fetchLibraryTexts() { const _authEpoch = capturePrivateEpoch();
   requireTarget();
   const names = ['papers_database.csv', 'interests_database.csv', 'groups_database.csv'];
   let texts;
-  if (isPrivate()) { const files = await privateAwait(privateReadLibrary(), _authEpoch); texts = files.map(file => normalizeNewlines(file.text)); }
+  if (isPrivate()) { const files = await privateAwait(privateReadLibrary(), _authEpoch); texts = files.map(file => file ? normalizeNewlines(file.text) : null); }
   else if (CSV_BASE_URL) texts = await privateAwait(Promise.all(names.map(name => fetchNormalized(csvUrl(name), { fallback: false }))), _authEpoch);
   else texts = await privateAwait(Promise.all(names.map(name => fetchLocal(name))), _authEpoch);
   requireTarget();
-  return { papers: texts[0], interests: texts[1], groups: texts[2] };
+  // Phase 15 (B2): the fourth, papers_state.csv, is a private library's only (root's ruling R1): a public page reads
+  // the three files as before, and its pull refuses a split papers file (libraryBundle)
+  return { papers: texts[0], interests: texts[1], groups: texts[2], state: texts[3] ?? null };
 }
 /* A result: { req, saveGen, how, view, texts: { papers, interests, groups } } (a text is null when the result has no
    copy of that file); how is 'startup', 'pull', 'button' or 'show'; view is the feed a pull or the button was asked
@@ -4126,7 +4372,8 @@ function refreshReceive(r) {
   const shares = !!s && REFRESH_FILES.some(f => s.texts[f] !== null && texts[f] !== null);
   if (shares && s.req > r.req) return { status: 'superseded' };   // a newer result is staged for these files: it stays
   const parsed = r.parsed || parseLibrary(texts);
-  let papersNew = texts.papers !== null && texts.papers !== _papersText;
+  // Phase 15 (B2): the papers and state pair is compared together: another device's star changes the state text alone
+  let papersNew = texts.papers !== null && (texts.papers !== _papersText || (parsed.bundle ? parsed.bundle.stateText : null) !== Layout.stateText);
   if (papersNew && _papersFresh && isOlder(parsed.fresh, _papersFresh)) papersNew = false;   // an older copy: ours stays
   const metaNew = (texts.interests !== null && texts.interests !== _interestsText) || (texts.groups !== null && texts.groups !== _groupsText);
   const pulled = r.how !== 'startup', readerOpen = document.getElementById('reader').classList.contains('open'), ms = document.getElementById('mainScroll');
@@ -4149,7 +4396,7 @@ function refreshReceive(r) {
     try {
       if (texts.interests !== null) takeInterests(texts.interests, true, parsed.interests);
       if (texts.groups !== null) takeGroups(texts.groups, true, parsed.groups);
-      if (papersNew) applyPapers(parsed.papers, texts.papers);
+      if (papersNew) applyPapers(parsed.papers, texts.papers, parsed.bundle);
     } finally { Refresh.applying = false; }
     // one rebuild: the feed from its top where it shows (new papers in by rank, decided posts out, the records gone,
     // the sheets reconciled, the + editor kept), else the view that shows, as on any received data
@@ -4188,7 +4435,8 @@ function receivePapers(text, fromGitHub, req, saveGen) {
   requireTarget();
   if (req < Refresh.accepted.papers) return;
   if (text === _papersText) return;
-  const rows = parsePapers(text);
+  // Phase 15 (B2, R1): a public library has no state file; a split papers file is refused, never taken
+  const bundle = libraryBundle(text, null), rows = bundle.rows;
   if (!rows.length) {
     const parsed = Papa.parse(text, { header: true, skipEmptyLines: true, newline: '\n' });
     if (!parsed.errors.length && parsed.meta.fields && parsed.meta.fields.includes('id') && parsed.meta.fields.includes('title') && !parsed.data.length) _emptyPapersCandidate = text;
@@ -4196,13 +4444,13 @@ function receivePapers(text, fromGitHub, req, saveGen) {
   }
   if (!_papersText) {
     Refresh.accepted.papers = req;
-    refreshHeld(() => { applyPapers(rows, text); applyHash(); }); revealContent();
+    refreshHeld(() => { applyPapers(rows, text, bundle); applyHash(); }); revealContent();
     if (vaultSupported()) vaultReady(true).catch(privateCallback(() => {}));   // a key remembered on this device unlocks notes quietly
     return;
   }
   const fresh = freshnessOf(rows);
   if (!(isOlder(_papersFresh, fresh) || (fromGitHub && !isOlder(fresh, _papersFresh)))) return;
-  refreshReceive({ req, saveGen, how: 'startup', texts: { papers: text, interests: null, groups: null }, parsed: { papers: rows, fresh } });
+  refreshReceive({ req, saveGen, how: 'startup', texts: { papers: text, interests: null, groups: null, state: null }, parsed: { papers: rows, fresh, bundle } });
 }
 async function fetchLocal(name) { const _authEpoch = capturePrivateEpoch();
   requireTarget(); if (isPrivate()) throw new Error('Private local data reads are disabled');
@@ -6998,7 +7246,10 @@ function papersHeader(text) {
   text = text || ''; const end = text.search(/\r?\n/), head = end < 0 ? text : text.slice(0, end);
   return head.replace(/^\uFEFF/, '').split(',').map(c => c.trim().replace(/^"(.*)"$/, '$1'));
 }
-function papersHas(column) { return (_papersColumns || papersHeader(_papersText)).includes(column); }
+function papersHas(column) {
+  if (Layout.now === 5 && EDITABLE_FIELDS.includes(column)) return true;   // Phase 15 (B2): in papers_state.csv, which has them all
+  return (_papersColumns || papersHeader(_papersText)).includes(column);
+}
 /* hide_reason is a column from schema 3 on; until the worker adds it to the file a reason has nowhere to go, and the
    hide works as before */
 function hideReasonsKept() { return papersHas('hide_reason'); }
@@ -8825,7 +9076,7 @@ function resetChanges() {
   _stateDirty = false; _interestsDirty = false; _groupsDirty = false;
   clearBackup();
   hideSaveBar();
-  _papersText = null;
+  _papersText = null; Layout.stateText = null; Layout.orphanPending = new Map();
   if (isPrivate()) retryPrivate(); else { loadPapers(); loadInterests(); loadGroups(); }
   toast('Changes discarded — reloaded from CSV files');
 }
@@ -8915,7 +9166,7 @@ function updateSyncStatus() {
   } else if (anyDirty()) {
     el.innerHTML = `<span class="sync-dot warn"></span>Not saved yet <button class="sync-btn" onclick="pushToGitHub()">Save now</button>`;
   } else {
-    el.innerHTML = `<span class="sync-dot on"></span>Saves to GitHub automatically${last ? ` \u00b7 last saved ${agoText(last)}` : ''} <button class="sync-btn quiet" onclick="disconnectGitHub()" title="Sign out on this browser: the site becomes read-only here">Sign out</button>`;
+    el.innerHTML = `<span class="sync-dot on"></span>Saves to GitHub automatically${last ? ` \u00b7 last saved ${agoText(last)}` : ''} \u00b7 <span class="sync-formats">${LIBRARY_FORMATS}</span> <button class="sync-btn quiet" onclick="disconnectGitHub()" title="Sign out on this browser: the site becomes read-only here">Sign out</button>`;
   }
 }
 async function connectGitHub() {
@@ -8979,7 +9230,9 @@ function _ghFail(res, what) {
 /* The file as it is on GitHub now. The papers file is over 1 MB, which the contents endpoint
    won't inline, so the text comes from the blob its sha points at. */
 async function _ghGetFile(headers, filename) { const _authEpoch = capturePrivateEpoch(); requireOwner();
-  if (isPrivate()) return privateReadFile(filename, false, null, syncedHeld(filename));
+  // Phase 15 (B2): papers_state.csv may be absent (a layout 4 library): { sha: null, text: null } then, never an error.
+  // Only a private page reads it (root's ruling R1).
+  if (isPrivate()) return filename === STATE_FILE ? (await privateAwait(privateReadFile(STATE_FILE, true, null, syncedHeld(STATE_FILE)), _authEpoch)) || { sha: null, text: null } : privateReadFile(filename, false, null, syncedHeld(filename));
   const res = await privateAwait(ownerFetch(`${_ghFileUrl(filename)}?ref=${GH_BRANCH}&_=${Date.now()}`, { headers, cache: 'no-store' }), _authEpoch);
   if (!res.ok) throw _ghFail(res, `read of ${filename}`);
   const { sha } = await privateAwait(res.json(), _authEpoch); requireOwner();
@@ -8990,6 +9243,11 @@ async function _ghGetFile(headers, filename) { const _authEpoch = capturePrivate
   return { sha, text: new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))) };
 }
 async function _ghPutFile(headers, filename, content, sha, message) { const _authEpoch = capturePrivateEpoch(); requireOwner();
+  // Phase 15 fix round (Sol's finding 5): a library file larger than the cap its readers apply (privatePathCap, the
+  // worker's limits) is never sent. GitHub would take it, but no page or worker could read the library back. The save
+  // stops before the PUT, so its edits and their backup stay here, unacknowledged.
+  if (isPrivate() && (LIBRARY_CSVS.includes(filename) || filename === STATE_FILE) && new TextEncoder().encode(content).length > privatePathCap(filename))
+    throw Object.assign(new Error(`${filename} would be larger than the ${privatePathCap(filename) / 1048576} MB Scout can read back, so nothing was saved. Your edits are kept in this browser.`), { fatal: true });
   const b64 = btoa(unescape(encodeURIComponent(content)));
   const res = await privateAwait(ownerFetch(_ghFileUrl(filename), {
     method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' },
@@ -9234,11 +9492,12 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
       // A strength edit is saved under the interest's name as GitHub has it now, so read its interests (and aliases) first
       const fresh = await privateAwait(freshInterests(headers), _authEpoch); requireOwner();
       const canon = fresh ? aliasIndex(fresh) : undefined;
-      const out = await privateAwait(_ghMergePush(headers, 'papers_database.csv', text => mergePapers(text, canon), 'Update papers_database.csv from dashboard'), _authEpoch);
+      // Phase 15 (B2): the file that holds the person's fields now, looked at on every attempt (savePaperFields)
+      const out = await privateAwait(savePaperFields(headers, canon), _authEpoch);
       // The edits just saved are the new baseline; anything changed since stays unsaved
       requireOwner();
       if (fresh && !_interestsDirty) adoptInterests(fresh);   // nothing pending here: show the interests as saved (a rename made elsewhere)
-      papersSaved(out);
+      paperFieldsSaved(out);
     }
     if (_interestsDirty) {
       const { rows, written } = await privateAwait(_ghMergePush(headers, 'interests_database.csv', mergeRows(allInterests, _loadedInterestNames, 'interest_name', {}, {}, _loadedInterestFields), 'Update interests_database.csv from dashboard'), _authEpoch);
@@ -9255,7 +9514,7 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
     requireOwner(); updateInterestsBadge();
     if (_interestsDirty || _groupsDirty) renderInterests();
     if (_editGen === gen && !_pushAgain) {
-      const held = heldPapers() || goneKept();   // edits to a column the file doesn't have yet, or to a row deleted there: still pending, still backed up
+      const held = heldPapers() || goneKept() || orphansHeld();   // edits to a column the file doesn't have yet, or to a row deleted there (B2: or with no row in layout 4): still pending, still backed up
       _stateDirty = held; _interestsDirty = false; _groupsDirty = false;
       if (held) { writeBackup(); scheduleAutoPush(HELD_RECHECK); } else clearBackup();
       hideSaveBar();
