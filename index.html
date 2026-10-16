@@ -662,6 +662,7 @@ html.no-hover .pd-topic-chip:hover:not(:active) { background: rgba(255,255,255,0
 .pd-edit { background: none; border: 1px solid var(--border); color: var(--text-muted); font: inherit; font-size: 12px; font-weight: 400; padding: 2px 10px; border-radius: 999px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
 .pd-edit:hover { color: var(--accent); border-color: var(--accent); }
 .pd-empty { color: var(--text-muted); font-size: 15px; }
+.pd-gone { margin: 0 0 14px; padding: 10px 14px; border-radius: 10px; background: rgba(242,139,130,0.1); border: 1px solid rgba(242,139,130,0.35); color: #f2b5ae; font-size: 14px; line-height: 1.4; }   /* Phase 13e: deleted on GitHub, kept here for an unsaved edit */
 
 .pd-aside { position: sticky; top: 76px; display: flex; flex-direction: column; gap: 16px; }
 .pd-card { background: var(--bg-surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 18px; }
@@ -1865,6 +1866,12 @@ html.no-hover .cr-x { opacity: 0.7; }
 .library-actions button.lib-ico svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .library-actions button.lib-ico:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 .library-actions button.lib-ico.danger:hover { background: rgba(242,139,130,0.1); color: #f28b82; }
+/* Phase 13e: Library's sections (Projects, To read, Suggested sets), a gone project's header, the hidden members of a list */
+.lib-sec-head .lib-legend { font-size: 12px; color: var(--text-muted); font-weight: 400; margin: 0; }
+.lib-sec-head.lib-sec-lanes { flex-wrap: wrap; gap: 4px 12px; }
+.lib-gone { font-size: 11px; color: var(--text-muted); margin-left: 8px; }
+.library-actions button.lib-revive { font-size: 11px; padding: 3px 10px; }
+.lib-sub { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); padding: 10px 14px 4px; }
 .library-rename-input { background: var(--bg); border: 1px solid var(--accent); color: var(--text); font-size: 14px; padding: 2px 8px; border-radius: 6px; outline: none; width: 200px; }
 .library-empty { padding: 40px; text-align: center; color: var(--text-muted); font-size: 14px; }
 .btn-interests { font-size: 15px; padding: 10px 22px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
@@ -1907,9 +1914,16 @@ html.no-hover .cr-x { opacity: 0.7; }
 
 /* [12] COPY-TO DROPDOWN (library) — animated entrance */
 @keyframes dropdown-in { 0% { opacity: 0; transform: translateY(-4px); } 100% { opacity: 1; transform: translateY(0); } }
-.copy-dd { position: absolute; z-index: 150; background: #000000ee; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); overflow: hidden; min-width: 180px; animation: dropdown-in 0.15s ease forwards; }
-.copy-dd-item { padding: 8px 14px; font-size: 13px; cursor: pointer; color: var(--text-secondary); transition: background 0.1s; }
+/* Phase 13e: a fixed menu placed by placeFixedMenu, inside what shows of the screen; its rows scroll inside, and a long
+   name wraps (an unbroken one too) rather than widening the menu past the viewport */
+#safeProbe { position: fixed; top: 0; left: 0; width: 0; height: 0; visibility: hidden; pointer-events: none; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+.copy-dd { position: fixed; z-index: 9999; background: #000000ee; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); overflow: hidden; min-width: 180px; display: flex; flex-direction: column; animation: dropdown-in 0.15s ease forwards; }
+.copy-dd-head { padding: 8px 14px 6px; font-size: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.copy-dd-list { overflow-y: auto; min-height: 0; flex: 1 1 auto; }
+.copy-dd-item { display: block; width: 100%; text-align: left; background: none; border: none; font: inherit; padding: 8px 14px; font-size: 13px; cursor: pointer; color: var(--text-secondary); transition: background 0.1s; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
 .copy-dd-item:hover { background: var(--bg-hover); color: var(--text); }
+.copy-dd-item.copy-dd-new { border-top: 1px solid var(--border); color: var(--accent); }
+.copy-dd-item:disabled { opacity: 0.45; cursor: default; }
 
 /* [12] SAVE DROPDOWN — animated entrance */
 .save-anchor { position: relative; display: inline-flex; }
@@ -1918,8 +1932,13 @@ html.no-hover .cr-x { opacity: 0.7; }
 .save-dd-input { width: 100%; padding: 8px 12px; background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--text); font-size: 13px; outline: none; }
 .save-dd-input::placeholder { color: var(--text-muted); }
 .save-dd-list { max-height: 180px; overflow-y: auto; min-height: 0; flex: 1 1 auto; }
-.save-dd-item { padding: 7px 12px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text-secondary); transition: background 0.1s; }
-.save-dd-item:hover { background: var(--bg-hover); }
+/* Phase 13e: each row is a real button with role checkbox, so keys and a screen reader reach it; a row whose list
+   went elsewhere is off where it stands and says why; long names wrap */
+.save-dd-item { display: flex; width: 100%; text-align: left; background: none; border: none; font: inherit; padding: 7px 12px; font-size: 13px; cursor: pointer; align-items: center; gap: 8px; color: var(--text-secondary); transition: background 0.1s; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+.save-dd-item:hover, .save-dd-item:focus-visible { background: var(--bg-hover); }
+.save-dd-item:disabled { opacity: 0.5; cursor: default; }
+.save-dd-item .dd-n { flex: 1 1 auto; min-width: 0; }
+.save-dd-item .dd-why { display: block; font-size: 11px; color: var(--text-muted); }
 .save-dd-item .dd-check { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; transition: all 0.15s; }
 .save-dd-item .dd-check.on { background: var(--list); border-color: var(--list); color: var(--bg); }
 .save-dd-empty { padding: 10px 12px; font-size: 12px; color: var(--text-muted); text-align: center; }
@@ -2180,6 +2199,13 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   .save-dd { width: 240px; }
   .save-dd-input { font-size: 16px; min-height: 44px; }
   .save-dd-item { min-height: 44px; }
+  /* Phase 13e: Library's row icons and its Rename, Copy and Delete are 44 px targets on a touch screen; the action row
+     wraps so four icons and the text buttons fit at 320 px; the Copy menu's rows are 44 px too */
+  .library-actions button.lib-ico { width: 44px; height: 44px; }
+  .library-actions button.lib-ico svg { width: 18px; height: 18px; }
+  .top-row .p-actions .btn-icon, .lp-row .p-actions .btn-icon { min-width: 44px; min-height: 44px; }
+  .top-row .p-action-row { flex-wrap: wrap; row-gap: 4px; }
+  .copy-dd-item { min-height: 44px; display: flex; align-items: center; }
 }
 /* ===== PHASE 13c: the app's tabs as icons at the bottom, on a phone and a phone sideways (X-style) =====
    The same bar on every tab and on a paper's page, so the tabs are always in the one place a thumb finds them. Its
@@ -2301,7 +2327,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
       <span class="sync-status" id="syncStatus"></span>
       <button class="btn-new-list" id="libAddBtn" onclick="toggleLibPanel('add')" aria-expanded="false" aria-controls="libAdd">+ Add paper</button>
       <button class="btn-new-list" id="libUploadBtn" onclick="toggleLibPanel('upload')" aria-expanded="false" aria-controls="libAdd">Upload PDF</button>
-      <button class="btn-new-list" onclick="createNewList()">+ New list</button>
+      <button class="btn-new-list" onclick="createNewList()">+ New project</button>
     </div>
   </div>
   <div class="lib-add-wrap"><section class="lib-add" id="libAdd" hidden aria-live="polite"></section></div>
@@ -2531,9 +2557,30 @@ async function targetFetch(url, options) {
   if (isPrivate() && (String(url).includes('raw.githubusercontent.com') || String(url).startsWith('https://api.github.com/repos/') || /(?:papers|interests|groups)_database\.csv(?:[?#]|$)/.test(String(url)))) throw new Error('Private repository data requires the authenticated API reader');
   const response = await fetch(url, options); checkPrivateEpoch(epoch); requireTarget(); return response;
 }
+/* GitHub deadlines (Phase 13e, item 11). A metadata or verification request gets GH_META_MS for its headers and body,
+   as before. A file transfer carries a whole file as base64 (the papers file is about 3.5 MB on the wire), so it gets a
+   budget scaled to its bytes at a slow link: GH_SLOW_BPS bytes a second (about 0.8 Mbit/s, a weak phone link), plus the
+   metadata time for the headers, never under GH_TRANSFER_MIN_MS and never over GH_TRANSFER_MAX_MS. The ceiling is set
+   so the largest file the page accepts (16 MiB, privatePathCap) still completes at the slow rate: 16 MiB as base64 is
+   22.4 MB, 224 s at GH_SLOW_BPS, plus the headers. The byte caps, the abort on lock and the epoch checks stay as they
+   are: the budget only says how long the bytes may take. */
+const GH_META_MS = 8000, GH_SLOW_BPS = 100000, GH_TRANSFER_MIN_MS = 15000, GH_TRANSFER_MAX_MS = 240000;
+function transferBudgetMs(bytes) {
+  const need = Math.ceil(Math.max(0, Number(bytes) || 0) / GH_SLOW_BPS * 1000) + GH_META_MS;
+  return Math.min(GH_TRANSFER_MAX_MS, Math.max(GH_TRANSFER_MIN_MS, need));
+}
+/* The deadline of a request to GitHub: a given budget; else, for one that sends a body of any size (a contents PUT,
+   a notes tree), the body's bytes; else the metadata time */
+function ghDeadlineMs(options) {
+  if (options && Number.isFinite(options.budget) && options.budget > 0) return options.budget;
+  const body = options && options.body;
+  if (typeof body === 'string' && body.length > 65536) return transferBudgetMs(body.length);
+  return GH_META_MS;
+}
 async function ownerFetch(url, options = {}) {
   requireOwner(); const epoch = capturePrivateEpoch();
-  if (!isPrivate()) { const response = await targetFetch(url, options); requireOwner(); return response; }
+  const { budget: _budget, ...fetchOptions } = options;   // the budget is this page's, not fetch's
+  if (!isPrivate()) { const response = await targetFetch(url, fetchOptions); requireOwner(); return response; }
   const parsed = new URL(url), github = parsed.origin === 'https://api.github.com';
   if (parsed.origin === 'https://raw.githubusercontent.com' || (github && (options.method || 'GET') === 'GET' && /\/(?:contents|git\/blobs)\//.test(parsed.pathname))) throw new Error('Private repository files require the bounded API reader');
   if (github && !parsed.pathname.startsWith('/repos/' + GH_OWNER + '/' + GH_REPO + '/')) throw new Error('Private API target mismatch');
@@ -2544,11 +2591,11 @@ async function ownerFetch(url, options = {}) {
   let timer;
   const deadline = new Promise((_, reject) => {
     ctl.signal.addEventListener('abort', () => reject(privateError('Private request aborted')), { once: true });
-    if (github) timer = setTimeout(() => { reject(new Error('Private response timed out')); ctl.abort(); }, 8000);
+    if (github) timer = setTimeout(() => { reject(new Error('Private response timed out')); ctl.abort(); }, ghDeadlineMs(options));
   });
   const done = () => { clearTimeout(timer); Private.controllers.delete(ctl); };
   try {
-    const response = await Promise.race([fetch(url, { ...options, ...(github ? { headers: { ...options.headers, Authorization: 'Bearer ' + Private.token }, redirect: 'error', credentials: 'omit', cache: 'no-store' } : {}), signal: ctl.signal }), deadline]);
+    const response = await Promise.race([fetch(url, { ...fetchOptions, ...(github ? { headers: { ...options.headers, Authorization: 'Bearer ' + Private.token }, redirect: 'error', credentials: 'omit', cache: 'no-store' } : {}), signal: ctl.signal }), deadline]);
     checkPrivateEpoch(epoch);
     if (github && (response.redirected || (response.url && new URL(response.url).origin !== 'https://api.github.com'))) throw new Error('Unexpected private API host');
     if (github && [401, 403].includes(response.status)) { lockPrivate('rejected'); throw privateError('Private repository access rejected'); }
@@ -2774,7 +2821,7 @@ function lockPrivate(state = 'required', detail) {
   _toastUndo = null; _stateDirty = _interestsDirty = _groupsDirty = _readingDirty = false;
   if (Ink.cancelGesture) Ink.cancelGesture();
   _pushing = _pushAgain = Vault.pushing = Vault.pushAgain = false;
-  allPapers = []; _hiddenPapers = []; allInterests = []; allGroups = []; GROUP_ORDER = [];
+  allPapers = []; _hiddenPapers = []; allInterests = []; allGroups = []; GROUP_ORDER = []; rowIndexClear(); _listsRead = false;
   readSet.clear(); starSet.clear(); libraryLists = Object.create(null); _loadedPaperFields.clear(); _loadedInterestNames = []; _loadedGroupNames = []; _loadedGroupFields = new Map(); _loadedInterestFields = new Map();
   _papersText = _papersFresh = _emptyPapersCandidate = null; _dataLoaded = false; _restoreAnnounced = false;
   _uploads = {}; _uploadObjs.clear(); _lastSeen = null; _listSig = null;
@@ -2824,7 +2871,7 @@ function checkPrivateRequest(binding) {
   if (binding.epoch !== Private.epoch) throw privateError('Private authorization changed');
   if (token !== binding.storedToken) { lockPrivate(token ? 'rejected' : 'required'); throw privateError('Private authorization changed'); }
 }
-async function privateJSON(url, cap, binding, optional404 = false) {
+async function privateJSON(url, cap, binding, optional404 = false, budget = GH_META_MS) {   // budget: the deadline for headers and body (a file's blob gets transferBudgetMs)
   const parsed = new URL(url);
   if (parsed.origin !== 'https://api.github.com' || parsed.username || parsed.password) throw new Error('Invalid private API host');
   checkPrivateRequest(binding);
@@ -2849,7 +2896,7 @@ async function privateJSON(url, cap, binding, optional404 = false) {
     const json = JSON.parse(body); checkPrivateRequest(binding); return json;
   })();
   try {
-    return await Promise.race([work, new Promise((_, reject) => { timer = setTimeout(() => { ctl.abort(); if (reader) { try { Promise.resolve(reader.cancel()).catch(() => {}); } catch (e) {} } reject(new Error('Private verification/request timed out')); }, 8000); })]);
+    return await Promise.race([work, new Promise((_, reject) => { timer = setTimeout(() => { ctl.abort(); if (reader) { try { Promise.resolve(reader.cancel()).catch(() => {}); } catch (e) {} } reject(new Error('Private verification/request timed out')); }, budget); })]);
   } finally {
     clearTimeout(timer); ctl.abort(); Private.controllers.delete(ctl);
     if (reader) { try { Promise.resolve(reader.cancel()).catch(() => {}); reader.releaseLock(); } catch (e) {} }
@@ -2901,7 +2948,11 @@ async function privateReadFile(path, optional = false) {
   if (optional && !path.startsWith('annotations/')) throw new Error('Required private CSV cannot be optional');
   const binding = { epoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token };
   const url = ghApiBase() + '/contents/' + path.split('/').map(encodeURIComponent).join('/') + '?ref=' + encodeURIComponent(GH_BRANCH);
-  const info = await privateJSON(url, Math.ceil(Math.min(cap, 1024 * 1024) * 1.5) + 262144, binding, true); checkPrivateEpoch(epoch);
+  // GitHub puts a file under 1 MB inline in this response, as base64: its body can be a file transfer, so it gets a
+  // budget for its byte cap at the slow rate (transferBudgetMs, about 26 s), not the metadata time. The repository
+  // check (verifyPrivate) keeps GH_META_MS.
+  const infoCap = Math.ceil(Math.min(cap, 1024 * 1024) * 1.5) + 262144;
+  const info = await privateJSON(url, infoCap, binding, true, transferBudgetMs(infoCap)); checkPrivateEpoch(epoch);
   if (info === null) {
     // GitHub also masks lost repository access as a file-level 404. Only treat
     // the file as absent after fresh metadata verifies this same authorization.
@@ -2912,7 +2963,7 @@ async function privateReadFile(path, optional = false) {
   }
   if (info.type !== 'file' || info.path !== path || !/^[0-9a-f]{40}$/.test(info.sha) || !Number.isSafeInteger(info.size) || info.size < 0 || info.size > cap) throw new Error('Invalid private Contents metadata');
   let blob;
-  try { blob = await privateJSON(ghApiBase() + '/git/blobs/' + info.sha, Math.ceil(cap * 1.5) + 262144, binding); }
+  try { blob = await privateJSON(ghApiBase() + '/git/blobs/' + info.sha, Math.ceil(cap * 1.5) + 262144, binding, false, transferBudgetMs(Math.ceil(info.size * 4 / 3) + 4096)); }   // the file as base64, with its JSON around it
   catch (e) {
     if (e.status === 404) {
       if (!(await privateAwait(verifyPrivate(binding.token, false, true), epoch))) throw privateError('Private authorization is required');
@@ -3164,7 +3215,12 @@ let _interestsDirty = false;
 let _groupsDirty = false;
 let _stateDirty = false;
 
-/* Bootstrap state from papers CSV columns (called after allPapers is loaded) */
+/* Bootstrap state from papers CSV columns (called after allPapers is loaded). A name only hidden rows carry is a list
+   too (Phase 13e, correction 6): it is in the inventory, empty, so Library shows it and its actions reach it; the hidden
+   papers themselves stay out of the membership arrays, which hold the papers that show. Nothing judges the lists
+   (listsReconcile, projectReconcile) before this has run (_listsRead): a save bar reached earlier would call a list
+   not read yet gone. */
+let _listsRead = false;
 function bootstrapStateFromCSV() {
   readSet.clear(); starSet.clear(); libraryLists = Object.create(null);
   allPapers.forEach(p => {
@@ -3176,33 +3232,49 @@ function bootstrapStateFromCSV() {
       libraryLists[name].push(k);
     });
   });
+  _hiddenPapers.forEach(h => rowLists(h).forEach(name => { if (!libraryLists[name]) libraryLists[name] = []; }));
   adoptListMeta();
+  _listsRead = true;
   listsReconcile(true);     // the lists as they arrived: one that went elsewhere is no place to save to
   projectReconcile(true);   // project mode restored, or ended if its project went elsewhere
-  feedSync();               // then an open save sheet's lists, the records and every press under way
+  viewsSync();              // then an open save sheet's lists, the records and every press under way; a paper page and its picker
 }
 
 /* Write current readSet/starSet/libraryLists back into allPapers rows */
 function flushStateToCSV() {
+  const lists = new Map();   // each paper's lists, in the lists' own order, found once (Phase 13e: the papers times the lists was 45 ms at 5,000 papers)
+  Object.entries(libraryLists).forEach(([name, keys]) => keys.forEach(k => { const a = lists.get(k); if (!a) lists.set(k, [name]); else if (a[a.length - 1] !== name) a.push(name); }));
   allPapers.forEach(p => {
     const k = paperKey(p);
     p.is_read    = readSet.has(k)    ? 'true' : 'false';
     p.is_starred = starSet.has(k)    ? 'true' : 'false';
-    const inLists = Object.entries(libraryLists)
-      .filter(([, keys]) => keys.includes(k))
-      .map(([name]) => name);
-    p.user_lists = inLists.join('|');
+    p.user_lists = (lists.get(k) || []).join('|');
   });
 }
 /* A hidden paper keeps its read mark, star and lists on its own row: the sets above are built from the papers that show,
    and a save writes them onto those alone (a hidden row's values are never overwritten from them). Its page reads them
    from the row, and an edit made there (from Library, or from its post in the feed) writes the row; the sets follow for
    that one paper, so a later Restore or Undo brings back what the row has now. */
-function hiddenRowOf(k) { return k ? _hiddenPapers.find(x => paperKey(x) === k) || null : null; }
+/* Phase 13e: the rows by key, once, until allPapers or _hiddenPapers is another array or another length (splitHidden,
+   a restore, papersSaved and the lock reassign them; addPaperFinished pushes). feedPaper, feedRow and hiddenRowOf read
+   it, so drawing every mounted post costs the posts, not the posts times the papers. The lock clears it: it holds the
+   rows. */
+let _rowIndex = null;
+function rowIndex() {
+  const a = allPapers, h = _hiddenPapers, m = _rowIndex;
+  if (m && m.a === a && m.h === h && m.na === a.length && m.nh === h.length) return m;
+  const vis = new Map(), hid = new Map();
+  a.forEach(p => vis.set(paperKey(p), p)); h.forEach(p => hid.set(paperKey(p), p));
+  return _rowIndex = { a, h, na: a.length, nh: h.length, vis, hid };
+}
+function rowIndexClear() { _rowIndex = null; }
+function hiddenRowOf(k) { return k ? rowIndex().hid.get(k) || null : null; }
 function rowLists(p) { return (p.user_lists || '').split('|').filter(Boolean); }
+/* A paper's marks as its buttons draw them: a hidden paper's from its own row (the sets hold the papers that show), any
+   other's from the sets. `listed` ignores the survey's lanes: being in one is not a save of yours (P2-4). */
 function paperMarks(p) {
   const k = paperKey(p);
-  return isHiddenRow(p) ? { read: p.is_read === 'true', star: p.is_starred === 'true', listed: rowLists(p).length > 0 }
+  return isHiddenRow(p) ? { read: p.is_read === 'true', star: p.is_starred === 'true', listed: rowLists(p).some(n => !isMachineLane(n)) }
     : { read: readSet.has(k), star: starSet.has(k), listed: paperInAnyList(k) };
 }
 function hiddenMark(h, field, set, on) { h[field] = on ? 'true' : 'false'; if (on) set.add(paperKey(h)); else set.delete(paperKey(h)); }
@@ -3277,10 +3349,12 @@ function announceRestore(b) {
   const when = b && b.savedAt ? new Date(b.savedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
   toast(`Restored unsaved changes from this browser${when ? ' (' + when + ')' : ''}. ${hasPAT() ? 'Saving them to GitHub now.' : 'Push to GitHub to keep them.'}`, null, { duration: 7000 });
 }
+/* The backup's edits laid onto the rows just loaded. Returns the backup it applied, or null; applyPapers announces it
+   once the lists are read (Phase 13e, P2-1: the announcement's save bar judged the lists before they were back). */
 function restorePapersFromBackup() {
   _loadedPaperFields = new Map(allPapers.map(p => [p.id, paperFields(p)]));
   const b = readBackup();
-  if (!b || (!b.papers && !b.deleted)) return;
+  if (!b || (!b.papers && !b.deleted)) return null;
   const gone = new Set(b.deleted || []), base = b.loadedPapers || {};
   allPapers = allPapers.filter(p => !gone.has(p.id));
   // The saved edits onto the copy just loaded, still pending: a topic the worker added since stays, and a removal the
@@ -3291,7 +3365,7 @@ function restorePapersFromBackup() {
     Object.assign(p, mergedPaperFields(o, was, theirs)); _loadedPaperFields.set(p.id, pendingBase(o, was, theirs));
   });
   _stateDirty = true;
-  announceRestore(b);
+  return b;
 }
 window.addEventListener('pagehide', writeBackup);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') writeBackup(); });
@@ -3330,24 +3404,34 @@ function persistLists()  { flushStateToCSV(); _stateDirty = true; showSaveBar();
    but haven't put a paper in yet is kept by its entry (the papers file can't hold an empty list). */
 const LISTMETA_KEY = 'scholar_list_meta_v1', LISTSORT_KEY = 'scholar_list_sort';
 let _listSig = null;
-function listSigs() { const o = {}; Object.entries(libraryLists).forEach(([n, a]) => { o[n] = a.slice().sort().join('|'); }); return o; }
-function listMetaLocal() { if (!isOwner()) return {}; requireOwner(); try { return JSON.parse(localStorage.getItem(LISTMETA_KEY) || '{}'); } catch (e) { return {}; } }
-function listMetaAll() { return mergeReading(listMetaLocal(), Vault.index && Vault.index.lists); }
+/* Phase 13e (P2-6, correction 3): every map of list names here has no prototype and is read by own property, so a list
+   called constructor, toString or __proto__ is an entry like any other. mergeListMeta is the own-property-safe merge of
+   two list-times maps (newest entry per name): mergeReading, protected, spreads into a plain object and an assignment
+   of __proto__ there sets the prototype instead of a key. */
+const hasOwn = (o, n) => !!o && Object.prototype.hasOwnProperty.call(o, n);
+function mergeListMeta(a, b) {
+  const out = Object.create(null);
+  for (const src of [a, b]) if (src && typeof src === 'object') for (const n of Object.keys(src)) { const e = src[n]; if (e && typeof e === 'object' && (!hasOwn(out, n) || (e.at || '') > (out[n].at || ''))) out[n] = e; }
+  return out;
+}
+function listSigs() { const o = Object.create(null); Object.entries(libraryLists).forEach(([n, a]) => { o[n] = a.slice().sort().join('|'); }); return o; }
+function listMetaLocal() { if (!isOwner()) return Object.create(null); requireOwner(); try { return mergeListMeta(JSON.parse(localStorage.getItem(LISTMETA_KEY) || '{}'), null); } catch (e) { return Object.create(null); } }
+function listMetaAll() { return mergeListMeta(listMetaLocal(), Vault.index && Vault.index.lists); }
 function saveListMeta(changes) {
   const all = listMetaLocal();
-  Object.assign(all, changes);
+  Object.keys(changes).forEach(n => { all[n] = changes[n]; });   // a change wins over what was kept, whatever its time
   privateSet(LISTMETA_KEY, JSON.stringify(all));
-  if (Vault.key && Vault.index) { Vault.index.lists = mergeReading(Vault.index.lists, changes); nfSave('_index.json', Vault.index).catch(privateCallback(() => {})); }
+  if (Vault.key && Vault.index) { const lists = mergeListMeta(Vault.index.lists, null); Object.keys(changes).forEach(n => { lists[n] = changes[n]; }); Vault.index.lists = lists; nfSave('_index.json', Vault.index).catch(privateCallback(() => {})); }
 }
 function touchListMeta() {
-  const now = new Date().toISOString(), sigs = listSigs(), was = _listSig || {}, meta = listMetaAll(), changes = {};
-  Object.keys(sigs).forEach(n => { if (sigs[n] !== was[n]) changes[n] = { created: (meta[n] && !meta[n].deleted && meta[n].created) || (n in was ? listDates(n).created : now), at: now }; });
-  Object.keys(was).forEach(n => { if (!(n in sigs)) changes[n] = { deleted: true, at: now }; });
+  const now = new Date().toISOString(), sigs = listSigs(), was = _listSig || Object.create(null), meta = listMetaAll(), changes = Object.create(null);
+  Object.keys(sigs).forEach(n => { if (!hasOwn(was, n) || sigs[n] !== was[n]) { const m = hasOwn(meta, n) ? meta[n] : null; changes[n] = { created: (m && !m.deleted && m.created) || (hasOwn(was, n) ? listDates(n).created : now), at: now }; } });
+  Object.keys(was).forEach(n => { if (!hasOwn(sigs, n)) changes[n] = { deleted: true, at: now }; });
   _listSig = sigs;
   if (Object.keys(changes).length) saveListMeta(changes);
 }
 function listDates(name) {
-  const m = listMetaAll()[name];
+  const all = listMetaAll(), m = hasOwn(all, name) ? all[name] : null;
   if (m && !m.deleted && m.created) return { created: m.created, updated: m.at || m.created };
   const ds = (libraryLists[name] || []).map(k => (findPaper(k) || {}).date_found).filter(Boolean).sort();   // from before: its papers' dates
   return { created: ds[0] || '', updated: ds[ds.length - 1] || '' };
@@ -3357,20 +3441,26 @@ function adoptListMeta() {
   Object.entries(listMetaAll()).forEach(([n, m]) => { if (m && !m.deleted && !libraryLists[n] && !n.includes('|')) libraryLists[n] = []; });
   _listSig = listSigs();
 }
-function listSort() { try { return Object.assign({ by: 'updated', dir: 'desc' }, JSON.parse(localStorage.getItem(LISTSORT_KEY) || '{}')); } catch (e) { return { by: 'updated', dir: 'desc' }; } }
+/* Library's order for the projects: by default the order they were made, oldest first, as the feed tabs, the sheet and
+   the picker have them (Phase 13e); a choice made here is kept and respected */
+function listSort() { try { return Object.assign({ by: 'created', dir: 'asc' }, JSON.parse(localStorage.getItem(LISTSORT_KEY) || '{}')); } catch (e) { return { by: 'created', dir: 'asc' }; } }
 function setListSort(by, dir) {
   const cur = listSort();
   const next = { by: by || cur.by, dir: dir || (by && by !== cur.by ? (by === 'name' ? 'asc' : 'desc') : cur.dir) };
   try { checkedStorageSet(LISTSORT_KEY, JSON.stringify(next)); } catch (e) {}
   renderLibrary();
 }
-function sortedListNames() {
+function sortedListNames(names) {
   const { by, dir } = listSort(), sign = dir === 'asc' ? 1 : -1;
   const key = n => by === 'name' ? n.toLowerCase() : listDates(n)[by === 'created' ? 'created' : 'updated'];
-  return Object.keys(libraryLists).sort((a, b) => { const x = key(a), y = key(b); return (x < y ? -1 : x > y ? 1 : a.localeCompare(b)) * sign; });
+  return (names || Object.keys(libraryLists)).sort((a, b) => { const x = key(a), y = key(b); return (x < y ? -1 : x > y ? 1 : a.localeCompare(b)) * sign; });
 }
 function paperKey(p) { return p.id; }
-function paperInAnyList(k) { return Object.values(libraryLists).some(arr => arr.includes(k)); }
+/* In a project or in To read; a survey lane counts for nothing (P2-4). While every post is drawn again (feedRepaintAll)
+   the answer comes from a set made once for that pass: nothing changes the lists while it runs. */
+let _listedPass = null;
+function listedKeys() { const s = new Set(); Object.keys(libraryLists).forEach(n => { if (!isMachineLane(n)) libraryLists[n].forEach(k => s.add(k)); }); return s; }
+function paperInAnyList(k) { return _listedPass ? _listedPass.has(k) : Object.keys(libraryLists).some(n => !isMachineLane(n) && libraryLists[n].includes(k)); }
 function listCount() { return Object.values(libraryLists).reduce((n, arr) => n + arr.length, 0); }
 
 /* ===== LOAD ===== */
@@ -3430,15 +3520,19 @@ function freshnessOf(rows) {
 /* Row counts don't say which copy is newer: merging duplicates or hiding papers shrinks the file.
    Only a later digest date does; on the same date GitHub's copy (the canonical one) wins. */
 function isOlder(a, b) { return a.latest < b.latest; }
+/* The rows, then the backup's edits, then the hidden ones split off, then the sets and lists read from them; only then
+   the restore is announced (its save bar reconciles the lists: see bootstrapStateFromCSV) */
 function applyPapers(rows, text) {
   if (anyDirty()) writeBackup();   // edits made meanwhile are re-applied by restorePapersFromBackup
+  _listsRead = false;
   allPapers = rows; _hiddenPapers = [];
   _papersText = text; _papersColumns = papersHeader(text);
   _papersFresh = freshnessOf(rows);
-  restorePapersFromBackup();
+  const b = restorePapersFromBackup();
   splitHidden();
   bootstrapStateFromCSV();
   updateLibraryBadge();
+  if (b) announceRestore(b);
   Feed.fresh = true;   // the feed is drawn afresh from these rows
   feedObserve();
 }
@@ -4101,19 +4195,24 @@ const TO_READ = 'To read';
 /* The lists that are not projects: the machine's three lanes and keep's own. Every other list is a project, by its
    exact name. The worker keeps the same four (ingest/ownership.NOT_PROJECTS), and a test compares them. */
 const NOT_PROJECTS = ['Starting set', 'Near misses', 'Random picks', 'To read'];
+/* The survey's lanes (Phase 13e, P2-3): filled by the survey tools, shown in Library as Suggested sets. Never a place to
+   save to, never renamed, deleted or made a feed tab, never lighting 🔖 or ☰; Copy may read from one into a project. */
+const MACHINE_LANES = NOT_PROJECTS.filter(n => n !== TO_READ);
+function isMachineLane(n) { return MACHINE_LANES.includes(n); }
+function laneMessage(n) { return `"${esc(n)}" is one of the survey's suggested sets; it can't be saved to.`; }
 const PROJECT_KEY = 'scholar_project_v1';
 /* phone: up to 700 px wide; land: a phone turned sideways (coarse pointer, no hover, at most 500 px tall); laptop.
    One rule: the app bar's CSS media query is these two, joined, word for word, and the sheets take the class
    feedLayout() gives them, so CSS and JavaScript never disagree about which a screen is. */
 const FEED_PHONE = '(max-width: 700px)', FEED_LAND = '(pointer: coarse) and (hover: none) and (max-height: 500px)';
 const Feed = { keys: [], shown: 0, project: null, ranked: null, near: null, switched: false, fresh: false, mounted: false,
-  gen: 0, tabsGen: 0, tabNames: null, seq: 0, recs: new Map(), focus: null, sheet: null, edit: null, noted: false, layout: null, obs: null };
+  gen: 0, tabsGen: 0, tabNames: null, seq: 0, recs: new Map(), focus: null, sheet: null, edit: null, noted: false, layout: null, obs: null, more: 0 };
 function isPassed(p) { return !!p && p.is_passed === 'true'; }
 /* The feed holds For you's papers less the starred: a star is already a liked example, so a second look at it teaches
    nothing. Being in a list alone decides nothing (three of the lists are the machine's). */
 function feedPool() { return forYouPool().filter(p => !starSet.has(paperKey(p))); }
-function feedPaper(k) { return k ? allPapers.find(x => paperKey(x) === k) || null : null; }
-function feedRow(k) { return k ? everyPaper().find(x => paperKey(x) === k) || null : null; }   // hidden ones too
+function feedPaper(k) { return k ? rowIndex().vis.get(k) || null : null; }   // a paper that shows
+function feedRow(k) { if (!k) return null; const ix = rowIndex(); return ix.vis.get(k) || ix.hid.get(k) || null; }   // hidden ones too
 function feedEligible(k) {
   const p = feedPaper(k);
   return !!p && !p._goneRemote && !readSet.has(k) && !starSet.has(k) && !isPassed(p) && scoreParts(p).matches.length > 0;
@@ -4182,11 +4281,7 @@ function renderFeed() {
 }
 /* The tabs: For you, then the projects in the order they were made (a new one appears beside +), names whole; the
    row scrolls sideways when they do not fit. One is selected: the project of project mode, else For you. */
-function feedTabNames() {
-  if (!isOwner()) return [];
-  const names = projectNames(), at = new Map(names.map(n => [n, listDates(n).created || '']));
-  return names.sort((a, b) => at.get(a).localeCompare(at.get(b)) || a.localeCompare(b));
-}
+function feedTabNames() { return isOwner() ? projectNames() : []; }   // projectNames is already in creation order
 function feedTabsHTML() {
   const sel = projectMode() ? Feed.project : null;
   const tab = (n, label) => { const on = (n || null) === sel; return `<button type="button" class="tab${on ? ' on' : ''}" role="tab" aria-selected="${on}" data-n="${dataAttr(n)}" onclick="feedTabTap(this)">${esc(label)}</button>`; };
@@ -4315,7 +4410,8 @@ function postHTML(k) {
     return `<article class="post gone${sel}" data-key="${dataAttr(k)}" data-rec="${rec ? rec.id : 0}" tabindex="-1" aria-label="${view === 'changed' ? 'Changed' : view === 'passed' ? 'Passed' : 'Hidden'}: ${dataAttr(title)}" onclick="feedTap(event, this)">
       <p class="gone-s">${what}</p><p class="gone-t">${esc(title)}</p>${row}${why}</article>`;
   }
-  const kept = view === 'kept', to = kept ? ('project' in rec.after ? rec.after.project : TO_READ) : projectMode() ? Feed.project : TO_READ;
+  const kept = view === 'kept', to = kept ? keepList(rec) : projectMode() ? Feed.project : TO_READ;
+  const owns = kept && keepOwns(rec);   // ★'s undo takes the paper out of the list only when the keep added it and it is still there
   const venue = rowVenueLabel(p), date = displayDate(p), must = dynamicRelevance(p) === 'definitely';
   const dek = hasText(p.headline) && p.headline.trim() !== (p.title || '').trim() ? p.headline : '';
   const url = !pdfSourceOf(p) && p.url ? p.url : '';
@@ -4323,7 +4419,7 @@ function postHTML(k) {
     : pdfSourceOf(p) || isOwner() ? `<button type="button" class="ic open" data-act="open" onclick="feedOpen(this.closest('.post').dataset.key)" aria-label="${pdfSourceOf(p) ? 'Read the paper' : 'Add a PDF to read it'}">${FEED_ICON.open}</button>` : '';
   const icons = isOwner() ? `<div class="icons">
       <button type="button" class="ic pass" data-act="pass" onclick="feedPass(this.closest('.post').dataset.key)" aria-label="Not for me"${kept ? ' disabled' : ''}>${FEED_ICON.pass}</button>
-      <button type="button" class="ic keep${kept ? ' on' : ''}" data-act="keep" aria-pressed="${kept}" onclick="feedKeep(this.closest('.post').dataset.key)" aria-label="${kept ? `Undo keep: unstar and take out of ${dataAttr(to)}` : `Keep: star and save to ${dataAttr(to)}`}">${FEED_ICON.keep}</button>
+      <button type="button" class="ic keep${kept ? ' on' : ''}" data-act="keep" aria-pressed="${kept}" onclick="feedKeep(this.closest('.post').dataset.key)" aria-label="${kept ? (owns ? `Undo keep: unstar and take out of ${dataAttr(to)}` : 'Undo keep: unstar') : `Keep: star and save to ${dataAttr(to)}`}">${FEED_ICON.keep}</button>
       <button type="button" class="ic save${paperMarks(p).listed ? ' on' : ''}" data-act="save" onclick="openSaveSheet(event, this, this.closest('.post').dataset.key)" aria-haspopup="dialog" aria-expanded="${Feed.sheet && Feed.sheet.key === k ? 'true' : 'false'}" aria-label="Save to a project"${feedLive(k) ? '' : ' disabled'}>${FEED_ICON.save}</button>
       ${open}</div>` : '';
   return `<article class="post${kept ? ' kept' : ''}${sel}" data-key="${dataAttr(k)}" data-rec="${rec && !rec.stale ? rec.id : 0}" tabindex="-1" onclick="feedTap(event, this)">${postNearHTML(k)}
@@ -4363,8 +4459,32 @@ function feedObserveMore() {
   if (Feed.obs || !window.IntersectionObserver) return;
   const more = document.getElementById('feedMore'), root = document.getElementById('mainScroll');
   if (!more || !root) return;
-  Feed.obs = new IntersectionObserver(privateCallback(entries => { if (entries.some(e => e.isIntersecting) && feedActive()) feedMountMore(); }), { root, rootMargin: '600px 0px' });
+  Feed.obs = new IntersectionObserver(privateCallback(entries => { if (entries.some(e => e.isIntersecting) && feedActive()) { feedMountMore(); feedPageOn(); } }), { root, rootMargin: '600px 0px' });
   Feed.obs.observe(more);
+}
+/* Automatic paging. The observer fires when the sentinel (#feedMore, under the posts) comes within 600 px of the
+   screen, and again only once it has left that margin and come back. A page that leaves the sentinel inside the margin
+   (short posts, a tall screen, a jump to the end) would stop there with Show more in view. So after each page one
+   check waits for the next frame, never more than one at a time (Feed.more). It mounts another page only if the feed
+   is the same (Feed.gen), the sign-in is the same (the private epoch), the sentinel is the same element, the feed
+   still shows, keys are left and the sentinel is still within the margin. Otherwise it stops; Show more stays. */
+function feedNearEnd(el) {
+  const root = document.getElementById('mainScroll');
+  if (!el || !root) return false;
+  const r = el.getBoundingClientRect(), b = root.getBoundingClientRect();
+  return r.top <= b.bottom + 600 && r.bottom >= b.top - 600;
+}
+function feedPageOn() {
+  const sentinel = document.getElementById('feedMore');
+  if (Feed.more || !sentinel) return;
+  const gen = Feed.gen, epoch = isPrivate() && Private.authorized ? Private.epoch : null;
+  Feed.more = requestAnimationFrame(privateCallback(() => {
+    Feed.more = 0;
+    if (Feed.gen !== gen || document.getElementById('feedMore') !== sentinel || (isPrivate() && (!Private.authorized || Private.epoch !== epoch))) return;
+    if (!feedActive() || Feed.shown >= Feed.keys.length || !feedNearEnd(sentinel)) return;
+    feedMountMore();
+    feedPageOn();
+  }));
 }
 function feedEndHTML() {
   const proj = projectMode() ? Feed.project : null, toRead = (libraryLists[TO_READ] || []).length, inProj = proj ? libraryLists[proj].length : 0;
@@ -4378,8 +4498,8 @@ function feedOpenToRead() { _openLibGroups.add('list-' + TO_READ); location.hash
 function feedOpenProject(name) { _openLibGroups.add('list-' + name); location.hash = '#library'; }
 /* One post drawn again from the paper as it is now, in place; a post that no longer belongs goes. An element is
    replaced only when what it shows changed, and focus stays with the post. */
-function feedRepaintPost(k) {
-  const el = postEl(k);
+function feedRepaintPost(k, el) {   // `el`: the post's element when the caller has it (feedRepaintAll), else looked up
+  el = el || postEl(k);
   if (!el) return;
   const h = postHTML(k);
   if (!h) { feedDropPost(el); return; }
@@ -4405,7 +4525,9 @@ function feedDropPost(el) {
 function feedRepaintAll() {
   const list = document.getElementById('feedList');
   if (!list) return;
-  [...list.querySelectorAll('.post')].forEach(el => feedRepaintPost(el.dataset.key));
+  _listedPass = listedKeys();
+  try { [...list.querySelectorAll('.post')].forEach(el => feedRepaintPost(el.dataset.key, el)); }   // each post once: no lookup per post
+  finally { _listedPass = null; }
   feedMoreRender();
   placeSheet();   // the save sheet's 🔖 may have moved: the popover goes with it
 }
@@ -4525,11 +4647,19 @@ function feedInList(k, n) { const h = hiddenRowOf(k); return h ? rowLists(h).inc
 function feedStillAsLeft(rec, p) {
   if (p._goneRemote) return false;   // deleted on GitHub since
   const k = rec.key, a = rec.after;
-  if (rec.kind === 'keep' && 'project' in a) return feedStarred(k) === a.starred && (rec.before.inProject || feedInList(k, a.project));   // the project it recorded, and only if it added the paper: a rename or a delete took it away
+  if (rec.kind === 'keep' && 'project' in a) return feedStarred(k) === a.starred && (rec.before.inProject || feedInList(k, a.project) === a.inProject);   // the project it recorded, and only if it added the paper: a rename or a delete took it away (a.inProject follows the sheet: keepOwn)
   if (rec.kind === 'keep') return feedStarred(k) === a.starred && (rec.before.inToRead || feedInList(k, TO_READ) === a.inToRead);   // To read only if it added it
   if ((p.is_passed || '') !== a.is_passed) return false;
   return !rec.hide || ((p.is_hidden || '') === rec.hide.after.is_hidden && (p.hide_reason || '') === rec.hide.after.hide_reason);
 }
+/* The list a keep saved to, and whether its undo still owns that membership: the keep added it (it was not there
+   before) and the record still expects it there. The feed's own 🔖 sheet changes the membership and the record
+   together (keepOwn, Phase 13e P2-2), so nothing changes under the record and ★ keeps undoing what the keep still owns;
+   a change from anywhere else still ends the undo for good (feedStillAsLeft). */
+function keepList(rec) { return 'project' in rec.after ? rec.after.project : TO_READ; }
+function keepAdded(rec) { return 'project' in rec.after ? !rec.before.inProject : !rec.before.inToRead; }
+function keepOwns(rec) { return keepAdded(rec) && ('project' in rec.after ? rec.after.inProject : rec.after.inToRead) === true; }
+function keepOwn(rec, on) { if (!keepAdded(rec)) return; if ('project' in rec.after) rec.after.inProject = on; else rec.after.inToRead = on; }
 /* An edit seen since the decision, made here or brought from GitHub, that changed a value the record owns ends its
    Undo for good: setting the value back later does not bring the Undo back. Edits to anything else, and saves that
    only acknowledge the decision, leave it. A pass that is no longer this one takes no reason: an Other sheet opened
@@ -4560,7 +4690,7 @@ function feedUndo(k, id) {
   flushStateToCSV();
   const unhide = h => { p.is_hidden = h.is_hidden; if (h.hide_reason || 'hide_reason' in p) p.hide_reason = h.hide_reason; };
   if (rec.kind === 'keep') {
-    const n = 'project' in rec.after ? rec.after.project : TO_READ, added = 'project' in rec.after ? !rec.before.inProject : !rec.before.inToRead;
+    const n = keepList(rec), added = keepOwns(rec);   // the list it recorded, if the keep added the paper and still has it there (the sheet may have taken it out: keepOwn)
     const h = hiddenRowOf(k);
     if (h) {   // hidden since: its own row, the sets following (a later hide, reason, read mark and other lists stay)
       if (!rec.before.starred) hiddenMark(h, 'is_starred', starSet, false);
@@ -4670,7 +4800,27 @@ const Presses = new Map();
 function pressControl(t) {
   if (!t || !t.closest) return null;
   return t.closest('#feedList .post .ic, #feedList .post.gone button, #feedTabs .tab, #feedTabs .tab-add, #saveSheet [data-guard], #hideSheet [data-guard], #hideSheet .hide-own input')
-    || t.closest('.sh-panel') || t.closest('#saveSheet') || t.closest('.hide-box') || t.closest('#hideSheet') || t.closest('#feedList .post');
+    || t.closest('.sh-panel') || t.closest('#saveSheet') || t.closest('.hide-box') || t.closest('#hideSheet') || t.closest('#feedList .post')
+    || t.closest('.save-dd .save-dd-item, .copy-dd .copy-dd-item, #paperDetail .pd-bar .pd-act[data-act], #libraryContent .top-row .p-actions [data-act]')   // Phase 13e: the picker, the Copy menu, the paper page's bar and Library's row icons
+    || t.closest('#paperDetail .pd-related .feed-item [data-act], #libraryContent [data-lib] .library-actions button[data-act]')   // and a page's related papers, and a Library group's header actions
+    || t.closest('#paperDetail .pd-related .feed-item');   // a related paper itself: it opens that paper's page
+}
+/* Phase 13e (correction 1): a press on the picker, the Copy menu, a paper page's bar, a related paper on that page, a
+   Library row or a Library group's header is bound to what it began on too: the view (Feed.gen, which every way out
+   moves on: another tab, a paper, search, a list, the reader), the picker or menu instance and its row, the page and
+   the paper, the group, the action, and the value the control showed (`on`), so a value that changes under the finger
+   (a received save, a redraw) cancels the click for good. */
+/* What a Library group's header shows for its actions: whether its list is here, whether it went elsewhere, and how
+   many papers it counts */
+function libHeadMark(g) {
+  const n = g.startsWith('list-') ? g.slice(5) : g.startsWith('lane-') ? g.slice(5) : null;
+  return n === null ? g : `${hasList(n)}|${listGone(n)}|${libListPapers(n).length}`;
+}
+function markOf(k, act) {   // a control's value as it shows now: the paper's star, read mark, lists, hidden or passed state
+  const p = feedRow(k);
+  if (!p) return null;
+  const m = paperMarks(p);
+  return act === 'star' ? m.star : act === 'read' ? m.read : act === 'list' ? m.listed : act === 'hide' || act === 'restore' ? isHiddenRow(p) : act === 'unpass' ? isPassed(p) : false;
 }
 function pressWhat(el) {
   if (!el || !el.closest) return null;
@@ -4682,6 +4832,17 @@ function pressWhat(el) {
   const s = el.closest('#saveSheet');
   if (s) { const ed = el.dataset.guard && el.closest('.sh-edit'), se = ed ? Number(ed.dataset.edit || 0) : 0;   // Add: the opening of the field it is in
     return { kind: 'sheet', act: el.dataset.guard || '', sedit: se, n: el.dataset.guard === 'row' ? el.dataset.n : null, ident: `sheet:${s.dataset.sheet || ''}:${el === s ? 'shade' : el.dataset.guard ? `${el.dataset.guard}:${el.dataset.n || ''}${ed ? ':' + se : ''}` : 'panel'}` }; }
+  const dd = el.closest('.save-dd');
+  if (dd) return { kind: 'dd', dd: Number(dd.dataset.dd || 0), key: dd.dataset.key || '', n: el.dataset.n || '', ident: `dd:${dd.dataset.dd || ''}:${el.dataset.n || ''}` };
+  const cd = el.closest('.copy-dd');
+  if (cd) return { kind: 'copy', copy: Number(cd.dataset.copy || 0), n: el.dataset.n || '', ident: `copy:${cd.dataset.copy || ''}:${el.dataset.n || (el.classList.contains('copy-dd-new') ? 'new' : '')}` };
+  if (el.closest('#paperDetail .pd-bar')) { const page = document.querySelector('#paperDetail [data-pid]'), k = page ? page.dataset.pid : ''; return { kind: 'pd', act: el.dataset.act || '', key: k, ident: `pd:${k}:${el.dataset.act || ''}` }; }
+  const rel = el.closest('#paperDetail .pd-related .feed-item');
+  if (rel) { const page = document.querySelector('#paperDetail [data-pid]'), pid = page ? page.dataset.pid : '', k = rel.dataset.key || '', act = el === rel ? 'page' : el.dataset.act || ''; return { kind: 'rel', act, key: k, page: pid, ident: `rel:${pid}:${k}:${act}` }; }
+  const head = el.closest('#libraryContent [data-lib] .library-actions');
+  if (head) { const g = el.closest('[data-lib]').dataset.lib; return { kind: 'libhead', act: el.dataset.act || '', group: g, ident: `libhead:${g}:${el.dataset.act || ''}` }; }
+  const row = el.closest('#libraryContent .top-row'), group = row && row.closest('[data-lib]');
+  if (row) return { kind: 'lib', act: el.dataset.act || '', key: row.dataset.key || '', group: group ? group.dataset.lib : '', ident: `lib:${group ? group.dataset.lib : ''}:${row.dataset.key || ''}:${el.dataset.act || ''}` };
   return null;
 }
 function pressIdent(el) { const w = pressWhat(el); return w ? w.ident : ''; }
@@ -4689,12 +4850,13 @@ function pressBegin(id, el) {
   const w = pressWhat(el);
   if (!w) { Presses.delete(id); return; }
   const hs = w.kind === 'hide' ? document.getElementById('hideSheet') : null;
-  const key = w.kind === 'post' ? w.key : w.kind === 'sheet' ? (Feed.sheet ? Feed.sheet.key : null) : hs ? hs.dataset.key || null : null;
+  const key = w.kind === 'post' || w.kind === 'dd' || w.kind === 'pd' || w.kind === 'lib' || w.kind === 'rel' ? w.key : w.kind === 'sheet' ? (Feed.sheet ? Feed.sheet.key : null) : hs ? hs.dataset.key || null : null;
   const r = w.kind === 'post' ? Feed.recs.get(key) : null;
+  const on = w.kind === 'sheet' && w.n !== null && w.n !== undefined ? sheetHas(w.n, key) : w.kind === 'dd' && w.n ? ddHas(w.n, key) : w.kind === 'pd' || w.kind === 'lib' || w.kind === 'rel' ? markOf(key, w.act) : w.kind === 'libhead' ? libHeadMark(w.group) : null;
   Presses.set(id, { ident: w.ident, kind: w.kind, act: w.act || '', key, n: w.n === undefined ? null : w.n, gen: Feed.gen, project: Feed.project,
     rec: r ? r.id : 0, tabsGen: Feed.tabsGen, edit: Feed.edit ? Feed.edit.id : 0, sheet: Feed.sheet ? Feed.sheet.id : 0, sedit: w.sedit || 0,
     hs: hs ? Number(hs.dataset.hs || 0) : 0, hrec: hs ? Number(hs.dataset.rec || 0) : 0,
-    on: w.kind === 'sheet' && w.n !== null && w.n !== undefined ? sheetHas(w.n, key) : null, up: 0, dead: false });
+    dd: w.dd || 0, copy: w.copy || 0, group: w.group || '', page: w.page || '', on, up: 0, dead: false });
 }
 /* A pass record still as its post showed it: the same id, the paper's own, not stale, no reason yet */
 function feedRecLive(id, kind) { const r = id ? feedRecById(id) : null; return !!r && Feed.recs.get(r.key) === r && !r.stale && (!kind || r.kind === kind); }
@@ -4710,6 +4872,40 @@ function pressStill(pr) {
     const s = document.getElementById('hideSheet');
     if (!s || !s.classList.contains('open') || Number(s.dataset.hs || 0) !== pr.hs) return false;
     return !pr.hrec || (pr.gen === Feed.gen && feedRecLive(pr.hrec, 'pass') && !feedRecById(pr.hrec).hide && feedRecById(pr.hrec).key === pr.key);
+  }
+  if (['dd', 'copy', 'pd', 'rel', 'lib', 'libhead'].includes(pr.kind) && pr.gen !== Feed.gen) return false;   // the view was left since (the reader opened over it too)
+  if (pr.kind === 'dd') {   // the same picker, for the same paper; for a row its list still a place to save to, with the paper in it or not as when the press began
+    const dd = _activeSaveDD;
+    if (!dd || dd.id !== pr.dd || dd.key !== pr.key) return false;
+    const p = feedRow(pr.key);
+    if (!p || p._goneRemote) return false;
+    return !pr.n || (ddDestOK(pr.n, pr.key) && ddHas(pr.n, pr.key) === pr.on);
+  }
+  if (pr.kind === 'copy') {   // the same Copy menu; for a row its list still a place to copy to
+    const cd = _copyDD;
+    if (!cd || cd.id !== pr.copy || !copySourceOK(cd.src)) return false;
+    return !pr.n || copyDestOK(cd.src, pr.n);
+  }
+  if (pr.kind === 'pd') {   // the paper page still showing that paper, which is still here, its control showing the same value
+    const page = _paperViewActive ? document.querySelector('#paperDetail [data-pid]') : null, p = feedRow(pr.key);
+    return !!page && page.dataset.pid === pr.key && !!p && !p._goneRemote && markOf(pr.key, pr.act) === pr.on;
+  }
+  if (pr.kind === 'rel') {   // the same paper's page, the related paper still drawn on it and still here, its control showing the same value
+    const page = _paperViewActive ? document.querySelector('#paperDetail [data-pid]') : null, p = feedRow(pr.key);
+    if (!page || page.dataset.pid !== pr.page || !p || p._goneRemote) return false;
+    return [...document.querySelectorAll('#paperDetail .pd-related .feed-item')].some(el => el.dataset.key === pr.key) && markOf(pr.key, pr.act) === pr.on;
+  }
+  if (pr.kind === 'libhead') {   // Library, the group still drawn with that action, its header showing the same (its list here or gone, its count)
+    if (currentTab !== 'library' || _paperViewActive || _listViewActive || _searchActive) return false;
+    const g = [...document.querySelectorAll('#libraryContent [data-lib]')].find(el => el.dataset.lib === pr.group);
+    return !!g && !!g.querySelector(`.library-actions button[data-act="${pr.act}"]`) && libHeadMark(pr.group) === pr.on;
+  }
+  if (pr.kind === 'lib') {   // Library, the row still in its group, its paper still here, the control showing the same value
+    if (currentTab !== 'library' || _paperViewActive || _listViewActive || _searchActive) return false;
+    const p = feedRow(pr.key);
+    if (!p || p._goneRemote) return false;
+    const rows = document.querySelectorAll('#libraryContent .top-row');
+    return [...rows].some(r => r.dataset.key === pr.key && (r.closest('[data-lib]') || { dataset: {} }).dataset.lib === pr.group) && markOf(pr.key, pr.act) === pr.on;
   }
   if (pr.gen !== Feed.gen) return false;   // the feed was rebuilt, left or locked since
   if (pr.kind === 'tab') return pr.tabsGen === Feed.tabsGen && (pr.n === '' || (isProjectName(pr.n) && hasList(pr.n) && !listGone(pr.n)));
@@ -4866,7 +5062,10 @@ function sheetToggle(n, sid) {
   const k = sh.key, on = !(hasList(n) && libraryLists[n].includes(k));
   if (on) (hasList(n) ? libraryLists[n] : (libraryLists[n] = [])).push(k);
   else libraryLists[n] = libraryLists[n].filter(x => x !== k);
+  const rec = Feed.recs.get(k);
+  if (rec && rec.kind === 'keep' && !rec.stale && n === keepList(rec)) keepOwn(rec, on);   // the keep's own list: the record follows the sheet, so ★ stays honest (P2-2)
   persistLists(); updateLibraryBadge();
+  feedRepaintPost(k);   // ★'s label says what its undo still owns
   saveSheetSync();
   return true;
 }
@@ -5009,9 +5208,9 @@ function hideToast() {
    nothing, and Undo never touches it. */
 function isProjectName(n) { return typeof n === 'string' && n !== '' && !n.includes('|') && !NOT_PROJECTS.includes(n); }
 function hasList(n) { return Object.prototype.hasOwnProperty.call(libraryLists, n); }
-function projectNames() {   // last changed first, as Library's "Last updated"; a list that went elsewhere is not one
-  const names = Object.keys(libraryLists).filter(n => isProjectName(n) && !listGone(n)), at = new Map(names.map(n => [n, listDates(n).updated || '']));
-  return names.sort((a, b) => at.get(b).localeCompare(at.get(a)) || a.localeCompare(b));
+function projectNames() {   // in the order they were made, oldest first (the feed tabs' order; the sheet, the picker and Copy take it too); a list that went elsewhere is not one
+  const names = Object.keys(libraryLists).filter(n => isProjectName(n) && !listGone(n)), at = new Map(names.map(n => [n, listDates(n).created || '']));
+  return names.sort((a, b) => at.get(a).localeCompare(at.get(b)) || a.localeCompare(b));
 }
 function projectMode() { return isOwner() && isProjectName(Feed.project) && hasList(Feed.project); }
 function projectStored() {
@@ -5061,7 +5260,7 @@ function namesInRows() {
 }
 /* `received`: the lists were just read from the papers (a load, or a save that took GitHub's values in) */
 function listsReconcile(received) {
-  if (!isOwner()) return;
+  if (!isOwner() || !_listsRead) return;   // not before the lists are read from the papers (applyPapers): nothing to judge yet
   const ev = listEv(), inRows = namesInRows(), lists = new Set(Object.keys(libraryLists).filter(isProjectName));
   let changed = false;
   const put = (n, r) => { const was = ev.get(n); if (!was || was.filled !== r.filled || was.gone !== r.gone) { ev.set(n, r); changed = true; } };
@@ -5076,7 +5275,10 @@ function listsReconcile(received) {
   });
   if (changed || _listEvUnsaved) listEvSave();
 }
-function goneMessage(n) { return `"${esc(n)}" was renamed or deleted on another device, or this browser has no record of it. To use the name again, make it in Library.`; }
+function goneMessage(n) { return `"${esc(n)}" was renamed or deleted on another device, or this browser has no record of it. To use the name again, make it again in Library.`; }
+/* Whether a list can be saved to now: To read always (made by its first add when it is not there yet); a project that
+   is here and did not go elsewhere; never a survey lane (Phase 13e, correction 2) */
+function listDestOK(n) { return n === TO_READ || (isProjectName(n) && hasList(n) && !listGone(n)); }
 /* The project's papers that seed its order: live and visible, not hidden and not deleted on GitHub */
 function projectSeeds(name) {
   const byKey = new Map(allPapers.filter(p => !p._goneRemote).map(p => [paperKey(p), p]));
@@ -5088,7 +5290,7 @@ function projectSeeds(name) {
    made here and still empty stays. Any other time the mode ends only when the list is gone, and notes whether the
    project has papers now. The remembered mode is restored here, once the lists are read. */
 function projectReconcile(received) {
-  if (!isOwner()) return;
+  if (!isOwner() || !_listsRead) return;   // not before the lists are read (applyPapers)
   const s = projectStored(), name = Feed.project || (received && s ? s.name : null);
   if (!name) return;
   const filled = projectInRows(name), mine = s && s.name === name;
@@ -5189,9 +5391,10 @@ window.addEventListener('resize', () => { placeSheet(); placeHideSheet(); });
 function feedTeardown() {
   pressForget();
   if (Feed.obs) Feed.obs.disconnect();
+  if (Feed.more) cancelAnimationFrame(Feed.more);   // a page's continuation waiting for its frame
   Object.assign(Feed, { keys: [], shown: 0, project: null, ranked: null, near: null, switched: false, fresh: false, mounted: false,
-    gen: Feed.gen + 1, tabsGen: Feed.tabsGen + 1, tabNames: null, recs: new Map(), focus: null, sheet: null, edit: null, noted: false, layout: null, obs: null });
-  _projectNear = { sig: null, rows: null, map: null }; _listEv = null;
+    gen: Feed.gen + 1, tabsGen: Feed.tabsGen + 1, tabNames: null, recs: new Map(), focus: null, sheet: null, edit: null, noted: false, layout: null, obs: null, more: 0 });
+  _projectNear = { sig: null, rows: null, map: null }; _listEv = null; rowIndexClear();
   const box = document.getElementById('topStories'); if (box) box.innerHTML = '';
   const m = document.getElementById('saveSheet');
   if (m) {
@@ -5521,7 +5724,7 @@ function topLeadHTML(p) {
 /* Compact item: top-papers side list and topic cards. Actions reveal on hover. opts.topics: show its topic chips
    (Top Papers; a topic card doesn't need them) */
 function feedItemHTML(p, opts) {
-  const k = paperKey(p), ir = readSet.has(k);
+  const k = paperKey(p), ir = paperMarks(p).read;   // a hidden paper's from its row
   const showTitle = hasText(p.headline) && p.headline.trim() !== (p.title||'').trim();
   const gs = opts && opts.topics ? groupsOfPaper(p) : [];
   return `<article class="topic-item feed-item ${ir?'is-read':''}" tabindex="0" data-key="${escAttr(k)}" onclick="openPaper('${escAttr(k)}', event)"${gs.length ? ` style="--gbg:${topicGlow(gs)}"` : ''}>
@@ -5537,24 +5740,26 @@ function feedItemHTML(p, opts) {
 /* ===== ACTION BUTTONS ===== */
 /* labelled = the lead card's bigger buttons with words beside the icons */
 const btnLabel = (on, a, b) => `<span class="btn-label">${on ? a : b}</span>`;
+/* Each button reads the paper's marks (paperMarks): a hidden row's own values, so Library's Hidden rows draw what a
+   press acts on (Phase 13e, P1-a). data-act names the control for the presses. */
 function starBtn(p, labelled) {
-  const k = paperKey(p), on = starSet.has(k);
-  return `<button class="btn-icon ${labelled?'btn-labelled':''} ${on?'starred':''}" onclick="event.preventDefault();event.stopPropagation();toggleStar('${escAttr(k)}',this)" title="${on?'Unstar':'Star'}">&#9733;${labelled ? btnLabel(on, 'Starred', 'Star') : ''}</button>`;
+  const k = paperKey(p), on = paperMarks(p).star;
+  return `<button class="btn-icon ${labelled?'btn-labelled':''} ${on?'starred':''}" data-act="star" aria-pressed="${on}" onclick="event.preventDefault();event.stopPropagation();toggleStar('${escAttr(k)}',this)" title="${on?'Unstar':'Star'}" aria-label="${on?'Unstar':'Star'}">&#9733;${labelled ? btnLabel(on, 'Starred', 'Star') : ''}</button>`;
 }
 function readBtn(p, labelled) {
-  const k = paperKey(p), on = readSet.has(k);
-  return `<button class="btn-icon ${labelled?'btn-labelled':''} is-read-btn ${on?'done':''}" onclick="event.preventDefault();event.stopPropagation();toggleRead('${escAttr(k)}',this)" title="${on?'Mark unread':'Mark as read'}">&#10003;${labelled ? btnLabel(on, 'Read', 'Mark read') : ''}</button>`;
+  const k = paperKey(p), on = paperMarks(p).read;
+  return `<button class="btn-icon ${labelled?'btn-labelled':''} is-read-btn ${on?'done':''}" data-act="read" aria-pressed="${on}" onclick="event.preventDefault();event.stopPropagation();toggleRead('${escAttr(k)}',this)" title="${on?'Mark unread':'Mark as read'}" aria-label="${on?'Mark unread':'Mark as read'}">&#10003;${labelled ? btnLabel(on, 'Read', 'Mark read') : ''}</button>`;
 }
 function saveBtn(p, labelled) {
-  const k = paperKey(p), inAny = paperInAnyList(k);
+  const k = paperKey(p), inAny = paperMarks(p).listed;
   return `<span class="save-anchor">
-    <button class="btn-icon ${labelled?'btn-labelled':''} ${inAny?'done':''}" onclick="event.preventDefault();event.stopPropagation();openSaveDD(this,'${escAttr(k)}')" title="Add to list" style="${inAny?'color:var(--list)':''}">&#9776;${labelled ? btnLabel(inAny, 'In a list', 'Save to list') : ''}</button>
+    <button class="btn-icon ${labelled?'btn-labelled':''} ${inAny?'done':''}" data-act="list" aria-haspopup="true" aria-expanded="false" onclick="event.preventDefault();event.stopPropagation();openSaveDD(this,'${escAttr(k)}')" title="Save to a project or To read" aria-label="${inAny ? 'Saved. Change where' : 'Save to a project or To read'}" style="${inAny?'color:var(--list)':''}">&#9776;${labelled ? btnLabel(inAny, 'Saved', 'Save') : ''}</button>
   </span>`;
 }
 function deleteBtn(p) {
   const k = paperKey(p);
-  if (isHiddenRow(p)) return `<button class="btn-icon btn-restore" onclick="event.preventDefault();event.stopPropagation();unhidePaper('${escAttr(k)}')" title="Restore paper"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>`;
-  return `<button class="btn-icon btn-delete" onclick="event.preventDefault();event.stopPropagation();askHide('${escAttr(k)}')" title="Hide paper (you can restore it from Library)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>`;
+  if (isHiddenRow(p)) return `<button class="btn-icon btn-restore" data-act="restore" onclick="event.preventDefault();event.stopPropagation();unhidePaper('${escAttr(k)}')" title="Restore paper" aria-label="Restore paper"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>`;
+  return `<button class="btn-icon btn-delete" data-act="hide" onclick="event.preventDefault();event.stopPropagation();askHide('${escAttr(k)}')" title="Hide paper (you can restore it from Library)" aria-label="Hide paper"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>`;
 }
 
 function summaryBtn(p) {
@@ -5663,110 +5868,268 @@ function markTruncatedVenues() {
   });
 }
 
-/* ===== SAVE DROPDOWN ===== */
-let _activeSaveDD = null;
+/* ===== SAVE DROPDOWN: the picker on a paper's page and on Library's rows (Phase 13e) =====
+   ☰ opens it for one paper: a field for a new project, then the projects in the order they were made, then To read
+   (never a survey lane); for a hidden paper also the projects its own row carries. Each row is a button with role
+   checkbox: Tab, the arrows, Home and End move through the field and the rows; Enter or Space on a row ticks it; Enter in
+   the field makes a project (once, not while composing); Escape closes and puts focus back on the ☰. One instance per
+   opening (_activeSaveDD.id): its rows stay where they are for its life. A list that goes elsewhere while it is open is
+   off where it stands and says why; a name that comes back is offered only by the next picker. Received data patches
+   the ticks in place (saveDDSync), the field and what is typed in it untouched; a redraw of the row or page it opened
+   from finds the ☰ again by paper and Library group. A scroll the page makes itself (a row redrawn above) places it
+   again; a scroll by hand, or a tap outside, closes it. Every press on it is bound to this instance and its row
+   (Presses). */
+let _activeSaveDD = null, _saveDDSeq = 0;
+function goneRowMessage() { return 'That paper was deleted from the library on GitHub. Your earlier change to it is kept in this browser, not saved; nothing more is saved to it.'; }
+function ddHas(n, k) { const h = hiddenRowOf(k); return h ? rowLists(h).includes(n) : hasList(n) && libraryLists[n].includes(k); }
+/* A row the open picker can save to: offered by this instance, not gone since, a place to save to now; a hidden paper's
+   own row lists stay editable while the row carries them. A name that went while this picker was open stays off in it
+   even when it comes back on the hidden paper's row: the dead record is checked first, and only a new picker offers
+   the name again. */
+function ddDestOK(n, k) {
+  const dd = _activeSaveDD;
+  if (!dd || dd.key !== k || !dd.names.includes(n) || isMachineLane(n) || dd.dead.has(n)) return false;
+  const h = hiddenRowOf(k);
+  if (h && rowLists(h).includes(n)) return true;
+  return listDestOK(n);
+}
+/* The lists a picker offers for a paper: the projects in the order they were made, for a hidden paper also the projects
+   its own row carries, then To read (there or not: its first add makes it). Never a survey lane. */
+function pickerNames(k) {
+  const h = hiddenRowOf(k), names = projectNames();
+  if (h) rowLists(h).forEach(n => { if (isProjectName(n) && !names.includes(n)) names.push(n); });
+  names.push(TO_READ);
+  return names;
+}
+function ddRowHTML(n, k) {
+  const on = ddHas(n, k), ok = ddDestOK(n, k);
+  return `<button type="button" class="save-dd-item${on ? ' on' : ''}" role="checkbox" aria-checked="${on}" data-n="${dataAttr(n)}"${ok ? '' : ' disabled'} onclick="event.stopPropagation();toggleListItem(this.dataset.n, this.closest('.save-dd').dataset.key)"><span class="dd-check${on ? ' on' : ''}" aria-hidden="true">${on ? '&#10003;' : ''}</span><span class="dd-n">${esc(n)}${ok ? '' : '<span class="dd-why">Renamed or deleted on another device</span>'}</span></button>`;
+}
+function buildDDItems(k, names) { return (names || (_activeSaveDD && _activeSaveDD.key === k ? _activeSaveDD.names : pickerNames(k))).map(n => ddRowHTML(n, k)).join(''); }
 function openSaveDD(btn, key) {
   closeSaveDD();
-  const rect = btn.getBoundingClientRect();
+  const p = feedRow(key);
+  if (!p || p._goneRemote) { if (p) toast(goneRowMessage()); return; }
+  const id = ++_saveDDSeq, group = btn && btn.closest ? btn.closest('[data-lib]') : null, onPage = !!(btn && btn.closest && btn.closest('#paperDetail .pd-bar'));
   const dd = document.createElement('div');
-  dd.className = 'save-dd';
+  dd.className = 'save-dd'; dd.setAttribute('role', 'group'); dd.setAttribute('aria-label', 'Save to');
+  dd.dataset.dd = String(id); dd.dataset.key = key;
   dd.onclick = e => e.stopPropagation();
-  dd.innerHTML = `<input class="save-dd-input" type="text" placeholder="Create list" data-key="${dataAttr(key)}" onclick="event.stopPropagation()">
+  dd.onkeydown = saveDDKey;
+  _activeSaveDD = { id, el: dd, key, names: pickerNames(key), dead: new Set(), from: btn, page: onPage, group: group ? group.dataset.lib : null, rect: btn.getBoundingClientRect(), place: null, done: null };
+  dd.innerHTML = `<input class="save-dd-input" type="text" placeholder="New project…" aria-label="New project name" maxlength="200" autocomplete="off" enterkeyhint="done" onclick="event.stopPropagation()">
     <div class="save-dd-list">${buildDDItems(key)}</div>`;
   document.body.appendChild(dd);
-  const place = () => placeSaveDD(dd, btn.isConnected ? btn.getBoundingClientRect() : rect), vv = window.visualViewport;
+  const place = () => saveDDPlace(), vv = window.visualViewport;
+  _activeSaveDD.place = place;
+  _activeSaveDD.done = () => { if (vv) { vv.removeEventListener('resize', place); vv.removeEventListener('scroll', place); } };
   place();
   if (vv) { vv.addEventListener('resize', place); vv.addEventListener('scroll', place); }   // a keyboard opening or closing
-  _activeSaveDD = { el: dd, key, done: () => { if (vv) { vv.removeEventListener('resize', place); vv.removeEventListener('scroll', place); } } };
+  btn.setAttribute('aria-expanded', 'true');
   const input = dd.querySelector('.save-dd-input');
-  if (!matchMedia('(pointer: coarse)').matches) input.focus();   // touch: the lists first, the keyboard only when you tap Create list
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); createListFromDD(input, key); }
-  });
+  if (!matchMedia('(pointer: coarse)').matches && input) input.focus();   // touch: the lists first, the keyboard only when you tap the field
 }
-/* Inside what shows of the screen, above an on-screen keyboard too: below the button when it fits there or there is
-   more room below, else above it (the deck's More sits at the bottom). The lists scroll when there are more than fit. */
-function placeSaveDD(dd, rect) {
-  const vv = window.visualViewport, top = vv ? vv.offsetTop : 0, left = vv ? vv.offsetLeft : 0;
-  const h = vv ? vv.height : window.innerHeight, w = vv ? vv.width : window.innerWidth, pad = 8, gap = 4;
+/* The ☰ the picker opened from, found again after a redraw: on the page by the paper, in Library (or any list of rows)
+   by the paper and its group */
+function saveDDAnchor(dd) {
+  if (dd.from && dd.from.isConnected) return dd.from;
+  const all = [...document.querySelectorAll('.save-anchor [data-act="list"]')];
+  return all.find(b => {
+    if (dd.page) { const page = document.querySelector('#paperDetail [data-pid]'); return !!b.closest('#paperDetail .pd-bar') && !!page && page.dataset.pid === dd.key; }
+    const row = b.closest('[data-key]'); if (!row || row.dataset.key !== dd.key) return false;
+    const g = b.closest('[data-lib]'); return (g ? g.dataset.lib : null) === dd.group;
+  }) || null;
+}
+function saveDDPlace() {
+  const dd = _activeSaveDD; if (!dd) return;
+  const a = saveDDAnchor(dd);
+  if (a) { dd.from = a; dd.rect = a.getBoundingClientRect(); }
+  placeFixedMenu(dd.el, dd.rect);
+}
+/* The safe area's insets (a notch, rounded corners, the home bar), as CSS gives them under viewport-fit=cover: a
+   hidden fixed probe padded by env(safe-area-inset-*) and read back in pixels */
+function safeInsets() {
+  const none = { top: 0, right: 0, bottom: 0, left: 0 };
+  if (typeof getComputedStyle !== 'function' || !document.body) return none;
+  let el = document.getElementById('safeProbe');
+  if (!el) { el = document.createElement('div'); el.id = 'safeProbe'; el.setAttribute('aria-hidden', 'true'); document.body.appendChild(el); }
+  const st = getComputedStyle(el), px = v => Math.max(0, parseFloat(v) || 0);
+  return { top: px(st.paddingTop), right: px(st.paddingRight), bottom: px(st.paddingBottom), left: px(st.paddingLeft) };
+}
+/* Where a fixed menu may go, in the layout viewport's coordinates that position: fixed uses: what shows of the screen
+   (the visual viewport, offsets included: above an on-screen keyboard, inside a zoomed-in part of the page), cut to
+   the safe area */
+function menuBounds() {
+  const vv = window.visualViewport, ins = safeInsets(), de = document.documentElement;
+  const W = (de && de.clientWidth) || window.innerWidth, H = (de && de.clientHeight) || window.innerHeight;
+  const vl = vv ? vv.offsetLeft : 0, vt = vv ? vv.offsetTop : 0, vw = vv ? vv.width : W, vh = vv ? vv.height : H;
+  const left = Math.max(vl, ins.left), top = Math.max(vt, ins.top);
+  return { left, top, width: Math.max(0, Math.min(vl + vw, W - ins.right) - left), height: Math.max(0, Math.min(vt + vh, H - ins.bottom) - top) };
+}
+/* Any fixed menu (the picker, Library's Copy menu) inside menuBounds: no wider than it, under the button when it fits
+   there or there is more room below, else above it, its right edge at the button's; when neither side holds three
+   quarters of it, over the button with all the height there is. Its rows scroll inside when there are more than fit
+   (the menu is a flex column with a scrolling list). */
+function placeFixedMenu(m, rect) {
+  const b = menuBounds(), top = b.top, left = b.left, h = b.height, w = b.width, pad = 8, gap = 4;
+  const wide = Math.max(0, w - 2 * pad);
+  m.style.maxWidth = wide + 'px'; m.style.minWidth = Math.min(180, wide) + 'px';   // the CSS min-width would win over max-width
   const first = top + pad, last = top + h - pad;   // what shows; a button under the keyboard counts as at its edge
   const under = Math.max(rect.bottom + gap, first), over = Math.min(rect.top - gap, last);
-  dd.style.maxHeight = '';
-  const want = dd.offsetHeight, below = last - under, above = over - first;
-  const down = want <= below || below >= above, room = Math.max(96, down ? below : above);
-  dd.style.maxHeight = room + 'px';
-  dd.style.top = (down ? under : Math.max(first, over - Math.min(want, room))) + 'px';
-  dd.style.left = Math.max(left + pad, Math.min(rect.right - dd.offsetWidth, left + w - pad - dd.offsetWidth)) + 'px';
+  m.style.maxHeight = '';
+  const want = m.offsetHeight, below = last - under, above = over - first;
+  const down = want <= below || below >= above, room = Math.max(96, Math.min(down ? below : above, last - first));
+  if (Math.max(below, above) < want * 0.75) {   // cramped (zoomed in, a keyboard up): over the button, all the height there is
+    m.style.maxHeight = (last - first) + 'px'; m.style.top = first + 'px';
+  } else {
+    m.style.maxHeight = room + 'px';
+    m.style.top = (down ? under : Math.max(first, over - Math.min(want, room))) + 'px';
+  }
+  m.style.left = Math.max(left + pad, Math.min(rect.right - m.offsetWidth, left + w - pad - m.offsetWidth)) + 'px';
 }
-function buildDDItems(key) {
-  const h = hiddenRowOf(key), names = h ? [...new Set(Object.keys(libraryLists).concat(rowLists(h)))] : Object.keys(libraryLists);   // a hidden paper: its row's lists too
-  if (!names.length) return '<div class="save-dd-empty">No lists yet</div>';
-  return names.map(n => {
-    const inList = h ? rowLists(h).includes(n) : libraryLists[n].includes(key);
-    return `<div class="save-dd-item" onclick="event.stopPropagation();toggleListItem('${escAttr(n)}','${escAttr(key)}')"><span class="dd-check ${inList?'on':''}">${inList?'&#10003;':''}</span>${esc(n)}</div>`;
-  }).join('');
+/* The picker's keys: the arrows move through the field and the rows that can be saved to, Home and End on a row go to
+   the ends (in the field they move the caret, as usual), Escape closes and puts focus back on the ☰, Enter in the field
+   makes a project once (not held, not while composing); Enter or Space on a row is the button's own click (pressKey
+   holds a repeat back); Tab moves on as usual. */
+function saveDDKey(e) {
+  const dd = _activeSaveDD;
+  if (!dd || e.metaKey || e.ctrlKey || e.altKey || e.isComposing) return;
+  const input = dd.el.querySelector('.save-dd-input'), inField = e.target === input;
+  const items = [input, ...dd.el.querySelectorAll('.save-dd-item:not(:disabled)')].filter(Boolean), i = items.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { const d = e.key === 'ArrowDown' ? 1 : -1; if (items.length) items[(Math.max(i, d > 0 ? -1 : 0) + d + items.length) % items.length].focus(); }
+  else if ((e.key === 'Home' || e.key === 'End') && !inField) { if (items.length) items[e.key === 'Home' ? 0 : items.length - 1].focus(); }
+  else if (e.key === 'Escape') closeSaveDD();
+  else if (e.key === 'Enter' && inField) { if (!e.repeat && e.keyCode !== 229) createListFromDD(input, dd.key); }
+  else return;
+  e.preventDefault(); e.stopPropagation();
 }
+/* The open picker follows the lists and its paper: each row patched in place (its tick; off where its list went, and
+   why), the ☰ found again and the menu placed again; the field is not touched. It closes when its paper is gone,
+   deleted on GitHub, or no longer shows where it opened from. */
+function saveDDSync() {
+  pressReconcile();   // every change passes here: a press it turned stale stays stale
+  const dd = _activeSaveDD;
+  if (!dd) return;
+  const p = feedRow(dd.key);
+  if (!p || p._goneRemote || !isOwner() || !saveDDAnchor(dd)) { closeSaveDD(); return; }
+  dd.names.forEach(n => { if (n !== TO_READ && (!hasList(n) || listGone(n))) dd.dead.add(n); });   // for good, in this picker
+  dd.el.querySelectorAll('.save-dd-item').forEach(b => {
+    const n = b.dataset.n, on = ddHas(n, dd.key), ok = ddDestOK(n, dd.key);
+    b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); b.disabled = !ok;
+    const t = b.querySelector('.dd-check'); if (t) { t.classList.toggle('on', on); t.innerHTML = on ? '&#10003;' : ''; }
+    const why = b.querySelector('.dd-why'), nm = b.querySelector('.dd-n');
+    if (!ok && !why && nm) nm.insertAdjacentHTML('beforeend', '<span class="dd-why">Renamed or deleted on another device</span>');
+    else if (ok && why) why.remove();
+  });
+  saveDDPlace();
+  if (dd.from && dd.from.setAttribute) dd.from.setAttribute('aria-expanded', 'true');
+}
+/* A new project from the picker's field with the paper in it, or an existing one typed by name: saved to (never
+   replaced). "To read" is itself, made by this add when it is not there yet. A survey lane, a name that went elsewhere
+   (the picker never brings one back: Library does), a taken kept name, "|" or a name every object has is refused with
+   the name selected to fix. Checked again at the commit, after the paper itself (correction 2). */
 function createListFromDD(input, key) {
-  const name = checkListName(input.value, { existing: true });   // the name of a list there already adds to it
-  if (!name) { if (input.value.trim()) input.select(); return; }
-  if (!hasList(name)) libraryLists[name] = [];
+  const typed = String(input && input.value != null ? input.value : '').trim();
+  if (!typed) return false;
+  const dd = _activeSaveDD && _activeSaveDD.key === key ? _activeSaveDD : null;
+  const refuse = m => { toast(m); if (input.select) input.select(); return false; };
+  if (isMachineLane(typed)) return refuse(laneMessage(typed));
+  if (listGone(typed) || (dd && dd.dead.has(typed))) return refuse(goneMessage(typed));
+  let name;
+  if (typed === TO_READ || (hasList(typed) && isProjectName(typed))) name = typed;   // there already: saved to as it is
+  else { name = checkListName(typed); if (!name) { if (input.select) input.select(); return false; } }
+  const h = hiddenRowOf(key), p = h || feedPaper(key);
+  if (!p) return false;
+  if (p._goneRemote) return refuse(goneRowMessage());
+  if (!hasList(name)) libraryLists[name] = [];   // new, or To read's first add
   if (!libraryLists[name].includes(key)) libraryLists[name].push(key);
-  const h = hiddenRowOf(key); if (h) hiddenList(h, name, true);   // a hidden paper: its own row
+  if (h) hiddenList(h, name, true);   // a hidden paper: its own row
   persistLists(); updateLibraryBadge();
   input.value = '';
-  const listEl = input.nextElementSibling;
-  listEl.innerHTML = buildDDItems(key);
-  toast(`Added to "${esc(name)}"`);
-  refresh();
-  updateListIcon(key);
+  if (dd && !dd.names.includes(name)) {   // a new project: a row of its own, above To read, in this picker
+    dd.names.splice(dd.names.indexOf(TO_READ) >= 0 ? dd.names.indexOf(TO_READ) : dd.names.length, 0, name);
+    const list = dd.el.querySelector('.save-dd-list'), toRead = [...list.querySelectorAll('.save-dd-item')].find(b => b.dataset.n === TO_READ);
+    if (toRead) toRead.insertAdjacentHTML('beforebegin', ddRowHTML(name, key)); else list.insertAdjacentHTML('beforeend', ddRowHTML(name, key));
+  }
+  toast(`Saved to "${esc(name)}"`);
+  refreshPaper(key, { list: name });
+  return true;
 }
+/* One list ticked or unticked for a paper from the picker (or by name). The destination is checked at the commit: a
+   survey lane never (before the hidden-row branch too), a list that went elsewhere or is not here never, To read made by
+   its first add; a hidden paper's own row lists come off its row. A paper deleted on GitHub takes no more changes.
+   Returns whether it wrote. */
 function toggleListItem(listName, key) {
-  const h = hiddenRowOf(key);
-  if (h) hiddenList(h, listName, !rowLists(h).includes(listName));   // a hidden paper: its own row
+  const dd = _activeSaveDD && _activeSaveDD.key === key ? _activeSaveDD : null;
+  if (isMachineLane(listName)) { toast(laneMessage(listName)); saveDDSync(); return false; }
+  const h = hiddenRowOf(key), p = h || feedPaper(key);
+  if (!p) return false;
+  if (p._goneRemote) { toast(goneRowMessage()); saveDDSync(); return false; }
+  if (dd && dd.dead.has(listName)) { toast(goneMessage(listName)); saveDDSync(); return false; }   // went while this picker was open: off for good in it, carried by a hidden row or not
+  const carried = h ? rowLists(h).includes(listName) : false;
+  if (!carried && ((dd && !dd.names.includes(listName)) || !listDestOK(listName))) { toast(goneMessage(listName)); saveDDSync(); return false; }
+  if (h) hiddenList(h, listName, !carried);   // a hidden paper: its own row
   else {
-    const arr = libraryLists[listName];
-    const idx = arr.indexOf(key);
-    if (idx >= 0) arr.splice(idx, 1); else arr.push(key);
+    const on = !(hasList(listName) && libraryLists[listName].includes(key));
+    if (on) (hasList(listName) ? libraryLists[listName] : (libraryLists[listName] = [])).push(key);   // To read is made by its first add
+    else libraryLists[listName] = libraryLists[listName].filter(x => x !== key);
   }
   persistLists(); updateLibraryBadge();
-  if (_activeSaveDD) {
-    _activeSaveDD.el.querySelector('.save-dd-list').innerHTML = buildDDItems(key);
-  }
-  refresh();
-  updateListIcon(key);
+  refreshPaper(key, { list: listName });
+  return true;
 }
-function updateListIcon(key) {
-  if (!_paperViewActive) return;
-  const inAny = paperInAnyList(key);
-  const btn = document.querySelector('#paperDetail .save-anchor .btn-icon');
-  if (btn) { btn.style.color = inAny ? 'var(--list)' : ''; btn.classList.toggle('done', inAny); }
-}
+/* The page's ☰ after a list change: kept for its callers; paperBarSync does the work */
+function updateListIcon(key) { if (_paperViewActive) paperBarSync(); }
 function closeSaveDD() {
-  if (_activeSaveDD) { if (_activeSaveDD.done) _activeSaveDD.done(); _activeSaveDD.el.remove(); _activeSaveDD = null; }
+  const dd = _activeSaveDD;
+  if (!dd) return;
+  _activeSaveDD = null;
+  if (dd.done) dd.done();
+  const inside = dd.el.contains(document.activeElement);
+  dd.el.remove();
+  const a = saveDDAnchor(dd);
+  if (a && a.setAttribute) a.setAttribute('aria-expanded', 'false');
+  if (inside && a && a.focus) a.focus({ preventScroll: true });   // back where it opened from
+  pressReconcile();   // a press on this picker is dead for good
 }
+/* A tap outside closes the menus. Scrolling the page by hand closes them too (the wheel, a finger, the keys that
+   scroll); a scroll the page makes itself (a row redrawn above, a jump) only places them again, so a draft in the
+   picker's field survives it. */
+function menuScrollIntent(e) {
+  if (!_activeSaveDD && !_copyDD) return;
+  if (e.target && ((_activeSaveDD && _activeSaveDD.el.contains(e.target)) || (_copyDD && _copyDD.el.contains(e.target)))) return;
+  if (e.type === 'wheel' && e.ctrlKey) return;   // a pinch on a trackpad zooms: the menu is placed again
+  if (e.type === 'keydown' && !['PageUp', 'PageDown', 'Home', 'End', ' ', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+  if (e.type === 'keydown' && e.target && (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable)) return;
+  closeSaveDD(); closeCopyDD();
+}
+['wheel', 'touchmove', 'keydown'].forEach(t => document.addEventListener(t, menuScrollIntent, { capture: true, passive: true }));
 document.addEventListener('click', () => { closeSaveDD(); closeAbsPopup(); closeVenueTooltip(); closeRelevancePopup(); });
-document.getElementById('mainScroll').addEventListener('scroll', () => { closeSaveDD(); closeAbsPopup(); closeVenueTooltip(); closeRelevancePopup(); }, { passive: true });
+document.getElementById('mainScroll').addEventListener('scroll', () => { if (_activeSaveDD) saveDDPlace(); if (_copyDD && _copyDD.place) _copyDD.place(); closeAbsPopup(); closeVenueTooltip(); closeRelevancePopup(); }, { passive: true });
 
-/* [5] Micro-interaction: pop animation on toggle */
+/* [5] Micro-interaction: pop animation on toggle. A star or a read mark made here draws only what shows the paper
+   (refreshPaper); a paper deleted on GitHub and kept for an unsaved edit takes no more changes. */
 function toggleStar(k, btn) {
   closeSaveDD();
-  const h = hiddenRowOf(k);
+  const h = hiddenRowOf(k), p = h || feedPaper(k);
+  if (p && p._goneRemote) { toast(goneRowMessage()); return; }
   if (h) hiddenMark(h, 'is_starred', starSet, h.is_starred !== 'true');   // a hidden paper: its own row
   else starSet.has(k)?starSet.delete(k):starSet.add(k);
   persistStars(); updateLibraryBadge();
   if (btn) { btn.classList.add('pop'); btn.addEventListener('animationend', () => btn.classList.remove('pop'), { once: true }); }
-  refresh();
+  refreshPaper(k, { star: true });
 }
 function toggleRead(k, btn) {
   closeSaveDD();
-  const h = hiddenRowOf(k);
+  const h = hiddenRowOf(k), p = h || feedPaper(k);
+  if (p && p._goneRemote) { toast(goneRowMessage()); return; }
   if (h) hiddenMark(h, 'is_read', readSet, h.is_read !== 'true');   // a hidden paper: its own row
   else readSet.has(k)?readSet.delete(k):readSet.add(k);
   persistRead();
   if (btn) { btn.classList.add('pop-sm'); btn.addEventListener('animationend', () => btn.classList.remove('pop-sm'), { once: true }); }
   // on For you a paper marked read leaves the list, so say so, with Undo
   if (btn && btn.closest && btn.closest('#topStories .fy-list') && readSet.has(k)) toast('Marked read', () => toggleRead(k, null));
-  refresh();
+  refreshPaper(k, { read: true });
 }
 
 /* Hiding keeps the row (marked is_hidden) so the paper can come back and a digest run
@@ -5907,10 +6270,49 @@ function closeHideSheet(hidden) {
 function refresh() {
   // A list page stays live (a paper marked read leaves it, stars show); the page underneath redraws on the way back
   if (_listViewActive) { renderListPage(); return; }
+  if (_paperViewActive) { paperViewSync(); return; }   // the page from its row as it is now (received topics, notes, related papers), or unavailable
+  if (_searchActive) { renderGlobalSearch(_lastSearchQ); saveDDSync(); }   // search shows over the tab it was opened from: it first, with what it filters and counts; the tab under it below, as before
   if (feedActive()) feedRefresh();   // the feed keeps its posts where they are
   else if (['all','email'].includes(currentTab)) applyFilters();
   else if (currentTab === 'library') renderLibrary();
   requestAnimationFrame(privateCallback(markTruncatedVenues));
+}
+/* ===== one paper changed here: draw only what shows it (Phase 13e) =====
+   A star, a read mark or a list change costs the post, the bar or the rows it touches, however many posts are mounted
+   or papers loaded. `what`: { star } / { read } / { list: name }, the groups Library must count again. Its callers
+   saved first (persistStars, persistRead, persistLists), and that save bar ran viewsSync. */
+function refreshPaper(k, what) {
+  if (_listViewActive) { renderListPage(); return; }   // a list page stays live, as before
+  if (_paperViewActive) { paperBarSync(); rowsSync(document.getElementById('paperDetail'), k); saveDDSync(); return; }   // the bar, a related paper's row, the picker
+  if (_searchActive) { searchRepaint(k, what || {}); return; }   // search shows over the tab it was opened from (Library too): it first
+  if (feedActive()) { feedRepaintPost(k); return; }   // the sheet, the records and the presses followed in the save bar (viewsSync)
+  if (currentTab === 'library') { libraryRepaint(k, what || {}); saveDDSync(); return; }
+  refresh();   // any other view: as before
+}
+/* Search results after one paper changed: its rows in place; a read mark with "Unread only" on changes which results
+   show and the counts, so the results are drawn again. The picker follows either way. */
+function searchRepaint(k, what) {
+  if (what.read && _searchFilters.unread) renderGlobalSearch(_lastSearchQ);
+  else rowsSync(document.getElementById('sec-search'), k);
+  saveDDSync();
+}
+/* Every view that shows marks follows a change: the feed's sheet, records and presses, a paper page's bar and the open
+   picker. Called wherever feedSync was: the lists read (bootstrapStateFromCSV) and every save bar (showSaveBar). */
+function viewsSync() { feedSync(); paperBarSync(); saveDDSync(); }
+/* One paper's rows under `root` drawn again in place from the row as it is now (Library's rows, a page's related papers,
+   search results), focus kept with the row */
+function rowsSync(root, k) {
+  if (!root || !root.querySelectorAll) return;
+  const p = feedRow(k);
+  if (!p) return;
+  [...root.querySelectorAll('.top-row[data-key], .feed-item[data-key]')].filter(el => el.dataset.key === k).forEach(el => {
+    const h = el.classList.contains('top-row') ? topRowHTML(p, groupsOfPaper(p)) : feedItemHTML(p);
+    const had = document.activeElement && el.contains && el.contains(document.activeElement);
+    el.insertAdjacentHTML('beforebegin', h);
+    const fresh = el.previousElementSibling;
+    el.remove();
+    if (fresh && had) fresh.focus({ preventScroll: true });
+  });
 }
 
 function updateLibraryBadge() { /* badge removed from Library tab */ }
@@ -6361,7 +6763,7 @@ document.addEventListener('DOMContentLoaded', () => document.getElementById('mai
 
 function topRowHTML(p, groups, o) {
   o = o || {};
-  const k = paperKey(p), ir = readSet.has(k);
+  const k = paperKey(p), m = paperMarks(p), ir = m.read;   // a hidden paper's marks from its own row (P1-a)
   const hasSummary = p.summary && p.summary.trim() && p.summary !== 'not specified';
   const hasAbstract = p.abstract && p.abstract.trim() && p.abstract !== 'not specified';
   const showTitle = p.headline && p.headline.trim() && p.headline.trim() !== (p.title||'').trim();
@@ -6376,7 +6778,7 @@ function topRowHTML(p, groups, o) {
       </div>
     </div>
     <div class="tr-side">
-      <span class="tr-venue-line">${starSet.has(k) ? '<span class="tr-star" title="Starred">&#9733;</span>' : ''}${venue && !o.hideVenue ? venueLinkHTML(p, 'tr-venue') : ''}</span>
+      <span class="tr-venue-line">${m.star ? '<span class="tr-star" title="Starred">&#9733;</span>' : ''}${venue && !o.hideVenue ? venueLinkHTML(p, 'tr-venue') : ''}</span>
       <span>${isNewSinceVisit(p) ? '<span class="f-new">New</span> ' : ''}${esc(o.hideVenue ? (paperDate(p) || venueOf(p).year || '') : displayDate(p))}</span>
     </div>
     <div class="tr-actions"><div>
@@ -6490,9 +6892,14 @@ function toggleLibGroup(headerEl, key) {
 }
 /* Collapsed lists ("All" has ~1,000 papers) render their rows only when opened */
 let _libPapers = {};
+/* A group's rows. A list's hidden members (their own rows name it) come after the papers that show, under "Hidden (n)":
+   they count, and their buttons read their row (Phase 13e). */
 function libBodyHTML(papers, key) {
   if (key === 'review') return `<div class="paper-list flat"><section class="tl-section">${papers.map(uploadRowHTML).join('')}</section></div>`;
-  return papers.length ? paperListHTML(papers) : '<div class="library-list-empty">No papers in this list</div>';
+  if (!papers.length) return '<div class="library-list-empty">No papers here yet</div>';
+  if (key === 'hidden' || !papers.some(isHiddenRow)) return paperListHTML(papers);
+  const vis = papers.filter(p => !isHiddenRow(p)), hid = papers.filter(isHiddenRow);
+  return (vis.length ? paperListHTML(vis) : '') + `<div class="lib-sub">Hidden (${hid.length})</div>${paperListHTML(hid)}`;
 }
 /* A PDF you uploaded: it opens straight in the reader (there's no paper page for it) */
 function uploadRowHTML(p) {
@@ -6513,8 +6920,9 @@ function uploadRowHTML(p) {
 function libGroupHTML(key, icon, label, papers, extra) {
   _libPapers[key] = papers;
   const collapsed = _openLibGroups.has(key) ? '' : ' collapsed';
+  /* data-lib holds the key as it is (dataAttr), so the presses, the picker and libraryRepaint find a group by its name (Phase 13e) */
   const body = collapsed ? '' : libBodyHTML(papers, key);
-  return `<div class="interest-group${collapsed}" data-lib="${escAttr(key)}"><div class="interest-group-inner"><div class="interest-group-header" onclick="toggleLibGroup(this,'${escAttr(key)}')"><span class="lib-icon" aria-hidden="true">${icon}</span>${esc(label)} <span class="interest-group-count">${papers.length}</span>${extra||''}<svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="interest-group-body">${body}</div></div></div>`;
+  return `<div class="interest-group${collapsed}" data-lib="${dataAttr(key)}"><div class="interest-group-inner"><div class="interest-group-header" onclick="toggleLibGroup(this,'${escAttr(key)}')"><span class="lib-icon" aria-hidden="true">${icon}</span>${esc(label)} <span class="interest-group-count">${papers.length}</span>${extra||''}<svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="interest-group-body">${body}</div></div></div>`;
 }
 /* ===== ADD A PAPER =====
    Library → + Add paper: a link, DOI, arXiv id or title goes to the bridge on the laptop, where Claude Code finds the
@@ -6610,85 +7018,139 @@ function addPaperFinished(j) {
     else if (j.state !== 'done') toastError('Paper not added: ' + (j.message || 'something went wrong'));
   }
 }
-function renderLibrary() {
-  _libPapers = {};
-  updateSyncStatus();
+/* ===== LIBRARY'S GROUPS (Phase 13e) =====
+   Projects first (sorted as chosen; by default as made, oldest first), each with Rename, Copy and Delete, and on one
+   that went elsewhere "Not a project here" with Use as a project; then To read, with Copy only; then the survey's lanes
+   that have members, as Suggested sets, with Copy only (nothing saves to them, nothing renames or deletes them); then
+   the groups the app makes. A list's count is its visible members plus its hidden ones. A name only hidden rows carry is
+   a list here too (bootstrapStateFromCSV). */
+function libGroupKey(n) { return (isMachineLane(n) ? 'lane-' : 'list-') + n; }
+/* The members of a list for Library: the papers that show, then the hidden ones whose own row names it (each once) */
+function libListPapers(name) {
+  const vis = hasList(name) ? allPapers.filter(p => libraryLists[name].includes(paperKey(p))) : [];
+  return vis.concat(_hiddenPapers.filter(h => rowLists(h).includes(name)));
+}
+function libActions(name) {
+  const copy = `<button class="lib-ico" data-act="copy" data-n="${dataAttr(name)}" onclick="showCopyDD(this,this.dataset.n)" title="Copy its papers to a project or To read" aria-label="Copy ${dataAttr(name)} to a project">${ICON_COPY}</button>`;
+  if (!isProjectName(name)) return `<span class="library-actions" onclick="event.stopPropagation()">${copy}</span>`;
+  const gone = listGone(name) ? `<span class="lib-gone">Not a project here</span><button class="lib-revive" data-act="revive" data-n="${dataAttr(name)}" onclick="listRevive(this.dataset.n)" title="Renamed or deleted on another device, or this browser has no record of it. Make it a project here again">Use as a project</button>` : '';
+  return `<span class="library-actions" onclick="event.stopPropagation()">${gone}<button class="lib-ico" data-act="rename" data-n="${dataAttr(name)}" onclick="renameList(this.dataset.n)" title="Rename" aria-label="Rename ${dataAttr(name)}">${ICON_EDIT}</button>${copy}<button class="lib-ico danger" data-act="delete" data-n="${dataAttr(name)}" onclick="deleteList(this.dataset.n)" title="Delete project (the papers stay)" aria-label="Delete ${dataAttr(name)}">${ICON_TRASH}</button></span>`;
+}
+/* Every group Library draws, in order: { key, icon, label, papers, extra, section } */
+function libraryGroups() {
+  const out = [];
+  const uploads = uploadedPapers();
+  if (uploads.length) out.push({ key: 'review', icon: '&#9873;', label: 'To review', papers: uploads, section: 'review', extra: '<span class="library-actions" onclick="event.stopPropagation()"><button data-act="upload" onclick="pickUploadPdf()">Upload PDF</button></span>' });
+  if (!everyPaper().length) return out;
+  sortedListNames(Object.keys(libraryLists).filter(isProjectName)).forEach(name => out.push({ key: libGroupKey(name), icon: '&#9776;', label: name, papers: libListPapers(name), extra: libActions(name), section: 'projects' }));
+  if (hasList(TO_READ)) out.push({ key: libGroupKey(TO_READ), icon: '&#9776;', label: TO_READ, papers: libListPapers(TO_READ), extra: libActions(TO_READ), section: 'toread' });
+  MACHINE_LANES.forEach(name => { const papers = libListPapers(name); if (papers.length) out.push({ key: libGroupKey(name), icon: '&#9670;', label: name, papers, extra: libActions(name), section: 'lanes' }); });
   const starred = allPapers.filter(p => starSet.has(paperKey(p)));
   const read = allPapers.filter(p => readSet.has(paperKey(p)));
   sortPapers(read);
-  const listNames = Object.keys(libraryLists);
   const noted = Vault.index ? allPapers.filter(p => hasNotesIx(p.id)) : [];
   sortPapers(noted);
-
-  const uploads = uploadedPapers();
-  let html = uploads.length
-    ? libGroupHTML('review', '&#9873;', 'To review', uploads, '<span class="library-actions" onclick="event.stopPropagation()"><button onclick="pickUploadPdf()">Upload PDF</button></span>')
-    : '';
-  if (!allPapers.length) {
-    html += '<div class="library-empty">No papers in the database yet.</div>';
-  } else {
-    // your lists first, sorted as you choose; then a divider; then the groups the app makes
-    const mine = sortedListNames();
-    let own = '';
-    if (mine.length) {
-      const { by, dir } = listSort();
-      const dirLabel = by === 'name' ? (dir === 'asc' ? 'A\u2013Z' : 'Z\u2013A') : (dir === 'desc' ? 'Newest first' : 'Oldest first');
-      own = `<div class="lib-sec-head"><h3>Your lists</h3><span class="grow"></span>
-        <label class="lib-sort"><span class="sr-only">Sort lists by</span><select onchange="setListSort(this.value)" aria-label="Sort lists by">${[['updated', 'Last updated'], ['created', 'Created'], ['name', 'Name']].map(([v, l]) => `<option value="${v}"${v === by ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
-        <button class="lib-sort-dir" onclick="setListSort(null, '${dir === 'asc' ? 'desc' : 'asc'}')" title="Reverse the order" aria-label="Order: ${dirLabel}. Reverse it">${dirLabel}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg></button></div>`;
-      mine.forEach(name => {
-        const papers = allPapers.filter(p => libraryLists[name].includes(paperKey(p)));
-        const actions = `<span class="library-actions" onclick="event.stopPropagation()"><button class="lib-ico" onclick="renameList('${escAttr(name)}')" title="Rename" aria-label="Rename ${escAttr(name)}">${ICON_EDIT}</button><button class="lib-ico" onclick="showCopyDD(this,'${escAttr(name)}')" title="Copy its papers to another list" aria-label="Copy ${escAttr(name)} to another list">${ICON_COPY}</button><button class="lib-ico danger" onclick="deleteList('${escAttr(name)}')" title="Delete list (the papers stay)" aria-label="Delete ${escAttr(name)}">${ICON_TRASH}</button></span>`;
-        own += libGroupHTML('list-' + name, '&#9776;', name, papers, actions);
-      });
-      own += '<hr class="lib-divider">';
-    }
-    html = own + html;
-    const reading = continueReadingList(true, true).map(x => x.p);
-    if (reading.length) html += libGroupHTML('progress', '&#9656;', 'In progress', reading);
-    const mineAdded = allPapers.filter(p => /\bmanual\b/.test(p.source_mode || '')).sort((x, y) => (y.date_found || '').localeCompare(x.date_found || ''));   // + Add paper / /add-paper, newest first
-    if (mineAdded.length) html += libGroupHTML('manual', '&#43;', 'Added by you', mineAdded);
-    if (starred.length) html += libGroupHTML('starred', '&#9733;', 'Starred', starred);
-    if (noted.length) html += libGroupHTML('noted', '&#9998;', 'Notes & highlights', noted);
-    else if (isOwner() && !Vault.key && vaultSupported() && Vault.meta) html += `<div class="lib-hint"><strong>Notes &amp; highlights</strong> are encrypted. <button class="lib-hint-btn" onclick="vaultReady().then(ok => ok && renderLibrary())">Unlock notes</button> to list the papers you annotated.</div>`;
-    if (read.length) html += libGroupHTML('read', '&#10003;', 'Read', read);
-    if (isOwner() && _hiddenPapers.length) html += libGroupHTML('hidden', '&#8856;', 'Hidden', sortPapers(_hiddenPapers.slice()));
-    const passed = isOwner() ? allPapers.filter(isPassed) : [];   // out of For you; each paper's page puts it back
-    if (passed.length) html += libGroupHTML('passed', '&#10005;', 'Passed', sortPapers(passed));
-    const MON = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
-    function pubDateVal(p) {
-      const s = (p.publishing_date||'').trim().toLowerCase();
-      const m = s.match(/^([a-z]+)\s+(\d{4})$/);
-      if (m) return parseInt(m[2])*12 + (MON[m[1]]||0);
-      const y = parseInt(s); return y ? y*12 : 0;
-    }
-    const allSorted = allPapers.slice().sort((a,b) => {
-      const d = pubDateVal(b) - pubDateVal(a);
-      if (d !== 0) return d;
-      const r = (REL_ORDER[dynamicRelevance(a)]??9) - (REL_ORDER[dynamicRelevance(b)]??9);
-      if (r !== 0) return r;
-      return (a.title||'').localeCompare(b.title||'');
-    });
-    html += libGroupHTML('all', '&#9636;', 'All papers', allSorted);
+  const reading = continueReadingList(true, true).map(x => x.p);
+  if (reading.length) out.push({ key: 'progress', icon: '&#9656;', label: 'In progress', papers: reading, section: 'auto' });
+  const mineAdded = allPapers.filter(p => /\bmanual\b/.test(p.source_mode || '')).sort((x, y) => (y.date_found || '').localeCompare(x.date_found || ''));   // + Add paper / /add-paper, newest first
+  if (mineAdded.length) out.push({ key: 'manual', icon: '&#43;', label: 'Added by you', papers: mineAdded, section: 'auto' });
+  if (starred.length) out.push({ key: 'starred', icon: '&#9733;', label: 'Starred', papers: starred, section: 'auto' });
+  if (noted.length) out.push({ key: 'noted', icon: '&#9998;', label: 'Notes & highlights', papers: noted, section: 'auto' });
+  if (read.length) out.push({ key: 'read', icon: '&#10003;', label: 'Read', papers: read, section: 'auto' });
+  if (isOwner() && _hiddenPapers.length) out.push({ key: 'hidden', icon: '&#8856;', label: 'Hidden', papers: sortPapers(_hiddenPapers.slice()), section: 'auto' });
+  const passed = isOwner() ? allPapers.filter(isPassed) : [];   // out of For you; each paper's page puts it back
+  if (passed.length) out.push({ key: 'passed', icon: '&#10005;', label: 'Passed', papers: sortPapers(passed), section: 'auto' });
+  const MON = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+  function pubDateVal(p) {
+    const s = (p.publishing_date||'').trim().toLowerCase();
+    const m = s.match(/^([a-z]+)\s+(\d{4})$/);
+    if (m) return parseInt(m[2])*12 + (MON[m[1]]||0);
+    const y = parseInt(s); return y ? y*12 : 0;
   }
+  const allSorted = allPapers.slice().sort((a,b) => {
+    const d = pubDateVal(b) - pubDateVal(a);
+    if (d !== 0) return d;
+    const r = (REL_ORDER[dynamicRelevance(a)]??9) - (REL_ORDER[dynamicRelevance(b)]??9);
+    if (r !== 0) return r;
+    return (a.title||'').localeCompare(b.title||'');
+  });
+  if (allPapers.length) out.push({ key: 'all', icon: '&#9636;', label: 'All papers', papers: allSorted, section: 'auto' });
+  return out;
+}
+/* Notes & highlights while the notes are locked: the papers you annotated cannot be listed, so Library says so where
+   that group goes, with Unlock notes; Library is drawn again once they unlock */
+function libNotesHint() {
+  if (!isOwner() || Vault.key || !vaultSupported() || !Vault.meta) return '';
+  return `<div class="lib-hint"><strong>Notes &amp; highlights</strong> are encrypted. <button class="lib-hint-btn" onclick="vaultReady().then(ok => ok && renderLibrary())">Unlock notes</button> to list the papers you annotated.</div>`;
+}
+function renderLibrary() {
+  _libPapers = {};
+  updateSyncStatus();
+  const groups = libraryGroups();
+  let html = '', section = null, hint = groups.some(g => g.key === 'noted') ? '' : libNotesHint();
+  if (!everyPaper().length) html = '<div class="library-empty">No papers in the database yet.</div>';
+  groups.forEach(g => {
+    if (g.section !== section) {
+      if (g.section === 'projects') {
+        const { by, dir } = listSort();
+        const dirLabel = by === 'name' ? (dir === 'asc' ? 'A–Z' : 'Z–A') : (dir === 'desc' ? 'Newest first' : 'Oldest first');
+        html += `<div class="lib-sec-head"><h3>Projects</h3><span class="grow"></span>
+          <label class="lib-sort"><span class="sr-only">Sort projects by</span><select onchange="setListSort(this.value)" aria-label="Sort projects by">${[['created', 'Created'], ['updated', 'Last updated'], ['name', 'Name']].map(([v, l]) => `<option value="${v}"${v === by ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+          <button class="lib-sort-dir" onclick="setListSort(null, '${dir === 'asc' ? 'desc' : 'asc'}')" title="Reverse the order" aria-label="Order: ${dirLabel}. Reverse it">${dirLabel}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg></button></div>`;
+      } else if (g.section === 'lanes') html += `<div class="lib-sec-head lib-sec-lanes"><h3>Suggested sets</h3><p class="lib-legend">Filled by the survey tools. Read them or copy from them; nothing saves to them.</p></div>`;
+      else if (g.section === 'auto' && section && section !== 'review') html += '<hr class="lib-divider">';
+      section = g.section;
+    }
+    if (hint && ['read', 'hidden', 'passed', 'all'].includes(g.key)) { html += hint; hint = ''; }   // where Notes & highlights would be
+    html += libGroupHTML(g.key, g.icon, g.label, g.papers, g.extra);
+  });
+  if (hint && everyPaper().length) html += hint;
   document.getElementById('libraryContent').innerHTML = html;
+  libraryDrawn();
+}
+/* After Library is drawn whole, every element in it is new: a picker opened from one of its rows finds its ☰ again by
+   paper and group, or closes when that row is no longer there (saveDDSync); the Copy menu closes when its list can no
+   longer be copied from or its group is gone; a press on what went is dead for good. */
+function libraryDrawn() {
+  if (_activeSaveDD && !_activeSaveDD.page) saveDDSync();
+  const cd = _copyDD;
+  if (cd && (!copySourceOK(cd.src) || ![...document.querySelectorAll('#libraryContent [data-lib]')].some(g => g.dataset.lib === libGroupKey(cd.src)))) closeCopyDD();
+  pressReconcile();
+}
+/* Library after one paper changed here (a star, a read mark, a list): its rows drawn again in place, and the groups the
+   change moves it in or out of (Starred, Read, the list's own group) built again with their counts, collapsed or open
+   as they were. A group that must appear or go (the first star, an emptied Read) draws the whole Library, as before. */
+function libraryRepaint(k, what) {
+  const box = document.getElementById('libraryContent');
+  if (!box || !box.innerHTML) return;
+  const groups = libraryGroups(), have = [...box.querySelectorAll('[data-lib]')].map(el => el.dataset.lib);
+  if (groups.length !== have.length || groups.some((g, i) => g.key !== have[i])) { renderLibrary(); return; }
+  const keys = new Set([what.star ? 'starred' : null, what.read ? 'read' : null, what.list ? libGroupKey(what.list) : null].filter(Boolean));
+  groups.forEach(g => {
+    const el = [...box.querySelectorAll('[data-lib]')].find(x => x.dataset.lib === g.key);
+    if (!el) return;
+    if (keys.has(g.key)) { el.insertAdjacentHTML('beforebegin', libGroupHTML(g.key, g.icon, g.label, g.papers, g.extra)); el.remove(); }
+    else { _libPapers[g.key] = g.papers; rowsSync(el, k); }
+  });
 }
 
 /* Library list management */
-/* Every new list name, and a list's new name (Library's New, Rename and Duplicate to a new list, the save picker,
-   a new project): trimmed; not empty; no "|" (a paper's lists are stored joined by it); not a list there already (the
-   save picker takes an existing one as that list; a rename may keep its own); not one of the names kept for the
-   machine's lanes and To read; and not a name every object already has (constructor, toString, __proto__), which
-   other maps of names in the page would take for their own. Says what is wrong (through opts.say, else a toast) and
-   returns null, else the name. */
+/* Every new list name, and a list's new name (Library's New project, Rename and Copy to a new project, the picker's
+   field, a new feed tab): trimmed; not empty; no "|" (a paper's lists are stored joined by it); not a project there
+   already (the picker takes one there already as that project; a rename may keep its own); not a survey lane (its own
+   message); not To read or a name every object already has (constructor, toString, __proto__), which other maps of
+   names in the page would take for their own. Says what is wrong (through opts.say, else a toast) and returns null,
+   else the name. opts.existing: To read is itself (its first add makes it); a project there already is that project. */
 function checkListName(raw, opts) {
   opts = opts || {};
   const name = String(raw == null ? '' : raw).trim(), say = opts.say || toast;
   if (!name) return null;
-  if (name.includes('|')) { say('List name cannot contain "|"'); return null; }
+  if (name.includes('|')) { say('A project name cannot contain "|"'); return null; }
   if (opts.except !== undefined && name === opts.except) return name;
-  if (hasList(name)) { if (opts.existing) return name; say('A list with that name already exists'); return null; }
+  if (name === TO_READ && opts.existing) return name;
+  if (isMachineLane(name)) { say(laneMessage(name)); return null; }
   if (NOT_PROJECTS.includes(name) || name in Object.prototype) { say(`"${esc(name)}" is kept for a list of the page's own; choose another name`); return null; }
+  if (hasList(name)) { if (opts.existing) return name; say('A project with that name already exists'); return null; }
   return name;
 }
 /* A rename or a delete reaches hidden papers too: their lists stay on their rows (the lists are read from the visible
@@ -6702,18 +7164,44 @@ function renameInHidden(oldName, newName) {
     p.user_lists = out.join('|');
   });
 }
+/* A name that went elsewhere (listGone), or is known from the list times alone, made a project again here on purpose:
+   Library's New project with that name, or Use as a project on its header. Nothing is written to any paper. */
+function listRevive(name) {
+  if (!isProjectName(name) || !listGone(name)) return false;
+  listEvForget(name);
+  if (!hasList(name)) { libraryLists[name] = []; persistLists(); }
+  else { listsReconcile(false); viewsSync(); }
+  updateLibraryBadge();
+  toast(`"${esc(name)}" is a project again`);
+  renderLibrary();
+  return true;
+}
+/* Library's New project: a new, empty project; "To read" as itself, made empty when it is not there yet (one there
+   already stays as it is); a name that went elsewhere, a project again (listRevive) */
 async function createNewList() { const _authEpoch = capturePrivateEpoch();
-  const name = await privateAwait(showPrompt('New list', null, 'List name'), _authEpoch);
-  const trimmed = checkListName(name);
+  const raw = await privateAwait(showPrompt('New project', null, 'Project name'), _authEpoch);
+  const typed = String(raw == null ? '' : raw).trim();
+  if (!typed) return;
+  if (typed === TO_READ) {
+    if (hasList(TO_READ)) { toast('"To read" is already here, with its papers'); return; }
+    libraryLists[TO_READ] = [];
+    persistLists(); updateLibraryBadge();
+    toast('Made "To read"');
+    renderLibrary();
+    return;
+  }
+  if (isProjectName(typed) && listGone(typed)) { listRevive(typed); return; }
+  const trimmed = checkListName(typed);
   if (!trimmed) return;
   listEvForget(trimmed);   // made again here: a list, even if a list of that name went elsewhere
   libraryLists[trimmed] = [];
   persistLists(); updateLibraryBadge();
-  toast(`Created "${esc(trimmed)}"`);
+  toast(`Made "${esc(trimmed)}"`);
   renderLibrary();
 }
 async function renameList(oldName) { const _authEpoch = capturePrivateEpoch();
-  const newName = checkListName(await privateAwait(showPrompt('Rename list', null, 'List name', oldName), _authEpoch), { except: oldName });
+  if (!isProjectName(oldName) || !hasList(oldName)) return;   // To read and the survey's lanes keep their names
+  const newName = checkListName(await privateAwait(showPrompt('Rename project', null, 'Project name', oldName), _authEpoch), { except: oldName });
   if (!newName || newName === oldName || !hasList(oldName)) return;
   libraryLists[newName] = libraryLists[oldName];
   delete libraryLists[oldName];
@@ -6724,14 +7212,17 @@ async function renameList(oldName) { const _authEpoch = capturePrivateEpoch();
   if (Feed.project === newName || (was && was.name === oldName)) projectStore(newName, projectInRows(oldName) || projectInRows(newName));
   const d = listDates(oldName), now = new Date().toISOString();
   saveListMeta({ [oldName]: { deleted: true, at: now }, [newName]: { created: d.created || now, at: now } });   // renamed, not new
-  if (_listSig) { _listSig[newName] = _listSig[oldName]; delete _listSig[oldName]; }
+  if (_listSig && hasOwn(_listSig, oldName)) { _listSig[newName] = _listSig[oldName]; delete _listSig[oldName]; }
   persistLists();
   toast(`Renamed to "${esc(newName)}"`);
   renderLibrary();
 }
 async function deleteList(name) { const _authEpoch = capturePrivateEpoch();
-  const ok = await privateAwait(showConfirm(`Delete "${name}"?`, `Papers won't be removed from the database.`, 'Delete', true), _authEpoch);
-  if (!ok) return;
+  if (!isProjectName(name) || !hasList(name)) return;   // To read and the survey's lanes stay
+  const members = libListPapers(name), hid = members.filter(isHiddenRow).length, n = members.length;
+  const sub = n ? `${n === 1 ? 'Its paper stays' : `Its ${n} papers stay`} in your library${hid ? ` (${hid} of them hidden)` : ''}.` : 'It has no papers.';
+  const ok = await privateAwait(showConfirm(`Delete "${name}"?`, sub, 'Delete', true), _authEpoch);
+  if (!ok || !hasList(name)) return;
   delete libraryLists[name];
   renameInHidden(name, null);
   listEvForget(name);
@@ -6743,47 +7234,85 @@ async function deleteList(name) { const _authEpoch = capturePrivateEpoch();
   renderLibrary();
 }
 
-/* Copy-to dropdown (positioned next to button) */
-let _copyDD = null;
-function closeCopyDD() { if (_copyDD) { _copyDD.remove(); _copyDD = null; } }
+/* ===== COPY MENU (Library): a list's papers into a project or To read =====
+   From a project, To read or a survey lane (the one thing a lane is for). The targets: the projects in the order they
+   were made, then To read (there or not), never the source, never a lane, never a name that went elsewhere; last, a new
+   project. A fixed menu placed like the picker (placeFixedMenu), its rows scrolling inside, each a 44 px target on a
+   touch screen. One instance per opening: a press on it is bound to that instance and its row. Hidden members go along. */
+let _copyDD = null, _copyDDSeq = 0;
+function closeCopyDD() { const cd = _copyDD; if (!cd) return; _copyDD = null; if (cd.done) cd.done(); cd.el.remove(); pressReconcile(); }
+function copyDestOK(src, n) { return n !== src && !isMachineLane(n) && listDestOK(n); }
+/* A list Copy can read from: here, and not gone elsewhere. The list times can keep a name that went (hasList but
+   listGone): that is no source. Checked by the menu, a press on it, and both commits (after the prompt too). */
+function copySourceOK(src) { return hasList(src) && !listGone(src); }
+function copySourceGone(src) { toast(`"${esc(src)}" is no longer here, so nothing was copied`); }
+function copyTargets(src) { return projectNames().concat(TO_READ).filter(n => copyDestOK(src, n)); }
 function showCopyDD(btn, srcName) {
   closeCopyDD();
-  const otherLists = Object.keys(libraryLists).filter(n => n !== srcName);
-  const dd = document.createElement('div');
-  dd.className = 'copy-dd';
+  if (!copySourceOK(srcName)) { if (hasList(srcName)) copySourceGone(srcName); return; }
+  const id = ++_copyDDSeq, dd = document.createElement('div');
+  dd.className = 'copy-dd'; dd.dataset.copy = String(id); dd.dataset.src = srcName; dd.setAttribute('role', 'menu'); dd.setAttribute('aria-label', 'Copy to');
   dd.onclick = e => e.stopPropagation();
-  let items = '';
-  if (otherLists.length) {
-    items = otherLists.map(n => `<div class="copy-dd-item" onclick="event.stopPropagation();doCopyList('${escAttr(srcName)}','${escAttr(n)}')">${esc(n)}</div>`).join('');
-  }
-  items += `<div class="copy-dd-item" style="border-top:1px solid var(--border);color:var(--accent)" onclick="event.stopPropagation();doCopyNew('${escAttr(srcName)}')">+ New list...</div>`;
-  dd.innerHTML = items;
-  const rect = btn.getBoundingClientRect();
-  dd.style.position = 'fixed';
-  dd.style.top = (rect.bottom + 4) + 'px';
-  dd.style.left = rect.left + 'px';
+  const rows = copyTargets(srcName).map(n => `<button type="button" class="copy-dd-item" role="menuitem" data-n="${dataAttr(n)}" onclick="event.stopPropagation();doCopyList(this.closest('.copy-dd').dataset.src, this.dataset.n)">${esc(n)}</button>`).join('');
+  dd.innerHTML = `<div class="copy-dd-head">Copy to</div><div class="copy-dd-list">${rows}<button type="button" class="copy-dd-item copy-dd-new" role="menuitem" onclick="event.stopPropagation();doCopyNew(this.closest('.copy-dd').dataset.src)">+ New project&hellip;</button></div>`;
   document.body.appendChild(dd);
-  _copyDD = dd;
+  const rect = btn.getBoundingClientRect(), place = () => placeFixedMenu(dd, btn.isConnected ? btn.getBoundingClientRect() : rect), vv = window.visualViewport;
+  place();
+  if (vv) { vv.addEventListener('resize', place); vv.addEventListener('scroll', place); }
+  _copyDD = { id, el: dd, src: srcName, place, done: () => { if (vv) { vv.removeEventListener('resize', place); vv.removeEventListener('scroll', place); } } };
+}
+/* The source's papers into the target: the ones that show through the lists, the hidden ones through their own rows;
+   each counted once. A paper that is not available (deleted on GitHub and kept here only for an unsaved edit, or no
+   longer in the library) is left as it is, its pending edit untouched, and counted as skipped. The source and the
+   target are checked at the commit (correction 2). Returns { copied, skipped }. */
+function copyMembers(srcName, targetName) {
+  let copied = 0, skipped = 0;
+  const seen = new Set();
+  libraryLists[srcName].forEach(k => {
+    if (seen.has(k) || hiddenRowOf(k)) return;   // a hidden member is reached through its own row, below
+    seen.add(k);
+    if (libraryLists[targetName].includes(k)) return;   // there already
+    const p = feedPaper(k);
+    if (!p || p._goneRemote) { skipped++; return; }
+    libraryLists[targetName].push(k); copied++;
+  });
+  _hiddenPapers.forEach(h => {
+    if (!rowLists(h).includes(srcName) || rowLists(h).includes(targetName)) return;
+    if (h._goneRemote) { skipped++; return; }
+    hiddenList(h, targetName, true); copied++;
+  });
+  return { copied, skipped };
+}
+function copiedMessage(r, targetName) {
+  const done = `Copied ${r.copied} paper${r.copied !== 1 ? 's' : ''} to "${esc(targetName)}"`;
+  return r.skipped ? `${done}. ${r.skipped} deleted on GitHub ${r.skipped !== 1 ? 'were' : 'was'} left out.` : done;
 }
 function doCopyList(srcName, targetName) {
-  const added = libraryLists[srcName].filter(k => !libraryLists[targetName].includes(k));
-  libraryLists[targetName].push(...added);
-  persistLists();
-  toast(`Copied ${added.length} paper${added.length!==1?'s':''} to "${esc(targetName)}"`);
   closeCopyDD();
+  if (!copySourceOK(srcName)) { copySourceGone(srcName); return; }
+  if (!copyDestOK(srcName, targetName)) { toast(isMachineLane(targetName) ? laneMessage(targetName) : goneMessage(targetName)); return; }
+  const made = !hasList(targetName);
+  if (made) libraryLists[targetName] = [];   // To read, made by its first add
+  const r = copyMembers(srcName, targetName);
+  if (made && !r.copied) delete libraryLists[targetName];   // nothing went in: To read is not made empty
+  persistLists();
+  toast(copiedMessage(r, targetName));
   renderLibrary();
 }
 async function doCopyNew(srcName) { const _authEpoch = capturePrivateEpoch();
   closeCopyDD();
-  const name = await privateAwait(showPrompt('New list name', null, 'List name'), _authEpoch);
-  const trimmed = checkListName(name);   // a new list, never one there already
+  const raw = await privateAwait(showPrompt('New project', null, 'Project name'), _authEpoch);
+  const typed = String(raw == null ? '' : raw).trim();
+  if (!typed) return;
+  if (!copySourceOK(srcName)) { copySourceGone(srcName); return; }   // it may have gone while the prompt was open
+  if (listGone(typed)) { toast(goneMessage(typed)); return; }   // made again only in Library's New project
+  const trimmed = checkListName(typed);   // a new project, never one there already
   if (!trimmed) return;
   listEvForget(trimmed);
   libraryLists[trimmed] = [];
-  const added = libraryLists[srcName].filter(k => !libraryLists[trimmed].includes(k));
-  libraryLists[trimmed].push(...added);
+  const r = copyMembers(srcName, trimmed);
   persistLists(); updateLibraryBadge();
-  toast(`Copied ${added.length} paper${added.length!==1?'s':''} to "${esc(trimmed)}"`);
+  toast(copiedMessage(r, trimmed));
   renderLibrary();
 }
 document.addEventListener('click', () => closeCopyDD());
@@ -7443,7 +7972,7 @@ function showSaveBar() {
   _editGen++;
   listsReconcile(false);     // what this device knows of each list
   projectReconcile(false);   // and one that deleted the chosen project ends project mode
-  feedSync();                // then the open save sheet, the records (an edit to what one set ends its Undo) and the presses
+  viewsSync();               // then the open save sheet, the records (an edit to what one set ends its Undo), the presses, a paper page's bar and its picker
   document.getElementById('saveBar').classList.add('visible');
   scheduleBackup();
   if (_pushing) return;
@@ -9105,6 +9634,10 @@ function validateVaultPlain(name, obj) {
   const memberId = value => mapKey(value) && /^[A-Za-z0-9_-]+$/.test(value) && value !== 'new' && value !== 'panel';
   const paperId = value => mapKey(value) && /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/.test(value) && !value.includes('..');
   const colorName = value => mapKey(value) && /^[A-Za-z0-9_-]+$/.test(value);
+  // List names are people's own words: any name a list can have, constructor, toString and __proto__ among them. They
+  // are only ever drawn escaped, and every map of them is read by own property (mergeListMeta, listMetaAll), so the
+  // identifier rules above do not apply; an empty name is no list.
+  const listName = value => typeof value === 'string' && value !== '';
   const itemIds = new Set();
   const item = record => { check(vaultObject(record) && memberId(record.id) && !itemIds.has(record.id)); itemIds.add(record.id); strings(record, ['created', 'updated']); };
   if (name === '_index.json') {
@@ -9123,8 +9656,8 @@ function validateVaultPlain(name, obj) {
       check(place.pos === undefined || (Number.isFinite(place.pos) && place.pos >= 1));
       check(place.pages === undefined || (Number.isSafeInteger(place.pages) && place.pages >= 0));
     }
-    for (const [listName, list] of Object.entries(obj.lists || {})) {
-      check(mapKey(listName) && vaultObject(list)); strings(list, ['created', 'at']); flag(list, 'deleted');
+    for (const [n, list] of Object.entries(obj.lists || {})) {
+      check(listName(n) && vaultObject(list)); strings(list, ['created', 'at']); flag(list, 'deleted');
     }
   } else {
     check(paperId(obj.id) && obj.id === name.replace(/\.json$/, '') && Array.isArray(obj.annos) && (obj.entries === undefined ? typeof obj.notes === 'string' : Array.isArray(obj.entries)) && vaultObject(obj.deleted) && (obj.ink === undefined || Array.isArray(obj.ink)));
@@ -9216,6 +9749,13 @@ function mergeIndex(a, b) {
 }
 
 /* ---- pushing: every dirty file, merged with GitHub's copy when that changed meanwhile ---- */
+/* The index merged with its list times done again by own property (Phase 13e, correction 3): mergeIndex, protected,
+   merges `lists` through mergeReading, which loses a right-hand list called __proto__ */
+function mergeIndexSafe(a, b) {
+  const out = mergeIndex(a, b);
+  out.lists = mergeListMeta(a && a.lists, b && b.lists);
+  return out;
+}
 function scheduleNotesPush(delay) {
   updateNotesSync();
   if (!isOwner()) return; requireOwner();
@@ -9261,10 +9801,10 @@ async function pushNotes() { const _authEpoch = capturePrivateEpoch();
         if (remote && remote.env.updated !== rec.base && name !== '_vault.json') {
           const mine = await privateAwait(vaultDecrypt(rec.env, key), _authEpoch), theirs = await privateAwait(vaultDecrypt(remote.env, key), _authEpoch);
           checkVaultGeneration(generation); if (isPrivate()) { validateVaultPlain(name, mine); validateVaultPlain(name, theirs); }
-          const merged = name === '_index.json' ? mergeIndex(theirs, mine) : mergePaperNotes(theirs, mine);
+          const merged = name === '_index.json' ? mergeIndexSafe(theirs, mine) : mergePaperNotes(theirs, mine);
           if (isPrivate()) validateVaultPlain(name, merged);
           env = await privateAwait(vaultEncrypt(merged, key), _authEpoch); requireOwner(); checkVaultGeneration(generation);
-          if (name === '_index.json') { Vault.index = mergeIndex(merged, Vault.index || {}); syncUploadsWithIndex(); refreshContinueReading(); }
+          if (name === '_index.json') { Vault.index = mergeIndexSafe(merged, Vault.index || {}); syncUploadsWithIndex(); refreshContinueReading(); }
           else {
             const pid = name.replace(/\.json$/, '');
             if (Vault.cache.has(pid)) Vault.cache.set(pid, merged);
@@ -12247,7 +12787,7 @@ function paperPageHTML(p, opts) {
   const rel = dynamicRelevance(p);
   const v = venueOf(p);
   const why = parseWhy(p);
-  const again = `paperAgain('${ka}')`;
+  const gone = !!p._goneRemote;   // deleted on GitHub, kept here for an unsaved edit: its notice shows and its controls are off (correction 7)
   const showBack = history.length > 1;
   // previous / next within the list this paper was opened from
   const nav = _navList && _navList.keys.includes(k) ? _navList : null;
@@ -12272,11 +12812,11 @@ function paperPageHTML(p, opts) {
     <div class="pd-bar-title" aria-hidden="true">${esc(p.title)}</div>
     <div class="pd-actions">
       ${navHTML}
-      <button class="pd-act ${isStar?'on-star':''}" onclick="toggleStar('${ka}',this);${again}" title="${isStar?'Unstar':'Star'}" aria-label="${isStar?'Unstar':'Star'}">&#9733;<span class="pd-act-label"><span>${isStar?'Starred':'Star'}</span></span></button>
-      <button class="pd-act ${ir?'on-read':''}" onclick="toggleRead('${ka}',this);${again}" title="${ir?'Mark unread':'Mark as read'}" aria-label="${ir?'Mark unread':'Mark as read'}">&#10003;<span class="pd-act-label"><span>${ir?'Read':'Mark read'}</span></span></button>
-      <span class="save-anchor"><button class="pd-act ${inAny?'on-list':''}" onclick="event.stopPropagation();openSaveDD(this,'${ka}')" title="Add to list" aria-label="Add to list">&#9776;<span class="pd-act-label"><span>${inAny?'In a list':'Save'}</span></span></button></span>
-      <button class="pd-act" onclick="${isHiddenRow(p) ? 'unhidePaper' : 'hidePaper'}('${ka}');${again}" title="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper (restore it from Library)'}" aria-label="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper'}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${isHiddenRow(p) ? '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg><span class="pd-act-label"><span>${isHiddenRow(p) ? 'Restore' : 'Hide'}</span></span></button>
-      ${isOwner() && isPassed(p) ? `<button class="pd-act pd-passed" onclick="unpassPaper('${ka}');${again}" title="You passed on it in For you. Put it back there" aria-label="Passed. Put it back in For you">&#10005;<span class="pd-act-label"><span>Passed &middot; Put back</span></span></button>` : ''}
+      <button class="pd-act ${isStar?'on-star':''}" data-act="star" aria-pressed="${isStar}" onclick="toggleStar('${ka}',this)" title="${isStar?'Unstar':'Star'}" aria-label="${isStar?'Unstar':'Star'}"${gone ? ' disabled' : ''}>&#9733;<span class="pd-act-label"><span>${isStar?'Starred':'Star'}</span></span></button>
+      <button class="pd-act ${ir?'on-read':''}" data-act="read" aria-pressed="${ir}" onclick="toggleRead('${ka}',this)" title="${ir?'Mark unread':'Mark as read'}" aria-label="${ir?'Mark unread':'Mark as read'}"${gone ? ' disabled' : ''}>&#10003;<span class="pd-act-label"><span>${ir?'Read':'Mark read'}</span></span></button>
+      <span class="save-anchor"><button class="pd-act ${inAny?'on-list':''}" data-act="list" aria-haspopup="true" aria-expanded="false" onclick="event.stopPropagation();openSaveDD(this,'${ka}')" title="Save to a project or To read" aria-label="${inAny ? 'Saved. Change where' : 'Save to a project or To read'}"${gone ? ' disabled' : ''}>&#9776;<span class="pd-act-label"><span>${inAny?'Saved':'Save'}</span></span></button></span>
+      <button class="pd-act" data-act="${isHiddenRow(p) ? 'restore' : 'hide'}" onclick="${isHiddenRow(p) ? 'unhidePaper' : 'hidePaper'}('${ka}')" title="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper (restore it from Library)'}" aria-label="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper'}"${gone ? ' disabled' : ''}><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${isHiddenRow(p) ? '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg><span class="pd-act-label"><span>${isHiddenRow(p) ? 'Restore' : 'Hide'}</span></span></button>
+      ${isOwner() && isPassed(p) ? `<button class="pd-act pd-passed" data-act="unpass" onclick="unpassPaper('${ka}')" title="You passed on it in For you. Put it back there" aria-label="Passed. Put it back in For you"${gone ? ' disabled' : ''}>&#10005;<span class="pd-act-label"><span>Passed &middot; Put back</span></span></button>` : ''}
       ${isOwner() || pdfSourceOf(p) ? `<button class="pd-read" onclick="openReader('${ka}')" title="${pdfSourceOf(p) ? 'Read the PDF here' : 'Add a PDF to read it here'}"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>${readLabelHTML(p)}</button>` : ''}
       ${p.url ? `<a class="pd-open" href="${esc(p.url)}" target="_blank" rel="noopener" title="Open the paper's page" aria-label="Open paper"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}
     </div>
@@ -12286,6 +12826,7 @@ function paperPageHTML(p, opts) {
   const dek = hasText(p.headline) && p.headline.trim() !== (p.title||'').trim() ? `<p class="pd-dek">${esc(p.headline)}</p>` : '';
   const glowGroups = groupsOfPaper(p);   // confirmed topics, in order: the glow and its chips
   const head = `<header class="pd-head">
+    ${gone ? '<p class="pd-gone" role="status">This paper was deleted from the library on GitHub. Your change to it is kept in this browser, not saved; nothing more can be saved to it.</p>' : ''}
     ${glowGroups.length ? `<div class="pd-topicline">${glowGroups.map(g => `<button class="pd-topic-chip" onclick="openGroup('${escAttr(g)}')" title="All ${escAttr(g)} papers">${gdot(g)}${esc(g)}</button>`).join('')}</div>` : ''}
     <div class="pd-kicker">
       ${hasText(p.venue) ? venueLinkHTML(p, 'pd-venue') : ''}
@@ -12350,7 +12891,7 @@ function paperPageHTML(p, opts) {
   }).join('');
   if (topicLinks) related += `<div class="pd-rel-more"><span>More in</span>${topicLinks}</div>`;
 
-  return { bar, glow: glowGroups.length ? topicGlow(glowGroups) : 'transparent', article: `<article class="pd-article" data-pid="${escAttr(p.id)}">
+  return { bar, glow: glowGroups.length ? topicGlow(glowGroups) : 'transparent', article: `<article class="pd-article" data-pid="${escAttr(p.id)}" data-gone="${gone}" data-hidden="${isHiddenRow(p)}" data-passed="${isPassed(p)}">
       ${head}
       <div class="pd-body"><div class="pd-main">${main}</div>${aside}</div>
       ${nextCard}
@@ -12394,7 +12935,49 @@ function repaintPaper(p) {
    left behind by another view). A post shows no notes. */
 function repaintShownPapers() {
   const page = document.querySelector('#paperDetail [data-pid]');
-  if (page) { const p = everyPaper().find(x => x.id === page.dataset.pid); if (p) renderPaperDetail(p); }
+  if (page) { const p = feedRow(page.dataset.pid); if (p) renderPaperDetail(p); }
+}
+/* ===== the paper page follows the paper (Phase 13e) =====
+   paperBarSync, on every change (viewsSync): the bar's ★, ✓ and ☰ patched from the row's marks as they are now, so a
+   value another device changed is shown before it is pressed (P1-b); a change of shape (hidden, deleted on GitHub,
+   passed, no longer here) draws the page again from the row, or the unavailable page. paperViewSync, under refresh():
+   the whole page again (received topics, notes or related papers), or the unavailable page. */
+function paperBarSync() {
+  if (!_paperViewActive) return;
+  const page = document.querySelector('#paperDetail [data-pid]');
+  if (!page) return;
+  const k = page.dataset.pid, p = feedRow(k);
+  if (!p) { paperUnavailable(k); return; }
+  if (String(!!p._goneRemote) !== page.dataset.gone || String(isHiddenRow(p)) !== page.dataset.hidden || String(isPassed(p)) !== page.dataset.passed) { renderPaperDetail(p); saveDDSync(); return; }
+  const m = paperMarks(p), bar = document.querySelector('#paperDetail .pd-bar');
+  if (!bar) return;
+  const set = (act, on, cls, title, label) => {
+    const b = bar.querySelector(`[data-act="${act}"]`);
+    if (!b) return;
+    b.classList.toggle(cls, on); b.setAttribute('aria-pressed', String(on)); b.setAttribute('title', title); b.setAttribute('aria-label', title);
+    const t = b.querySelector('.pd-act-label span'); if (t) t.textContent = label;
+  };
+  set('star', m.star, 'on-star', m.star ? 'Unstar' : 'Star', m.star ? 'Starred' : 'Star');
+  set('read', m.read, 'on-read', m.read ? 'Mark unread' : 'Mark as read', m.read ? 'Read' : 'Mark read');
+  const l = bar.querySelector('[data-act="list"]');
+  if (l) { l.classList.toggle('on-list', m.listed); l.setAttribute('aria-label', m.listed ? 'Saved. Change where' : 'Save to a project or To read'); const t = l.querySelector('.pd-act-label span'); if (t) t.textContent = m.listed ? 'Saved' : 'Save'; }
+}
+function paperViewSync() {
+  const page = document.querySelector('#paperDetail [data-pid]');
+  if (!page) return;
+  const p = feedRow(page.dataset.pid);
+  if (p) { renderPaperDetail(p); saveDDSync(); } else paperUnavailable(page.dataset.pid);
+}
+/* The paper is no longer in the library (deleted on GitHub with nothing of yours pending, so it went here too): the
+   page says so, with Back; its picker closes and a press on its controls reaches nothing (correction 7). Nothing is
+   rebuilt or added back. */
+function paperUnavailable(k) {
+  closeSaveDD();
+  const box = document.getElementById('paperDetail');
+  if (!box) return;
+  box.innerHTML = `<div class="pd"><div class="pd-bar"><div class="pd-bar-inner">${history.length > 1 ? `<button class="pd-back" onclick="paperBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg><span class="pd-back-label">Back</span></button>` : ''}</div></div>
+    <article class="pd-article pd-unavailable" data-pid="${escAttr(k)}" data-gone="true" data-hidden="false" data-passed="false"><header class="pd-head"><h1 class="pd-title">This paper is no longer in the library</h1><p class="pd-dek">It was deleted on GitHub. Nothing here can be saved to it.</p></header></article></div>`;
+  pressReconcile();
 }
 /* Show the title in the sticky bar once the page heading has scrolled under it */
 function updatePaperBar() {
@@ -12772,7 +13355,8 @@ Config.startup = bootstrapApp();
 (function () {
   const views = ['applyPapers', 'switchTab', 'applyHash', 'backFromList', 'refresh', 'applyFilters', 'toggleRel', 'setListSort',
     'showGlobalSearch', 'hideGlobalSearch', 'renderGlobalSearch', 'setSearchFilter', 'setSearchSelect', 'clearSearchFilters',
-    'renderFeed', 'feedRefresh', 'feedMountMore', 'feedRepaintPost', 'feedTabsRender', 'openSaveSheet', 'relayout', 'repaintPaper', 'repaintShownPapers',
+    'renderFeed', 'feedRefresh', 'feedMountMore', 'feedPageOn', 'feedRepaintPost', 'feedTabsRender', 'openSaveSheet', 'relayout', 'repaintPaper', 'repaintShownPapers',
+    'refreshPaper', 'viewsSync', 'paperBarSync', 'paperViewSync', 'saveDDSync', 'libraryRepaint', 'placeFixedMenu', 'rowsSync', 'searchRepaint', 'libraryDrawn',
     'renderPapers', 'renderEmailPapers', 'renderWeekPulse', 'renderTopPapers',
     'openLatestDigest', 'openAlert', 'openGroup', 'openVenue', 'setVenueYear', 'openTopList', 'showList',
     'renderVenues', 'renderListPage', 'renderListRail', 'renderListTools', 'renderListBody', 'setListOrder', 'setListRel', 'setListQuery',
@@ -12810,7 +13394,7 @@ Config.startup = bootstrapApp();
    list can't quietly go stale. */
 (function () {
   const ALWAYS = ['toggleStar', 'toggleRead', 'persistStars', 'persistRead', 'persistLists', 'openSaveDD', 'toggleListItem', 'createListFromDD',
-    'hidePaper', 'unhidePaper', 'addGroupToPaper', 'removeGroupFromPaper', 'toggleGroupAddDD', 'createNewList', 'renameList', 'deleteList',
+    'hidePaper', 'unhidePaper', 'addGroupToPaper', 'removeGroupFromPaper', 'toggleGroupAddDD', 'createNewList', 'renameList', 'deleteList', 'listRevive',
     'showCopyDD', 'doCopyList', 'doCopyNew', 'updateI', 'updateG', 'updateInterestField', 'toggleInterestDropdown', 'gDragStart', 'gDrop',
     'resetChanges', 'pushToGitHub', 'showSaveBar', 'openStrengthDD', 'setMatchStrength', 'scheduleAutoPush', 'disconnectGitHub', 'submitPdfLink', 'pinPdfVersion',
     // the feed's decisions, a passed post's reasons, Undo, and putting a passed paper back
