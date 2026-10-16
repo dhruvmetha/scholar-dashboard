@@ -2016,6 +2016,7 @@ html.no-hover .cr-x { opacity: 0.7; }
 .auth-toggle-vis:hover { color: var(--text); }
 .auth-toggle-vis svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
 .auth-error { font-size: 12px; color: #f28b82; margin-bottom: 14px; min-height: 18px; }
+.auth-modal-note { font-size: 12px; line-height: 1.45; color: var(--text-muted); margin: 0 0 10px; }
 .auth-submit { width: 100%; padding: 10px; background: var(--accent); border: none; border-radius: 8px; color: var(--accent-ink); font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
 .auth-submit:hover { }
 .auth-submit:active { opacity: 0.72; }
@@ -2575,6 +2576,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
         <svg id="genericVisIcon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
     </div>
+    <div class="auth-modal-note" id="genericNote" hidden></div>
     <div class="auth-error" id="genericError"></div>
     <div id="genericBtns"></div>
   </div>
@@ -2708,13 +2710,13 @@ function privateSet(key, value) { requireOwner(); localStorage.setItem(key, valu
 function privateRemove(key) { requireOwner(); localStorage.removeItem(key); if (localStorage.getItem(key) !== null) throw new Error('Browser storage did not remove ' + key); }
 async function acceptTarget(instance) {
   const target = instance.data_repo.toLowerCase() + '@' + instance.branch;
-  const mismatch = previous => { throw new Error('This browser profile holds sign-in and unsaved edits for ' + previous + '. Use a separate browser profile, or restore the previous configuration.'); };
+  const mismatch = previous => { libCacheErase(false); throw new Error('This browser profile holds sign-in and unsaved edits for ' + previous + '. Use a separate browser profile, or restore the previous configuration.'); };   // B1: the copy goes with a target change (B1 second fix: no erasure value, a refused start leaves storage as it was)
   let binding, historical = false;
   try {
     binding = localStorage.getItem(TARGET_KEY);
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key !== TARGET_KEY && (key === 'gh_pat' || key === 'gh_pat_ok' || key.startsWith('scholar_') || key.startsWith('claude_bridge_'))) historical = true;
+      if (key !== TARGET_KEY && key !== LIBCACHE_ERASURE_KEY && (key === 'gh_pat' || key === 'gh_pat_ok' || key.startsWith('scholar_') || key.startsWith('claude_bridge_'))) historical = true;   // B1 second fix: the erasure value is never cleared, so it is not history
     }
   } catch (e) { throw new Error('Browser storage is unavailable'); }
   if (binding !== null) {
@@ -2728,7 +2730,7 @@ async function acceptTarget(instance) {
       try {
         const databases = await Promise.race([indexedDB.databases(), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Database enumeration timed out')), 3000); })]);
         cleanDatabases = Array.isArray(databases);
-        if (cleanDatabases && databases.some(db => db.name === 'scholar_notes' || db.name === 'scholar_pdfs')) historical = true;
+        if (cleanDatabases && databases.some(db => db.name === 'scholar_notes' || db.name === 'scholar_pdfs' || db.name === LIBCACHE_DB)) historical = true;
       } finally { clearTimeout(timer); }
     }
   } catch (e) { cleanDatabases = false; }
@@ -2739,7 +2741,7 @@ async function acceptTarget(instance) {
   if (current === target) { _acceptedTarget = target; return; }
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key !== TARGET_KEY && (key === 'gh_pat' || key === 'gh_pat_ok' || key.startsWith('scholar_') || key.startsWith('claude_bridge_'))) historical = true;
+    if (key !== TARGET_KEY && key !== LIBCACHE_ERASURE_KEY && (key === 'gh_pat' || key === 'gh_pat_ok' || key.startsWith('scholar_') || key.startsWith('claude_bridge_'))) historical = true;
   }
   if ((historical || !cleanDatabases) && !legacy) mismatch('the previous deployment');
   localStorage.setItem(TARGET_KEY, target);
@@ -2763,6 +2765,7 @@ function savePatVerification(pat, saveToken) {
    token and target; fingerprints remain schema-1 compatibility metadata. */
 const Private = { enabled: false, epoch: 0, authorized: false, token: null, state: 'required', viewDepth: 0, controllers: new Set(), transactions: new Set(), waiters: new Set(), pdfTasks: new Set(), pdfDocuments: new Set(), renderTasks: new Set(), uiTeardowns: new Set(), interactionResets: new Set(), verificationBinding: null, verifying: null };
 const Synced = new Map();   // Phase 15 (A3): each library CSV's last SHA and text pair, by file (syncedKeep)
+const LibCache = { db: null, opening: null, key: null, dead: null, txs: new Set(), erasing: null, fence: null, fenceDb: null, pending: null };   // Phase 15 (B1): this tab's handle on the encrypted copy
 function isPrivate() { return Private.enabled; }
 function privateError(message) { const e = new Error(message); e.privateAuth = true; return e; }
 function privateBinding() {
@@ -2868,6 +2871,7 @@ function lockPrivate(state = 'required', detail) {
   for (const revoke of Private.waiters) revoke(); Private.waiters.clear();
   for (const ctl of Private.controllers) ctl.abort(); Private.controllers.clear();
   for (const tx of Private.transactions) { try { tx.abort(); } catch (e) {} } Private.transactions.clear();
+  libCacheLock(state);
   document.documentElement.classList.add('ro', 'private-locked');
   for (const close of Private.uiTeardowns) close(); Private.uiTeardowns.clear();
   for (const reset of Private.interactionResets) reset();
@@ -2989,7 +2993,9 @@ async function verifyPrivate(pat, candidate = false, reread = false) {
   if (!pat) { lockPrivate('required'); return false; }
   if (!candidate && pat !== storedToken) { lockPrivate('rejected'); return false; }
   Private.verificationBinding = binding;
+  const fenced = !candidate && !Private.authorized ? libCacheFenceCapture(binding.epoch) : null;   // B1 fix: read before the request is sent
   try {
+    if (fenced) { await fenced; checkPrivateRequest(binding); }
     if (reread) {
       const current = await ScholarConfig.load({ fetch: window.fetch.bind(window), origin: location.origin, root: APP_ROOT }); checkPrivateRequest(binding);
       if (JSON.stringify(current.instance) !== JSON.stringify(Config.instance)) { const e = new Error('The instance configuration changed'); e.status = 403; throw e; }
@@ -3051,23 +3057,64 @@ async function privateReadFile(path, optional = false, superseded = null, held =
     return null;
   }
   if (info.type !== 'file' || info.path !== path || !/^[0-9a-f]{40}$/.test(info.sha) || !Number.isSafeInteger(info.size) || info.size < 0 || info.size > cap) throw new Error('Invalid private Contents metadata');
+  return privateBlobText(path, info, binding, held);
+}
+/* The text of one file whose SHA and size GitHub gave just now (info, from its Contents answer or the root listing),
+   read under binding. From the held pair when it is that SHA (A3); else, for a library CSV, from this browser's
+   encrypted copy when it holds exactly those bytes (B1, libCacheGet); else from the blob. */
+async function privateBlobText(path, info, binding, held) {
+  const epoch = binding.epoch, dropped = () => !!(binding.superseded && binding.superseded());
   if (held && held.sha === info.sha && held.epoch === epoch && held.target === binding.target && held.token === binding.token) return { sha: info.sha, text: held.text };   // unchanged since this page read or wrote it
-  let bytes;
-  try { bytes = await privateBytes(ghApiBase() + '/git/blobs/' + info.sha, info.size, binding, false, transferBudgetMs(info.size + 4096), GH_RAW); }   // the file's bytes, with room for the headers
-  catch (e) {
-    if (e.status === 404 && !dropped()) {
-      if (!(await privateAwait(verifyPrivate(binding.token, false, true), epoch))) throw privateError('Private authorization is required');
-      checkPrivateEpoch(epoch);
+  let bytes = null;
+  if (LIBCACHE_FILES.includes(path)) { bytes = await libCacheGet(path, info); checkPrivateEpoch(epoch); }   // size and Git blob SHA already checked
+  const cached = !!bytes;
+  if (!cached) {
+    try { bytes = await privateBytes(ghApiBase() + '/git/blobs/' + info.sha, info.size, binding, false, transferBudgetMs(info.size + 4096), GH_RAW); }   // the file's bytes, with room for the headers
+    catch (e) {
+      if (e.status === 404 && !dropped()) {
+        if (!(await privateAwait(verifyPrivate(binding.token, false, true), epoch))) throw privateError('Private authorization is required');
+        checkPrivateEpoch(epoch);
+      }
+      throw e;  // A missing blob never establishes that the file is absent.
     }
-    throw e;  // A missing blob never establishes that the file is absent.
+    checkPrivateEpoch(epoch);
+    if (!(bytes instanceof Uint8Array) || bytes.length !== info.size) throw new Error('Private blob size mismatch');
+    const sha = await gitBlobSha(bytes); checkPrivateEpoch(epoch);   // the digest is asynchronous: a lock may have come meanwhile
+    if (sha !== info.sha) throw new Error('Private blob does not match its SHA');
   }
-  checkPrivateEpoch(epoch);
-  if (!(bytes instanceof Uint8Array) || bytes.length !== info.size) throw new Error('Private blob size mismatch');
-  const sha = await gitBlobSha(bytes); checkPrivateEpoch(epoch);   // the digest is asynchronous: a lock may have come meanwhile
-  if (sha !== info.sha) throw new Error('Private blob does not match its SHA');
   const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes); checkPrivateEpoch(epoch);
+  if (!cached && LIBCACHE_FILES.includes(path)) libCachePut(path, info.sha, bytes);   // not awaited: storing can only fail quietly
   syncedKeep(path, info.sha, text, binding.token);
   return { sha: info.sha, text };
+}
+/* Phase 15 (B1): the three library CSVs, at start-up and on a pull. One listing of the repository's root at the branch
+   as GitHub has it now names each file's SHA and size, with no file contents (25,197 bytes for the 27 entries of the
+   public Pages repository, measured once on 2026-10-16); each file then comes from
+   privateBlobText. A listing that fails for any reason but the authorization, or that does not name all three as files,
+   changes nothing: the files are read one by one, as before (privateReadFile). superseded: as for privateReadFile. */
+const LIBRARY_LISTING_CAP = 1024 * 1024;
+async function privateReadLibrary(superseded = null) {
+  const epoch = capturePrivateEpoch();
+  const binding = { epoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token, superseded };
+  let listing = null;
+  try { listing = await privateJSON(ghApiBase() + '/contents/?ref=' + encodeURIComponent(GH_BRANCH), LIBRARY_LISTING_CAP, binding, true, transferBudgetMs(LIBRARY_LISTING_CAP)); }
+  catch (e) { if (e.privateAuth || [401, 403].includes(e.status)) throw e; listing = null; }
+  checkPrivateEpoch(epoch);
+  const infos = libraryListing(listing);
+  if (!infos) return Promise.all(SYNCED_FILES.map(name => privateReadFile(name, false, superseded)));
+  return Promise.all(SYNCED_FILES.map((name, i) => privateBlobText(name, infos[i], binding, syncedHeld(name))));
+}
+/* The three files' entries in a root listing (an array of {name, path, type, sha, size}), or null */
+function libraryListing(listing) {
+  if (!Array.isArray(listing) || listing.length > 1000) return null;
+  const infos = [];
+  for (const name of SYNCED_FILES) {
+    const rows = listing.filter(row => row && typeof row === 'object' && row.path === name), row = rows[0];
+    if (rows.length !== 1 || row.type !== 'file' || row.name !== name || typeof row.sha !== 'string' || !/^[0-9a-f]{40}$/.test(row.sha) ||
+        !Number.isSafeInteger(row.size) || row.size < 0 || row.size > privatePathCap(name)) return null;
+    infos.push({ type: 'file', path: name, sha: row.sha, size: row.size });
+  }
+  return infos;
 }
 /* Phase 15 (A3): the last copy of each library CSV that this page read from GitHub or wrote to it, as one pair: a blob
    SHA and the text that SHA names. A save that finds GitHub's SHA unchanged merges onto that text instead of
@@ -3086,6 +3133,274 @@ function syncedHeld(file) {
   if (!pair) return null;
   if (!isPrivate() || pair.target !== _acceptedTarget || pair.epoch !== Private.epoch || !Private.token || pair.token !== Private.token) { Synced.delete(file); return null; }
   return pair;
+}
+/* ===== THE LIBRARY ON THIS DEVICE (Phase 15, B1) =====
+   An encrypted copy of the three library CSVs in this browser, so a start whose files GitHub has not changed downloads
+   none of them. Dhruv approved it on 2026-10-15. Sol's correction 6 is the contract:
+   - Its own database (LIBCACHE_DB), apart from the notes and PDF stores. Only the three library CSVs go in
+     (LIBCACHE_FILES), never annotations, uploads, PDFs or briefs.
+   - Each file's exact blob bytes, before any BOM or newline change, encrypted with AES-GCM under a fresh 96-bit nonce.
+     The target, the branch as written, the format, the path, the SHA and the size are bound in as additional data, so
+     an entry decrypts only for the file and SHA it was written for. The decrypted bytes are used only when their size
+     and Git blob SHA are what GitHub names now. Any failure means the file is read from GitHub.
+   - The key is a non-extractable CryptoKey in the same database. It stops a stray read of the browser's files. It does
+     not stop someone who copies the whole browser profile, and the sign-in prompt says so.
+   - It is read only after the sign-in is checked and GitHub has named each file's SHA (privateReadLibrary). There is
+     no offline start.
+   - Every lock drops the key and the connection from memory, aborts this tab's cache transactions, and turns every
+     callback from before it into a no-op (the epoch). Every lock but 'unavailable' and 'load_error' also deletes the
+     database: a missing, replaced or rejected token, sign-out, a target or configuration change.
+   - Another tab's deletion closes this tab's connection (versionchange). This tab then leaves the copy alone until it
+     is signed in again, so it cannot write it back. Sign-out waits for the deletion before it reloads.
+   - A tab that had not opened the copy yet when another tab deleted it gets no versionchange. The erasure fence below
+     covers it: the tab checks the fence before every use of the copy and leaves the copy alone once it moved.
+   - A storage, decryption or quota failure changes nothing but where the file comes from. Nothing goes in plain text. */
+const LIBCACHE_DISCLOSURE = 'Scout keeps an encrypted copy of your library in this browser so it opens faster. Signing out erases it. The key is stored in this browser too, so the copy is safe from a stray look at its files but not from someone who copies this browser\'s profile.';
+const LIBCACHE_DB = 'scholar_library_cache', LIBCACHE_FORMAT = 'git-blob/aes-256-gcm/v1', LIBCACHE_FILES = SYNCED_FILES, LIBCACHE_WAIT_MS = 3000;
+function libCacheLive(epoch) { return isPrivate() && Private.authorized && epoch === Private.epoch && LibCache.dead !== epoch; }
+function libCacheAad(target, branch, path, sha, size) { return new TextEncoder().encode(JSON.stringify([LIBCACHE_DB, LIBCACHE_FORMAT, target, branch, path, sha, size])); }
+function libCacheKeyOK(rec) {
+  const key = rec && rec.key;
+  return !!key && typeof key === 'object' && key.type === 'secret' && key.extractable === false && !!key.algorithm && key.algorithm.name === 'AES-GCM' &&
+    Array.isArray(key.usages) && key.usages.includes('encrypt') && key.usages.includes('decrypt');
+}
+/* B1 fix: the erasure fence. A counter in a database of its own (LIBCACHE_FENCE_DB, store 'fence', one value). It is
+   never deleted and holds nothing else: no key, no file, nothing about the library. Every wipe moves it by one before
+   it deletes the copy (libCacheErase). Every sign-in check reads it before its request goes out (verifyPrivate,
+   libCacheFenceCapture) and keeps that reading for its epoch. Every use of the copy reads it again and goes on only
+   while it still holds that reading (libCacheFenceOK), on a connection to the copy that is already open. The order is
+   what makes it hold:
+   - if a wipe deleted the database before this tab opened it, the counter had moved before that, so the check fails;
+   - if a wipe comes after the check, its deletion waits for this tab's open connection, which closes on versionchange,
+     and whatever the tab wrote before that goes with the database.
+   So a tab signed in before another tab's wipe never uses or recreates the copy, whether or not a storage event tells
+   it anything. It stays signed in, reads GitHub, and uses a copy again after its next sign-in check. */
+const LIBCACHE_FENCE_DB = 'scholar_library_cache_fence', LIBCACHE_FENCE_MS = 1000;
+function libCacheFenceOpen() {   // this tab's connection to the fence, kept open: nothing deletes or upgrades the fence
+  if (!LibCache.fenceDb) {
+    const opening = LibCache.fenceDb = new Promise(resolve => {
+      let req;
+      try { req = indexedDB.open(LIBCACHE_FENCE_DB, 1); } catch (e) { resolve(null); return; }
+      req.onupgradeneeded = () => { try { req.result.createObjectStore('fence'); } catch (e) {} };
+      req.onerror = () => resolve(null);
+      req.onsuccess = () => {
+        const db = req.result, lost = () => { if (LibCache.fenceDb === opening) LibCache.fenceDb = null; };
+        db.onversionchange = () => { db.close(); lost(); };   // only clearing the site's data deletes it
+        db.onclose = lost; resolve(db);
+      };
+    });
+    opening.then(db => { if (!db && LibCache.fenceDb === opening) LibCache.fenceDb = null; });   // unusable now: the next call tries again
+  }
+  return LibCache.fenceDb;
+}
+/* One transaction on the fence: the counter (advance: after moving it by one), or null when the fence cannot be used
+   within LIBCACHE_FENCE_MS. A value that is not a counter is never moved and never matches: the copy stays unused. */
+async function libCacheFenceTx(advance) {
+  let timer;
+  const work = (async () => {
+    const db = await libCacheFenceOpen(); if (!db) return null;
+    return await new Promise(resolve => {
+      let tx, value = null;
+      try { tx = db.transaction('fence', advance ? 'readwrite' : 'readonly'); } catch (e) { resolve(null); return; }
+      const st = tx.objectStore('fence'), got = st.get('generation');
+      got.onsuccess = () => {
+        const now = got.result === undefined ? 0 : got.result;
+        if (!Number.isSafeInteger(now) || now < 0) return;
+        value = advance ? now + 1 : now;
+        if (advance) st.put(value, 'generation');
+      };
+      tx.oncomplete = () => resolve(value);
+      tx.onabort = () => resolve(null);
+    });
+  })().catch(() => null);
+  try { return await Promise.race([work, new Promise(resolve => { timer = setTimeout(() => resolve(null), LIBCACHE_FENCE_MS); })]); }
+  finally { clearTimeout(timer); }
+}
+/* B1 second fix: a second erasure fence, in localStorage (LIBCACHE_ERASURE_KEY): 16 random hex characters, never
+   cleared. Every wipe from a lock sets a fresh value before it moves the counter (libCacheMarkMove). The sign-in check
+   reads it with the counter, and every use of the copy needs both to be what that check read. A storage event for it
+   closes this tab's copy at once (the storage listener).
+   It is the fallback, not the primary fence. Chrome carries a localStorage write to the other tabs' processes on its
+   own channel, not in order with IndexedDB, so another tab may read the old value for a moment after the deletion.
+   The counter lives in IndexedDB with the copy, so the counter stays the fence that orders things whenever it moves.
+   The value covers the wipes whose counter does not move: a full quota aborts the write, or the fence does not
+   answer. localStorage works whenever someone is signed in, since the token is kept there. A new value has the same
+   length, so it never grows storage, and removing the key never fails on quota.
+   A wipe is confirmed only when the deletion succeeded and at least one fence moved. Until then the erasure is
+   pending (LibCache.pending): the next lock, and the next sign-in check before its request goes out, wipe again. */
+const LIBCACHE_ERASURE_KEY = 'scholar_library_cache_erasure';
+function libCacheMark() { try { return localStorage.getItem(LIBCACHE_ERASURE_KEY); } catch (e) { return undefined; } }   // undefined: storage cannot be read
+/* A wipe's move of the value: a fresh value, or no value when that write throws. Whether the value moved. */
+function libCacheMarkMove() {
+  const next = [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
+  try { localStorage.setItem(LIBCACHE_ERASURE_KEY, next); return libCacheMark() === next; }
+  catch (e) {
+    const was = libCacheMark();
+    if (was === null || was === undefined) return false;   // nothing to remove: this fence did not move
+    try { localStorage.removeItem(LIBCACHE_ERASURE_KEY); } catch (x) {}
+    return libCacheMark() === null;
+  }
+}
+/* A sign-in check's reading of both fences. verifyPrivate starts it, and waits for it, before its request goes out.
+   It is kept for the epoch: a second check in the same epoch keeps the first reading. B1 second fix: an erasure still
+   pending is done again first, for at most LIBCACHE_WAIT_MS. A fence that cannot be read makes the reading null, and
+   the copy stays unused in that epoch. */
+function libCacheFenceCapture(epoch) {
+  if (!LibCache.fence || LibCache.fence.epoch !== epoch) {
+    const retry = LibCache.pending ? libCacheRetry() : null;
+    LibCache.fence = { epoch, value: (async () => {
+      if (retry) await retry;
+      const counter = await libCacheFenceTx(false), mark = libCacheMark();
+      return counter === null || mark === undefined ? null : { counter, mark };
+    })() };
+  }
+  return LibCache.fence.value;
+}
+/* Whether this tab may use the copy under epoch: both fences, read now (the counter in a new transaction), still hold
+   what this epoch's sign-in check read. Otherwise the copy is left alone until the next sign-in check (libCacheStale). */
+async function libCacheFenceOK(epoch) {
+  const kept = LibCache.fence && LibCache.fence.epoch === epoch ? await LibCache.fence.value : null;
+  const ok = kept !== null && libCacheLive(epoch) && await libCacheFenceTx(false) === kept.counter && libCacheMark() === kept.mark && libCacheLive(epoch);
+  if (!ok) libCacheStale(epoch);
+  return ok;
+}
+/* The fence moved since this tab's sign-in check, or cannot be read: close the connection, stop this tab's cache
+   transactions, and leave the copy alone for the rest of this authorization */
+function libCacheStale(epoch) {
+  if (epoch !== Private.epoch) return;
+  const db = LibCache.db; LibCache.db = null; LibCache.opening = null; LibCache.key = null; LibCache.dead = epoch;
+  for (const tx of LibCache.txs) { try { tx.abort(); } catch (e) {} } LibCache.txs.clear();
+  if (db) { try { db.close(); } catch (e) {} }
+}
+/* This tab's connection: opened once per authorization and kept open, so that another tab's deletion reaches it.
+   B1 fix: not opened once the fence has moved (so it makes no empty database either), and an upgrade under a lock
+   that came while the open waited is aborted, so it creates nothing. */
+function libCacheOpen(epoch) {
+  if (LibCache.db) return Promise.resolve(LibCache.db);
+  if (!LibCache.opening) LibCache.opening = libCacheFenceOK(epoch).then(fresh => !fresh ? null : new Promise(resolve => {
+    let req, settled = false;
+    const done = db => { if (!settled) { settled = true; resolve(db); } };
+    try { req = indexedDB.open(LIBCACHE_DB, 1); } catch (e) { done(null); return; }   // (an open can wait on a deletion another tab holds up: libCacheGet does not wait for it)
+    req.onupgradeneeded = () => {
+      if (!libCacheLive(epoch)) { try { req.transaction.abort(); } catch (e) {} return; }   // B1 fix: the open fails and leaves no database
+      try { req.result.createObjectStore('entries'); } catch (e) {}
+    };
+    req.onerror = () => done(null);
+    req.onsuccess = () => {
+      const db = req.result;
+      if (!libCacheLive(epoch)) { db.close(); done(null); return; }   // a lock came while it opened, or the fence moved
+      db.onversionchange = () => { db.close(); libCacheDrop(db); };
+      db.onclose = () => libCacheDrop(db);
+      LibCache.db = db; done(db);
+    };
+  }));
+  return LibCache.opening;
+}
+/* The connection closed under this tab (another tab deleted the database, or the browser cleared it): no more use of
+   the copy until the next authorization */
+function libCacheDrop(db) {
+  if (LibCache.db !== db) return;
+  LibCache.db = null; LibCache.opening = null; LibCache.key = null; LibCache.dead = Private.epoch;
+  for (const tx of LibCache.txs) { try { tx.abort(); } catch (e) {} } LibCache.txs.clear();
+}
+/* One transaction on the 'entries' store: fn(store) returns the requests whose results to give back. B1 fix: the
+   fence is checked first, with db already open, and the transaction then runs on that same connection. */
+async function libCacheTx(db, epoch, mode, fn) {
+  if (!await libCacheFenceOK(epoch)) throw new Error('The copy was erased after this sign-in check');
+  return new Promise((resolve, reject) => {
+    let tx, requests = [];
+    try { tx = db.transaction('entries', mode); } catch (e) { reject(e); return; }
+    LibCache.txs.add(tx);
+    tx.oncomplete = () => { LibCache.txs.delete(tx); resolve(requests.map(r => r.result)); };
+    tx.onabort = () => { LibCache.txs.delete(tx); reject(tx.error || new Error('Library cache transaction aborted')); };
+    try { requests = fn(tx.objectStore('entries')); } catch (e) { try { tx.abort(); } catch (x) {} }
+  });
+}
+/* The file's exact bytes from this browser's copy, or null: no copy, another SHA, a failed decryption or check, a lock */
+async function libCacheGet(path, info) {
+  const epoch = Private.epoch; let timer;
+  const work = (async () => {
+    if (!LIBCACHE_FILES.includes(path) || !libCacheLive(epoch)) return null;
+    const db = await libCacheOpen(epoch); if (!db || !libCacheLive(epoch)) return null;
+    const [keyRec, rec] = await libCacheTx(db, epoch, 'readonly', st => [st.get('key'), st.get('file:' + path)]);
+    if (!libCacheLive(epoch) || !libCacheKeyOK(keyRec) || !rec || rec.format !== LIBCACHE_FORMAT || rec.target !== _acceptedTarget || rec.branch !== GH_BRANCH ||
+        rec.path !== path || rec.sha !== info.sha || rec.size !== info.size || !ArrayBuffer.isView(rec.iv) || rec.iv.byteLength !== 12) return null;
+    LibCache.key = keyRec.key;
+    const plain = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: rec.iv, additionalData: libCacheAad(_acceptedTarget, GH_BRANCH, path, info.sha, info.size) }, keyRec.key, rec.ct));
+    if (!libCacheLive(epoch) || plain.length !== info.size) return null;
+    const sha = await gitBlobSha(plain);
+    return libCacheLive(epoch) && sha === info.sha ? plain : null;
+  })().catch(() => null);
+  try { return await Promise.race([work, new Promise(resolve => { timer = setTimeout(() => resolve(null), LIBCACHE_WAIT_MS); })]); }
+  finally { clearTimeout(timer); }
+}
+/* Store a file's exact bytes under the SHA GitHub gave them (a verified read, or an acknowledged PUT). Resolves to
+   whether they were stored; a failure (storage, quota, a lock, another tab's deletion) leaves the page as it was. */
+async function libCachePut(path, sha, bytes) {
+  const epoch = Private.epoch, target = _acceptedTarget, branch = GH_BRANCH;
+  try {
+    if (!LIBCACHE_FILES.includes(path) || typeof sha !== 'string' || !/^[0-9a-f]{40}$/.test(sha) || !(bytes instanceof Uint8Array) || !libCacheLive(epoch)) return false;
+    const db = await libCacheOpen(epoch); if (!db || !libCacheLive(epoch)) return false;
+    let key = LibCache.key;
+    if (!key) {   // the key in the database, or a new one when there is none (in one transaction, so two tabs agree)
+      const fresh = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+      if (!libCacheLive(epoch)) return false;
+      const [rec] = await libCacheTx(db, epoch, 'readwrite', st => {
+        const out = { result: null }, got = st.get('key');
+        got.onsuccess = () => {
+          if (libCacheKeyOK(got.result)) { out.result = got.result; return; }
+          st.clear(); out.result = { key: fresh }; st.put(out.result, 'key');   // without a usable key nothing stored can be read
+        };
+        return [out];
+      });
+      if (!libCacheLive(epoch) || !libCacheKeyOK(rec)) return false;
+      key = LibCache.key = rec.key;
+    }
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: libCacheAad(target, branch, path, sha, bytes.length) }, key, bytes);
+    if (!libCacheLive(epoch) || target !== _acceptedTarget || branch !== GH_BRANCH) return false;
+    capturePrivateEpoch();   // the token in storage is still this one: a sign-out in another tab removes it before it deletes
+    await libCacheTx(db, epoch, 'readwrite', st => [st.put({ format: LIBCACHE_FORMAT, target, branch, path, sha, size: bytes.length, iv, ct }, 'file:' + path)]);
+    return libCacheLive(epoch);
+  } catch (e) { return false; }
+}
+/* A lock (lockPrivate, after the epoch moved): the key and the connection leave memory, this tab's transactions stop,
+   and every state but 'unavailable' and 'load_error' deletes the database */
+function libCacheLock(state) {
+  LibCache.key = null; LibCache.dead = null;
+  for (const tx of LibCache.txs) { try { tx.abort(); } catch (e) {} } LibCache.txs.clear();
+  const db = LibCache.db; LibCache.db = null; LibCache.opening = null;
+  if (db) { try { db.close(); } catch (e) {} }
+  if (state !== 'unavailable' && state !== 'load_error') LibCache.erasing = libCacheErase();
+  else if (LibCache.pending) LibCache.erasing = libCacheErase();   // B1 second fix: an erasure not confirmed is done again
+}
+/* Delete the database, key and copy together. Resolves true once the browser confirms it, false if it failed. Another
+   tab's open connection holds it up until that tab closes it (it does on versionchange). B1 fix: the fence moves
+   first, and the deletion starts only once that is done; if the fence cannot be used, it deletes all the same.
+   B1 second fix: the localStorage value moves first (mark false, for a refused target at start, leaves storage as it
+   was), then the counter, then the deletion. The result is true only when the deletion succeeded and a fence moved.
+   The erasure is pending until the latest wipe is confirmed. */
+function libCacheErase(mark = true) {
+  const run = LibCache.pending = {};
+  const marked = mark && libCacheMarkMove();
+  return libCacheFenceTx(true).then(counter => new Promise(resolve => {
+    let req;
+    try { req = indexedDB.deleteDatabase(LIBCACHE_DB); } catch (e) { resolve(false); return; }
+    req.onsuccess = () => resolve(true);
+    req.onerror = () => resolve(false);
+  }).then(deleted => {
+    const confirmed = deleted && (marked || counter !== null);
+    if (confirmed && LibCache.pending === run) LibCache.pending = null;
+    return confirmed;
+  }));
+}
+/* An erasure still pending, done again before a sign-in check's reading: whether it was confirmed within ms */
+function libCacheRetry(ms = LIBCACHE_WAIT_MS) { LibCache.erasing = libCacheErase(); return libCacheErased(ms); }
+/* Sign-out: whether the deletion the lock started was confirmed within ms */
+async function libCacheErased(ms = 5000) {
+  let timer;
+  try { return await Promise.race([LibCache.erasing || libCacheErase(), new Promise(resolve => { timer = setTimeout(() => resolve(false), ms); })]); }
+  finally { clearTimeout(timer); }
 }
 function restorePreferences() {
   try { _listOrder = localStorage.getItem('scholar_list_order') || 'best'; _rnSort = localStorage.getItem('scholar_rn_sort') || 'page'; _panelTab = localStorage.getItem(PANEL_TAB_KEY) === 'chat' ? 'chat' : 'notes'; Object.assign(PanelLayout, JSON.parse(localStorage.getItem(PANEL_LAYOUT_KEY)) || {}); } catch (e) {}
@@ -3111,7 +3426,7 @@ async function loadPrivateLibrary() {
   const overtaken = () => epoch !== Private.epoch || req < refreshAcceptedFor({ papers: '', interests: '', groups: '' }) || !!(Refresh.staged && Refresh.staged.req > req);
   if (!_papersText) privateView('loading');
   try {
-    const files = await Promise.all(['papers_database.csv', 'interests_database.csv', 'groups_database.csv'].map(name => privateReadFile(name, false, overtaken))); checkPrivateEpoch(epoch);
+    const files = await privateReadLibrary(overtaken); checkPrivateEpoch(epoch);
     const texts = files.map(file => normalizeNewlines(file.text));
     if (_papersText) {
       const out = refreshReceive({ req, saveGen, how: 'startup', texts: { papers: texts[0], interests: texts[1], groups: texts[2] } });
@@ -3153,6 +3468,7 @@ async function retryPrivate() {
 }
 window.addEventListener('storage', event => {
   if (isPrivate() && (event.key === null || ['gh_pat', TARGET_KEY, PAT_VERIFIED_KEY, PAT_OK_KEY].includes(event.key))) lockPrivate(hasPAT() ? 'rejected' : 'required');
+  else if (isPrivate() && event.key === LIBCACHE_ERASURE_KEY) libCacheStale(Private.epoch);   // B1 second fix: another tab erased the copy; this tab stays signed in
 });
 const verifyOnReturn = () => { if (isPrivate() && document.visibilityState !== 'hidden') reverifyPrivate().catch(() => lockPrivate('unavailable')); };
 window.addEventListener('focus', verifyOnReturn);
@@ -3785,7 +4101,7 @@ async function fetchLibraryTexts() { const _authEpoch = capturePrivateEpoch();
   requireTarget();
   const names = ['papers_database.csv', 'interests_database.csv', 'groups_database.csv'];
   let texts;
-  if (isPrivate()) { const files = await privateAwait(Promise.all(names.map(name => privateReadFile(name))), _authEpoch); texts = files.map(file => normalizeNewlines(file.text)); }
+  if (isPrivate()) { const files = await privateAwait(privateReadLibrary(), _authEpoch); texts = files.map(file => normalizeNewlines(file.text)); }
   else if (CSV_BASE_URL) texts = await privateAwait(Promise.all(names.map(name => fetchNormalized(csvUrl(name), { fallback: false }))), _authEpoch);
   else texts = await privateAwait(Promise.all(names.map(name => fetchLocal(name))), _authEpoch);
   requireTarget();
@@ -8369,7 +8685,7 @@ function setMatchStrength(key, name, value) {
 /* ===== GENERIC MODAL (prompt / confirm) ===== */
 let _genericResolve = null;
 
-function _openGeneric({ title, sub, inputPlaceholder, defaultValue, showInput, submitLabel, cancelLabel, danger, isPassword }) {
+function _openGeneric({ title, sub, inputPlaceholder, defaultValue, showInput, submitLabel, cancelLabel, danger, isPassword, note }) {
   return new Promise(resolve => {
     _genericResolve = resolve;
     document.getElementById('genericTitle').textContent = title;
@@ -8389,6 +8705,8 @@ function _openGeneric({ title, sub, inputPlaceholder, defaultValue, showInput, s
       if (visBtn) visBtn.style.display = isPassword ? '' : 'none';
       input.classList.remove('error');
     }
+    const noteEl = document.getElementById('genericNote');   // a line under the field (the private sign-in's disclosure)
+    noteEl.textContent = note || ''; noteEl.hidden = !note;
     const errEl = document.getElementById('genericError');
     errEl.textContent = ''; errEl.style.display = showInput ? '' : 'none';   // a confirm has no field to report on: no reserved gap
     const btnsEl = document.getElementById('genericBtns');
@@ -8436,8 +8754,8 @@ function toggleGenericVis() {
   }
 }
 
-function showPrompt(title, sub, placeholder, defaultValue, isPassword) {
-  return _openGeneric({ title, sub, inputPlaceholder: placeholder, defaultValue, showInput: true, submitLabel: 'OK', isPassword });
+function showPrompt(title, sub, placeholder, defaultValue, isPassword, note) {
+  return _openGeneric({ title, sub, inputPlaceholder: placeholder, defaultValue, showInput: true, submitLabel: 'OK', isPassword, note });
 }
 function showConfirm(title, sub, confirmLabel = 'Confirm', danger = false) {
   return _openGeneric({ title, sub, showInput: false, submitLabel: confirmLabel, cancelLabel: 'Cancel', danger });
@@ -8604,7 +8922,7 @@ async function connectGitHub() {
   requireTarget();
   const storedToken = isPrivate() ? privateBinding() : null;
   const handshake = isPrivate() ? { epoch: Private.epoch, target: _acceptedTarget, storedToken } : null;
-  const pat = (await showPrompt('Sign in', null, isPrivate() ? 'GitHub access token' : 'Password', '', true) || '').trim();   // (it's the GitHub token; checked with GitHub)
+  const pat = (await showPrompt('Sign in', null, isPrivate() ? 'GitHub access token' : 'Password', '', true, isPrivate() ? LIBCACHE_DISCLOSURE : '') || '').trim();   // (it's the GitHub token; checked with GitHub)
   if (handshake) checkPrivateRequest(handshake);
   if (!pat) return;
   const verification = patCanWrite(pat);
@@ -8621,10 +8939,13 @@ async function connectGitHub() {
 }
 async function disconnectGitHub() { const _authEpoch = capturePrivateEpoch();
   requireOwner();
-  const ok = await privateAwait(showConfirm('Sign out on this browser?', isPrivate() ? 'This private library locks until you sign in again. Saved browser state is preserved.' : 'The site becomes read-only here: no changes, notes or chat until you sign in again with the key icon.', 'Sign out', true), _authEpoch);
+  const ok = await privateAwait(showConfirm('Sign out on this browser?', isPrivate() ? 'This private library locks until you sign in again. The copy of the library kept in this browser is erased. Unsaved edits stay here.' : 'The site becomes read-only here: no changes, notes or chat until you sign in again with the key icon.', 'Sign out', true), _authEpoch);
   if (!ok) return;
   requireOwner(); if (isPrivate()) writeBackup(); checkedStorageRemove(PAT_OK_KEY); checkedStorageRemove(PAT_VERIFIED_KEY); checkedStorageRemove('gh_pat'); _ownerAtLoad = false;
-  if (isPrivate()) lockPrivate('required');
+  if (isPrivate()) {
+    lockPrivate('required');   // B1: deletes the library copy; reload only once the browser confirms it
+    if (!await libCacheErased()) { privateView('required', 'This browser did not confirm that the copy of the library kept here was erased. Scout erases it again the next time it opens.'); return; }
+  }
   try { sessionStorage.setItem('owner_toast', 'out'); } catch (e) { checkPrivateEpoch(_authEpoch);}
   location.reload();   // read-only from here
 }
@@ -8682,6 +9003,7 @@ async function _ghPutFile(headers, filename, content, sha, message) { const _aut
     const ack = await privateAwait(res.json(), _authEpoch), bytes = new TextEncoder().encode(content), put = ack && ack.content;
     if (put && put.path === filename && typeof put.sha === 'string' && put.sha === await privateAwait(gitBlobSha(bytes), _authEpoch)) {
       syncedKeep(filename, put.sha, new TextDecoder('utf-8', { fatal: true }).decode(bytes), Private.token);   // the text a read of those bytes gives
+      libCachePut(filename, put.sha, bytes);   // Phase 15 (B1): so the next start downloads nothing for this save
     }
   } catch (e) { checkPrivateEpoch(_authEpoch); }
 }
