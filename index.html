@@ -1813,6 +1813,81 @@ html.no-hover .cr-x { opacity: 0.7; }
 .ig-empty { line-height: 1.6; max-width: 520px; margin: 48px auto; color: var(--text-secondary); }
 .ig-empty strong { display: block; color: var(--text); margin-bottom: 4px; }
 .ig-tools { max-width: 1200px; margin: 0 auto 14px; padding: 0 24px; display: flex; gap: 8px; }
+/* ===== THE INTERESTS PAGE (Phase 16, mockup A): one column of cards, the weekly note on top ===== */
+#sec-interests .interests-header .briefing { max-width: 760px; }
+.ip-lede { margin-top: 8px; font-size: 15px; line-height: 1.45; color: var(--text-secondary); max-width: 60ch; }
+#sec-interests .interests-scroll { max-width: 760px; margin: 0 auto; padding: 8px 24px 48px; }
+.ip-week { max-width: 712px; margin: 20px auto 0; padding: 14px 16px; background: var(--bg-surface); border: 1px solid var(--line); border-radius: 16px; display: flex; flex-direction: column; gap: 6px; }
+.ip-week-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.ip-week-head h3, .ip-sec-head h3 { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted-raised); }
+.ip-week-date { font-size: 13px; color: var(--text-muted-raised); white-space: nowrap; }
+.ip-week-line { font-size: 15px; line-height: 1.45; color: var(--text-secondary); }
+.ip-week-warn { color: var(--text); }
+.ip-week-names { display: flex; flex-wrap: wrap; gap: 8px; }
+.ip-link, .ip-name-plain { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 14px; text-align: left; }
+.ip-link { border: 1px solid var(--line); background: transparent; color: var(--accent); cursor: pointer; }
+.ip-link:hover { background: var(--accent-dim); }
+.ip-name-plain { padding: 0; min-height: 0; color: var(--text-secondary); }
+.ip-fold { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; min-height: 44px; padding: 0 2px; border: none; background: none; color: var(--accent); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.ip-chev { width: 18px; height: 18px; fill: currentColor; transition: transform 0.2s ease; }
+.ip-fold[aria-expanded="true"] .ip-chev, .ip-card.open .ip-chev { transform: rotate(180deg); }
+.ip-examples h4 { margin: 6px 0 2px; font-size: 13px; font-weight: 600; color: var(--text-muted-raised); }
+.ip-ex { list-style: none; display: flex; flex-direction: column; }
+.ip-ex li { padding: 6px 0; border-top: 1px solid var(--line); }
+.ip-ex li:first-child { border-top: none; }
+.ip-ex-t { display: block; font-size: 14px; line-height: 1.4; color: var(--text); }
+a.ip-ex-a { display: flex; flex-direction: column; justify-content: center; min-height: 44px; text-decoration: none; }
+a.ip-ex-a:hover .ip-ex-t { color: var(--accent); }
+.ip-ex-why { display: block; font-size: 13px; line-height: 1.4; color: var(--text-muted-raised); margin-top: 2px; }
+.ip-sec { margin-top: 28px; display: flex; flex-direction: column; gap: 10px; }
+.ip-sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.ip-sec-note { font-size: 13px; color: var(--text-muted); }
+.ip-legend, .ip-empty { font-size: 14px; line-height: 1.45; color: var(--text-muted); }
+.ip-list { display: flex; flex-direction: column; gap: 10px; }
+.ip-card { background: var(--bg-surface); border: 1px solid var(--line); border-radius: 16px; display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; }
+.ip-card:has(> .ip-card-head) { padding: 0; gap: 0; }
+.ip-card-head { display: grid; grid-template-columns: 1fr auto; grid-template-areas: 'name chev' 'meta chev'; align-items: center; gap: 6px 12px; width: 100%; min-height: 64px; padding: 14px 16px; border: none; border-radius: 16px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ip-card-head:hover { background: rgba(255,255,255,0.03); }
+.ip-card-head .ip-name { grid-area: name; }
+.ip-card-head .ip-meta { grid-area: meta; }
+.ip-card-head .ip-chev { grid-area: chev; color: var(--text-muted-raised); }
+.ip-name { font-size: 17px; font-weight: 600; line-height: 1.3; color: var(--text); overflow-wrap: anywhere; }
+.ip-sugg .ip-name, .ip-gone .ip-name { font-size: 16px; }
+.ip-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 14px; color: var(--text-muted-raised); }
+.ip-level { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--bg-raise); color: var(--text); }
+.ip-level.lv-definitely { background: var(--accent-dim); color: var(--accent); }
+.ip-level.lv-mildly { background: var(--gray-badge-bg); color: var(--text-muted-raised); }
+.ip-card-body { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 6px; }
+.ip-detail, .ip-notes, .ip-effect { font-size: 14px; line-height: 1.45; color: var(--text-muted-raised); overflow-wrap: anywhere; }
+.ip-notes { color: var(--text-secondary); }
+.ip-effect .ip-level { margin-right: 6px; vertical-align: 1px; }
+.ip-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
+.ip-pick { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-muted-raised); }
+.ip-pick select { min-height: 44px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; font-size: 15px; }
+.ip-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.ip-btn:hover { background: rgba(255,255,255,0.05); }
+.ip-btn-primary { border-color: transparent; background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.ip-btn-primary:hover { background: var(--accent-hover); }
+.ip-btn-quiet { color: var(--text-muted-raised); }
+.ip-pair { display: flex; gap: 8px; margin-top: 4px; }
+.ip-pair .ip-btn { flex: 1; }
+.ip-gone .ip-pair .ip-btn { flex: 0 1 auto; }
+.ip-add { min-height: 44px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.ip-add:hover { background: rgba(255,255,255,0.05); }
+.ip-count { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+.ip-dismissed .ip-fold { color: var(--text-secondary); }
+.ip-form { padding: 6px 0; }
+.ip-form .author-form { padding: 8px 16px 12px; }
+.ip-form .ui-btn { min-height: 44px; }
+.ip-sugg:focus { outline: none; }
+.ip-sugg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 700px) {
+  #sec-interests .interests-header .briefing { padding: 24px 16px 0; }
+  #sec-interests .interests-header .briefing h2 { font-size: 40px; line-height: 1.1; }
+  #sec-interests .interests-scroll { padding: 4px 16px 40px; }
+  .ip-week { margin: 20px 16px 0; }
+}
+@media (prefers-reduced-motion: reduce) { .ip-chev { transition: none; } }
 .author-form { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 8px 20px 12px; max-width: 720px; }
 .author-form h3 { font-family: var(--serif); font-size: 20px; font-weight: 500; margin-bottom: 4px; }
 .author-form label { font-size: 12.5px; color: var(--text-secondary); margin-top: 6px; }
@@ -1898,9 +1973,8 @@ html.no-hover .cr-x { opacity: 0.7; }
 .library-actions button.lib-ico svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .library-actions button.lib-ico:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 .library-actions button.lib-ico.danger:hover { background: rgba(242,139,130,0.1); color: #f28b82; }
-/* Phase 13e: Library's sections (Projects, To read, Suggested sets), a gone project's header, the hidden members of a list */
+/* Phase 13e: Library's sections (Projects, To read), a gone project's header, the hidden members of a list */
 .lib-sec-head .lib-legend { font-size: 12px; color: var(--text-muted); font-weight: 400; margin: 0; }
-.lib-sec-head.lib-sec-lanes { flex-wrap: wrap; gap: 4px 12px; }
 .lib-gone { font-size: 11px; color: var(--text-muted); margin-left: 8px; }
 .library-actions button.lib-revive { font-size: 11px; padding: 3px 10px; }
 .lib-sub { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); padding: 10px 14px 4px; }
@@ -2304,7 +2378,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
     <div class="nav-tabs">
       <button class="nav-tab active" data-tab="all" onclick="switchTab('all')">For you</button>
       <button class="nav-tab" data-tab="email" onclick="switchTab('email')" hidden>Email Digest</button>   <!-- off: SHOW_EMAIL_TAB -->
-      <button class="nav-tab" data-tab="venues" onclick="switchTab('venues')">Venues</button>
+      <button class="nav-tab" data-tab="venues" onclick="switchTab('venues')" hidden>Venues</button>   <!-- off: SHOW_VENUES_TAB -->
       <button class="nav-tab" data-tab="library" onclick="switchTab('library')">Library</button>
       <button class="nav-tab" data-tab="interests" onclick="switchTab('interests')">Interests <span class="tab-badge" id="interestsBadge" style="display:none">0</span></button>
     </div>
@@ -2400,23 +2474,12 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   <div class="search-results" id="globalSearchResults" style="padding-top:24px;"></div>
 </div>
 
-<!-- INTERESTS TAB -->
+<!-- INTERESTS TAB (Phase 16): Claude's weekly note, your interests, the suggestions to add, and the dismissed ones -->
 <div class="tab-section" id="sec-interests">
   <div class="interests-header">
-    <div class="briefing"><h2>Topics &amp; Interests</h2></div>
-    <div class="ig-toggle-wrap">
-      <div class="ig-toggle">
-        <button class="ig-toggle-btn active" data-igtab="groups" onclick="switchIGTab('groups')">Topics <span class="ig-badge" id="igBadgeGroups" style="display:none">0</span></button>
-        <button class="ig-toggle-btn" data-igtab="interests" onclick="switchIGTab('interests')">Interests <span class="ig-badge" id="igBadgeInterests" style="display:none">0</span></button>
-      </div>
-    </div>
-    <div class="interest-filter-chips" id="interestChips">
-      <button class="pill active" data-istatus="suggested" onclick="toggleIStatus('suggested')">Needs review <span class="pill-count"></span></button>
-      <button class="pill" data-istatus="confirmed" onclick="toggleIStatus('confirmed')">Confirmed <span class="pill-count"></span></button>
-      <button class="pill" data-istatus="rejected" onclick="toggleIStatus('rejected')">Rejected <span class="pill-count"></span></button>
-      <button class="pill" data-istatus="all" onclick="toggleIStatus('all')">All <span class="pill-count"></span></button>
-    </div>
+    <div class="briefing"><h2>Interests</h2><p class="ip-lede">These decide what Scout searches for, which papers it adds, and how it ranks them.</p></div>
   </div>
+  <section class="ip-week" id="activityNote" aria-labelledby="activityTitle" hidden></section>
   <div class="interests-scroll" id="interestsMain"></div>
 </div>
 
@@ -2454,7 +2517,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
 <!-- the app's tabs as icons, at the bottom on a phone and a phone sideways (CSS shows it there only) -->
 <nav class="app-bar" id="appBar" aria-label="App">
   <button class="app-tab active" data-tab="all" onclick="appTab('all')" aria-label="For you" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></button>
-  <button class="app-tab" data-tab="venues" onclick="appTab('venues')" aria-label="Venues"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V9l8-5 8 5v12"/><path d="M9 21v-7h6v7"/></svg></button>
+  <button class="app-tab" data-tab="venues" onclick="appTab('venues')" aria-label="Venues" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V9l8-5 8 5v12"/><path d="M9 21v-7h6v7"/></svg></button>
   <button class="app-tab" data-tab="library" onclick="appTab('library')" aria-label="Library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4v16H5zM10 4h4v16h-4z"/><path d="M15.5 5l3.8 1-3.6 14-3.8-1"/></svg></button>
   <button class="app-tab" data-tab="interests" onclick="appTab('interests')" aria-label="Interests"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></svg></button>
   <button class="app-tab app-search" onclick="appSearch()" aria-label="Search" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
@@ -2883,7 +2946,7 @@ function lockPrivate(state = 'required', detail) {
   // without fades whose callbacks belong to the revoked authorization.
   closeAbsPopup(); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeRelevancePopup(); closeVenueTooltip();
   _absBtn = null; _dismissTap = null; clearTimeout(_relPopupTimer); _relPopupTimer = null;
-  feedTeardown(); refreshTeardown(); briefTeardown();
+  feedTeardown(); refreshTeardown(); briefTeardown(); activityTeardown();
   const askSelection = document.getElementById('chatAskSel'); if (askSelection) askSelection.remove();
   const readerMenu = document.getElementById('readerMenu'); if (readerMenu) { clearTimeout(readerMenu._leaveT); readerMenu.classList.remove('open', 'glide', 'leaving'); }
   const readerMore = document.getElementById('readerMore'); if (readerMore) readerMore.setAttribute('aria-expanded', 'false');
@@ -2901,7 +2964,7 @@ function lockPrivate(state = 'required', detail) {
   clearTimeout(AddPaper.poll); clearTimeout(TopicTag.poll); clearTimeout(Pinch.timer); clearTimeout(_reader.panelT); clearTimeout(_reader.leaveT);
   Object.assign(AddPaper, { open: false, job: null, poll: 0, text: '', star: false }); Object.assign(TopicTag, { job: null, poll: 0, afterSave: new Set() });
   _libPanel = null; _lastSearchQ = ''; _searchFilters = { rel: 'all', unread: false, topic: null, year: null }; Pinch.active = false; Pinch.anchor = null;
-  _collapsedGroups.clear(); _venuesOpen.clear();
+  _collapsedGroups.clear(); _venuesOpen.clear(); _ipOpen.clear(); _ipDismissedOpen = false;
   for (const task of Private.renderTasks) { try { task.cancel(); } catch (e) {} } Private.renderTasks.clear();
   for (const task of Private.pdfTasks) { try { Promise.resolve(task.destroy()).catch(() => {}); } catch (e) {} } Private.pdfTasks.clear();
   _reader.token++; if (_reader.obs) _reader.obs.disconnect(); if (_reader.far) _reader.far.disconnect();
@@ -2928,6 +2991,7 @@ function lockPrivate(state = 'required', detail) {
   const listFilter = document.getElementById('lpFilter'); if (listFilter) listFilter.placeholder = '';
   const genericInput = document.getElementById('genericInput'); if (genericInput) { genericInput.placeholder = ''; genericInput.onkeydown = null; }
   for (const id of ['interestsBadge', 'igBadgeGroups', 'igBadgeInterests']) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+  const dotTab = document.querySelector('.app-tab[data-tab="interests"]'); if (dotTab) dotTab.classList.remove('dot');   // Phase 16: the phone's dot goes with the badge
   document.querySelectorAll('#filtersBar .pill-count, #interestChips .pill-count').forEach(el => { el.textContent = ''; });
   const external = document.getElementById('readerExternal'); if (external) external.removeAttribute('href');
   document.body.classList.remove('search-open'); document.body.style.overflow = '';
@@ -3033,6 +3097,7 @@ function privatePathCap(path) {
   if (/^annotations\/(?:_vault|_index|[A-Za-z0-9][A-Za-z0-9._-]{0,199})\.json$/.test(path) && !path.includes('..')) return 4 * 1024 * 1024;
   if (path === 'briefs/_index.json') return 2 * 1024 * 1024;   // Phase 14: the answers' index
   if (/^briefs\/[a-z0-9][a-z0-9-]{0,199}\.json$/.test(path) && !path.startsWith('briefs/up-')) return 64 * 1024;   // one paper's answers
+  if (path === 'activity.json') return 64 * 1024;   // Phase 16: Claude's weekly note (ACTIVITY_FILE), read only
   throw new Error('Private repository path is not allowed');
 }
 /* superseded: for a load, true once a newer result was accepted or staged since it began. Its failures then neither
@@ -3044,7 +3109,7 @@ function privatePathCap(path) {
 async function privateReadFile(path, optional = false, superseded = null, held = null, ref = null) {
   const epoch = capturePrivateEpoch(), cap = privatePathCap(path);
   // Phase 15 (B2): the state file is optional (a layout 4 library has none); ref pins a read to one commit
-  if (optional && !path.startsWith('annotations/') && !path.startsWith('briefs/') && path !== STATE_FILE) throw new Error('Required private CSV cannot be optional');
+  if (optional && !path.startsWith('annotations/') && !path.startsWith('briefs/') && path !== STATE_FILE && path !== 'activity.json') throw new Error('Required private CSV cannot be optional');
   const binding = { epoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token, superseded };
   const dropped = () => !!(superseded && superseded());
   const url = ghApiBase() + '/contents/' + path.split('/').map(encodeURIComponent).join('/') + '?ref=' + encodeURIComponent(ref || GH_BRANCH);
@@ -3062,7 +3127,8 @@ async function privateReadFile(path, optional = false, superseded = null, held =
     if (!optional) { const e = new Error('Required private file was not found'); e.status = 404; throw e; }
     return null;
   }
-  if (info.type !== 'file' || info.path !== path || !/^[0-9a-f]{40}$/.test(info.sha) || !Number.isSafeInteger(info.size) || info.size < 0 || info.size > cap) throw new Error('Invalid private Contents metadata');
+  if (info.type !== 'file' || info.path !== path || !/^[0-9a-f]{40}$/.test(info.sha) || !Number.isSafeInteger(info.size) || info.size < 0 || info.size > cap)
+    throw Object.assign(new Error('Invalid private Contents metadata'), { tooLarge: Number.isSafeInteger(info.size) && info.size > cap });   // Phase 16: the weekly note tells a file too large from a failed read
   return privateBlobText(path, info, binding, held);
 }
 /* The text of one file whose SHA and size GitHub gave just now (info, from its Contents answer or the root listing),
@@ -4391,6 +4457,7 @@ function refreshReceive(r) {
   const before = new Set(everyPaper().map(p => p.id));
   Refresh.noticed = false;
   if (pulled) briefRefresh();   // Phase 14: the answers are read again too
+  if (pulled) activityRefresh();   // Phase 16: and Claude's weekly note
   refreshHeld(() => {
     Refresh.applying = true;
     try {
@@ -4568,6 +4635,7 @@ function buildGroupOrder() {
 function revealContent() {
   if (_dataLoaded) return;
   _dataLoaded = true;
+  setTimeout(privateCallback(() => { if (activityShown()) activityStart(); }), 0);   // Phase 16: opened on Interests, the note is read once the library is ready
   const skel = document.getElementById('skeleton');
   skel.classList.add('hidden');
   setTimeout(privateCallback(() => { skel.style.display = 'none'; fitTopPapers(); }), 400);   // the loader held the page's place: fit Top Papers now it's gone
@@ -4918,6 +4986,7 @@ function highlightTokens(root, tokens) {
 }
 function renderGlobalSearch(q) {
   if (q !== _lastSearchQ) { _searchFilters.topic = null; _searchFilters.year = null; }
+  if (!SHOW_TOPICS) _searchFilters.topic = null;   // Phase 16: no Topic selector, and no topic filter left over
   _lastSearchQ = q;
   const tokens = q.split(/\s+/).filter(Boolean);
   const scored = allPapers.map(p => ({ p, s: searchScore(p, tokens) })).filter(x => x.s > 0);
@@ -4930,7 +4999,7 @@ function renderGlobalSearch(q) {
   const all = scored.map(x => x.p);
   const f = _searchFilters;
   const topicCounts = {}, yearCounts = {};
-  all.forEach(p => { groupsOfPaper(p).forEach(g => topicCounts[g] = (topicCounts[g] || 0) + 1); const y = pubKey(p) ? Math.floor(pubKey(p) / 100) : null; if (y) yearCounts[y] = (yearCounts[y] || 0) + 1; });
+  all.forEach(p => { shownTopics(p).forEach(g => topicCounts[g] = (topicCounts[g] || 0) + 1); const y = pubKey(p) ? Math.floor(pubKey(p) / 100) : null; if (y) yearCounts[y] = (yearCounts[y] || 0) + 1; });
   const keep = p => (f.rel === 'all' || dynamicRelevance(p) === f.rel) && (!f.unread || !readSet.has(paperKey(p)))
     && (!f.topic || groupsOfPaper(p).includes(f.topic)) && (!f.year || Math.floor(pubKey(p) / 100) === f.year);
   const shown = scored.filter(x => keep(x.p));
@@ -4967,7 +5036,7 @@ function switchTab(tab, fromHash) {
     toggleMobileSearch(false);
   }
   currentTab = tab;
-  if (!fromHash) location.hash = tab === 'interests' ? '#interests/' + currentIGTab : '#' + tab;
+  if (!fromHash) location.hash = tab === 'interests' ? interestsHash() : '#' + tab;
   markNavTabs(tab);
   revealActiveTab();
   const paperTabs = ['all','email'];
@@ -4982,9 +5051,10 @@ function switchTab(tab, fromHash) {
   else feedOff();
   if (tab === 'library') renderLibrary();
   else if (tab === 'venues') renderVenues();
-  else if (tab === 'interests') renderInterests();
+  else if (tab === 'interests') { renderInterests(); activityEnter(); }   // Phase 16: the weekly note is read here, never at start-up
   if (moved || fromList) jumpScroll(ms, _tabScroll[tab] || 0);
 }
+function interestsHash() { return SHOW_TOPICS ? '#interests/' + currentIGTab : '#interests'; }
 function jumpScroll(el, y) { el.style.scrollBehavior = 'auto'; el.scrollTop = y; el.style.scrollBehavior = ''; }
 /* The tab shown, in the navbar and the app bar (which says it to a screen reader too) */
 function markNavTabs(tab) {
@@ -5005,7 +5075,7 @@ function markAppSearch() {
    shown goes back to its top */
 function appTab(tab) {
   if (tab === currentTab && !_paperViewActive && !_listViewActive && !_searchActive) { jumpScroll(document.getElementById('mainScroll'), 0); return; }
-  location.hash = tab === 'interests' ? '#interests/' + currentIGTab : '#' + tab;
+  location.hash = tab === 'interests' ? interestsHash() : '#' + tab;
 }
 function appSearch() { toggleMobileSearch(true); }
 
@@ -5110,6 +5180,7 @@ function foundHTML(p) {
 /* The glow at the top of a card spans all of the paper's topics, left to right in order: each colour holds the
    middle of its share of the width and blends into the next (two topics meet in the centre) */
 function topicGlow(groups) {
+  if (!SHOW_TOPICS) return 'var(--accent)';   // Phase 16: no topic colours on the page
   const cs = groups.map(groupColor);
   if (cs.length < 2) return cs[0] || 'var(--accent)';
   const n = cs.length;
@@ -5119,7 +5190,7 @@ const TO_READ = 'To read';
 /* The lists that are not projects: the machine's three lanes and keep's own. Every other list is a project, by its
    exact name. The worker keeps the same four (ingest/ownership.NOT_PROJECTS), and a test compares them. */
 const NOT_PROJECTS = ['Starting set', 'Near misses', 'Random picks', 'To read'];
-/* The survey's lanes (Phase 13e, P2-3): filled by the survey tools, shown in Library as Suggested sets. Never a place to
+/* The survey's lanes (Phase 13e, P2-3): filled by the survey tools; Library no longer lists them (Phase 16). Never a place to
    save to, never renamed, deleted or made a feed tab, never lighting 🔖 or ☰; Copy may read from one into a project. */
 const MACHINE_LANES = NOT_PROJECTS.filter(n => n !== TO_READ);
 function isMachineLane(n) { return MACHINE_LANES.includes(n); }
@@ -6519,6 +6590,7 @@ function renderPapers(papers, topPool) {   // topPool: the tab's unread papers, 
   const nTop = renderTopPapers(top);
   // Papers already shown above; topic cards prefer papers the reader hasn't seen yet
   const shownAbove = new Set(top.slice(0, nTop).map(paperKey));
+  if (!SHOW_TOPICS) { document.getElementById('topicJump').innerHTML = ''; document.getElementById('topicsGrid').innerHTML = ''; return; }   // Phase 16: no topic cards
 
   const grouped = {};
   const confirmed = confirmedTopics();   // the chips' rule: no confirmed topic, no card
@@ -6627,9 +6699,11 @@ function jumpToTopic(name) {
 }
 
 /* Stacked bar of this week's additions, one segment per topic */
+/* Phase 16: with topics off the pulse goes. Its bar and legend are the week split by topic; what is left, a count of
+   the week's papers, the For you line and the Interests page's weekly note already give. */
 function renderWeekPulse(weekPapers) {
   const el = document.getElementById('weekPulse');
-  if (!weekPapers.length) { el.innerHTML = ''; return; }
+  if (!SHOW_TOPICS || !weekPapers.length) { el.innerHTML = ''; return; }
   const counts = {};
   let untopiced = 0;   // in no confirmed topic: counted in the caption, never drawn as a made-up group
   weekPapers.forEach(p => { const gs = groupsOfPaper(p).filter(g => GROUP_ORDER.includes(g)); if (!gs.length) untopiced++; gs.forEach(g => counts[g] = (counts[g] || 0) + 1); });
@@ -6744,7 +6818,7 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(privateCal
 function hasText(v) { return v && v.trim() && v !== 'not specified'; }
 /* A paper's topics as small chips: the first two, then "…" (its tooltip names the rest) */
 function topicChipsHTML(p) {
-  const gs = groupsOfPaper(p);
+  const gs = shownTopics(p);
   if (!gs.length) return '';
   const more = gs.slice(2);
   return `<span class="f-topics">${gs.slice(0, 2).map(g => `<span class="f-topic">${gdot(g)}${esc(g)}</span>`).join('')}${more.length ? `<span class="f-topic more" title="${escAttr('Also: ' + more.join(', '))}" aria-label="${escAttr('Also: ' + more.join(', '))}">…</span>` : ''}</span>`;
@@ -6773,7 +6847,7 @@ function feedActionsHTML(p, withSummaryBtn, labelled) {
 function topLeadHTML(p) {
   const k = paperKey(p), ir = readSet.has(k);
   const showTitle = hasText(p.headline) && p.headline.trim() !== (p.title||'').trim();
-  const gs = groupsOfPaper(p);
+  const gs = shownTopics(p);
   return `<article class="top-card top-lead ${ir?'is-read':''}" tabindex="0" data-key="${escAttr(k)}" onclick="openPaper('${escAttr(k)}', event)"${gs.length ? ` style="--gbg:${topicGlow(gs)}"` : ''}>
     ${feedMetaHTML(p, false, true)}
     <h3 class="lead-headline">${esc(p.headline||p.title)}</h3>
@@ -6790,7 +6864,7 @@ function topLeadHTML(p) {
 function feedItemHTML(p, opts) {
   const k = paperKey(p), ir = paperMarks(p).read;   // a hidden paper's from its row
   const showTitle = hasText(p.headline) && p.headline.trim() !== (p.title||'').trim();
-  const gs = opts && opts.topics ? groupsOfPaper(p) : [];
+  const gs = opts && opts.topics ? shownTopics(p) : [];
   return `<article class="topic-item feed-item ${ir?'is-read':''}" tabindex="0" data-key="${escAttr(k)}" onclick="openPaper('${escAttr(k)}', event)"${gs.length ? ` style="--gbg:${topicGlow(gs)}"` : ''}>
     <div class="f-headline">${esc(p.headline||p.title)}</div>
     ${showTitle ? `<div class="f-title" title="${escAttr(p.title)}">${esc(p.title)}</div>` : ''}
@@ -7377,7 +7451,7 @@ function rowsSync(root, k) {
   const p = feedRow(k);
   if (!p) return;
   [...root.querySelectorAll('.top-row[data-key], .feed-item[data-key]')].filter(el => el.dataset.key === k).forEach(el => {
-    const h = el.classList.contains('top-row') ? topRowHTML(p, groupsOfPaper(p)) : feedItemHTML(p);
+    const h = el.classList.contains('top-row') ? topRowHTML(p, shownTopics(p)) : feedItemHTML(p);
     const had = document.activeElement && el.contains && el.contains(document.activeElement);
     el.insertAdjacentHTML('beforebegin', h);
     const fresh = el.previousElementSibling;
@@ -7388,9 +7462,11 @@ function rowsSync(root, k) {
 
 function updateLibraryBadge() { /* badge removed from Library tab */ }
 
+/* Phase 16: the navbar's count and the app bar's dot count what the Interests page lists to act on, by the same rule
+   (actionableSuggestion); topic suggestions only while topics show */
 function updateInterestsBadge() {
-  const ni = allInterests.filter(i => i.status === 'suggested').length;
-  const ng = allGroups.filter(g => g.status === 'suggested').length;
+  const ni = allInterests.filter(actionableSuggestion).length;
+  const ng = SHOW_TOPICS ? allGroups.filter(g => g.status === 'suggested').length : 0;
   const n = ni + ng;
   const badge = document.getElementById('interestsBadge');
   if (n > 0) { badge.textContent = n; badge.style.display = ''; }
@@ -7505,10 +7581,13 @@ function groupsOfPaper(p, confirmed) {
   confirmed = confirmed || confirmedTopics();
   return effTopics(p).map(norm).filter((g, i, all) => g && confirmed.has(g) && all.indexOf(g) === i);
 }
+/* Phase 16: the topics a view shows for a paper. None while SHOW_TOPICS is off: every card, row, glow and paper page
+   then looks as an untopiced paper always has, and the data underneath stays as it is. */
+function shownTopics(p) { return SHOW_TOPICS ? groupsOfPaper(p) : []; }
 
 /* Rows with the reading rail, used by Library and search */
 function paperListHTML(papers) {
-  return `<div class="paper-list flat"><section class="tl-section">${papers.map(p => topRowHTML(p, groupsOfPaper(p))).join('')}</section></div>`;
+  return `<div class="paper-list flat"><section class="tl-section">${papers.map(p => topRowHTML(p, shownTopics(p))).join('')}</section></div>`;
 }
 
 /* ===== LIST PAGES =====
@@ -7600,14 +7679,14 @@ function listFamily(key) {
   const email = currentTab === 'email' || key === LATEST_KEY || key.startsWith(ALERT_KEY);
   const pool = allPapers.filter(p => unread(p) && (!email || isEmailPaper(p)));
   const topics = { title: 'Topics', items: GROUP_ORDER.map(g => item(g, '#group/' + encodeURIComponent(g), g, pool.filter(p => effTopics(p).map(norm).includes(g)).length, groupColor(g))).filter(x => x.n || x.k === key) };
-  if (!email) return [{ title: '', items: [item(TOP_LIST_KEY, '#top', 'Top Papers', pool.filter(p => dynamicRelevance(p) === 'definitely').length)] }, topics];
+  if (!email) return [{ title: '', items: [item(TOP_LIST_KEY, '#top', 'Top Papers', pool.filter(p => dynamicRelevance(p) === 'definitely').length)] }].concat(SHOW_TOPICS ? [topics] : []);
   const byAlert = {};
   pool.forEach(p => alertSourcesOf(p).forEach(a => byAlert[a] = (byAlert[a] || 0) + 1));
   const tail = a => a === 'Keyword alerts' ? 1 : 0;
   const alerts = Object.keys(byAlert).filter(a => byAlert[a] >= 3 || ALERT_KEY + a === key).sort((a, b) => tail(a) - tail(b) || byAlert[b] - byAlert[a] || a.localeCompare(b));
   const dig = latestDigestOf(allPapers.filter(isEmailPaper));
   return [{ title: '', items: [item(LATEST_KEY, '#latest', 'Latest digest', dig.papers.filter(unread).length)] },
-    { title: 'Alerts', items: alerts.map(a => item(ALERT_KEY + a, '#alert/' + encodeURIComponent(a), a, byAlert[a])) }, topics];
+    { title: 'Alerts', items: alerts.map(a => item(ALERT_KEY + a, '#alert/' + encodeURIComponent(a), a, byAlert[a])) }].concat(SHOW_TOPICS ? [topics] : []);
 }
 
 /* A list opened from a tab, search, a paper page, or another list's sidebar */
@@ -7746,7 +7825,7 @@ function renderListBody(m) {
 function listRowHTML(p, n, m) {
   const k = paperKey(p), ka = escAttr(k), w = parseWhy(p);
   const why = w && w.reason ? w.reason.replace(/\s*\(abstract:[^)]*\)/i, '') : '';
-  const others = groupsOfPaper(p).filter(g => g !== m.topic);
+  const others = shownTopics(p).filter(g => g !== m.topic);
   const authors = shortAuthors(p);
   const differs = hasText(p.title) && p.title.trim() !== (p.headline || '').trim();
   return `<article class="lp-row" tabindex="0" data-key="${ka}" onclick="openPaper('${ka}', event)">
@@ -8089,9 +8168,10 @@ function addPaperFinished(j) {
 }
 /* ===== LIBRARY'S GROUPS (Phase 13e) =====
    Projects first (sorted as chosen; by default as made, oldest first), each with Rename, Copy and Delete, and on one
-   that went elsewhere "Not a project here" with Use as a project; then To read, with Copy only; then the survey's lanes
-   that have members, as Suggested sets, with Copy only (nothing saves to them, nothing renames or deletes them); then
-   the groups the app makes. A list's count is its visible members plus its hidden ones. A name only hidden rows carry is
+   that went elsewhere "Not a project here" with Use as a project; then To read, with Copy only; then the groups the
+   app makes. Phase 16: the survey's lanes (MACHINE_LANES) are no longer listed. Their names stay reserved, so they
+   never become projects, and their members stay in user_lists as they are. A list's count is its visible members
+   plus its hidden ones. A name only hidden rows carry is
    a list here too (bootstrapStateFromCSV). */
 function libGroupKey(n) { return (isMachineLane(n) ? 'lane-' : 'list-') + n; }
 /* The members of a list for Library: the papers that show, then the hidden ones whose own row names it (each once) */
@@ -8113,7 +8193,6 @@ function libraryGroups() {
   if (!everyPaper().length) return out;
   sortedListNames(Object.keys(libraryLists).filter(isProjectName)).forEach(name => out.push({ key: libGroupKey(name), icon: '&#9776;', label: name, papers: libListPapers(name), extra: libActions(name), section: 'projects' }));
   if (hasList(TO_READ)) out.push({ key: libGroupKey(TO_READ), icon: '&#9776;', label: TO_READ, papers: libListPapers(TO_READ), extra: libActions(TO_READ), section: 'toread' });
-  MACHINE_LANES.forEach(name => { const papers = libListPapers(name); if (papers.length) out.push({ key: libGroupKey(name), icon: '&#9670;', label: name, papers, extra: libActions(name), section: 'lanes' }); });
   const starred = allPapers.filter(p => starSet.has(paperKey(p)));
   const read = allPapers.filter(p => readSet.has(paperKey(p)));
   sortPapers(read);
@@ -8166,8 +8245,7 @@ function renderLibrary() {
         html += `<div class="lib-sec-head"><h3>Projects</h3><span class="grow"></span>
           <label class="lib-sort"><span class="sr-only">Sort projects by</span><select onchange="setListSort(this.value)" aria-label="Sort projects by">${[['created', 'Created'], ['updated', 'Last updated'], ['name', 'Name']].map(([v, l]) => `<option value="${v}"${v === by ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
           <button class="lib-sort-dir" onclick="setListSort(null, '${dir === 'asc' ? 'desc' : 'asc'}')" title="Reverse the order" aria-label="Order: ${dirLabel}. Reverse it">${dirLabel}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg></button></div>`;
-      } else if (g.section === 'lanes') html += `<div class="lib-sec-head lib-sec-lanes"><h3>Suggested sets</h3><p class="lib-legend">Filled by the survey tools. Read them or copy from them; nothing saves to them.</p></div>`;
-      else if (g.section === 'auto' && section && section !== 'review') html += '<hr class="lib-divider">';
+      } else if (g.section === 'auto' && section && section !== 'review') html += '<hr class="lib-divider">';
       section = g.section;
     }
     if (hint && ['read', 'hidden', 'passed', 'all'].includes(g.key)) { html += hint; hint = ''; }   // where Notes & highlights would be
@@ -8414,52 +8492,293 @@ function toggleIStatus(s) {
   document.querySelectorAll('#interestChips .pill').forEach(c => c.classList.toggle('active', c.dataset.istatus === s));
   renderInterests();
 }
-let _interestsAutoSwitched = false;
+/* ===== THE INTERESTS PAGE (Phase 16) =====
+   From the top: Claude's weekly note (activityRender, its own element above the list), your interests, the
+   suggestions to add, and the dismissed ones, collapsed. Every confirmed interest shows, Peripheral ones too. A
+   suggestion shows only at Related or Core (actionableSuggestion); a Peripheral one stays in the file, unlisted and
+   uncounted. Rejected rows of every level are under Dismissed, with Restore. Nothing here filters allInterests: the
+   rows the page leaves out are still loaded, merged and saved as they are. */
+function actionableSuggestion(i) { return !!i && i.status === 'suggested' && (i.relevance_mapping === 'probably' || i.relevance_mapping === 'definitely'); }
+/* What adding a suggestion changes, as the daily web search does it (survey/capture.py). QuickRead and the arXiv
+   harvest do not follow an interest, so neither line names them. */
+const SUGGESTION_EFFECT = {
+  probably: 'The daily web search adds one search for it, on arXiv and conferences. Papers that match it rank a little higher.',
+  definitely: 'The daily web search looks for it in conferences, workshops, journals and arXiv. Papers that match it rank first.',
+};
+const LEVEL_RANK = { definitely: 0, probably: 1, mildly: 2 };
+let _ipOpen = new Set(), _ipDismissedOpen = false;   // the cards opened and the Dismissed fold, kept across redraws
 function renderInterests() {
   keepAuthorDraft();
-  if (!_interestsAutoSwitched && currentIStatus === 'suggested') {
-    const items = currentIGTab === 'interests' ? allInterests : allGroups;
-    if (!items.some(x => x.status === 'suggested')) {
-      _interestsAutoSwitched = true;
-      currentIStatus = 'all';
-      document.querySelectorAll('#interestChips .pill').forEach(c => c.classList.toggle('active', c.dataset.istatus === 'all'));
-    }
-  }
   const main = document.getElementById('interestsMain');
-  const pool = currentIGTab === 'interests' ? allInterests : allGroups;
-  // a filter only when it would show something: statuses with nothing in them are hidden (unless selected),
-  // and with a single status left there is nothing to filter, so the row goes
-  let shown = 0;
-  document.querySelectorAll('#interestChips .pill').forEach(c => {
-    const st = c.dataset.istatus, n = st === 'all' ? pool.length : pool.filter(x => x.status === st).length;
-    c.querySelector('.pill-count').textContent = n;
-    c.hidden = st !== 'all' && !n && currentIStatus !== st;
-    if (st !== 'all' && !c.hidden) shown++;
-  });
-  document.getElementById('interestChips').hidden = shown <= 1 && currentIStatus === 'all';
-  if (currentIGTab === 'groups') { renderGroupsTab(main); return; }
-  let interests = allInterests;
-  if (currentIStatus !== 'all') interests = interests.filter(i => i.status === currentIStatus);
-  const adding = _authorForm && _authorForm.kind === 'interest' && !_authorForm.name;
-  const tools = !isOwner() ? '' : adding ? `<div class="interest-group"><div class="interest-group-inner">${authorFormHTML()}</div></div>`
-    : `<div class="ig-tools"><button class="lib-hint-btn" onclick="openAuthorForm('interest')">+ New interest</button></div>`;
-  if (!interests.length) { main.innerHTML = tools + interestsEmptyHTML('interests'); return; }
-  const grouped = {};
-  interests.forEach(i => { const c = i.category==='method'?'Methods':'Application Areas'; if (!grouped[c]) grouped[c]=[]; grouped[c].push(i); });
-  const so = {suggested:0,confirmed:1,rejected:2};
-  const ro = {definitely:0,probably:1,mildly:2};
-  const r = (map,k) => k in map ? map[k] : 9;
-  Object.values(grouped).forEach(a => a.sort((x,y)=> r(so,x.status)-r(so,y.status) || r(ro,x.relevance_mapping)-r(ro,y.relevance_mapping) || interestPaperCount(y.interest_name)-interestPaperCount(x.interest_name)));
-  const sugN = allInterests.filter(i=>i.status==='suggested').length;
-  let html = `<p class="ig-legend"><strong>Interests</strong> decide how papers rank; each paper lists the ones it matches. They are separate from <a href="#interests/groups" class="ig-link">Topics</a>, which only group papers for browsing.</p><p class="ig-legend">Each interest is <span class="badge badge-definitely">Core</span> (your research), <span class="badge badge-probably">Related</span> or <span class="badge badge-mildly">Peripheral</span>. A paper scores by how strongly it matches: being about a Core interest makes it Must Read, and Related and Peripheral ones add context. The level also sets how hard the weekly survey searches for it.${isOwner() ? ` ${TOUCH ? 'Tap' : 'Click'} an interest\u2019s level to change it.` : ''}</p>`;
-  if (sugN > 0 && currentIStatus === 'all' && isOwner()) html += `<div style="padding:12px 20px;margin-bottom:16px;background:var(--purple-bg);border:1px solid var(--purple);border-radius:8px;font-size:13px;color:var(--purple);">${sugN} suggested interest${sugN>1?'s':''} from recent papers</div>`;
-  html += tools;
-  ['Application Areas','Methods'].forEach(cat => {
-    if (!grouped[cat]) return;
-    const collapsed = _collapsedGroups.has(cat) ? ' collapsed' : '';
-    html += `<div class="interest-group${collapsed}"><div class="interest-group-inner"><div class="interest-group-header" onclick="toggleInterestGroup(this,'${escAttr(cat)}')">${cat} <span class="interest-group-count">${grouped[cat].length}</span><svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="interest-group-body">${grouped[cat].map(interestCardHTML).join('')}</div></div></div>`;
-  });
+  const own = isOwner(), lv = i => LEVEL_RANK[i.relevance_mapping] ?? 3;
+  const mine = allInterests.filter(i => i.status === 'confirmed')
+    .sort((a, b) => lv(a) - lv(b) || interestPaperCount(b.interest_name) - interestPaperCount(a.interest_name) || String(a.interest_name).localeCompare(String(b.interest_name)));
+  const suggested = allInterests.filter(actionableSuggestion).sort((a, b) => lv(a) - lv(b) || String(b.date_added || '').localeCompare(String(a.date_added || '')));
+  const dismissed = allInterests.filter(i => i.status === 'rejected').sort((a, b) => String(b.date_updated || '').localeCompare(String(a.date_updated || '')));
+  const adding = own && _authorForm && _authorForm.kind === 'interest' && !_authorForm.name;
+  let html = `<section class="ip-sec" aria-labelledby="ipMineTitle"><div class="ip-sec-head"><h3 id="ipMineTitle">Your interests</h3></div>`;
+  html += mine.length ? `<div class="ip-list">${mine.map(interestCardHTML).join('')}</div>` : '<p class="ip-empty">No interests yet.</p>';
+  if (adding) html += `<div class="ip-card ip-form">${authorFormHTML()}</div>`;
+  else if (own) html += `<button class="ip-add" onclick="openAuthorForm('interest')">+ Add an interest</button>`;
+  html += '</section>';
+  html += `<section class="ip-sec" aria-labelledby="ipSuggTitle"><div class="ip-sec-head"><h3 id="ipSuggTitle">Suggested</h3><span class="ip-sec-note">at most two a week</span></div>`;
+  html += suggested.length ? `<p class="ip-legend">Claude suggests these from the papers it finds. When you add one, Claude also checks the papers already in your library against it.</p><div class="ip-list">${suggested.map(suggestionCardHTML).join('')}</div>`
+    : '<p class="ip-empty">Nothing to review. Claude suggests at most two new interests a week.</p>';
+  html += '</section>';
+  if (dismissed.length) {
+    html += `<section class="ip-sec ip-dismissed"><button class="ip-fold" aria-expanded="${_ipDismissedOpen}" aria-controls="ipDismissed" onclick="toggleDismissed()"><span>Dismissed</span><span class="ip-count">${dismissed.length}</span><svg class="ip-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></button>`;
+    html += `<div class="ip-list" id="ipDismissed"${_ipDismissedOpen ? '' : ' hidden'}>${dismissed.map(dismissedCardHTML).join('')}</div></section>`;
+  }
   main.innerHTML = html;
+  activityRender();   // the note's links follow the cards shown now
+}
+/* One confirmed interest: its name, level and paper count; a tap opens what it covers and, for you, its controls
+   (level, see its papers, rename or edit, remove). The card's head is a button, so the keyboard opens it too. */
+function interestCardHTML(i) {
+  const name = i.interest_name, own = isOwner();
+  if (own && _authorForm && _authorForm.kind === 'interest' && _authorForm.name === name) return `<div class="ip-card ip-form" data-iname="${dataAttr(name)}">${authorFormHTML()}</div>`;
+  const lv = LEVEL_NAME[i.relevance_mapping] ? i.relevance_mapping : 'mildly', n = interestPaperCount(name), open = _ipOpen.has(name);
+  const id = 'ipc-' + interestSlot(name);
+  const aka = nameList(i.aliases).length ? `<p class="ip-detail">Formerly ${esc(nameList(i.aliases).join(', '))}</p>` : '';
+  const related = i.related_to ? `<p class="ip-detail">See also: ${esc(i.related_to)}</p>` : '';
+  const notes = i.notes ? `<p class="ip-notes">${esc(i.notes)}</p>` : '';
+  const papers = n ? `<button class="ip-btn" onclick="openInterest(this.closest('[data-iname]').dataset.iname)">See its ${n} ${n === 1 ? 'paper' : 'papers'}</button>` : '';
+  const controls = own ? `<label class="ip-pick"><span>Level</span><select aria-label="Level of ${dataAttr(name)}" onchange="updateInterestField(this.closest('[data-iname]').dataset.iname, 'relevance', this.value)">${REL_OPTIONS.map(o => `<option value="${o}"${o === lv ? ' selected' : ''}>${LEVEL_NAME[o]}</option>`).join('')}</select></label>
+      <button class="ip-btn" onclick="openAuthorForm('interest', this.closest('[data-iname]').dataset.iname)">Rename or edit</button>
+      <button class="ip-btn ip-btn-quiet" onclick="updateI(this.closest('[data-iname]').dataset.iname, 'rejected')">Remove</button>` : '';
+  return `<div class="ip-card${open ? ' open' : ''}" data-iname="${dataAttr(name)}">
+    <button class="ip-card-head" aria-expanded="${open}" aria-controls="${id}" onclick="toggleInterestCard(this.closest('[data-iname]').dataset.iname)">
+      <span class="ip-name">${esc(name)}</span>
+      <span class="ip-meta"><span class="ip-level lv-${lv}" title="${dataAttr(LEVEL_HELP[lv])}">${LEVEL_NAME[lv]}</span><span>${n ? `${n} ${n === 1 ? 'paper' : 'papers'}` : 'No papers yet'}</span></span>
+      <svg class="ip-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+    </button>
+    <div class="ip-card-body" id="${id}"${open ? '' : ' hidden'}>
+      <p class="ip-detail">${esc(LEVEL_HELP[lv])}</p>${notes}${related}${aka}
+      ${papers || controls ? `<div class="ip-actions">${papers}${controls}</div>` : ''}
+    </div>
+  </div>`;
+}
+/* A suggestion at Related or Core: its name, what adding it changes, Claude's reason, and Add or Dismiss for you */
+function suggestionCardHTML(i) {
+  const name = i.interest_name, lv = i.relevance_mapping;
+  const notes = i.notes ? `<p class="ip-notes">${esc(i.notes)}</p>` : '';
+  const related = i.related_to ? `<p class="ip-detail">Related to ${esc(i.related_to)}</p>` : '';
+  const acts = isOwner() ? `<div class="ip-pair interest-actions"><button class="ip-btn ip-btn-primary" onclick="updateI(this.closest('[data-iname]').dataset.iname, 'confirmed')">Add</button><button class="ip-btn" onclick="updateI(this.closest('[data-iname]').dataset.iname, 'rejected')">Dismiss</button></div>` : '';
+  return `<div class="ip-card ip-sugg" data-iname="${dataAttr(name)}" tabindex="-1">
+    <div class="ip-name">${esc(name)}</div>
+    <p class="ip-effect"><span class="ip-level lv-${lv}">${LEVEL_NAME[lv]}</span> ${esc(SUGGESTION_EFFECT[lv])}</p>${notes}${related}${acts}
+  </div>`;
+}
+/* A dismissed or removed interest, any level, with Restore for you (updateI, as before: it comes back confirmed) */
+function dismissedCardHTML(i) {
+  const lv = LEVEL_NAME[i.relevance_mapping] ? i.relevance_mapping : 'mildly';
+  return `<div class="ip-card ip-gone" data-iname="${dataAttr(i.interest_name)}">
+    <div class="ip-name">${esc(i.interest_name)}</div>
+    <p class="ip-effect"><span class="ip-level lv-${lv}">${LEVEL_NAME[lv]}</span></p>${i.notes ? `<p class="ip-notes">${esc(i.notes)}</p>` : ''}
+    ${isOwner() ? `<div class="ip-pair interest-actions"><button class="ip-btn" onclick="updateI(this.closest('[data-iname]').dataset.iname, 'confirmed')">Restore</button></div>` : ''}
+  </div>`;
+}
+/* A stable small id for a card's body, by the interest's place in the file (names can hold any character) */
+function interestSlot(name) { const k = allInterests.findIndex(x => x.interest_name === name); return k >= 0 ? k : 'x'; }
+function toggleInterestCard(name) {
+  if (_ipOpen.has(name)) _ipOpen.delete(name); else _ipOpen.add(name);
+  renderInterests();
+  const head = [...document.querySelectorAll('#interestsMain .ip-card[data-iname]')].find(c => c.dataset.iname === name);
+  const btn = head && head.querySelector('.ip-card-head'); if (btn) btn.focus();   // the keyboard stays on the card it opened
+}
+function toggleDismissed() {
+  _ipDismissedOpen = !_ipDismissedOpen;
+  renderInterests();
+  const btn = document.querySelector('#interestsMain .ip-fold'); if (btn) btn.focus();
+}
+/* A name in the weekly note: its card, shown now, scrolled to and given the keyboard */
+function interestJump(name) {
+  const card = [...document.querySelectorAll('#interestsMain .ip-card[data-iname]')].find(c => c.dataset.iname === name);
+  if (!card) return;
+  card.scrollIntoView({ block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth' });
+  const target = card.querySelector('.ip-card-head') || card; target.focus({ preventScroll: true });
+}
+/* The names that have a card on the page now: your interests and the suggestions listed */
+function interestCardNames() { return new Set(allInterests.filter(i => i.status === 'confirmed' || actionableSuggestion(i)).map(i => i.interest_name)); }
+
+/* ===== CLAUDE'S WEEKLY NOTE (Phase 16) =====
+   The worker writes activity.json at the root of a private data repository, at most once a day: what the hourly
+   passes added and turned away in the last 7 days, a few examples with Claude's reasons, the interests it suggested,
+   and any problems. The Interests page shows it at the top, under "This week".
+   - Private libraries only. A public page has no note and reads nothing.
+   - Read only once the Interests page is on screen and the library has loaded (activityEnter, activityStart). A render
+     never reads (renderInterests and activityRender draw the last result), so start-up asks for nothing.
+   - One read per generation (Activity.gen). A pull, a lock or Try again moves it; a late answer then fills nothing
+     and reports nothing, and privateReadFile neither locks on its 401 or 403 nor re-verifies on its 404.
+   - A missing file is "no note yet". A file that is not the shared format (activityCheck) is ignored and logged once.
+     A failed read says so, with Try again. None of them touches the library, a save or a pull.
+   - Every string is escaped (briefEsc). The note is held in memory only: it is not in SYNCED_FILES, LIBCACHE_FILES,
+     the backup or any storage, the page never writes it (pageMayWrite), and a lock clears it (activityTeardown). */
+const ACTIVITY_FILE = 'activity.json';
+const ACTIVITY_CAP = 64 * 1024;   // the whole serialized file, UTF-8 bytes
+const ACTIVITY_FORMAT = 'scout-activity-v1';
+const ACTIVITY_SOURCES = ['quickread', 'harvest', 'survey', 'manual', 'unknown'];
+const ACTIVITY_SOURCE_NAME = { quickread: 'QuickRead', harvest: 'arXiv', survey: 'web search', manual: 'you', unknown: 'source not recorded' };
+const ACTIVITY_ID = /^[a-z0-9][a-z0-9-]{0,199}$/;   // the paper id grammar (BRIEF_ID); never an upload's up- id
+const ACTIVITY_CONTROLS = /[\u0000-\u001f\u007f]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/;   // a control character or a lone surrogate
+/* state: idle (not read in this generation), loading, ready (doc), none (no file), invalid (not the format), error */
+const Activity = { gen: 0, state: 'idle', doc: null, open: false, warned: false };
+
+/* The shared contract (docs/plan/phase16_decisions.md; tests/phase16/activity_cases.json, whose rules the worker's
+   ingest/activity.py checks too): the whole text at most ACTIVITY_CAP bytes with no byte-order mark; one JSON object
+   whose objects have exactly the listed keys; a UTC time to the second; window_days exactly 7; nonnegative safe
+   integers, the five sources adding up to added.total and the two kinds of turned away to theirs; at most five
+   examples of each kind, never more than the papers they stand for, each with a recorded why; paper ids, none twice;
+   strings with no lone surrogate or control character, counted in code points (titles 300, a why 200, a name 120); at
+   most ten suggestions at Related or Core, dated in the week the note covers. Returns the document, or throws. */
+function activityCheck(text) {
+  const bad = why => { throw Object.assign(new Error('activity.json: ' + why), { activityWhy: why }); };
+  if (typeof text !== 'string') bad('not text');
+  if (text.charCodeAt(0) === 0xfeff) bad('a byte-order mark');
+  if (new TextEncoder().encode(text).length > ACTIVITY_CAP) bad('over 64 KiB');
+  let d;
+  try { d = JSON.parse(text); } catch (e) { bad('not JSON'); }
+  const obj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+  const keys = (v, want) => obj(v) && Object.keys(v).length === want.length && want.every(k => hasOwn(v, k));
+  const int = v => Number.isSafeInteger(v) && v >= 0;
+  const str = (v, max) => typeof v === 'string' && !ACTIVITY_CONTROLS.test(v) && [...v].length >= 1 && [...v].length <= max;
+  if (!keys(d, ['format', 'generated_at', 'window_days', 'added', 'turned_away', 'examples', 'suggested', 'problems'])) bad('fields');
+  if (d.format !== ACTIVITY_FORMAT) bad('format');
+  if (!activityStamp(d.generated_at)) bad('generated_at');
+  if (d.window_days !== 7) bad('window_days');
+  if (!keys(d.added, ['total', 'by_source']) || !int(d.added.total) || !keys(d.added.by_source, ACTIVITY_SOURCES) || !ACTIVITY_SOURCES.every(k => int(d.added.by_source[k]))) bad('added');
+  if (ACTIVITY_SOURCES.reduce((n, k) => n + d.added.by_source[k], 0) !== d.added.total) bad('added.by_source does not add up');
+  const t = d.turned_away;
+  if (!keys(t, ['total', 'no_match', 'touches_only']) || ![t.total, t.no_match, t.touches_only].every(int) || t.no_match + t.touches_only !== t.total) bad('turned_away');
+  const ex = d.examples;
+  if (!keys(ex, ['added', 'turned_away']) || !Array.isArray(ex.added) || !Array.isArray(ex.turned_away) || ex.added.length > 5 || ex.turned_away.length > 5) bad('examples');
+  if (ex.added.length > d.added.total || ex.turned_away.length > t.total) bad('more examples than papers');
+  for (const e of ex.added) if (!keys(e, ['id', 'title', 'why']) || typeof e.id !== 'string' || !ACTIVITY_ID.test(e.id) || e.id.startsWith('up-') || !str(e.title, 300) || !str(e.why, 200)) bad('an added example');
+  if (new Set(ex.added.map(e => e.id)).size !== ex.added.length) bad('an id twice');
+  for (const e of ex.turned_away) if (!keys(e, ['title', 'why']) || !str(e.title, 300) || !str(e.why, 200)) bad('a turned-away example');
+  const day = d.generated_at.slice(0, 10), weekAgo = new Date(Date.parse(day + 'T00:00:00Z') - 7 * 86400000).toISOString().slice(0, 10);
+  if (!Array.isArray(d.suggested) || d.suggested.length > 10 || !d.suggested.every(x => keys(x, ['name', 'level', 'date']) && str(x.name, 120)
+    && ['probably', 'definitely'].includes(x.level) && activityDay(x.date) && x.date <= day && x.date >= weekAgo)) bad('suggested');
+  if (!keys(d.problems, ['failed_passes', 'waiting']) || !int(d.problems.failed_passes) || !int(d.problems.waiting)) bad('problems');
+  return d;
+}
+/* A time in UTC to the second, as the worker writes it (2026-10-17T07:05:00Z), that names a real instant */
+function activityStamp(v) {
+  const m = typeof v === 'string' && /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z$/.exec(v);
+  if (!m || +m[4] > 23 || +m[5] > 59 || +m[6] > 59) return false;
+  return activityDay(`${m[1]}-${m[2]}-${m[3]}`);
+}
+function activityDay(v) {   // a real calendar day, YYYY-MM-DD
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v) || v.startsWith('0000')) return false;
+  const t = new Date(v + 'T00:00:00Z');
+  return !isNaN(t.getTime()) && t.toISOString().slice(0, 10) === v;
+}
+
+/* ---- reading ---- */
+/* The Interests page on screen: its tab, with no paper page, list or search over it */
+function activityShown() {
+  const sec = document.getElementById('sec-interests');
+  return currentTab === 'interests' && !_paperViewActive && !_listViewActive && !_searchActive && !!sec && sec.classList.contains('active');
+}
+/* The Interests page was entered (switchTab): read the note if this generation has not, once the library is ready.
+   Opened before then, revealContent starts it. */
+function activityEnter() { if (activityShown()) activityStart(); }
+function activityStart() {
+  if (!isPrivate() || !Private.authorized || !_dataLoaded || Activity.state !== 'idle') return;
+  const gen = Activity.gen;
+  Activity.state = 'loading'; activityRender();
+  activityLoad(gen).catch(() => {});   // activityLoad settles every outcome itself
+}
+async function activityRead(gen) { const _authEpoch = capturePrivateEpoch();
+  const file = await privateAwait(privateReadFile(ACTIVITY_FILE, true, () => gen !== Activity.gen), _authEpoch);
+  return file ? file.text : null;
+}
+async function activityLoad(gen) {
+  let text;
+  try { text = await activityRead(gen); }
+  catch (e) {
+    if (gen !== Activity.gen || (e && e.privateAuth)) return;   // superseded, or a lock (which cleared the note)
+    if (e && e.tooLarge) activityIgnored('activity.json: over 64 KiB');   // GitHub's size for it is past the cap: never read
+    else { Activity.state = 'error'; activityRender(); }
+    return;
+  }
+  if (gen !== Activity.gen) return;
+  if (text === null) { Activity.doc = null; Activity.state = 'none'; activityRender(); return; }
+  try { Activity.doc = activityCheck(text); Activity.state = 'ready'; activityRender(); }
+  catch (e) { activityIgnored(e.message); }
+}
+/* A note that is not the shared format: ignored, said once in the console, never a failure of the page */
+function activityIgnored(why) {
+  Activity.doc = null; Activity.state = 'invalid';
+  if (!Activity.warned) { Activity.warned = true; console.warn('Scout ignored the weekly note: ' + why); }
+  activityRender();
+}
+/* A pull took a newer library: the note is read again, now if the page shows, else when it is next entered */
+function activityRefresh() {
+  Activity.gen++; Activity.state = 'idle'; Activity.doc = null;
+  if (activityShown()) activityStart();
+}
+function activityRetry() { activityRefresh(); }
+/* Run by lockPrivate. Nothing of the note outlives the authorization. */
+function activityTeardown() {
+  Activity.gen++; Activity.state = 'idle'; Activity.doc = null; Activity.open = false; Activity.warned = false;
+  const el = document.getElementById('activityNote'); if (el) { el.innerHTML = ''; el.hidden = true; }
+}
+
+/* ---- showing ---- */
+function activityRender() {
+  const el = document.getElementById('activityNote');
+  if (!el) return;
+  if (!isPrivate() || !Private.authorized) { el.innerHTML = ''; el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML = activityHTML();
+}
+function activityToggle() {
+  Activity.open = !Activity.open;
+  activityRender();
+  const btn = document.querySelector('#activityNote .ip-fold'); if (btn) btn.focus();
+}
+const activityNum = n => n.toLocaleString('en-US');
+const activityCount = (n, one, many) => `${activityNum(n)} ${n === 1 ? one : many}`;
+/* "Week to Oct 17": the day the note was written, in New York, where the worker's day is */
+function activityWeek(at) {
+  try {
+    const t = new Date(at), opts = { month: 'short', day: 'numeric', timeZone: 'America/New_York' };
+    if (t.toLocaleDateString('en-US', { year: 'numeric', timeZone: 'America/New_York' }) !== new Date().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'America/New_York' })) opts.year = 'numeric';
+    return 'Week to ' + t.toLocaleDateString('en-US', opts);
+  } catch (e) { return 'Week to ' + String(at).slice(0, 10); }
+}
+function activityHTML() {
+  const e = briefEsc, st = Activity.state, d = Activity.doc;
+  const head = when => `<div class="ip-week-head"><h3 id="activityTitle">This week</h3>${when ? `<span class="ip-week-date">${e(when)}</span>` : ''}</div>`;
+  if (st !== 'ready' || !d) {
+    const line = st === 'none' ? 'Claude has not written a weekly note yet.' : st === 'invalid' ? 'This week’s note could not be shown.'
+      : st === 'error' ? 'The weekly note could not be loaded.' : 'Loading Claude’s weekly note…';
+    return head('') + `<p class="ip-week-line">${line}</p>${st === 'error' ? '<button class="ip-btn" onclick="activityRetry()">Try again</button>' : ''}`;
+  }
+  const a = d.added, by = ACTIVITY_SOURCES.filter(k => a.by_source[k] > 0).map(k => `${ACTIVITY_SOURCE_NAME[k]} ${activityNum(a.by_source[k])}`);
+  let line = a.total ? `This week Claude added ${activityCount(a.total, 'paper', 'papers')}${by.length ? ` (${by.join(', ')})` : ''}` : 'This week Claude added no papers';
+  line += d.turned_away.total ? ` and turned away ${activityNum(d.turned_away.total)}.` : '.';
+  let html = head(activityWeek(d.generated_at)) + `<p class="ip-week-line">${e(line)}</p>`;
+  if (d.suggested.length) {
+    const cards = interestCardNames();
+    const names = d.suggested.map(x => cards.has(x.name) ? `<button class="ip-link" data-name="${e(x.name)}" onclick="interestJump(this.dataset.name)">${e(x.name)}</button>` : `<span class="ip-name-plain">${e(x.name)}</span>`);
+    html += `<p class="ip-week-line">Claude suggested ${d.suggested.length === 1 ? 'one interest' : activityCount(d.suggested.length, 'interest', 'interests')}:</p><div class="ip-week-names">${names.join('')}</div>`;
+  }
+  if (d.problems.failed_passes > 0) html += `<p class="ip-week-line ip-week-warn">${e(activityCount(d.problems.failed_passes, 'pass', 'passes'))} failed this week.</p>`;
+  if (d.problems.waiting > 0) html += `<p class="ip-week-line">${e(activityCount(d.problems.waiting, 'paper is', 'papers are'))} waiting for a later pass.</p>`;
+  const ex = d.examples, item = x => {   // a paper in the library now links to its page, the title and the reason as one target
+    const known = x.id && ACTIVITY_ID.test(x.id) && everyPaper().some(p => p.id === x.id);
+    const inner = `<span class="ip-ex-t">${e(x.title)}</span>${x.why ? `<span class="ip-ex-why">${e(x.why)}</span>` : ''}`;
+    return `<li>${known ? `<a class="ip-ex-a" href="#paper/${e(encodeURIComponent(x.id))}">${inner}</a>` : inner}</li>`;
+  };
+  if (ex.added.length || ex.turned_away.length) {
+    html += `<button class="ip-fold" aria-expanded="${Activity.open}" aria-controls="activityExamples" onclick="activityToggle()"><span>${Activity.open ? 'Hide examples' : 'Show examples'}</span><svg class="ip-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></button>`;
+    html += `<div class="ip-examples" id="activityExamples"${Activity.open ? '' : ' hidden'}>`
+      + (ex.added.length ? `<h4>Added</h4><ul class="ip-ex">${ex.added.map(item).join('')}</ul>` : '')
+      + (ex.turned_away.length ? `<h4>Turned away</h4><ul class="ip-ex">${ex.turned_away.map(item).join('')}</ul>` : '') + '</div>';
+  }
+  return html;
 }
 function interestsEmptyHTML(what) {
   const msg = currentIStatus === 'suggested'
@@ -8571,7 +8890,7 @@ function topicTagged(j) {
   });
   if (j.group && j.group.notes != null) { g.notes = j.group.notes; const was = _loadedGroupFields.get(name); if (was) was.notes = g.notes; }
   _colorKey = null; buildGroupOrder(); refresh();
-  toast(`\u201c${name}\u201d: tagged ${(j.tagged || []).length} existing papers`, () => { location.hash = '#group/' + encodeURIComponent(name); }, { actionLabel: 'Show', duration: 8000 });
+  toast(`\u201c${name}\u201d: tagged ${(j.tagged || []).length} existing papers`, SHOW_TOPICS ? () => { location.hash = '#group/' + encodeURIComponent(name); } : null, SHOW_TOPICS ? { actionLabel: 'Show', duration: 8000 } : { duration: 8000 });
 }
 /* ===== GROUP DRAG & DROP ===== */
 let _draggedGroup = null;
@@ -8629,28 +8948,6 @@ function gDragEnd(e) {
   document.querySelectorAll('.interest-card.drag-over').forEach(el => el.classList.remove('drag-over'));
 }
 
-function interestCardHTML(i) {
-  if (_authorForm && _authorForm.kind === 'interest' && _authorForm.name === i.interest_name && isOwner()) return `<div class="interest-card">${authorFormHTML()}</div>`;
-  const own = isOwner(), lv = LEVEL_NAME[i.relevance_mapping] ? i.relevance_mapping : 'mildly';   // a visitor sees the level, not a way to change it
-  const relBadge = own ? `<span class="badge badge-${lv} badge-editable" title="${escAttr(LEVEL_HELP[lv])} ${TOUCH ? 'Tap' : 'Click'} to change." onclick="event.stopPropagation();toggleInterestDropdown(event,'${escAttr(i.interest_name)}','relevance')">${LEVEL_NAME[lv]}</span>`
-    : `<span class="badge badge-${lv}" title="${escAttr(LEVEL_HELP[lv])}">${LEVEL_NAME[lv]}</span>`;
-  const related = i.related_to ? `<div class="interest-detail">See also: ${esc(i.related_to)}</div>` : '';
-  const notes = i.notes ? `<div class="interest-detail interest-notes" title="${escAttr(i.notes)}">${esc(i.notes)}</div>` : '';
-  const actions = i.status==='suggested'
-    ? `<div class="interest-actions"><button class="btn-approve" onclick="event.stopPropagation();updateI('${escAttr(i.interest_name)}','confirmed')">Approve</button><button class="btn-reject" onclick="event.stopPropagation();updateI('${escAttr(i.interest_name)}','rejected')">Dismiss</button></div>`
-    : i.status==='confirmed'
-    ? `<div class="interest-actions"><button class="btn-quiet-remove" onclick="event.stopPropagation();updateI('${escAttr(i.interest_name)}','rejected')" title="Stop using this interest (you can restore it from Rejected)">Remove</button></div>`
-    : i.status==='rejected'
-    ? `<div class="interest-actions"><button class="btn-approve" onclick="event.stopPropagation();updateI('${escAttr(i.interest_name)}','confirmed')">Restore</button></div>`
-    : '';
-  const showStatus = currentIStatus === 'all' || i.status === 'suggested';
-  const statusBadge = showStatus && i.status && i.status !== 'confirmed' ? `<span class="badge badge-${i.status}">${i.status.charAt(0).toUpperCase()+i.status.slice(1)}</span>` : '';
-  const n = interestPaperCount(i.interest_name);
-  const count = n ? `<button class="badge badge-venue badge-link" onclick="event.stopPropagation();openInterest('${escAttr(i.interest_name)}')" title="List the papers that match this interest">${n} paper${n !== 1 ? 's' : ''}</button>` : '<span class="badge badge-venue">No papers yet</span>';
-  const edit = own ? `<button class="lib-hint-btn" onclick="event.stopPropagation();openAuthorForm('interest','${escAttr(i.interest_name)}')" title="Rename it, or change what it covers">Edit</button>` : '';
-  const aka = nameList(i.aliases).length ? `<div class="interest-detail">Formerly ${esc(nameList(i.aliases).join(', '))}</div>` : '';
-  return `<div class="interest-card"><div class="interest-info"><div class="interest-name">${esc(i.interest_name)}</div>${aka}${related}${notes}<div class="interest-meta">${statusBadge}${relBadge}${count}${edit}</div></div>${actions}</div>`;
-}
 function matchesOf(p) { return effMatches(p); }   // by current names: a paper that names an old name counts for the renamed interest
 let _interestCounts = null, _interestCountsKey = null, _interestCountsAliases = null;
 function interestPaperCount(name) {
@@ -8673,7 +8970,8 @@ function updateI(name, status) {
   renderInterests();
   showSaveBar();
   _interestsDirty = true;
-  toast(`"${name}" ${status==='confirmed'?'approved':'removed'}`, () => { updateI(name, prev); });
+  const said = status === 'confirmed' ? (prev === 'rejected' ? 'restored' : 'added') : prev === 'suggested' ? 'dismissed' : 'removed';
+  toast(`"${name}" ${said}`, () => { updateI(name, prev); });
 }
 function updateG(name, status) {
   const g = allGroups.find(x => x.group_name === name);
@@ -8845,10 +9143,10 @@ function submitAuthorForm() {
 
 /* ===== INTEREST INLINE DROPDOWNS ===== */
 const REL_OPTIONS = ['definitely','probably','mildly'];
-const LEVEL_HELP = {
-  definitely: 'Core: your research. A paper about it is Must Read; the weekly survey searches it hardest.',
-  probably: 'Related: close to your work. Adds to a paper\u2019s score as context; searched every week.',
-  mildly: 'Peripheral: background. Adds a little; no searches of its own (papers come from alerts).'
+const LEVEL_HELP = {   // Phase 16: the search effort as survey/capture.py gives it (the daily web search)
+  definitely: 'Core: your research. A paper about it is Must Read. The daily web search looks for it in conferences, workshops, journals and arXiv.',
+  probably: 'Related: close to your work. Papers that match it rank a little higher. The daily web search adds one search for it, on arXiv and conferences.',
+  mildly: 'Peripheral: background. It adds a little to a paper\u2019s score and gets no searches of its own.'
 };
 let _openInterestDD = null;
 function closeInterestDD() { if (_openInterestDD) { _openInterestDD.remove(); _openInterestDD = null; } document.removeEventListener('click', _onInterestDDOutside, true); }
@@ -9219,6 +9517,9 @@ window.addEventListener('online', () => { if (anyDirty()) scheduleAutoPush(1000)
 /* Leaving the tab: save now rather than wait out the delay */
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && anyDirty() && hasPAT()) pushToGitHub(true); });
 
+/* Phase 16: activity.json is the worker's alone. The page reads it (activityRead) and refuses to write it, whatever
+   a caller passes, on a private library or a public one. */
+function pageMayWrite(path) { if (String(path).replace(/^\/+/, '') === 'activity.json') throw new Error('activity.json is written by the worker only'); }
 function _ghFileUrl(filename) { if (isPrivate()) privatePathCap(filename); return ghApiBase() + `/contents/${filename}`; }
 function _ghFail(res, what) {
   requireOwner();
@@ -9243,6 +9544,7 @@ async function _ghGetFile(headers, filename) { const _authEpoch = capturePrivate
   return { sha, text: new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))) };
 }
 async function _ghPutFile(headers, filename, content, sha, message) { const _authEpoch = capturePrivateEpoch(); requireOwner();
+  pageMayWrite(filename);   // Phase 16: never the weekly note
   // Phase 15 fix round (Sol's finding 5): a library file larger than the cap its readers apply (privatePathCap, the
   // worker's limits) is never sent. GitHub would take it, but no page or worker could read the library back. The save
   // stops before the PUT, so its edits and their backup stay here, unacknowledged.
@@ -10213,7 +10515,7 @@ function renderContinueReading() {
   el.hidden = !list.length;
   if (!list.length) { el.innerHTML = ''; return; }
   const card = x => { const b = readingBits(x);
-    return `<article class="cr-card" tabindex="0" data-key="${b.id}" onclick="openReader('${b.id}')" style="--gbg:${x.p.uploaded ? 'none' : topicGlow(groupsOfPaper(x.p))}" title="Continue at page ${b.page}">
+    return `<article class="cr-card" tabindex="0" data-key="${b.id}" onclick="openReader('${b.id}')" style="--gbg:${x.p.uploaded ? 'none' : topicGlow(shownTopics(x.p))}" title="Continue at page ${b.page}">
       <h3 class="cr-h">${esc(b.title)}</h3>
       <div class="cr-m"><span><b>p. ${b.page}</b>${x.e.pages ? ` of ${x.e.pages}` : ''}</span><span>${esc(b.where)}</span></div>
       <span class="cr-bar"><i style="width:${b.pct}%"></i></span>
@@ -10861,6 +11163,7 @@ function scheduleNotesPush(delay) {
    branch). Files changed on GitHub since we last synced are merged first; if the branch moved while we
    worked, the whole round is redone. */
 async function ghCommitFiles(files, message) { const _authEpoch = capturePrivateEpoch(); requireOwner();
+  files.forEach(file => pageMayWrite(file.path));   // Phase 16: never the weekly note
   if (isPrivate()) files.forEach(file => privatePathCap(file.path));
   const generation = files.every(file => file.path.startsWith(VAULT_DIR)) ? vaultGeneration() : null;
   const api = ghApiBase() + '/git', H = ghHeaders(), HJ = { ...H, 'Content-Type': 'application/json' };
@@ -13248,7 +13551,7 @@ function mentionMatches(q) {
     recentReads().slice(0, 6).forEach(r => add(pool.find(p => p.id === r.id), 'opened recently'));
     pool.filter(p => p.uploaded).slice(0, 3).forEach(p => add(p, 'to review'));
     pool.filter(p => p.is_starred === 'true').slice(0, 3).forEach(p => add(p, 'starred'));
-    pool.filter(p => effTopics(p).some(g => groups.has(g))).slice(0, 4).forEach(p => add(p, 'same topic'));
+    if (SHOW_TOPICS) pool.filter(p => effTopics(p).some(g => groups.has(g))).slice(0, 4).forEach(p => add(p, 'same topic'));
     return out.slice(0, 8);
   }
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);   // any words, any order: title, authors, summary, topics, venue, year
@@ -13925,7 +14228,7 @@ function paperPageHTML(p, opts) {
 
   // Heading: venue + date, real title, takeaway as the subheading, authors, why it's here
   const dek = hasText(p.headline) && p.headline.trim() !== (p.title||'').trim() ? `<p class="pd-dek">${esc(p.headline)}</p>` : '';
-  const glowGroups = groupsOfPaper(p);   // confirmed topics, in order: the glow and its chips
+  const glowGroups = shownTopics(p);   // confirmed topics, in order: the glow and its chips (none while SHOW_TOPICS is off)
   const head = `<header class="pd-head">
     ${gone ? '<p class="pd-gone" role="status">This paper was deleted from the library on GitHub. Your change to it is kept in this browser, not saved; nothing more can be saved to it.</p>' : ''}
     ${glowGroups.length ? `<div class="pd-topicline">${glowGroups.map(g => `<button class="pd-topic-chip" onclick="openGroup('${escAttr(g)}')" title="All ${escAttr(g)} papers">${gdot(g)}${esc(g)}</button>`).join('')}</div>` : ''}
@@ -13980,7 +14283,7 @@ function paperPageHTML(p, opts) {
 
   const aside = `<aside class="pd-aside">
     <div class="pd-card"><dl class="pd-facts">${facts.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join('')}</dl></div>
-    <div class="pd-card"><h3>Topics</h3><div class="pd-topics paper-detail-tags">${topics}${addBtn}</div></div>
+    ${SHOW_TOPICS ? `<div class="pd-card"><h3>Topics</h3><div class="pd-topics paper-detail-tags">${topics}${addBtn}</div></div>` : ''}
   </aside>`;
 
   // Related: the papers closest to this one (shared authors, title words, interests), then links to its topics
@@ -13991,7 +14294,7 @@ function paperPageHTML(p, opts) {
     const n = allPapers.filter(pp => !readSet.has(paperKey(pp)) && effTopics(pp).map(norm).includes(g)).length;   // to read, as its list page counts
     return `<button class="pd-rel-topic" onclick="openGroup('${escAttr(g)}')">${gdot(g)}${esc(g)}<span class="n">${n}</span></button>`;
   }).join('');
-  if (topicLinks) related += `<div class="pd-rel-more"><span>More in</span>${topicLinks}</div>`;
+  if (SHOW_TOPICS && topicLinks) related += `<div class="pd-rel-more"><span>More in</span>${topicLinks}</div>`;
 
   return { bar, glow: glowGroups.length ? topicGlow(glowGroups) : 'transparent', article: `<article class="pd-article" data-pid="${escAttr(p.id)}" data-gone="${gone}" data-hidden="${isHiddenRow(p)}" data-passed="${isPassed(p)}">
       ${head}
@@ -14826,13 +15129,30 @@ window.addEventListener('popstate', privateCallback(() => setTimeout(privateCall
 /* The Email Digest tab (the latest digest, a card per alert, and their list pages) is switched off; its papers
    still show everywhere else. true brings it back: the nav button, #email, #latest and #alert/<name>. */
 const SHOW_EMAIL_TAB = false;
-const VALID_TABS = ['all', ...(SHOW_EMAIL_TAB ? ['email'] : []), 'venues', 'library', 'interests'];
+/* Phase 16: three tabs, For you, Library and Interests. Venues leaves the navbar and the app bar; its code stays, and
+   true brings back both buttons and #venues. */
+const SHOW_VENUES_TAB = false;
+/* Phase 16: topics leave the page. Their data stays as it is (theme_groups, machine_topics, topics_removed and
+   groups_database.csv load, merge, save and back up as before, and the worker's tagging still lands), but nothing on
+   the page shows a topic or edits one. true brings back every place they showed. */
+const SHOW_TOPICS = false;
+const VALID_TABS = ['all', ...(SHOW_EMAIL_TAB ? ['email'] : []), ...(SHOW_VENUES_TAB ? ['venues'] : []), 'library', 'interests'];
 if (SHOW_EMAIL_TAB) document.querySelector('.nav-tab[data-tab="email"]').hidden = false;
+if (SHOW_VENUES_TAB) document.querySelectorAll('.nav-tab[data-tab="venues"], .app-tab[data-tab="venues"]').forEach(b => { b.hidden = false; });
+/* An old address that leads nowhere now, as the one to use instead (null: it still leads somewhere) */
+function retiredHash(hash) {
+  // old links and history entries into the switched-off Email Digest land on For you
+  if (!SHOW_EMAIL_TAB && (/^#(email|latest)$/.test(hash) || hash.startsWith('#alert/'))) return '#all';
+  if (!SHOW_VENUES_TAB && hash === '#venues') return '#all';   // Phase 16: the Venues tab, from a link or a history entry
+  if (!SHOW_TOPICS && hash.startsWith('#group/')) return '#all';   // Phase 16: a topic's list
+  if (!SHOW_TOPICS && /^#interests\/(groups|interests)$/.test(hash)) return '#interests';   // Phase 16: the old Topics and Interests toggle
+  return null;
+}
 function applyHash() {
   if (!configReady() || !_ownerDecisionDone) return;
   try { requireTarget(); } catch (e) { return; }
-  // old links and history entries into the switched-off Email Digest land on For you (without a new Back step)
-  if (!SHOW_EMAIL_TAB && (/^#(email|latest)$/.test(location.hash) || location.hash.startsWith('#alert/'))) history.replaceState(null, '', location.pathname + location.search + '#all');
+  const retired = retiredHash(location.hash);   // replaced in place, without a new Back step
+  if (retired) history.replaceState(null, '', location.pathname + location.search + retired);
   syncAddress();
   _appliedHash = location.hash;
   const hash = location.hash.slice(1); // remove '#'
@@ -14957,10 +15277,10 @@ function applyHash() {
       return;
     }
   }
-  if (hash.startsWith('interests/')) {
+  if (hash.startsWith('interests/')) {   // with SHOW_TOPICS, the old Topics and Interests toggle
     const sub = hash.slice(10);
     switchTab('interests', true);
-    if (sub === 'groups' || sub === 'interests') switchIGTab(sub, true);
+    if (SHOW_TOPICS && (sub === 'groups' || sub === 'interests')) switchIGTab(sub, true);
     if (wasInList) backFromList();
     return;
   }
@@ -15039,6 +15359,7 @@ Config.startup = bootstrapApp();
     'renderVenues', 'renderListPage', 'renderListRail', 'renderListTools', 'renderListBody', 'setListOrder', 'setListRel', 'setListQuery',
     'openListSearch', 'updateListBar', 'toggleLibGroup', 'toggleLibPanel', 'renderAddPaper', 'renderLibrary',
     'toggleInterestGroup', 'switchIGTab', 'toggleIStatus', 'renderInterests', 'renderGroupsTab', 'openInterest', 'updateInterestsBadge',
+    'toggleInterestCard', 'toggleDismissed', 'interestJump', 'activityRender', 'activityToggle', 'activityRetry',
     'openPaper', 'showPaperDetail', 'renderPaperDetail', 'updatePaperBar', 'goPaper', 'paperBack', 'listBack',
     'openReader', 'renderContinueReading', 'refreshContinueReading', 'crPhoneHTML', 'readLabelHTML', 'paperListHTML', 'updateReaderPageNo', 'toggleReaderMenu', 'updateSyncStatus', 'updateNotesSync',
     'renderAnnoLayer', 'renderInkLayer', 'renderInkBar', 'renderReaderPanel', 'setRnSort', 'renderRnList', 'toggleRnColor', 'pinchStart', 'pinchTo', 'setPanelLayout', 'savePanelLayout',
