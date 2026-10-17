@@ -5398,7 +5398,7 @@ function postView(k) {
 function postHTML(k) {
   const view = postView(k);
   if (!view) return '';
-  const p = feedRow(k), rec = Feed.recs.get(k), sel = Feed.focus === k ? ' kb-sel' : '', title = p.title || p.headline || '';
+  const p = feedRow(k), rec = Feed.recs.get(k), sel = Feed.focus === k ? ' kb-sel' : '', title = (hasText(p.headline) ? p.headline : p.title) || '';   // the post's big line: Claude's headline, else the paper's title (2026-10-17)
   if (view === 'passed' || view === 'hidden' || view === 'changed') {
     const what = view === 'passed' ? 'Passed.' : view === 'hidden' ? `Hidden &middot; ${esc(rec.hide.after.hide_reason || 'no reason kept yet')}` : 'Changed since.';
     const row = view === 'changed' ? `<div class="gone-row"><span>It changed here or on another device, so there is nothing to undo.</span></div>`
@@ -5410,7 +5410,7 @@ function postHTML(k) {
   const kept = view === 'kept', to = kept ? keepList(rec) : projectMode() ? Feed.project : TO_READ;
   const owns = kept && keepOwns(rec);   // ★'s undo takes the paper out of the list only when the keep added it and it is still there
   const venue = rowVenueLabel(p), date = displayDate(p), must = dynamicRelevance(p) === 'definitely';
-  const dek = hasText(p.headline) && p.headline.trim() !== (p.title || '').trim() ? p.headline : '';
+  const dek = hasText(p.title) && p.title.trim() !== title.trim() ? p.title : '';   // the paper's own title, under the headline
   const url = !pdfSourceOf(p) && p.url ? p.url : '';
   const open = url ? `<a class="ic open" data-act="open" href="${esc(url)}" target="_blank" rel="noopener" aria-label="Open the paper">${FEED_ICON.open}</a>`
     : pdfSourceOf(p) || isOwner() ? `<button type="button" class="ic open" data-act="open" onclick="feedOpen(this.closest('.post').dataset.key)" aria-label="${pdfSourceOf(p) ? 'Read the paper' : 'Add a PDF to read it'}">${FEED_ICON.open}</button>` : '';
@@ -14226,8 +14226,9 @@ function paperPageHTML(p, opts) {
     </div>
   </div></div>`;
 
-  // Heading: venue + date, real title, takeaway as the subheading, authors, why it's here
-  const dek = hasText(p.headline) && p.headline.trim() !== (p.title||'').trim() ? `<p class="pd-dek">${esc(p.headline)}</p>` : '';
+  // Heading: venue + date, Claude's headline (else the real title), the real title as the subheading, authors, why it's here
+  const headline = hasText(p.headline) ? p.headline : (p.title || '');
+  const dek = hasText(p.title) && p.title.trim() !== headline.trim() ? `<p class="pd-dek">${esc(p.title)}</p>` : '';
   const glowGroups = shownTopics(p);   // confirmed topics, in order: the glow and its chips (none while SHOW_TOPICS is off)
   const head = `<header class="pd-head">
     ${gone ? '<p class="pd-gone" role="status">This paper was deleted from the library on GitHub. Your change to it is kept in this browser, not saved; nothing more can be saved to it.</p>' : ''}
@@ -14237,7 +14238,7 @@ function paperPageHTML(p, opts) {
       ${paperDate(p) ? `<span>${esc(paperDate(p))}</span>` : ''}
       <span class="f-rel rel-${rel}"><i></i>${relLabel(rel)}</span>
     </div>
-    <h1 class="pd-title">${esc(p.title)}</h1>
+    <h1 class="pd-title">${esc(headline)}</h1>
     ${dek}
     ${hasText(p.authors) ? `<div class="pd-authors">${esc(p.authors)}</div>` : ''}
     ${parseWhy(p) ? `<div class="pd-why"><span class="pd-why-label">Why it's here</span>${whyHTML(p)}</div>` : ''}
