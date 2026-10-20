@@ -152,6 +152,22 @@ a { color: inherit; text-decoration: none; }
 .nav-refresh:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 .nav-refresh svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 html.private-locked .main-scroll, html.private-locked #reader, html.private-locked #skeleton, html.private-locked .app-bar, html.private-locked #saveBar { display:none !important; }
+/* Phase 19 (A3): the lock box: what happened, a button for the token already stored here, and the sign-in form.
+   placePrivateAccess keeps it inside what shows of the screen, and it scrolls in itself, so the field and every
+   button stay reachable with a phone's keyboard up or the phone turned sideways */
+#privateAccess { position: fixed; top: 80px; left: 24px; right: 24px; z-index: 9999; box-sizing: border-box; max-width: 520px; margin: 0 auto; max-height: calc(100vh - 104px); overflow-y: auto; overscroll-behavior: contain; padding: 20px; background: var(--bg); border: 1px solid var(--line); border-radius: 14px; color: var(--text); font-size: 14px; line-height: 1.5; }
+#privateAccess[hidden], #privateAccess [hidden] { display: none !important; }
+#privateAccess p { margin: 0; }
+.pa-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.pa-actions:empty { display: none; }
+.pa-form { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.pa-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.pa-form .pp-input { flex: none; height: 44px; box-sizing: border-box; font-size: 16px; }   /* 16 px: iOS does not zoom in on it */
+.pa-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+#privateAccess .ui-btn { min-height: 44px; }
+.pa-help { font-size: 13px; color: var(--text-secondary); }
+.pa-create { align-self: flex-start; text-decoration: none; }
+@media (max-width: 420px) { #privateAccess { left: 12px; right: 12px; padding: 16px; } }
 /* ===== READ-ONLY (html.ro: no owner's GitHub token in this browser; see OWNER MODE) =====
    The key to sign in shows only then; every control that changes something is gone. The functions behind them
    are guarded as well, so this list is about what shows, not what's safe. */
@@ -260,6 +276,7 @@ html.ro #vaultOverlay { display: none !important; }
 .sync-btn { background: none; border: 1px solid var(--border); color: var(--text-secondary); font: inherit; font-size: 12px; padding: 2px 10px; border-radius: 999px; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
 .sync-btn:hover { border-color: var(--line); color: var(--text); }
 .sync-btn.quiet { border-color: transparent; }
+.sync-btn.sync-renew { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0 14px; }   /* Phase 19: Renew, a 44 px target */
 .lib-icon { display: inline-flex; justify-content: center; width: 18px; margin-right: 8px; }
 .lib-hint { border: 1px dashed var(--border); border-radius: 12px; padding: 16px 20px; margin: 0 0 18px; font-size: 13.5px; line-height: 1.6; color: var(--text-secondary); }
 .lib-hint strong { color: var(--text); }
@@ -2110,6 +2127,7 @@ a.ip-ex-a:hover .ip-ex-t { color: var(--accent); }
 .toast-msg { flex: 1; min-width: 0; overflow-wrap: anywhere; }   /* it shrinks beside the action, and a name with no spaces breaks */
 .toast-undo { background: none; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 .toast-undo:hover { text-decoration: underline; }
+.toast.full-target .toast-undo { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -10px -12px -10px 0; padding: 0 12px; }   /* Phase 19: an action that is a 44 px target of its own (Renew) */
 
 /* LOADING / EMPTY */
 .loading { text-align: center; padding: 64px; color: var(--text-secondary); }
@@ -2628,7 +2646,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
     <div class="vault-gh" id="vaultGh">
       <div class="vault-step"><span class="vault-num">1</span>Connect GitHub <span class="vault-why">so every device shares this one notes password</span></div>
       <input class="pp-input" id="vaultPat" type="password" autocomplete="off" spellcheck="false" placeholder="GitHub token (fine-grained, Contents: read and write)">
-      <div class="vault-hint">Stored in this browser and only sent to api.github.com. <a class="ig-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Create a token</a> for the scholar-dashboard repo.</div>
+      <div class="vault-hint">Stored in this browser and only sent to api.github.com. <a class="ig-link" id="vaultCreate" target="_blank" rel="noopener noreferrer" onclick="signinCreateTap(this)">Create a token</a> for the <span id="vaultRepo"></span> repo.</div>
       <div class="vault-step"><span class="vault-num">2</span>Choose a notes password</div>
     </div>
     <input type="text" name="username" autocomplete="username" value="Scholar notes" hidden>
@@ -2705,7 +2723,21 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   <button class="btn-dismiss-bar" onclick="hideSaveBar()" title="Dismiss" aria-label="Dismiss">&times;</button>
 </div>
 
-<div id="privateAccess" role="status" hidden style="position:fixed;inset:80px 24px auto;z-index:9999;padding:20px;background:var(--bg);border:1px solid var(--line)"></div>
+<!-- Phase 19 (A3): static markup, so a typed token survives a failed check; privateView shows and hides its parts -->
+<div id="privateAccess" hidden>
+  <p id="privateMsg" role="status"></p>
+  <div class="pa-actions" id="privateActions"></div>
+  <form class="pa-form" id="signinForm" hidden onsubmit="event.preventDefault(); connectGitHub()">
+    <input type="text" id="signinUser" name="username" autocomplete="username" value="" hidden readonly>
+    <label class="pa-label" for="signinToken">GitHub token</label>
+    <input class="pp-input" id="signinToken" name="password" type="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" required>
+    <div class="pa-btns"><button type="submit" class="ui-btn ui-btn-primary" id="signinGo">Sign in</button><button type="button" class="ui-btn ui-btn-secondary" id="signinCancel" hidden onclick="renewCancel()">Cancel</button></div>
+    <p class="pa-help">No token on this device yet?</p>
+    <a class="ui-btn ui-btn-secondary pa-create" id="signinCreate" target="_blank" rel="noopener noreferrer" onclick="signinCreateTap(this)">Create a token on GitHub</a>
+    <p class="pa-help">There, tap Only select repositories, pick <span id="signinRepo"></span>, then Generate token and Copy. Come back and paste it here.</p>
+    <p class="pa-help" id="signinNote"></p>
+  </form>
+</div>
 <div id="configError" role="alert" hidden style="position:fixed;inset:80px 24px auto;z-index:10000;padding:20px;background:var(--bg);border:1px solid #c66;color:#fbb;white-space:pre-wrap"></div>
 <script>
 /* ===== CONFIG ===== */
@@ -2715,7 +2747,7 @@ const TARGET_KEY = 'scholar_target_v1', PAT_VERIFIED_KEY = 'scholar_pat_verified
 let _acceptedTarget = null, _ownerToken = null, _ownerDecisionDone = false;
 function configReady() { return Config.state === 'ready'; }
 function requireConfig() { if (!configReady()) throw Config.error || new Error('Configuration is not ready'); }
-function targetFailure(message) { if (isPrivate()) lockPrivate('rejected'); const e = new Error(message); e.target = true; failConfig(e); throw e; }
+function targetFailure(message) { if (isPrivate()) lockPrivate('rejected', { reason: 'config_changed' }); const e = new Error(message); e.target = true; failConfig(e); throw e; }
 function requireTarget() {
   requireConfig();
   let binding;
@@ -2737,6 +2769,183 @@ async function targetFetch(url, options) {
    22.4 MB, 224 s at GH_SLOW_BPS, plus the headers. The byte caps, the abort on lock and the epoch checks stay as they
    are: the budget only says how long the bytes may take. */
 const GH_META_MS = 8000, GH_SLOW_BPS = 100000, GH_TRANSFER_MIN_MS = 15000, GH_TRANSFER_MAX_MS = 240000;
+/* ===== SIGN-IN TOKENS (Phase 19, Part A) =====
+   A1: a link to GitHub's new-token form, filled in for this device and this library. A2: the date Scout estimates the
+   token ends, kept beside it, with a reminder from TOKEN_REMIND_DAYS before. Sol's correction 5 is A2's rule: reminder
+   dates, fingerprints, parsing failures and storage failures never authorize, reject, lock, remove a token, erase the
+   library copy, or prevent a successful sign-in. Every read and write of the two keys below is best effort, and
+   nothing that decides a lock or a check reads them: they change only words, in the lock box and in Library. */
+const TOKEN_DAYS = 366, TOKEN_REMIND_DAYS = 14, TOKEN_LINK_DAYS = 2, DAY_MS = 86400000;
+const TOKEN_META_KEY = 'scholar_token_meta_v1', TOKEN_LINK_KEY = 'scholar_token_link_v1';
+/* The kind of device, for the token's name: GitHub lists a person's tokens by name */
+function deviceKind() {
+  const ua = navigator.userAgent || '';
+  if (/iPhone|iPod/.test(ua)) return 'iPhone';
+  if (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'iPad';   // iPadOS asks for pages as a Mac
+  if (/Android/.test(ua)) return 'Android';
+  return 'laptop';
+}
+function localDay(at) { const d = new Date(at); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+/* A1: GitHub's form for a new fine-grained token, filled in: a name like "Scout iPhone 2026-10-19" (24 characters at
+   most, Sol's ruling 1), a description, this library's owner, TOKEN_DAYS days, Contents read and write, Metadata read.
+   GitHub takes no parameter for the repository, so the person picks it there; the form's help line says how. */
+function tokenLink() {
+  const device = deviceKind();
+  return 'https://github.com/settings/personal-access-tokens/new?' + new URLSearchParams({
+    name: 'Scout ' + device + ' ' + localDay(Date.now()),
+    description: 'Scout on this ' + device + '. Contents read and write on ' + GH_OWNER + '/' + GH_REPO + ' only.',
+    target_name: GH_OWNER, expires_in: String(TOKEN_DAYS), contents: 'write', metadata: 'read' });
+}
+/* A tap on a create link (the lock box's or the notes dialog's): the link made afresh, and in a private library the
+   time of the tap, which the next sign-in reads (tokenMetaSave) */
+function signinCreateTap(a) {
+  if (a) a.href = tokenLink();
+  if (isPrivate()) { try { localStorage.setItem(TOKEN_LINK_KEY, String(Date.now())); } catch (e) {} }
+}
+/* The time of the last tap on a create link when it was 0 to TOKEN_LINK_DAYS days ago; null for none, for a value
+   that is malformed or not finite, and for one in the future (correction 5) */
+function tokenLinkTime() {
+  let raw = null; try { raw = localStorage.getItem(TOKEN_LINK_KEY); } catch (e) { return null; }
+  if (raw === null || !/^\d{1,16}$/.test(raw)) return null;
+  const at = Number(raw), age = Date.now() - at;
+  return Number.isSafeInteger(at) && age >= 0 && age <= TOKEN_LINK_DAYS * DAY_MS ? at : null;
+}
+/* What Scout knows of this device's token: {expires, reminded, record}, expires being the estimated end in ms or null.
+   A record made for another token (by its fingerprint), or one that does not parse, says nothing. */
+function tokenMeta() {
+  let token = null, rec = null;
+  try { token = localStorage.getItem('gh_pat'); rec = JSON.parse(localStorage.getItem(TOKEN_META_KEY) || 'null'); } catch (e) { return null; }
+  if (!token || !rec || typeof rec !== 'object' || rec.fingerprint !== patPrint(token)) return null;
+  return { expires: Number.isSafeInteger(rec.expires) && rec.expires > 0 ? rec.expires : null, reminded: typeof rec.reminded === 'string' ? rec.reminded : null, record: rec };
+}
+/* At a sign-in with a new token: it ends about TOKEN_DAYS after a create link tapped in the last TOKEN_LINK_DAYS
+   days, else Scout does not know when. The tap counts once. */
+function tokenMetaSave(pat) {
+  try {
+    const at = tokenLinkTime();
+    localStorage.setItem(TOKEN_META_KEY, JSON.stringify({ v: 1, fingerprint: patPrint(pat), expires: at === null ? null : at + TOKEN_DAYS * DAY_MS, from: at === null ? 'pasted' : 'link' }));
+    localStorage.removeItem(TOKEN_LINK_KEY);
+  } catch (e) {}
+}
+function tokenDate(at) { const d = new Date(at); return d.toLocaleDateString('en-GB', d.getFullYear() === new Date().getFullYear() ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' }); }
+/* The Library's line: the estimated end, and from TOKEN_REMIND_DAYS before it a Renew button */
+function tokenStatusHTML() {
+  if (!isPrivate()) return '';
+  const meta = tokenMeta();
+  if (!meta || !meta.expires) return ' · Token end date not known here';
+  const soon = meta.expires - Date.now() <= TOKEN_REMIND_DAYS * DAY_MS;
+  return ' · Token estimated to end ' + tokenDate(meta.expires) + (soon ? ' <button class="sync-btn sync-renew" onclick="renewToken()">Renew</button>' : '');
+}
+/* After the library loads: from TOKEN_REMIND_DAYS before the estimated end, once a day, a toast with Renew. A toast
+   already showing (a restore, a sign-in) keeps its place, and the reminder waits for the next start. */
+function tokenReminder() {
+  const meta = tokenMeta(), today = localDay(Date.now());
+  if (!meta || !meta.expires || meta.expires - Date.now() > TOKEN_REMIND_DAYS * DAY_MS || meta.reminded === today) return;
+  if (document.getElementById('toast').classList.contains('show')) return;
+  try { localStorage.setItem(TOKEN_META_KEY, JSON.stringify({ ...meta.record, reminded: today })); } catch (e) {}
+  toast(meta.expires > Date.now() ? 'This device’s GitHub token is estimated to end on ' + tokenDate(meta.expires) + '.'
+    : 'Scout estimated that this device’s GitHub token would end on ' + tokenDate(meta.expires) + '. It still works, but may end soon.', renewToken, { actionLabel: 'Renew', duration: 8000, fullTarget: true });
+}
+/* Renew: GitHub's form for a new token, and the sign-in form over the library. The library and its copy stay until a
+   new token is submitted; checking that one ends this sign-in, as any new token does (verifyPrivate). */
+function renewToken() {
+  if (!isPrivate() || !Private.authorized) return;
+  signinCreateTap(null);
+  window.open(tokenLink(), '_blank', 'noopener,noreferrer');
+  privateView('renew');
+}
+function renewCancel() { const el = document.getElementById('privateAccess'); if (el.dataset.state === 'renew') el.hidden = true; }
+/* ===== WHAT A REFUSAL FROM GITHUB MEANS (Phase 19, A4; Sol's correction 4) =====
+   ghRefusal(status, headers, message) gives {kind, reason, retryAt, message}:
+   - 401: definite, 'expired'. GitHub no longer takes the token, whatever its body says, and even with no body.
+   - a wait, 'rate_limited': any 429; a 403 with Retry-After or X-RateLimit-Remaining "0" (both readable across origins,
+     unlike the token's expiry header), however its body reads; a 403 whose message names a limit (a secondary limit
+     may carry neither header).
+   - a 403 whose whole body reads and whose message is one of GitHub's explicit permission refusals (a phrase such as
+     "Resource not accessible by", not a lone word such as "access"): definite, 'forbidden', with GitHub's words.
+   - any other 403 (no body, a cut or stalled one, no message, words Scout cannot place): a wait, 'unclear'. It may be
+     a limit, so nothing is erased, and Scout backs off before it asks again.
+   The whole message (at most GH_REFUSAL_BYTES) is classified, a limit first; only the words shown are cut, to 200
+   characters (Sol's fix review, finding 1).
+   A definite answer locks and erases the copy. A wait locks nothing while the library shows, and no request goes to
+   GitHub until it ends (ghWaitGate): not a return to the app, a quiet re-check, a pull, a save or a Retry. */
+const GH_REFUSAL_BYTES = 4096, GH_REFUSAL_MS = 2000, GH_WAIT_MIN_MS = 60000, GH_WAIT_MAX_MS = 15 * 60000;
+const GhWait = { until: 0, strikes: 0, reason: 'rate_limited' };
+const GH_LIMIT_WORDS = /rate limit|abuse|too many requests|try again later/i;
+const GH_DENIAL_PHRASES = new RegExp(['resource not accessible by', 'must have (?:admin|push|write|maintain|triage|read|pull)[\\w ]* (?:access|rights|permission)',
+  'write access to (?:the |this )?repository not granted', 'permission to \\S+ denied', 'protected by organization saml enforcement',
+  'enabled oauth app access restrictions', 'forbids access via a fine-grained personal access token', 'repository access blocked',
+  'repository has been disabled', 'account (?:is|has been|was) suspended'].join('|'), 'i');
+function ghHeader(headers, name) { try { return headers && typeof headers.get === 'function' ? headers.get(name) : null; } catch (e) { return null; } }
+/* The time a response's headers ask Scout to wait until, or null */
+function ghHeaderWait(headers) {
+  const after = ghHeader(headers, 'Retry-After');
+  if (after !== null && after.trim() !== '') {
+    const s = Number(after), at = Number.isFinite(s) ? Date.now() + s * 1000 : Date.parse(after);
+    if (Number.isFinite(at)) return Math.max(at, Date.now() + 1000);
+  }
+  if (ghHeader(headers, 'X-RateLimit-Remaining') === '0') {
+    const reset = Number(ghHeader(headers, 'X-RateLimit-Reset')) * 1000;
+    return Number.isFinite(reset) && reset > Date.now() ? reset : Date.now() + GH_WAIT_MIN_MS;
+  }
+  return null;
+}
+function ghRefusal(status, headers, message) {
+  if (status === 401) return { kind: 'definite', reason: 'expired', retryAt: null, message: null };
+  const at = ghHeaderWait(headers);
+  if (at !== null) return { kind: 'wait', reason: 'rate_limited', retryAt: at, message: null };
+  const said = typeof message === 'string' ? message.trim() : '';
+  if (status === 429 || GH_LIMIT_WORDS.test(said)) return { kind: 'wait', reason: 'rate_limited', retryAt: null, message: null };
+  if (status === 403 && GH_DENIAL_PHRASES.test(said)) return { kind: 'definite', reason: 'forbidden', retryAt: null, message: said.slice(0, 200) };
+  return { kind: 'wait', reason: 'unclear', retryAt: null, message: null };
+}
+/* GitHub's message from a refusal's body: at most GH_REFUSAL_BYTES, read within GH_REFUSAL_MS and the request's own
+   deadline (stop: a promise that settles when it ends). null when the body is missing, longer, slower, not JSON, or
+   has no message. */
+async function ghRefusalMessage(res, stop) {
+  let reader, timer;
+  try {
+    if (!res.body || typeof res.body.getReader !== 'function') return null;
+    reader = res.body.getReader();
+    const read = (async () => {
+      const chunks = []; let size = 0;
+      for (;;) {
+        const part = await reader.read();
+        if (part.done) break;
+        if (!(part.value instanceof Uint8Array)) return null;
+        size += part.value.byteLength; if (size > GH_REFUSAL_BYTES) return null; chunks.push(part.value);
+      }
+      const bytes = new Uint8Array(size); let offset = 0;
+      for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+      const json = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+      return json && typeof json === 'object' && typeof json.message === 'string' && json.message.trim() ? json.message.trim() : null;
+    })().catch(() => null);
+    const late = new Promise(resolve => { timer = setTimeout(() => resolve(null), GH_REFUSAL_MS); });
+    return await Promise.race(stop ? [read, late, stop.then(() => null, () => null)] : [read, late]);
+  } finally {
+    clearTimeout(timer);
+    if (reader) { try { Promise.resolve(reader.cancel()).catch(() => {}); reader.releaseLock(); } catch (e) {} }
+  }
+}
+/* A wait begins: until GitHub's own time; for a limit that named none, or an unclear refusal, a minute, then twice as
+   long each time in a row, up to GH_WAIT_MAX_MS. A successful answer starts the count again. Returns the time. */
+function ghWaitStart(refusal) {
+  let at = refusal.retryAt;
+  if (!at) { at = Date.now() + Math.min(GH_WAIT_MAX_MS, GH_WAIT_MIN_MS * 2 ** GhWait.strikes); GhWait.strikes = Math.min(GhWait.strikes + 1, 8); }
+  if (at >= GhWait.until) GhWait.reason = refusal.reason;
+  GhWait.until = Math.max(GhWait.until, at);
+  return GhWait.until;
+}
+function ghWaitError(reason, retryAt, status) { return Object.assign(new Error('GitHub asked Scout to wait'), { wait: true, transient: true, reason, retryAt, status: status || null }); }
+/* Before any request to GitHub: while a wait runs, nothing is sent, and the caller gets the wait instead */
+function ghWaitGate() { if (GhWait.until > Date.now()) throw ghWaitError(GhWait.reason, GhWait.until); }
+function clockTime(at) { return new Date(at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
+/* A wait, in words: until when, and for an unclear refusal that GitHub gave no reason */
+function waitText(e) {
+  const t = e && e.retryAt || (GhWait.until > Date.now() ? GhWait.until : 0), at = t ? clockTime(t) : '';
+  if (e && e.reason === 'unclear') return 'GitHub refused a request without saying why. Scout asks again ' + (at ? 'after ' + at : 'in a minute') + '.';
+  return 'GitHub asked Scout to wait' + (at ? ' until ' + at : ' a minute') + '.';
+}
 /* Phase 15 (A2): GitHub's media type for a blob as its raw bytes, documented for GET /repos/{owner}/{repo}/git/blobs/{sha}
    ("application/vnd.github.raw+json: Returns the raw blob data") */
 const GH_RAW = 'application/vnd.github.raw+json';
@@ -2761,6 +2970,7 @@ async function ownerFetch(url, options = {}) {
   if (github && !parsed.pathname.startsWith('/repos/' + GH_OWNER + '/' + GH_REPO + '/')) throw new Error('Private API target mismatch');
   if ((options.method || 'GET') !== 'GET' && !await reverifyPrivate()) throw privateError('Private mutation verification failed');
   checkPrivateEpoch(epoch);
+  if (github) ghWaitGate();   // Phase 19: nothing goes to GitHub while it asked Scout to wait
   const ctl = new AbortController(); Private.controllers.add(ctl);
   if (options.signal) { if (options.signal.aborted) ctl.abort(); else options.signal.addEventListener('abort', () => ctl.abort(), { once: true }); }
   let timer;
@@ -2773,7 +2983,16 @@ async function ownerFetch(url, options = {}) {
     const response = await Promise.race([fetch(url, { ...fetchOptions, ...(github ? { headers: { ...options.headers, Authorization: 'Bearer ' + Private.token }, redirect: 'error', credentials: 'omit', cache: 'no-store' } : {}), signal: ctl.signal }), deadline]);
     checkPrivateEpoch(epoch);
     if (github && (response.redirected || (response.url && new URL(response.url).origin !== 'https://api.github.com'))) throw new Error('Unexpected private API host');
-    if (github && [401, 403].includes(response.status)) { lockPrivate('rejected'); throw privateError('Private repository access rejected'); }
+    if (github && [401, 403, 429].includes(response.status)) {
+      // Phase 19 (A4): a definite refusal locks; a wait, or a 403 that says no clear reason, locks nothing and sends
+      // nothing more until it ends (ghRefusal)
+      const refusal = ghRefusal(response.status, response.headers, response.status === 403 && ghHeaderWait(response.headers) === null ? await ghRefusalMessage(response, deadline) : null);
+      checkPrivateEpoch(epoch);
+      try { if (response.body && !response.body.locked) Promise.resolve(response.body.cancel()).catch(() => {}); } catch (e) {}
+      if (refusal.kind === 'definite') { lockPrivate('rejected', { reason: refusal.reason, message: refusal.message }); throw privateError('Private repository access rejected'); }
+      throw ghWaitError(refusal.reason, ghWaitStart(refusal), response.status);
+    }
+    if (github && response.ok) GhWait.strikes = 0;
     if (github && response.status === 404) {
       if (!(await privateAwait(verifyPrivate(Private.token, false, true), epoch))) throw privateError('Private authorization is required');
       checkPrivateEpoch(epoch);
@@ -2872,8 +3091,10 @@ function savePatVerification(pat, saveToken) {
   if (!scopedPat(pat) || localStorage.getItem(PAT_OK_KEY) !== patPrint(pat)) throw new Error('Could not persist sign-in verification');
 }
 /* Schema 2 authorization lives only in memory. Every boot verifies the exact
-   token and target; fingerprints remain schema-1 compatibility metadata. */
-const Private = { enabled: false, epoch: 0, authorized: false, token: null, state: 'required', viewDepth: 0, controllers: new Set(), transactions: new Set(), waiters: new Set(), pdfTasks: new Set(), pdfDocuments: new Set(), renderTasks: new Set(), uiTeardowns: new Set(), interactionResets: new Set(), verificationBinding: null, verifying: null };
+   token and target; fingerprints remain schema-1 compatibility metadata.
+   Phase 19: detail is the last lock's {reason, ...} for the lock box, lockToken the token stored when it locked, and
+   recheckTimer the one quiet re-check after a check that could not finish with the library on screen (A5). */
+const Private = { enabled: false, epoch: 0, authorized: false, token: null, state: 'required', viewDepth: 0, controllers: new Set(), transactions: new Set(), waiters: new Set(), pdfTasks: new Set(), pdfDocuments: new Set(), renderTasks: new Set(), uiTeardowns: new Set(), interactionResets: new Set(), verificationBinding: null, verifying: null, detail: null, lockToken: undefined, recheckTimer: null };
 const Synced = new Map();   // Phase 15 (A3): each library CSV's last SHA and text pair, by file (syncedKeep)
 // Phase 15 (B2): the person's twelve fields in their own file, and the library's layout as last read (see "THE PERSON'S
 // FILE"). STATE_CAP is the worker's ownership.STATE_CSV_LIMIT.
@@ -2887,17 +3108,24 @@ function privateBinding() {
   const instance = Config.instance;
   if (!instance || !ScholarConfig.isPrivate(instance) || instance.data_repo.toLowerCase() + '@' + instance.branch !== _acceptedTarget ||
       (GH_OWNER + '/' + GH_REPO).toLowerCase() + '@' + GH_BRANCH !== _acceptedTarget) {
-    lockPrivate('rejected'); throw privateError('The private target changed. Use a separate browser profile.');
+    lockPrivate('rejected', { reason: 'config_changed' }); throw privateError('The private target changed. Use a separate browser profile.');
   }
   const token = localStorage.getItem('gh_pat');
-  if ((Private.authorized && token !== Private.token) || (Private.verificationBinding && token !== Private.verificationBinding.storedToken)) lockPrivate(token ? 'rejected' : 'required');
+  if ((Private.authorized && token !== Private.token) || (Private.verificationBinding && token !== Private.verificationBinding.storedToken)) lockPrivate(token ? 'rejected' : 'required', { reason: 'token_changed' });
   return token;
 }
 function capturePrivateEpoch() {
   if (!isPrivate()) return null;
   const token = privateBinding();
   if (!Private.authorized || token !== Private.token) {
-    lockPrivate(hasPAT() ? 'rejected' : 'required'); throw privateError('Private authorization is required');
+    // Phase 19 (and Sol's fix review, finding 2): a call while no sign-in holds, with nothing changed, locks nothing.
+    // That is a check under way (the start's or a typed token's: its binding is this epoch's and the stored token is
+    // the one it began with), which goes on with its epoch; or a lock with the token stored as it was then, which
+    // keeps its reason and the copy it kept. A changed token still locks (so does privateBinding, before this, for a
+    // changed target and for a token changed during a check).
+    const binding = Private.verificationBinding, pending = !!binding && binding.epoch === Private.epoch && token === binding.storedToken;
+    if (Private.authorized || !(pending || (Private.lockToken !== undefined && token === Private.lockToken))) lockPrivate(hasPAT() ? 'rejected' : 'required', Private.authorized ? { reason: 'token_changed' } : undefined);
+    throw privateError('Private authorization is required');
   }
   return Private.epoch;
 }
@@ -2905,7 +3133,7 @@ function checkPrivateEpoch(epoch) {
   if (epoch === null) return;
   const token = privateBinding();
   if (!Private.authorized || epoch !== Private.epoch || token !== Private.token) {
-    if (Private.authorized && token !== Private.token) lockPrivate(token ? 'rejected' : 'required');
+    if (Private.authorized && token !== Private.token) lockPrivate(token ? 'rejected' : 'required', { reason: 'token_changed' });
     throw privateError('Private authorization changed');
   }
 }
@@ -2963,24 +3191,83 @@ function privateDelay(callback, delay) {
     if (run) run();
   }, delay);
 }
+/* The lock box (Phase 19, A3 and A4, Sol's lock-state table). state: a lock state, 'loading', or 'renew' (the form
+   over the library, no lock). detail: a sentence to add, or the lock's {reason, message, retryAt, status, candidate}
+   (candidate: the check was of a token just typed, not the one stored). The box says what GitHub answered and what to
+   do. The form shows to sign in, and after a failed check of a typed token, which stays in its field; Try again
+   checks the stored token again; Retry repeats the check that could not finish. */
 function privateView(state, detail) {
   const el = document.getElementById('privateAccess');
   if (!el) return;
+  const info = detail && typeof detail === 'object' ? detail : {}, reason = info.reason || '', repo = GH_OWNER + '/' + GH_REPO;
+  const typed = !!String(document.getElementById('signinToken').value || '').trim(), again = info.candidate ? 'Sign in' : 'Try again';
+  const kept = info.candidate ? ' The token you typed is still in the field.' : ' Your library and edits are kept on this device.';
+  const rejected = {
+    checking: 'Checking this token with GitHub…',
+    expired: info.candidate ? 'GitHub didn’t accept that token. Check that all of it was copied, or create a new one.' : expiredText(),
+    no_access: (info.candidate ? 'That' : 'This') + ' token can’t see ' + repo + '. On GitHub, give it access to that repository, then tap ' + again + '.',
+    read_only: (info.candidate ? 'That' : 'This') + ' token can read ' + repo + ' but not change it. On GitHub, set Contents to Read and write, then tap ' + again + '.',
+    not_private: 'GitHub says ' + repo + ' is not private, so Scout won’t open it as a private library.',
+    wrong_repo: 'GitHub answered for a repository other than ' + repo + '.',
+    forbidden: 'GitHub refused this token: ' + (info.message || 'no reason given') + (/[.!?]$/.test(info.message || '') ? '' : '.'),
+    config_changed: 'This site’s configuration changed while it was open. Reload to use the new one.',
+    token_changed: 'The GitHub token on this device changed, in another tab or window. Tap Try again to check the one stored now, or sign in below.',
+  };
+  const unavailable = {
+    offline: 'Couldn’t reach GitHub.', timeout: 'GitHub took too long to answer.',
+    server: info.status ? 'GitHub had a problem (' + info.status + ').' : 'GitHub’s answer could not be read.',
+    rate_limited: waitText({ reason, retryAt: info.retryAt }), unclear: waitText({ reason, retryAt: info.retryAt }),
+  };
   const copy = {
-    required: 'Sign in with a GitHub access token to open this private library.',
-    rejected: 'Access rejected. The token must have write access to this private repository.',
-    unavailable: 'Verification temporarily unavailable. Your saved browser state is preserved.',
+    required: 'Sign in with a GitHub token to open this private library.',
+    rejected: rejected[reason] || 'Scout stopped using this device’s token. Tap Try again to check it with GitHub, or sign in below.',
+    unavailable: (unavailable[reason] || 'Verification temporarily unavailable.') + kept,
     loading: 'Loading the private library…',
     load_error: 'Could not load the private library. Required files must load and decode successfully.',
+    renew: 'Make a new token on GitHub, then paste it here. Your library stays open until the new token is checked.',
   };
-  el.hidden = false; el.dataset.state = state;
-  el.innerHTML = '<p>' + esc(copy[state] || copy.unavailable) + (detail ? ' ' + esc(detail) : '') + '</p>' +
-    '<button class="ui-btn ui-btn-primary" onclick="' + (state === 'required' || state === 'rejected' ? 'connectGitHub()' : 'retryPrivate()') + '">' +
-    (state === 'required' || state === 'rejected' ? 'Sign in' : 'Retry') + '</button>';
+  const form = state === 'required' || state === 'renew' || (state === 'rejected' && reason !== 'checking' && reason !== 'config_changed') || (state === 'unavailable' && (info.candidate || typed));
+  const button = (label, call, primary) => '<button type="button" class="ui-btn ' + (primary ? 'ui-btn-primary' : 'ui-btn-secondary') + '" onclick="' + call + '">' + label + '</button>';
+  el.hidden = false; el.dataset.state = state; el.dataset.reason = reason;
+  document.getElementById('privateMsg').textContent = (copy[state] || copy.unavailable) + (typeof detail === 'string' && detail ? ' ' + detail : '');
+  document.getElementById('privateActions').innerHTML = state === 'rejected' && reason === 'config_changed' ? button('Reload', 'location.reload()', true)
+    : state === 'rejected' && reason !== 'checking' && hasPAT() ? button('Try again', 'retryPrivate()', false)
+    : state === 'unavailable' || state === 'load_error' ? button('Retry', 'retryCheck()', true) : '';
+  document.getElementById('signinForm').hidden = !form;
+  document.getElementById('signinCancel').hidden = state !== 'renew';
+  document.getElementById('signinUser').value = 'Scout ' + deviceKind() + ' for ' + repo;   // correction 6: the password manager keeps one entry per device and library
+  document.getElementById('signinCreate').href = tokenLink();
+  document.getElementById('signinRepo').textContent = GH_REPO;
+  document.getElementById('signinNote').textContent = LIBCACHE_DISCLOSURE;
+  placePrivateAccess();
 }
+/* A token GitHub no longer accepts. Once the estimated end has passed, the box says so, as a possibility: the estimate
+   can be wrong, and a token can also be deleted or changed (correction 5). */
+function expiredText() {
+  const meta = tokenMeta();
+  return meta && meta.expires && meta.expires <= Date.now()
+    ? 'GitHub no longer accepts this device’s token. Scout estimated it would end on ' + tokenDate(meta.expires) + ', so it may have expired. It may also have been deleted or changed on GitHub.'
+    : 'GitHub no longer accepts this device’s token. It may have expired or been deleted.';
+}
+/* The lock box inside what shows of the screen (correction 6). With a phone's keyboard up the visual viewport is
+   shorter than the window, and a phone turned sideways is short: the box's top and height follow what shows, so it
+   scrolls in itself rather than below the screen, and a focused field in it is scrolled into view. */
+function placePrivateAccess() {
+  const el = document.getElementById('privateAccess');
+  if (!el || el.hidden) return;
+  const vv = window.visualViewport, h = vv ? vv.height : window.innerHeight, top = vv ? vv.offsetTop : 0, gap = h < 560 ? 8 : 80;
+  el.style.top = Math.round(top + gap) + 'px';
+  el.style.maxHeight = Math.max(120, Math.round(h - gap - 8)) + 'px';
+  const focused = document.activeElement;
+  if (focused && focused !== el && typeof el.contains === 'function' && el.contains(focused) && focused.scrollIntoView) focused.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+window.addEventListener('resize', placePrivateAccess, { passive: true });
+if (window.visualViewport) { window.visualViewport.addEventListener('resize', placePrivateAccess); window.visualViewport.addEventListener('scroll', placePrivateAccess); }
 function lockPrivate(state = 'required', detail) {
   if (!isPrivate()) return;
   Private.epoch++; Private.authorized = false; Private.token = null; Private.state = state; Private.verifying = null; Private.verificationBinding = null;
+  Private.detail = detail === undefined ? null : detail; clearTimeout(Private.recheckTimer); Private.recheckTimer = null;   // Phase 19: any lock ends the quiet re-check
+  try { Private.lockToken = localStorage.getItem('gh_pat'); } catch (e) { Private.lockToken = undefined; }
   _ownerAtLoad = false; _ownerToken = null; _ownerDecisionDone = false;
   for (const revoke of Private.waiters) revoke(); Private.waiters.clear();
   for (const ctl of Private.controllers) ctl.abort(); Private.controllers.clear();
@@ -3052,7 +3339,7 @@ function checkPrivateRequest(binding) {
   if (binding.epoch !== Private.epoch || binding.target !== _acceptedTarget) throw privateError('Private authorization changed');
   const token = privateBinding();
   if (binding.epoch !== Private.epoch) throw privateError('Private authorization changed');
-  if (token !== binding.storedToken) { lockPrivate(token ? 'rejected' : 'required'); throw privateError('Private authorization changed'); }
+  if (token !== binding.storedToken) { lockPrivate(token ? 'rejected' : 'required', { reason: 'token_changed' }); throw privateError('Private authorization changed'); }
 }
 /* One authenticated GitHub read, streamed under its byte cap: the response's bytes, or null for a 404 that the caller
    allows (optional404). budget: the deadline for headers and body (a file's blob gets transferBudgetMs). accept: the
@@ -3061,14 +3348,30 @@ async function privateBytes(url, cap, binding, optional404 = false, budget = GH_
   const parsed = new URL(url);
   if (parsed.origin !== 'https://api.github.com' || parsed.username || parsed.password) throw new Error('Invalid private API host');
   checkPrivateRequest(binding);
+  ghWaitGate();   // Phase 19: nothing goes to GitHub while it asked Scout to wait
   const ctl = new AbortController(); Private.controllers.add(ctl); let timer, reader;
   const work = (async () => {
     const res = await fetch(url, { headers: { Authorization: 'Bearer ' + binding.token, Accept: accept }, cache: 'no-store', credentials: 'omit', redirect: 'error', signal: ctl.signal });
     checkPrivateRequest(binding);
     if (!res || res.redirected || (res.url && new URL(res.url).href !== parsed.href)) throw new Error('Unexpected private API response host');
     if (res.status === 404 && optional404) { if (res.body) await res.body.cancel(); checkPrivateRequest(binding); return null; }
-    // a 401 or 403 locks, unless the request was superseded (binding.superseded): its answer is about the past
-    if (res.status !== 200) { if ([401, 403].includes(res.status) && !(binding.superseded && binding.superseded())) lockPrivate('rejected'); const e = new Error('GitHub request failed (' + res.status + ')'); e.status = res.status; if (res.body) await res.body.cancel(); throw e; }
+    if (res.status !== 200) {
+      const e = new Error('GitHub request failed (' + res.status + ')'); e.status = res.status;
+      if ([401, 403, 429].includes(res.status)) {
+        // Phase 19 (A4): a refusal is read for what it means, with at most GH_REFUSAL_BYTES of a 403's body. A definite
+        // one locks and a wait begins, unless the request was superseded (binding.superseded): its answer is about the past.
+        const refusal = ghRefusal(res.status, res.headers, res.status === 403 && ghHeaderWait(res.headers) === null ? await ghRefusalMessage(res) : null);
+        checkPrivateRequest(binding);
+        Object.assign(e, { definite: refusal.kind === 'definite', wait: refusal.kind === 'wait', transient: refusal.kind === 'wait', reason: refusal.reason, ghMessage: refusal.message, retryAt: null });
+        if (!(binding.superseded && binding.superseded())) {
+          if (e.definite) lockPrivate('rejected', { reason: refusal.reason, message: refusal.message, candidate: !!binding.candidate });
+          else e.retryAt = ghWaitStart(refusal);
+        }
+      }
+      try { if (res.body && !res.body.locked) await res.body.cancel(); } catch (x) {}
+      throw e;
+    }
+    GhWait.strikes = 0;   // a successful answer: an unexplained limit later starts again at a minute
     if (!res.body || typeof res.body.getReader !== 'function') throw new Error('Private response body unavailable');
     reader = res.body.getReader(); const chunks = []; let size = 0;
     for (;;) {
@@ -3100,25 +3403,55 @@ async function gitBlobSha(bytes) {
   all.set(head); all.set(bytes, head.length);
   return [...new Uint8Array(await crypto.subtle.digest('SHA-1', all))].map(b => b.toString(16).padStart(2, '0')).join('');
 }
+/* Phase 19 (A4, A5): a definite answer about the repository or its configuration, which locks as rejected */
+function privateDefinite(reason, message) { return Object.assign(new Error(message), { definite: true, reason }); }
+/* Why a check could not finish, for the lock box: a wait's reason, 'timeout', 'server' (a status, or an answer that
+   would not read), or 'offline' */
+function transientReason(e) {
+  if (e && e.wait) return e.reason || 'rate_limited';
+  if (e && /timed out/i.test(e.message || '')) return 'timeout';
+  return e && (e.status || e instanceof SyntaxError || /decode|encoded|invalid|exceeds/i.test(e.message || '')) ? 'server' : 'offline';
+}
+/* A5 (Sol's ruling 5): the one quiet re-check after a check that could not finish with the library on screen, at
+   PRIVATE_RECHECK_MS or when a wait ends, whichever is later, while the page shows. A lock clears it; a return to the
+   app or coming back online may run it sooner, as long as no wait runs. */
+const PRIVATE_RECHECK_MS = 30000;
+function privateRecheckLater(retryAt) {
+  clearTimeout(Private.recheckTimer);
+  const epoch = Private.epoch;
+  Private.recheckTimer = setTimeout(() => privateRecheck(epoch), Math.max(PRIVATE_RECHECK_MS, (retryAt || 0) - Date.now()));
+}
+function privateRecheck(epoch) {
+  clearTimeout(Private.recheckTimer); Private.recheckTimer = null;
+  if (epoch !== Private.epoch || !Private.authorized || document.visibilityState === 'hidden') return;   // hidden: the return to the app checks
+  reverifyPrivate().catch(e => { if (!e || !(e.transient || e.privateAuth || e.target)) lockPrivate('unavailable'); });   // as a return to the app does
+}
+/* candidate: a token just typed, which ends this sign-in before its check (the check's lock, reason 'checking', erases
+   the copy as any token change does). Phase 19 (A4, A5): a definite answer (a refusal, a repository 404, a repository
+   that is not private, not writable or not this one, a changed configuration) locks as rejected with its reason. A
+   check that could not finish (offline, a timeout, a 5xx, an answer that would not read, a wait) of the stored token,
+   with the library on screen, locks nothing: it throws an ordinary error marked transient (never privateAuth, which
+   the view guard locks on) and leaves one quiet re-check. Otherwise it locks as unavailable, with its reason. */
 async function verifyPrivate(pat, candidate = false, reread = false) {
   requireTarget();
   const storedToken = privateBinding();
-  if (candidate || (Private.authorized && pat !== Private.token) || (Private.verificationBinding && pat !== Private.verificationBinding.token)) lockPrivate(pat ? 'rejected' : 'required');
-  const binding = { epoch: Private.epoch, target: _acceptedTarget, storedToken, token: pat };
+  if (candidate) lockPrivate(pat ? 'rejected' : 'required', { reason: 'checking', candidate: true });
+  else if ((Private.authorized && pat !== Private.token) || (Private.verificationBinding && pat !== Private.verificationBinding.token)) lockPrivate(pat ? 'rejected' : 'required', { reason: 'token_changed' });
+  const binding = { epoch: Private.epoch, target: _acceptedTarget, storedToken, token: pat, candidate };
   if (!pat) { lockPrivate('required'); return false; }
-  if (!candidate && pat !== storedToken) { lockPrivate('rejected'); return false; }
+  if (!candidate && pat !== storedToken) { lockPrivate('rejected', { reason: 'token_changed' }); return false; }
   Private.verificationBinding = binding;
   const fenced = !candidate && !Private.authorized ? libCacheFenceCapture(binding.epoch) : null;   // B1 fix: read before the request is sent
   try {
     if (fenced) { await fenced; checkPrivateRequest(binding); }
     if (reread) {
       const current = await ScholarConfig.load({ fetch: window.fetch.bind(window), origin: location.origin, root: APP_ROOT }); checkPrivateRequest(binding);
-      if (JSON.stringify(current.instance) !== JSON.stringify(Config.instance)) { const e = new Error('The instance configuration changed'); e.status = 403; throw e; }
+      if (JSON.stringify(current.instance) !== JSON.stringify(Config.instance)) throw privateDefinite('config_changed', 'The instance configuration changed');
     }
     const json = await privateJSON(ghApiBase(), 262144, binding); checkPrivateRequest(binding);
-    if (!json || json.private !== true || !json.permissions || json.permissions.push !== true || typeof json.full_name !== 'string' || json.full_name.toLowerCase() !== (GH_OWNER + '/' + GH_REPO).toLowerCase()) {
-      const e = new Error('The repository is not the expected writable private target'); e.status = 403; throw e;
-    }
+    if (!json || typeof json.full_name !== 'string' || json.full_name.toLowerCase() !== (GH_OWNER + '/' + GH_REPO).toLowerCase()) throw privateDefinite('wrong_repo', 'The repository is not the expected target');
+    if (json.private !== true) throw privateDefinite('not_private', 'The repository is not private');
+    if (!json.permissions || json.permissions.push !== true) throw privateDefinite('read_only', 'The token cannot write to the repository');
     if (!candidate) {
       Private.authorized = true; Private.token = pat; Private.state = 'verified'; _ownerToken = pat; _ownerAtLoad = true;
     }
@@ -3126,7 +3459,13 @@ async function verifyPrivate(pat, candidate = false, reread = false) {
   } catch (e) {
     // A stale request must never lock a newer successful authorization.
     if (binding.epoch !== Private.epoch) return false;
-    lockPrivate([401, 403, 404].includes(e.status) ? 'rejected' : 'unavailable'); return false;
+    if (e.status === 404 || e.definite) { lockPrivate('rejected', { reason: e.status === 404 ? 'no_access' : e.reason, message: e.ghMessage || null, candidate }); return false; }
+    const why = { reason: transientReason(e), status: e.status || null, retryAt: e.retryAt || null, candidate };
+    if (!candidate && Private.authorized && _dataLoaded) {
+      privateRecheckLater(why.retryAt);
+      throw Object.assign(new Error(e.wait ? 'GitHub asked Scout to wait' : 'GitHub could not be reached'), { transient: true, wait: !!e.wait, reason: why.reason, retryAt: why.retryAt, status: why.status });
+    }
+    lockPrivate('unavailable', why); return false;
   } finally { if (Private.verificationBinding === binding) Private.verificationBinding = null; }
 }
 async function reverifyPrivate() {
@@ -3217,7 +3556,7 @@ async function privateReadLibrary(superseded = null) {
   const binding = { epoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token, superseded };
   let listing = null;
   try { listing = await privateJSON(ghApiBase() + '/contents/?ref=' + encodeURIComponent(GH_BRANCH), LIBRARY_LISTING_CAP, binding, true, transferBudgetMs(LIBRARY_LISTING_CAP)); }
-  catch (e) { if (e.privateAuth || [401, 403].includes(e.status)) throw e; listing = null; }
+  catch (e) { if (e.privateAuth || e.definite || e.wait) throw e; listing = null; }   // Phase 19: a refusal or a wait is the answer, not a missing listing
   checkPrivateEpoch(epoch);
   const infos = libraryListing(listing);
   if (!infos) return privateReadBundleByFile(superseded);   // Phase 15 (B2): still one snapshot without the listing
@@ -3596,28 +3935,46 @@ async function loadPrivateLibrary() {
     updateInterestsBadge(); revealContent();
     if (!papers.length) document.getElementById('topStories').innerHTML = '<div class="empty-state">No papers yet</div>';
     if (vaultSupported()) vaultReady(true).catch(() => {});
+    privateDelay(tokenReminder, 1500);   // Phase 19 (A2): after the library, and after a restore's or a sign-in's own toast
     return true;
   } catch (e) {
     if (overtaken()) return false;
-    if (_papersText && !e.privateAuth && ![401, 403].includes(e.status)) {   // a later load that failed: the library on the page stays
-      toastError(/^Invalid /.test(e.message || '') ? "Couldn't read the library. Nothing changed." : "Couldn't reach GitHub. Nothing changed.");
+    // Phase 19 (A4): a current definite refusal has locked already (privateBytes); a wait, or a check that could not
+    // finish, leaves the library on the page as any failed later load does, and at the first load locks as unavailable
+    if (e.definite) { lockPrivate('rejected', { reason: e.reason, message: e.ghMessage || null }); return false; }
+    if (_papersText && !e.privateAuth) {   // a later load that failed: the library on the page stays
+      toastError(e.wait ? waitText(e) + ' Nothing changed.' : /^Invalid /.test(e.message || '') ? "Couldn't read the library. Nothing changed." : "Couldn't reach GitHub. Nothing changed.");
       return false;
     }
-    if ([401, 403].includes(e.status)) lockPrivate('rejected'); else lockPrivate('load_error', e.message);
+    if (e.wait) lockPrivate('unavailable', { reason: e.reason, retryAt: e.retryAt }); else lockPrivate('load_error', e.message);
     return false;
   }
 }
+/* Retry, Try again and other checks of the stored token. Phase 19 (A5): one that cannot finish with the library on
+   screen locks nothing, and says so */
 async function retryPrivate() {
   if (!isPrivate()) return;
-  if (await reverifyPrivate()) await loadPrivateLibrary();
+  try { if (await reverifyPrivate()) await loadPrivateLibrary(); }
+  catch (e) { if (!e || !e.transient) throw e; toastError(e.wait ? waitText(e) + ' Nothing changed.' : "Couldn't reach GitHub. Nothing changed."); }
 }
+/* The lock box's Retry (correction 6): after a failed check of a token just typed, that token again, from its field;
+   after any other, the stored token */
+function retryCheck() { return Private.detail && Private.detail.candidate ? connectGitHub() : retryPrivate(); }
 window.addEventListener('storage', event => {
-  if (isPrivate() && (event.key === null || ['gh_pat', TARGET_KEY, PAT_VERIFIED_KEY, PAT_OK_KEY].includes(event.key))) lockPrivate(hasPAT() ? 'rejected' : 'required');
+  if (isPrivate() && (event.key === null || ['gh_pat', TARGET_KEY, PAT_VERIFIED_KEY, PAT_OK_KEY].includes(event.key))) lockPrivate(hasPAT() ? 'rejected' : 'required', { reason: event.key === TARGET_KEY ? 'config_changed' : 'token_changed' });
   else if (isPrivate() && event.key === LIBCACHE_ERASURE_KEY) libCacheStale(Private.epoch);   // B1 second fix: another tab erased the copy; this tab stays signed in
 });
-const verifyOnReturn = () => { if (isPrivate() && document.visibilityState !== 'hidden') reverifyPrivate().catch(() => lockPrivate('unavailable')); };
+/* A return to the app checks the sign-in again. Phase 19 (A5): a check that could not finish locks nothing while the
+   library shows (verifyPrivate), and none goes out while a wait runs (ghWaitGate) or a typed token is being checked;
+   an error that locked already keeps its lock */
+const verifyOnReturn = () => {
+  if (!isPrivate() || document.visibilityState === 'hidden' || (Private.verificationBinding && Private.verificationBinding.candidate)) return;
+  reverifyPrivate().catch(e => { if (!e || !(e.transient || e.privateAuth || e.target)) lockPrivate('unavailable'); });
+};
 window.addEventListener('focus', verifyOnReturn);
 document.addEventListener('visibilitychange', verifyOnReturn);
+/* Back online: a quiet re-check that was waiting runs now, unless GitHub asked Scout to wait */
+window.addEventListener('online', () => { if (isPrivate() && Private.recheckTimer && GhWait.until <= Date.now()) privateRecheck(Private.epoch); });
 
 let GROUP_ORDER = []; // Populated dynamically from groups_database.csv
 const REL_ORDER = { definitely: 0, probably: 1, mildly: 2 };
@@ -4286,7 +4643,10 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 let _refreshing = false;
 async function refreshPage() {
   requireTarget();
-  if (isPrivate() && !await reverifyPrivate()) return;
+  if (isPrivate()) {   // Phase 19 (A5): a check that cannot finish keeps the page as it is, rather than reload into a lock
+    try { if (!await reverifyPrivate()) return; }
+    catch (e) { if (!e || !e.transient) throw e; toastError(e.wait ? waitText(e) + ' Nothing changed.' : "Couldn't reach GitHub. Nothing changed."); return; }
+  }
   const btn = document.getElementById('navRefresh');
   if (btn) btn.classList.add('spinning');
   try { await targetFetch(APP_ROOT, { cache: 'reload' }); } catch (e) {  requireTarget(); }
@@ -6892,7 +7252,7 @@ async function feedCheckNew(how) {
     pill('Saving… try again in a moment');
   } catch (e) {
     if (e && e.privateAuth) return;
-    pill(e && /^Invalid /.test(e.message || '') ? "Couldn't read the library. Nothing changed." : "Couldn't reach GitHub. Nothing changed.");
+    pill(e && e.wait ? waitText(e) + ' Nothing changed.' : e && /^Invalid /.test(e.message || '') ? "Couldn't read the library. Nothing changed." : "Couldn't reach GitHub. Nothing changed.");   // Phase 19: a wait says until when
   } finally { pullSettle(op, t0); }
 }
 function pullSettle(op, t0) {
@@ -9687,6 +10047,7 @@ function toast(msg, undoFn, opts) {
   _toastUndo = undoFn || null;
   t.classList.toggle('error', !!(opts && opts.error));
   t.classList.toggle('pill', !!(opts && opts.pill));
+  t.classList.toggle('full-target', !!(opts && opts.fullTarget));   // Phase 19: an action that is a 44 px target of its own
   const duration = (opts && opts.duration) || (opts && opts.error ? 6000 : 4000);
   if (undoFn && opts && opts.actionLabel) {
     t.innerHTML = `<span class="toast-msg">${msg}</span><button class="toast-undo" onclick="_doToastUndo()">${opts.actionLabel}</button>`;
@@ -9833,25 +10194,41 @@ function updateSyncStatus() {
   } else if (anyDirty()) {
     el.innerHTML = `<span class="sync-dot warn"></span>Not saved yet <button class="sync-btn" onclick="pushToGitHub()">Save now</button>`;
   } else {
-    el.innerHTML = `<span class="sync-dot on"></span>Saves to GitHub automatically${last ? ` \u00b7 last saved ${agoText(last)}` : ''} \u00b7 <span class="sync-formats">${LIBRARY_FORMATS}</span> <button class="sync-btn quiet" onclick="disconnectGitHub()" title="Sign out on this browser: the site becomes read-only here">Sign out</button>`;
+    el.innerHTML = `<span class="sync-dot on"></span>Saves to GitHub automatically${last ? ` \u00b7 last saved ${agoText(last)}` : ''} \u00b7 <span class="sync-formats">${LIBRARY_FORMATS}</span>${tokenStatusHTML()} <button class="sync-btn quiet" onclick="disconnectGitHub()" title="Sign out on this browser: the site becomes read-only here">Sign out</button>`;   // Phase 19 (A2): and the token's estimated end
   }
 }
 async function connectGitHub() {
   requireTarget();
-  const storedToken = isPrivate() ? privateBinding() : null;
-  const handshake = isPrivate() ? { epoch: Private.epoch, target: _acceptedTarget, storedToken } : null;
-  const pat = (await showPrompt('Sign in', null, isPrivate() ? 'GitHub access token' : 'Password', '', true, isPrivate() ? LIBCACHE_DISCLOSURE : '') || '').trim();   // (it's the GitHub token; checked with GitHub)
-  if (handshake) checkPrivateRequest(handshake);
+  if (isPrivate()) return privateSignIn();   // Phase 19 (A3): the lock box's form
+  const pat = (await showPrompt('Sign in', null, 'Password', '', true, '') || '').trim();   // (it's the GitHub token; checked with GitHub)
   if (!pat) return;
-  const verification = patCanWrite(pat);
-  const candidateStoredToken = handshake ? privateBinding() : null;
-  const candidateBinding = handshake ? { epoch: Private.epoch, target: _acceptedTarget, storedToken: candidateStoredToken } : null;
-  const ok = await verification;
-  if (candidateBinding && ok === true) checkPrivateRequest(candidateBinding);
-  if (isPrivate() && ok !== true) return;
+  const ok = await patCanWrite(pat);
   if (ok !== true) { toastError(ok === false ? 'That password didn\u2019t work.' : 'Couldn\u2019t check the password. Try again when you\u2019re online.'); return; }
   requireTarget(); savePatVerification(pat, true);
-  if (isPrivate()) lockPrivate('required');
+  try { sessionStorage.setItem('owner_toast', 'in'); } catch (e) { }
+  location.reload();   // everything is drawn again, with your controls
+}
+/* Phase 19 (A3): sign in to a private library with the token in the lock box's form. The token stored here already is
+   a check of it, not a new sign-in, so its copy and its record stay (correction 6). A new token is checked with
+   GitHub (verifyPrivate, which ends the old sign-in first); a failed check keeps the old token stored and the new one
+   in its field. A token that works is stored with its estimated end (tokenMetaSave, best effort), and the page
+   reloads, which is what Safari and Chrome watch for before they offer to save the password. */
+async function privateSignIn() {
+  const field = document.getElementById('signinToken'), pat = String(field.value || '').trim();
+  if (!pat) { try { field.focus(); } catch (e) {} return; }
+  if (pat === privateBinding()) {
+    if (!Private.authorized) return retryPrivate();
+    try { if (await reverifyPrivate()) { document.getElementById('privateAccess').hidden = true; toast('That is the token this device uses now, and it still works.'); } }
+    catch (e) { if (!e || !e.transient) throw e; toastError(e.wait ? waitText(e) + ' Nothing changed.' : "Couldn't reach GitHub. Nothing changed."); }
+    return;
+  }
+  const verification = patCanWrite(pat);
+  const candidateBinding = { epoch: Private.epoch, target: _acceptedTarget, storedToken: privateBinding() };   // after the check's own lock
+  const ok = await verification;
+  if (ok !== true) return;
+  checkPrivateRequest(candidateBinding);
+  requireTarget(); savePatVerification(pat, true); tokenMetaSave(pat);
+  lockPrivate('required');
   try { sessionStorage.setItem('owner_toast', 'in'); } catch (e) { }
   location.reload();   // everything is drawn again, with your controls
 }
@@ -9860,6 +10237,7 @@ async function disconnectGitHub() { const _authEpoch = capturePrivateEpoch();
   const ok = await privateAwait(showConfirm('Sign out on this browser?', isPrivate() ? 'This private library locks until you sign in again. The copy of the library kept in this browser is erased. Unsaved edits stay here.' : 'The site becomes read-only here: no changes, notes or chat until you sign in again with the key icon.', 'Sign out', true), _authEpoch);
   if (!ok) return;
   requireOwner(); if (isPrivate()) writeBackup(); checkedStorageRemove(PAT_OK_KEY); checkedStorageRemove(PAT_VERIFIED_KEY); checkedStorageRemove('gh_pat'); _ownerAtLoad = false;
+  try { localStorage.removeItem(TOKEN_META_KEY); localStorage.removeItem(TOKEN_LINK_KEY); } catch (e) {}   // Phase 19 (A2): the token's record goes with it, best effort
   if (isPrivate()) {
     lockPrivate('required');   // B1: deletes the library copy; reload only once the browser confirms it
     if (!await libCacheErased()) { privateView('required', 'This browser did not confirm that the copy of the library kept here was erased. Scout erases it again the next time it opens.'); return; }
@@ -10201,6 +10579,10 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
     if (e.fatal || !hasPAT()) {
       setSaveBar('Unsaved changes', 'Kept in this browser until you push', 'Push to GitHub');
       toastError(e.message);
+    } else if (e.wait) {   // Phase 19 (A4): GitHub asked Scout to wait: the edits stay pending, and the next try is when it ends
+      setSaveBar('Not saved yet', 'GitHub asked Scout to wait; trying again then', 'Retry now');
+      toastError(waitText(e) + ' Your changes are kept here.');
+      scheduleAutoPush(Math.max(AUTO_PUSH_RETRY, (e.retryAt || 0) - Date.now()));
     } else {
       setSaveBar('Not saved yet', 'GitHub didn’t take it; trying again shortly', 'Retry now');
       toastError(`Couldn’t save to GitHub: ${e.message}. Trying again in 30 s.`);
@@ -11693,6 +12075,7 @@ function openVaultModal(mode) {
     : 'Your notes are encrypted. Enter the password you set for them.';
   document.getElementById('vaultPw2').style.display = create ? '' : 'none';
   document.getElementById('vaultGh').classList.toggle('show', create && !hasPAT());
+  document.getElementById('vaultCreate').href = tokenLink(); document.getElementById('vaultRepo').textContent = GH_REPO;   // Phase 19 (A1): the prefilled link, and the repository this library is in
   document.getElementById('vaultPat').value = '';
   document.getElementById('vaultPw').setAttribute('autocomplete', create ? 'new-password' : 'current-password');
   document.getElementById('vaultGo').textContent = create ? 'Encrypt my notes' : 'Unlock';
@@ -15750,7 +16133,10 @@ Config.startup = bootstrapApp();
       } catch (e) {
         if (!e.privateAuth && !e.target) throw e;
         if (depth) throw e;
-        if (!Private.authorized || epoch === Private.epoch) lockPrivate(Private.state);
+        // Phase 19 (Sol's fix review, finding 2): a view refused at its entry drew nothing, and the entry check locked
+        // whatever had changed; locking again there would end a check under way or erase a copy a lock kept. A view
+        // that had begun is locked as before, with the lock's reason.
+        if (epoch !== undefined && (!Private.authorized || epoch === Private.epoch)) lockPrivate(Private.state, Private.detail === null ? undefined : Private.detail);
         return undefined;
       } finally { if (entered) Private.viewDepth--; }
     };
