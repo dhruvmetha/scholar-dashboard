@@ -856,6 +856,8 @@ html:not(.no-hover) .post:hover { background: rgba(255,255,255,0.02); }
 .post .meta { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 13px; color: var(--text-muted); }
 .post .meta .venue { color: var(--text-secondary); font-weight: 500; }
 .post .meta .must { color: var(--accent); }
+.post .meta .following { color: var(--text-secondary); }   /* Phase 21 (mockup B): a post from someone you follow */
+.post .by .by-f { color: var(--text); font-weight: 700; }
 .post-t { margin: 6px 0 0; font-family: var(--serif); font-optical-sizing: auto; font-weight: 500; font-size: 20px; line-height: 1.25; color: var(--text); text-wrap: pretty; overflow-wrap: anywhere; }
 .post .dek { margin: 6px 0 0; font-size: 14.5px; line-height: 1.45; color: var(--text); overflow-wrap: anywhere; }
 .post .by { margin: 6px 0 0; font-size: 13px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1945,6 +1947,37 @@ a.ip-ex-a:hover .ip-ex-t { color: var(--accent); }
 .ip-form .ui-btn { min-height: 44px; }
 .ip-sugg:focus { outline: none; }
 .ip-sugg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Phase 21 (mockup B): People you follow as name chips, Who to follow as rows of a name, its initials, Follow and x.
+   Names only: no counts or reasons. Every control is a 44 px target; colours are the page's tokens. */
+.fw-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.fw-chip { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; padding: 0 16px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--text); font: inherit; font-size: 15px; font-weight: 600; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+button.fw-chip:hover { background: rgba(255,255,255,0.05); }
+.fw-add { border-style: dashed; border-color: var(--text-muted); color: var(--accent); }
+.fw-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; }
+.fw-form .fw-input { flex: 1 1 220px; height: 44px; box-sizing: border-box; font-size: 16px; }   /* 16 px: iOS does not zoom in on it */
+.fw-msg { flex-basis: 100%; font-size: 14px; color: var(--text-secondary); }
+.fw-msg:empty { display: none; }
+.fw-check { color: var(--text-secondary); }
+.fw-list { list-style: none; background: var(--bg-surface); border: 1px solid var(--line); border-radius: 16px; }
+.fw-row { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 6px 10px 16px; }
+.fw-row + .fw-row { border-top: 1px solid var(--line); }
+.fw-av { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--bg-raise); color: var(--text); font-size: 15px; font-weight: 700; }
+.fw-c0 { background: color-mix(in srgb, var(--g1) 32%, var(--bg-raise)); }
+.fw-c1 { background: color-mix(in srgb, var(--g7) 32%, var(--bg-raise)); }
+.fw-c2 { background: color-mix(in srgb, var(--g3) 32%, var(--bg-raise)); }
+.fw-c3 { background: color-mix(in srgb, var(--g10) 32%, var(--bg-raise)); }
+.fw-c4 { background: color-mix(in srgb, var(--g9) 32%, var(--bg-raise)); }
+.fw-c5 { background: color-mix(in srgb, var(--g5) 32%, var(--bg-raise)); }
+.fw-name { flex: 1; min-width: 0; font-size: 16px; font-weight: 700; line-height: 1.3; color: var(--text); overflow-wrap: anywhere; }   /* a long name wraps: never cut on a narrow phone */
+.fw-follow { flex: none; min-width: 44px; min-height: 44px; padding: 0 18px; border: none; border-radius: 999px; background: var(--text); color: var(--bg); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.fw-follow:hover { background: var(--text-secondary); }
+.fw-x { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: none; border-radius: 50%; background: none; color: var(--text-muted-raised); cursor: pointer; }
+.fw-x:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+.fw-x svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.fw-gone .ip-fold { color: var(--text-secondary); }
+.fw-gone .fw-list { margin-top: 4px; }
+.fw-again { align-self: flex-start; }
+@media (max-width: 360px) { .fw-row { gap: 8px; padding-left: 12px; } .fw-av { width: 36px; height: 36px; font-size: 14px; } .fw-follow { padding: 0 14px; } }
 @media (max-width: 700px) {
   #sec-interests .interests-header .briefing { padding: 24px 16px 0; }
   #sec-interests .interests-header .briefing h2 { font-size: 40px; line-height: 1.1; }
@@ -3100,6 +3133,10 @@ const Synced = new Map();   // Phase 15 (A3): each library CSV's last SHA and te
 // FILE"). STATE_CAP is the worker's ownership.STATE_CSV_LIMIT.
 const STATE_FILE = 'papers_state.csv', STATE_CAP = 4 * 1024 * 1024;
 const Layout = { now: 4, stateText: null, orphans: [], orphanPending: new Map() };
+// Phase 21 (B2): the people you follow, an optional file of a private library (see "PEOPLE YOU FOLLOW"). PEOPLE_CAP is
+// the worker's people.FILE_CAP, and the most the page ever writes.
+const PEOPLE_FILE = 'people_database.csv', PEOPLE_CAP = 256 * 1024;
+const People = { text: undefined, header: null, rows: [], bad: false, edits: new Map(), dirty: false, seq: 0, ver: 0, view: null, index: null, adding: false, draft: '', msg: '', goneOpen: false, sending: new Set(), undone: new Set(), done: new Map() };
 const LibCache = { db: null, opening: null, key: null, dead: null, txs: new Set(), erasing: null, fence: null, fenceDb: null, pending: null };   // Phase 15 (B1): this tab's handle on the encrypted copy
 function isPrivate() { return Private.enabled; }
 function privateError(message) { const e = new Error(message); e.privateAuth = true; return e; }
@@ -3280,7 +3317,7 @@ function lockPrivate(state = 'required', detail) {
   // without fades whose callbacks belong to the revoked authorization.
   closeAbsPopup(); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeRelevancePopup(); closeVenueTooltip();
   _absBtn = null; _dismissTap = null; clearTimeout(_relPopupTimer); _relPopupTimer = null;
-  feedTeardown(); refreshTeardown(); briefTeardown(); activityTeardown();
+  feedTeardown(); refreshTeardown(); briefTeardown(); activityTeardown(); peopleTeardown();
   const askSelection = document.getElementById('chatAskSel'); if (askSelection) askSelection.remove();
   const readerMenu = document.getElementById('readerMenu'); if (readerMenu) { clearTimeout(readerMenu._leaveT); readerMenu.classList.remove('open', 'glide', 'leaving'); }
   const readerMore = document.getElementById('readerMore'); if (readerMore) readerMore.setAttribute('aria-expanded', 'false');
@@ -3480,6 +3517,7 @@ function privatePathCap(path) {
   if (path === 'papers_database.csv') return 16 * 1024 * 1024;
   if (path === 'interests_database.csv' || path === 'groups_database.csv') return 2 * 1024 * 1024;
   if (path === STATE_FILE) return STATE_CAP;   // Phase 15 (B2)
+  if (path === PEOPLE_FILE) return PEOPLE_CAP;   // Phase 21 (B2)
   if (/^annotations\/(?:_vault|_index|[A-Za-z0-9][A-Za-z0-9._-]{0,199})\.json$/.test(path) && !path.includes('..')) return 4 * 1024 * 1024;
   if (path === 'briefs/_index.json') return 2 * 1024 * 1024;   // Phase 14: the answers' index
   if (/^briefs\/[a-z0-9][a-z0-9-]{0,199}\.json$/.test(path) && !path.startsWith('briefs/up-')) return 64 * 1024;   // one paper's answers
@@ -3495,7 +3533,7 @@ function privatePathCap(path) {
 async function privateReadFile(path, optional = false, superseded = null, held = null, ref = null) {
   const epoch = capturePrivateEpoch(), cap = privatePathCap(path);
   // Phase 15 (B2): the state file is optional (a layout 4 library has none); ref pins a read to one commit
-  if (optional && !path.startsWith('annotations/') && !path.startsWith('briefs/') && path !== STATE_FILE && path !== 'activity.json') throw new Error('Required private CSV cannot be optional');
+  if (optional && !path.startsWith('annotations/') && !path.startsWith('briefs/') && path !== STATE_FILE && path !== PEOPLE_FILE && path !== 'activity.json') throw new Error('Required private CSV cannot be optional');
   const binding = { epoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token, superseded };
   const dropped = () => !!(superseded && superseded());
   const url = ghApiBase() + '/contents/' + path.split('/').map(encodeURIComponent).join('/') + '?ref=' + encodeURIComponent(ref || GH_BRANCH);
@@ -3560,36 +3598,59 @@ async function privateReadLibrary(superseded = null) {
   checkPrivateEpoch(epoch);
   const infos = libraryListing(listing);
   if (!infos) return privateReadBundleByFile(superseded);   // Phase 15 (B2): still one snapshot without the listing
-  // Phase 15 (B2): papers_state.csv from the same listing, so the pair is one tree's; null when the tree has none
+  // Phase 15 (B2): papers_state.csv from the same listing, so the pair is one tree's; null when the tree has none.
+  // Phase 21 (B2): the people file from it too, fifth: null when the tree has none, PEOPLE_UNREAD when it can't be read
   return Promise.all(LIBRARY_CSVS.map((name, i) => privateBlobText(name, infos[i], binding, syncedHeld(name)))
-    .concat([infos.state ? privateBlobText(STATE_FILE, infos.state, binding, syncedHeld(STATE_FILE)) : null]));
+    .concat([infos.state ? privateBlobText(STATE_FILE, infos.state, binding, syncedHeld(STATE_FILE)) : null,
+      infos.people === null ? null : infos.people ? peopleRead(privateBlobText(PEOPLE_FILE, infos.people, binding, syncedHeld(PEOPLE_FILE))) : PEOPLE_UNREAD]));
 }
 /* The three files' entries in a root listing (an array of {name, path, type, sha, size}), or null. Phase 15 (B2): the
    state file's entry as infos.state, null when the tree has none. Its rule depends on the layout: in layout 5 the
    state file is required, in layout 4 it is not (libraryBundle applies it once the papers file's header is read, and
-   a layout 5 library without one is an error there, never a fallback here). An entry that is there must be valid. */
+   a layout 5 library without one is an error there, never a fallback here). An entry that is there must be valid.
+   Phase 21 (B2): the people file's entry as infos.people: null when the tree has none, false when its entry is not a
+   file Scout can read (two entries, a folder, past PEOPLE_CAP). That never makes the listing unusable: only the People
+   section is off. */
 function libraryListing(listing) {
   if (!Array.isArray(listing) || listing.length > 1000) return null;
   const infos = [];
-  for (const name of LIBRARY_CSVS.concat([STATE_FILE])) {
+  const entry = name => {   // the one valid entry for a file, or null when there is none, or false
     const rows = listing.filter(row => row && typeof row === 'object' && row.path === name), row = rows[0];
-    if (name === STATE_FILE && !rows.length) { infos.state = null; break; }
+    if (!rows.length) return null;
     if (rows.length !== 1 || row.type !== 'file' || row.name !== name || typeof row.sha !== 'string' || !/^[0-9a-f]{40}$/.test(row.sha) ||
-        !Number.isSafeInteger(row.size) || row.size < 0 || row.size > privatePathCap(name)) return null;
-    if (name === STATE_FILE) infos.state = { type: 'file', path: name, sha: row.sha, size: row.size };
-    else infos.push({ type: 'file', path: name, sha: row.sha, size: row.size });
+        !Number.isSafeInteger(row.size) || row.size < 0 || row.size > privatePathCap(name)) return false;
+    return { type: 'file', path: name, sha: row.sha, size: row.size };
+  };
+  for (const name of LIBRARY_CSVS.concat([STATE_FILE])) {
+    const info = entry(name);
+    if (name === STATE_FILE && info === null) { infos.state = null; break; }
+    if (!info) return null;
+    if (name === STATE_FILE) infos.state = info;
+    else infos.push(info);
   }
+  infos.people = entry(PEOPLE_FILE);
   return infos;
 }
 /* Phase 15 (B2): the library read file by file when there is no listing, still as one snapshot. Fix round (Sol's
    finding 3): in every layout, all four files are read at the commit the branch names now, the state file too (null
    when that commit has none), so a live or corrupt state file beside a legacy header is seen and refused. A file whose
-   SHA did not move comes from its held pair, without a download. */
+   SHA did not move comes from its held pair, without a download. Phase 21 (B2): the people file too, at the same
+   commit and optional, fifth (peopleRead). */
 async function privateReadBundleByFile(superseded = null) {
   const commit = await privateHeadCommit(superseded);
   return Promise.all(LIBRARY_CSVS.map(name => privateReadFile(name, false, superseded, syncedHeld(name), commit))
-    .concat([privateReadFile(STATE_FILE, true, superseded, syncedHeld(STATE_FILE), commit)]));
+    .concat([privateReadFile(STATE_FILE, true, superseded, syncedHeld(STATE_FILE), commit),
+      peopleRead(privateReadFile(PEOPLE_FILE, true, superseded, syncedHeld(PEOPLE_FILE), commit))]));
 }
+/* Phase 21 (Sol's correction 5): the people file's read never fails the library. A lock, a definite refusal and a
+   superseded load go on as they would for any file (Phase 19's guards); any other failure (a network error, a wait,
+   an answer that does not read, a file too large) makes it PEOPLE_UNREAD, which turns the People section off. */
+const PEOPLE_UNREAD = Object.freeze({ unread: true });
+function peopleRead(read) {
+  return read.catch(e => { if (e && (e.privateAuth || e.definite || e.target || /^Superseded/.test(e.message || ''))) throw e; return PEOPLE_UNREAD; });
+}
+/* The people file's text from a read's result: null when the tree has none, false when it could not be read */
+function peopleTextOf(file) { return file === PEOPLE_UNREAD ? false : file ? (file.text || '') : null; }   // as GitHub has it: peopleParse checks field sizes before any line ending is changed, as the worker does
 /* The commit the branch names now (GET /git/ref/heads/{branch}), checked as a 40-hex commit SHA */
 async function privateHeadCommit(superseded = null) {
   const epoch = capturePrivateEpoch(), binding = { epoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token, superseded };
@@ -3606,7 +3667,7 @@ async function privateHeadCommit(superseded = null) {
    a lock clears them all (Synced is declared beside Private). Private libraries only: a public one reads its file
    before every save, as before. */
 const LIBRARY_CSVS = ['papers_database.csv', 'interests_database.csv', 'groups_database.csv'];
-const SYNCED_FILES = LIBRARY_CSVS.concat(['papers_state.csv']);   // Phase 15 (B2): the state file keeps its pair too (and is cached, LIBCACHE_FILES)
+const SYNCED_FILES = LIBRARY_CSVS.concat(['papers_state.csv', 'people_database.csv']);   // Phase 15 (B2): the state file keeps its pair too (and is cached, LIBCACHE_FILES); Phase 21 (B2): so does the people file
 function syncedKeep(file, sha, text, token) {
   if (!isPrivate() || !SYNCED_FILES.includes(file) || !/^[0-9a-f]{40}$/.test(sha) || typeof text !== 'string' || !token || token !== Private.token) return;
   Synced.set(file, Object.freeze({ sha, text, target: _acceptedTarget, epoch: Private.epoch, token }));
@@ -3620,8 +3681,9 @@ function syncedHeld(file) {
 /* ===== THE LIBRARY ON THIS DEVICE (Phase 15, B1) =====
    An encrypted copy of the three library CSVs in this browser, so a start whose files GitHub has not changed downloads
    none of them. Dhruv approved it on 2026-10-15. Sol's correction 6 is the contract:
-   - Its own database (LIBCACHE_DB), apart from the notes and PDF stores. Only the three library CSVs go in
-     (LIBCACHE_FILES), never annotations, uploads, PDFs or briefs.
+   - Its own database (LIBCACHE_DB), apart from the notes and PDF stores. Only the library's CSVs go in
+     (LIBCACHE_FILES: the three, the state file and, from Phase 21, the people file), never annotations, uploads, PDFs,
+     briefs or the weekly note.
    - Each file's exact blob bytes, before any BOM or newline change, encrypted with AES-GCM under a fresh 96-bit nonce.
      The target, the branch as written, the format, the path, the SHA and the size are bound in as additional data, so
      an entry decrypts only for the file and SHA it was written for. The decrypted bytes are used only when their size
@@ -3911,9 +3973,10 @@ async function loadPrivateLibrary() {
   if (!_papersText) privateView('loading');
   try {
     const files = await privateReadLibrary(overtaken); checkPrivateEpoch(epoch);
-    const texts = files.map(file => file ? normalizeNewlines(file.text) : null);   // the fourth: papers_state.csv, or null
+    const texts = files.slice(0, 4).map(file => file ? normalizeNewlines(file.text) : null);   // the fourth: papers_state.csv, or null
+    const people = peopleTextOf(files[4]);   // Phase 21 (B2): the fifth, the people file: text, null, or false (unread)
     if (_papersText) {
-      const out = refreshReceive({ req, saveGen, how: 'startup', texts: { papers: texts[0], interests: texts[1], groups: texts[2], state: texts[3] ?? null } });
+      const out = refreshReceive({ req, saveGen, how: 'startup', texts: { papers: texts[0], interests: texts[1], groups: texts[2], state: texts[3] ?? null, people } });
       return out.status === 'accepted' || out.status === 'deferred';
     }
     const bundle = libraryBundle(texts[0], texts[3] ?? null), papers = bundle.rows;   // Phase 15 (B2): the pair, checked before anything is adopted
@@ -3928,6 +3991,8 @@ async function loadPrivateLibrary() {
     refreshHeld(() => {
       if (backup && backup.interests) { allInterests = mergeBackupRows(interests, backup.interests, 'interest_name'); _interestsDirty = true; announceRestore(backup); }
       if (backup && backup.groups) { allGroups = mergeBackupRows(groups, backup.groups, 'group_name'); _groupsDirty = true; announceRestore(backup); }
+      takePeople(people, true);   // Phase 21: never a reason to refuse the library; a file that won't read turns People off
+      if (peopleRestore(backup)) announceRestore(backup);
       buildGroupOrder(); applyPapers(papers, texts[0], bundle); _ownerDecisionDone = true;
       document.getElementById('privateAccess').hidden = true; document.documentElement.classList.remove('private-locked');
       applyHash();
@@ -4547,7 +4612,7 @@ function rowSnapshot(rows, key, saved) {          // saved: a backup's own snaps
   return m;
 }
 let _backupTimer = null, _restoreAnnounced = false;
-function anyDirty() { return _stateDirty || _interestsDirty || _groupsDirty; }
+function anyDirty() { return _stateDirty || _interestsDirty || _groupsDirty || People.dirty; }
 function paperFields(p) { const o = {}; EDITABLE_FIELDS.forEach(f => o[f] = p[f] || ''); return o; }
 function scheduleBackup() { if (!isOwner()) return; requireOwner(); clearTimeout(_backupTimer); _backupTimer = setTimeout(privateCallback(writeBackup), 250); }
 function writeBackup() {
@@ -4579,6 +4644,7 @@ function writeBackup() {
     }
     if (_interestsDirty) b.interests = { rows: allInterests, loadedNames: _loadedInterestNames, loadedFields: Object.fromEntries(_loadedInterestFields) };
     if (_groupsDirty) b.groups = { rows: allGroups, loadedNames: _loadedGroupNames, loadedFields: Object.fromEntries(_loadedGroupFields) };
+    if (People.dirty) b.people = peopleBackup();   // Phase 21: each pending edit with its own baseline
     checkedStorageSet(LOCAL_BACKUP_KEY, JSON.stringify(b));
   } catch (e) { toastError("Could not save the browser backup: " + e.message); throw e; }
 }
@@ -4894,16 +4960,18 @@ async function fetchLibraryTexts() { const _authEpoch = capturePrivateEpoch();
   requireTarget();
   const names = ['papers_database.csv', 'interests_database.csv', 'groups_database.csv'];
   let texts;
-  if (isPrivate()) { const files = await privateAwait(privateReadLibrary(), _authEpoch); texts = files.map(file => file ? normalizeNewlines(file.text) : null); }
+  if (isPrivate()) { const files = await privateAwait(privateReadLibrary(), _authEpoch); texts = files.slice(0, 4).map(file => file ? normalizeNewlines(file.text) : null).concat([peopleTextOf(files[4])]); }
   else if (CSV_BASE_URL) texts = await privateAwait(Promise.all(names.map(name => fetchNormalized(csvUrl(name), { fallback: false }))), _authEpoch);
   else texts = await privateAwait(Promise.all(names.map(name => fetchLocal(name))), _authEpoch);
   requireTarget();
   // Phase 15 (B2): the fourth, papers_state.csv, is a private library's only (root's ruling R1): a public page reads
-  // the three files as before, and its pull refuses a split papers file (libraryBundle)
-  return { papers: texts[0], interests: texts[1], groups: texts[2], state: texts[3] ?? null };
+  // the three files as before, and its pull refuses a split papers file (libraryBundle). Phase 21: so is the fifth, the
+  // people file (text, null when absent, false when unread); a result without it (undefined) leaves People alone.
+  return { papers: texts[0], interests: texts[1], groups: texts[2], state: texts[3] ?? null, people: isPrivate() ? texts[4] : undefined };
 }
 /* A result: { req, saveGen, how, view, texts: { papers, interests, groups } } (a text is null when the result has no
-   copy of that file); how is 'startup', 'pull', 'button' or 'show'; view is the feed a pull or the button was asked
+   copy of that file; Phase 21: texts.people, the people file, is undefined when the result does not carry it, which a
+   public page's never does, else its text, null or false, and goes with the result as a whole); how is 'startup', 'pull', 'button' or 'show'; view is the feed a pull or the button was asked
    from (feedViewKey: the project, or For you's sort and interest). Returns { status, n, ids, all }:
      superseded  a newer result was accepted since it was requested
      stale       a save was running, or started or ended, since it was requested: nothing taken, ask again
@@ -4925,7 +4993,8 @@ function refreshReceive(r) {
   // Phase 15 (B2): the papers and state pair is compared together: another device's star changes the state text alone
   let papersNew = texts.papers !== null && (texts.papers !== _papersText || (parsed.bundle ? parsed.bundle.stateText : null) !== Layout.stateText);
   if (papersNew && _papersFresh && isOlder(parsed.fresh, _papersFresh)) papersNew = false;   // an older copy: ours stays
-  const metaNew = (texts.interests !== null && texts.interests !== _interestsText) || (texts.groups !== null && texts.groups !== _groupsText);
+  const metaNew = (texts.interests !== null && texts.interests !== _interestsText) || (texts.groups !== null && texts.groups !== _groupsText)
+    || (texts.people !== undefined && texts.people !== People.text);   // Phase 21: another device followed someone
   const pulled = r.how !== 'startup', readerOpen = document.getElementById('reader').classList.contains('open'), ms = document.getElementById('mainScroll');
   const ok = !readerOpen && (r.how === 'show' ? !(_paperViewActive || _searchActive || _listViewActive)
     : pulled ? feedActive() && (r.view === undefined || feedViewKey() === r.view) && ms.scrollTop <= 40 : quietSwapOK());
@@ -4947,6 +5016,7 @@ function refreshReceive(r) {
     try {
       if (texts.interests !== null) takeInterests(texts.interests, true, parsed.interests);
       if (texts.groups !== null) takeGroups(texts.groups, true, parsed.groups);
+      if (texts.people !== undefined) takePeople(texts.people, true);   // Phase 21: before the papers, whose posts show it
       if (papersNew) applyPapers(parsed.papers, texts.papers, parsed.bundle);
     } finally { Refresh.applying = false; }
     // one rebuild: the feed from its top where it shows (new papers in by rank, decided posts out, the records gone,
@@ -6122,6 +6192,7 @@ function postHTML(k) {
   const venue = rowVenueLabel(p), date = displayDate(p), must = dynamicRelevance(p) === 'definitely';
   const dek = hasText(p.title) && p.title.trim() !== title.trim() ? p.title : '';   // the paper's own title, under the headline
   const added = feedAddedText(p);   // in For you's New, when Scout added it (plain text, else '')
+  const follow = followMarks(p);   // Phase 21 (mockup B): people you follow on it, since you followed them: their names bold, and Following
   const url = !pdfSourceOf(p) && p.url ? p.url : '';
   const open = url ? `<a class="ic open" data-act="open" href="${esc(url)}" target="_blank" rel="noopener" aria-label="Open the paper">${FEED_ICON.open}</a>`
     : pdfSourceOf(p) || isOwner() ? `<button type="button" class="ic open" data-act="open" onclick="feedOpen(this.closest('.post').dataset.key)" aria-label="${pdfSourceOf(p) ? 'Read the paper' : 'Add a PDF to read it'}">${FEED_ICON.open}</button>` : '';
@@ -6131,8 +6202,8 @@ function postHTML(k) {
       <button type="button" class="ic save${paperMarks(p).listed ? ' on' : ''}" data-act="save" onclick="openSaveSheet(event, this, this.closest('.post').dataset.key)" aria-haspopup="dialog" aria-expanded="${Feed.sheet && Feed.sheet.key === k ? 'true' : 'false'}" aria-label="Save to a project"${feedLive(k) ? '' : ' disabled'}>${FEED_ICON.save}</button>
       ${open}</div>` : '';
   return `<article class="post${kept ? ' kept' : ''}${sel}" data-key="${dataAttr(k)}" data-rec="${rec && !rec.stale ? rec.id : 0}" tabindex="-1" onclick="feedTap(event, this)">${postNearHTML(k)}
-      <div class="meta">${venue ? `<span class="venue">${esc(venue)}</span>` : ''}${date ? `<span>${esc(date)}</span>` : ''}${added ? `<span class="added">${esc(added)}</span>` : ''}${must ? '<span class="must">Must Read</span>' : ''}</div>
-      <h2 class="post-t">${esc(title)}</h2>${dek ? `<p class="dek">${esc(dek)}</p>` : ''}${hasText(p.authors) ? `<p class="by">${esc(p.authors)}</p>` : ''}
+      <div class="meta">${venue ? `<span class="venue">${esc(venue)}</span>` : ''}${date ? `<span>${esc(date)}</span>` : ''}${added ? `<span class="added">${esc(added)}</span>` : ''}${must ? '<span class="must">Must Read</span>' : ''}${follow ? '<span class="following">Following</span>' : ''}</div>
+      <h2 class="post-t">${esc(title)}</h2>${dek ? `<p class="dek">${esc(dek)}</p>` : ''}${hasText(p.authors) ? `<p class="by">${follow ? followAuthorsHTML(p.authors, follow) : esc(p.authors)}</p>` : ''}
       ${icons}</article>`;
 }
 /* A tap on a post opens its page, unless it was on one of its own controls */
@@ -9221,8 +9292,9 @@ function toggleIStatus(s) {
   renderInterests();
 }
 /* ===== THE INTERESTS PAGE (Phase 16) =====
-   From the top: Claude's weekly note (activityRender, its own element above the list), your interests, the
-   suggestions to add, and the dismissed ones, collapsed. Every confirmed interest shows, Peripheral ones too. A
+   From the top: Claude's weekly note (activityRender, its own element above the list), your interests, on a private
+   library the people you follow and Who to follow (Phase 21, peopleSectionHTML), the suggestions to add, and the
+   dismissed ones, collapsed. Every confirmed interest shows, Peripheral ones too. A
    suggestion shows only at Related or Core (actionableSuggestion); a Peripheral one stays in the file, unlisted and
    uncounted. Rejected rows of every level are under Dismissed, with Restore. Nothing here filters allInterests: the
    rows the page leaves out are still loaded, merged and saved as they are. */
@@ -9237,7 +9309,8 @@ const LEVEL_RANK = { definitely: 0, probably: 1, mildly: 2 };
 let _ipOpen = new Set(), _ipDismissedOpen = false;   // the cards opened and the Dismissed fold, kept across redraws
 function renderInterests() {
   keepAuthorDraft();
-  const main = document.getElementById('interestsMain');
+  keepPeopleDraft();   // Phase 21: the name being typed after + Follow someone keeps its text
+  const main = document.getElementById('interestsMain'), mark = focusMark(main);   // and whatever has the keyboard keeps it
   const own = isOwner(), lv = i => LEVEL_RANK[i.relevance_mapping] ?? 3;
   const mine = allInterests.filter(i => i.status === 'confirmed')
     .sort((a, b) => lv(a) - lv(b) || interestPaperCount(b.interest_name) - interestPaperCount(a.interest_name) || String(a.interest_name).localeCompare(String(b.interest_name)));
@@ -9249,6 +9322,7 @@ function renderInterests() {
   if (adding) html += `<div class="ip-card ip-form">${authorFormHTML()}</div>`;
   else if (own) html += `<button class="ip-add" onclick="openAuthorForm('interest')">+ Add an interest</button>`;
   html += '</section>';
+  if (isPrivate()) html += `<div id="fwPeople" data-sig="${peopleSig()}">${peopleSectionHTML()}</div>`;   // Phase 21: People you follow, Who to follow
   html += `<section class="ip-sec" aria-labelledby="ipSuggTitle"><div class="ip-sec-head"><h3 id="ipSuggTitle">Suggested</h3><span class="ip-sec-note">at most two a week</span></div>`;
   html += suggested.length ? `<p class="ip-legend">Claude suggests these from the papers it finds. When you add one, Claude also checks the papers already in your library against it.</p><div class="ip-list">${suggested.map(suggestionCardHTML).join('')}</div>`
     : '<p class="ip-empty">Nothing to review. Claude suggests at most two new interests a week.</p>';
@@ -9258,6 +9332,7 @@ function renderInterests() {
     html += `<div class="ip-list" id="ipDismissed"${_ipDismissedOpen ? '' : ' hidden'}>${dismissed.map(dismissedCardHTML).join('')}</div></section>`;
   }
   main.innerHTML = html;
+  focusBack(main, mark);
   activityRender();   // the note's links follow the cards shown now
 }
 /* One confirmed interest: its name, level and paper count; a tap opens what it covers and, for you, its controls
@@ -9317,7 +9392,7 @@ function toggleInterestCard(name) {
 function toggleDismissed() {
   _ipDismissedOpen = !_ipDismissedOpen;
   renderInterests();
-  const btn = document.querySelector('#interestsMain .ip-fold'); if (btn) btn.focus();
+  const btn = document.querySelector('#interestsMain .ip-dismissed .ip-fold'); if (btn) btn.focus();   // Phase 21: not the people's fold above it
 }
 /* A name in the weekly note: its card, shown now, scrolled to and given the keyboard */
 function interestJump(name) {
@@ -9345,8 +9420,10 @@ function interestCardNames() { return new Set(allInterests.filter(i => i.status 
 const ACTIVITY_FILE = 'activity.json';
 const ACTIVITY_CAP = 64 * 1024;   // the whole serialized file, UTF-8 bytes
 const ACTIVITY_FORMAT = 'scout-activity-v1';
-const ACTIVITY_SOURCES = ['quickread', 'harvest', 'survey', 'manual', 'unknown'];
-const ACTIVITY_SOURCE_NAME = { quickread: 'QuickRead', harvest: 'arXiv', survey: 'web search', manual: 'you', unknown: 'source not recorded' };
+const ACTIVITY_FORMAT_V2 = 'scout-activity-v2';   // Phase 21: a note with people (Who to follow and the checks)
+const ACTIVITY_SOURCES = ['quickread', 'harvest', 'follow', 'survey', 'manual', 'unknown'];   // version 2's, in the line's order
+const ACTIVITY_SOURCES_V1 = ['quickread', 'harvest', 'survey', 'manual', 'unknown'];
+const ACTIVITY_SOURCE_NAME = { quickread: 'QuickRead', harvest: 'arXiv', follow: 'people you follow', survey: 'web search', manual: 'you', unknown: 'source not recorded' };
 const ACTIVITY_ID = /^[a-z0-9][a-z0-9-]{0,199}$/;   // the paper id grammar (BRIEF_ID); never an upload's up- id
 const ACTIVITY_CONTROLS = /[\u0000-\u001f\u007f]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/;   // a control character or a lone surrogate
 /* state: idle (not read in this generation), loading, ready (doc), none (no file), invalid (not the format), error */
@@ -9358,7 +9435,12 @@ const Activity = { gen: 0, state: 'idle', doc: null, open: false, warned: false 
    integers, the five sources adding up to added.total and the two kinds of turned away to theirs; at most five
    examples of each kind, never more than the papers they stand for, each with a recorded why; paper ids, none twice;
    strings with no lone surrogate or control character, counted in code points (titles 300, a why 200, a name 120); at
-   most ten suggestions at Related or Core, dated in the week the note covers. Returns the document, or throws. */
+   most ten suggestions at Related or Core, dated in the week the note covers. Returns the document, or throws.
+   Phase 21 (version 2, tests/phase21/activity_cases_v2.json): a note with a `people` object is version 2, its format
+   scout-activity-v2, with a sixth source, follow; people holds at most 20 suggestions (a person key, a name, an
+   OpenAlex id or '', a reason of at most 200, a paper count) and at most 20 checks (key, name, a why of at most 200),
+   no key twice in either. A note without one is version 1 and is read as before (Sol's ruling 8): Who to follow then
+   waits. A page from before Phase 21 refuses version 2 and says the note could not be shown. */
 function activityCheck(text) {
   const bad = why => { throw Object.assign(new Error('activity.json: ' + why), { activityWhy: why }); };
   if (typeof text !== 'string') bad('not text');
@@ -9369,13 +9451,14 @@ function activityCheck(text) {
   const obj = v => !!v && typeof v === 'object' && !Array.isArray(v);
   const keys = (v, want) => obj(v) && Object.keys(v).length === want.length && want.every(k => hasOwn(v, k));
   const int = v => Number.isSafeInteger(v) && v >= 0;
-  const str = (v, max) => typeof v === 'string' && !ACTIVITY_CONTROLS.test(v) && [...v].length >= 1 && [...v].length <= max;
-  if (!keys(d, ['format', 'generated_at', 'window_days', 'added', 'turned_away', 'examples', 'suggested', 'problems'])) bad('fields');
-  if (d.format !== ACTIVITY_FORMAT) bad('format');
+  const str = (v, max, min = 1) => typeof v === 'string' && !ACTIVITY_CONTROLS.test(v) && [...v].length >= min && [...v].length <= max;
+  const v2 = obj(d) && hasOwn(d, 'people'), sources = v2 ? ACTIVITY_SOURCES : ACTIVITY_SOURCES_V1;   // Phase 21: the shape says the version
+  if (!keys(d, ['format', 'generated_at', 'window_days', 'added', 'turned_away', 'examples', 'suggested', 'problems'].concat(v2 ? ['people'] : []))) bad('fields');
+  if (d.format !== (v2 ? ACTIVITY_FORMAT_V2 : ACTIVITY_FORMAT)) bad('format');
   if (!activityStamp(d.generated_at)) bad('generated_at');
   if (d.window_days !== 7) bad('window_days');
-  if (!keys(d.added, ['total', 'by_source']) || !int(d.added.total) || !keys(d.added.by_source, ACTIVITY_SOURCES) || !ACTIVITY_SOURCES.every(k => int(d.added.by_source[k]))) bad('added');
-  if (ACTIVITY_SOURCES.reduce((n, k) => n + d.added.by_source[k], 0) !== d.added.total) bad('added.by_source does not add up');
+  if (!keys(d.added, ['total', 'by_source']) || !int(d.added.total) || !keys(d.added.by_source, sources) || !sources.every(k => int(d.added.by_source[k]))) bad('added');
+  if (sources.reduce((n, k) => n + d.added.by_source[k], 0) !== d.added.total) bad('added.by_source does not add up');
   const t = d.turned_away;
   if (!keys(t, ['total', 'no_match', 'touches_only']) || ![t.total, t.no_match, t.touches_only].every(int) || t.no_match + t.touches_only !== t.total) bad('turned_away');
   const ex = d.examples;
@@ -9388,6 +9471,14 @@ function activityCheck(text) {
   if (!Array.isArray(d.suggested) || d.suggested.length > 10 || !d.suggested.every(x => keys(x, ['name', 'level', 'date']) && str(x.name, 120)
     && ['probably', 'definitely'].includes(x.level) && activityDay(x.date) && x.date <= day && x.date >= weekAgo)) bad('suggested');
   if (!keys(d.problems, ['failed_passes', 'waiting']) || !int(d.problems.failed_passes) || !int(d.problems.waiting)) bad('problems');
+  if (v2) {
+    const p = d.people, key = v => peopleKeyOK(v), list = v => Array.isArray(v) && v.length <= 20;
+    if (!keys(p, ['suggested', 'checks']) || !list(p.suggested) || !list(p.checks)) bad('people');
+    if (!p.suggested.every(x => keys(x, ['key', 'name', 'openalex', 'reason', 'papers']) && key(x.key) && str(x.name, 120) && typeof x.openalex === 'string'
+      && /^(?:A\d{4,15})?$/.test(x.openalex) && str(x.reason, 200, 0) && int(x.papers))) bad('people.suggested');
+    if (!p.checks.every(x => keys(x, ['key', 'name', 'why']) && key(x.key) && str(x.name, 120) && str(x.why, 200, 0))) bad('people.checks');
+    if (new Set(p.suggested.map(x => x.key)).size !== p.suggested.length || new Set(p.checks.map(x => x.key)).size !== p.checks.length) bad('a person twice');
+  }
   return d;
 }
 /* A time in UTC to the second, as the worker writes it (2026-10-17T07:05:00Z), that names a real instant */
@@ -9460,6 +9551,7 @@ function activityRender() {
   if (!isPrivate() || !Private.authorized) { el.innerHTML = ''; el.hidden = true; return; }
   el.hidden = false;
   el.innerHTML = activityHTML();
+  peopleRender();   // Phase 21: Who to follow and the checks come from the note too
 }
 function activityToggle() {
   Activity.open = !Activity.open;
@@ -9468,6 +9560,12 @@ function activityToggle() {
 }
 const activityNum = n => n.toLocaleString('en-US');
 const activityCount = (n, one, many) => `${activityNum(n)} ${n === 1 ? one : many}`;
+/* Phase 21: whether a note was written after the whole of a calendar day here (a follow's date_updated), and not after
+   now: only such a note can say whether the worker knows someone followed that day */
+function noteAfter(d, day) {
+  const at = d ? Date.parse(d.generated_at) : NaN, end = new Date(String(day || '').trim() + 'T23:59:59.999').getTime();
+  return at > end && at <= Date.now();
+}
 /* "Week to Oct 17": the day the note was written, in New York, where the worker's day is */
 function activityWeek(at) {
   try {
@@ -9508,6 +9606,505 @@ function activityHTML() {
   }
   return html;
 }
+/* ===== PEOPLE YOU FOLLOW (Phase 21, Part B) =====
+   people_database.csv at the root of a private data repository, one row a person: person_key, display_name, status
+   (confirmed: followed; rejected: dismissed or unfollowed), aliases and openalex_ids ('|'-separated), discovered_from,
+   date_added, date_updated, notes, and any column this page does not know. This page and the owner command
+   (python3 -m ingest.suggest --person) write it; the worker only reads it. Private libraries only: a public page reads
+   no people file and shows no People section and no post line. Sol's correction 5 is the contract:
+   - Read with the library, from the same root listing (or at the same commit without one), as an optional file:
+     absent means nobody is followed. A file that cannot be read, or that breaks the worker's rules (peopleParse, as
+     ingest/people.py parse), turns the People section off with one line; it never stops the library. A lock, signing
+     out too, clears it all (peopleTeardown).
+   - Each action (Follow, Dismiss, Unfollow, Follow again, a typed name) is one edit to one person, in People.edits by
+     key: `set`, the fields it writes and only those (its mask: status and date_updated always, together, and on a
+     Follow a new episode), the row as it was then, and `was`, that person's status, date and episode in the file as
+     last read (the baseline; null for a person the file did not have). Edits stay pending through a pull, a conflict
+     retry and a failed save, and go in the browser backup with their baselines (peopleBackup).
+   - The episode (Sol's Part A review, finding 9): a follow is one episode, named by a fresh random token of 16
+     lowercase hex characters (peopleEpisode), so the worker can tell an Unfollow and Follow again on one day from no
+     change. Follow (on Who to follow, on + Follow someone) and Follow again write a new one in the same change as the
+     status and date; Unfollow and Dismiss leave it as it is; Undo of a Follow puts back the episode the row had. A row
+     with none (empty, or no column) is from before it.
+   - A save (mergePeople) reads the file as GitHub has it now and writes only each edit's masked fields: onto GitHub's
+     row for that person (by key, or by a name or alias that folds the same), or a new row when it has none. Every other
+     field, column, row, alias and id stays as GitHub has it. A file GitHub does not have yet is created with
+     PEOPLE_HEADER. Nothing over PEOPLE_CAP is ever sent (_ghPutFile). For each edit the save keeps what it did (its
+     outcome): the key of the row it wrote, whether it made that row, the masked fields before and after.
+   - Two devices that change the same person: the save that reaches GitHub last decides that person's status and date;
+     nothing else in the row changes.
+   - Undo (Sol's Part B review, findings 1 and 2) touches only its own action's row and masked fields. An edit not saved
+     yet is taken back. One saved, or taken back while its save was out, gets its opposite from that save's outcome: on
+     the row it actually wrote (an alias's too), the masked fields as they were before it, and only while that row,
+     read again at the next save, still has what the action wrote (for a Follow, its token). A row the action made is
+     removed only while every field of it is still as written: a repair made since (ids, aliases, notes), or a row
+     another writer had made under that key, stays. Unfollow and Dismiss never touch the episode, nor does their Undo.
+   - Following on a post (followMarks) comes from folded author names and the follow date. It cannot tell two people
+     with one name apart, so the post says only "Following", never that it is that person. The dates are calendar
+     days: a paper added earlier on the day someone was followed shows it too. */
+const PEOPLE_HEADER = ['person_key', 'display_name', 'status', 'aliases', 'openalex_ids', 'discovered_from', 'date_added', 'date_updated', 'notes', 'episode'];
+const PEOPLE_SUFFIXES = ['jr', 'sr', 'ii', 'iii', 'iv'];
+const PEOPLE_KEY = /^[a-z0-9]+(?:-[a-z0-9]+){1,7}$/;   // the one key grammar (ingest/people.py KEY_PATTERN), at most 80 characters
+const PEOPLE_AUTHORS = /(\s*(?:,|;|(?<![\p{L}\p{N}_])and(?![\p{L}\p{N}_])|&)\s*)/u;   // ingest/people.py split_authors, kept
+const WHO_SHOWN = 5;   // Who to follow shows this many at a time, refilled as you act
+
+/* ---- names: ingest/people.py fold and key, the same answers on tests/phase21/name_fold_cases.json ---- */
+function peopleTokens(name) {   // compatibility decomposition, apostrophes out, anything else outside ASCII out, lower case
+  if (typeof name !== 'string') return [];
+  const text = name.normalize('NFKD').replace(/['`‘’ʼ]/g, '').replace(/[^\x00-\x7f]/g, '').toLowerCase();
+  const parts = text.split(/[^a-z0-9]+/).filter(t => t && !PEOPLE_SUFFIXES.includes(t));
+  return parts.length >= 3 ? [parts[0], parts[parts.length - 1]] : parts;
+}
+function peopleFold(name) { return peopleTokens(name).join(' '); }
+/* A person's key, or null: fewer than two tokens, or a key over 80 characters (refused, never cut) */
+function peopleKey(name) { const t = peopleTokens(name), k = t.join('-'); return t.length >= 2 && k.length <= 80 ? k : null; }
+function peopleKeyOK(k) { return typeof k === 'string' && k.length <= 80 && PEOPLE_KEY.test(k); }
+function peopleNameOK(s) { return typeof s === 'string' && !ACTIVITY_CONTROLS.test(s) && [...s].length >= 1 && [...s].length <= 120; }
+function peopleCells(v) { return String(v || '').split('|').map(x => x.trim()).filter(Boolean); }
+function peopleRowKey(row) { return String((row && row.person_key) || '').trim(); }
+/* A person's status, date and episode together: a baseline (an edit's `was`) */
+function peoplePair(row) { return row ? { status: String(row.status || '').trim(), date_updated: String(row.date_updated || '').trim(), episode: String(row.episode || '').trim() } : null; }
+/* A follow episode's token: 16 lowercase hex characters from the browser's random source */
+function peopleEpisode() { return [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join(''); }
+
+/* ---- the file ---- */
+/* Python's csv reader in its strict default dialect, as the worker reads the file: a record ends at \n, \r\n or \r
+   outside quotes; an empty line is an empty record ([]); "" is one empty field; a closing quote must come before a
+   comma or the end of a line; a quoted field must close; a field holds at most 131,072 characters (field_size_limit).
+   Returns the records, or throws. */
+function peopleRecords(text) {
+  const bad = why => { throw new Error('people_database.csv: ' + why); };
+  const cs = Array.from(text), out = [], LIMIT = 131072;
+  let rec = null, field = '', size = 0, st = 'record';
+  const add = c => { if (size >= LIMIT) bad('a field longer than 131,072 characters'); field += c; size++; };
+  const push = () => { rec.push(field); field = ''; size = 0; };
+  const eol = c => c === '\n' || c === '\r';
+  for (let k = 0; k < cs.length; k++) {
+    const c = cs[k], end = () => { push(); out.push(rec); rec = null; st = 'record'; if (c === '\r' && cs[k + 1] === '\n') k++; };
+    if (st === 'record') {
+      if (eol(c)) { out.push([]); if (c === '\r' && cs[k + 1] === '\n') k++; continue; }
+      rec = []; st = 'start';
+    }
+    if (st === 'start') { if (c === '"') st = 'quoted'; else if (c === ',') push(); else if (eol(c)) end(); else { add(c); st = 'field'; } }
+    else if (st === 'field') { if (c === ',') { push(); st = 'start'; } else if (eol(c)) end(); else add(c); }
+    else if (st === 'quoted') { if (c === '"') st = 'quote'; else add(c); }
+    else if (c === '"') { add(c); st = 'quoted'; }   // after a quote in a quoted field: a doubled quote, or the field's end
+    else if (c === ',') { push(); st = 'start'; }
+    else if (eol(c)) end();
+    else bad("',' expected after '\"'");
+  }
+  if (st === 'quoted') bad('unexpected end of data');
+  if (st !== 'record') { push(); out.push(rec); }
+  return out;
+}
+/* The worker's rules for the file (ingest/people.py parse): at most PEOPLE_CAP bytes; the first record a header of
+   unique, nonempty names with person_key, display_name and status (a blank first line is no header); an empty line
+   skipped, any other record as many cells as the header (a quoted empty record is one cell); each key in the grammar
+   and once; each name 1 to 120 characters of plain text; each OpenAlex id A and 4 to 15 digits; each episode empty (a
+   legacy row) or 16 lowercase hex characters. Returns { header, rows } (rows as read, every column kept), or throws. */
+function peopleParse(text) {
+  const bad = why => { throw new Error('people_database.csv: ' + why); };
+  if (typeof text !== 'string') bad('not read');
+  if (new TextEncoder().encode(text).length > PEOPLE_CAP) bad('over 256 KiB');
+  const records = peopleRecords(text.replace(/^\uFEFF/, '')), header = records[0], rows = [], keys = new Set();
+  if (!Array.isArray(header) || !header.length || new Set(header).size !== header.length || header.some(h => !h || h.includes('\u0000')) || !['person_key', 'display_name', 'status'].every(h => header.includes(h))) bad('no valid header');
+  for (const cells of records.slice(1)) {
+    if (!cells.length) continue;   // an empty line
+    if (cells.length !== header.length) bad(`a row has ${cells.length} cells, not ${header.length}`);
+    const row = Object.fromEntries(header.map((h, i) => [h, cells[i]])), key = peopleRowKey(row);
+    if (!peopleKeyOK(key) || keys.has(key)) bad('a key that is not a key, or twice');
+    if (!peopleNameOK(String(row.display_name || '').trim())) bad('a name that is empty, too long or not plain text');
+    if (peopleCells(row.openalex_ids).some(id => !/^A\d{4,15}$/.test(id))) bad('an OpenAlex id that is not one');
+    if (!/^(?:[0-9a-f]{16})?$/.test(String(row.episode || '').trim())) bad('an episode that is not 16 lowercase hex characters');
+    keys.add(key); rows.push(row);
+  }
+  return { header, rows };
+}
+/* The file as read with the library or a pull: its text, null (the tree has none) or false (it could not be read).
+   The same text again changes nothing; the edits made here stay on top of whatever comes. quiet: the caller redraws. */
+function takePeople(text, quiet) {
+  if (text === People.text) return false;
+  People.text = text;
+  try { const parsed = text === null ? { header: null, rows: [] } : peopleParse(text); People.header = parsed.header; People.rows = parsed.rows; People.bad = false; }
+  catch (e) { People.header = null; People.rows = []; People.bad = true; if (text !== false) console.warn('Scout could not read the people you follow: ' + e.message); }
+  peopleChanged();
+  if (!People.bad && People.dirty && isOwner()) scheduleAutoPush();   // edits that waited for a readable file
+  if (!quiet) peopleRedraw();
+  return true;
+}
+function peopleChanged() { People.ver++; People.view = null; People.index = null; }
+/* After a change: the Interests page, the posts on the page (their Following) and an open paper page (its Found via) */
+function peopleRedraw() {
+  renderInterests();
+  if (Feed.mounted) feedRepaintAll();
+  if (_paperViewActive) rerenderForMetadata();
+}
+/* Run by lockPrivate: nothing about the people you follow outlives the authorization */
+function peopleTeardown() {
+  Object.assign(People, { text: undefined, header: null, rows: [], bad: false, dirty: false, adding: false, draft: '', msg: '', goneOpen: false });
+  People.edits.clear(); People.sending = new Set(); People.undone.clear(); People.done.clear(); peopleChanged();
+}
+/* GitHub's rows with the edits made here on top: what the page shows and matches. An edit's fields go onto its row
+   (an opposite from Undo onto the row it names, `target`); a removal hides it; a person with no row gets one. */
+function peopleRows() {
+  if (People.view) return People.view;
+  const rows = People.rows.map(r => ({ ...r })), at = new Map(rows.map((r, i) => [peopleRowKey(r), i]));
+  People.edits.forEach((e, key) => {
+    const i = at.get(e.target || key);
+    if (e.remove) { if (i !== undefined) rows[i] = null; return; }
+    if (i !== undefined) Object.assign(rows[i], e.set);
+    else if (!e.target) { at.set(key, rows.length); rows.push({ ...e.row, ...e.set }); }
+  });
+  return People.view = rows.filter(Boolean);
+}
+function peopleRow(key) { return peopleRows().find(r => peopleRowKey(r) === key) || null; }
+function peopleBase(key) { return People.rows.find(r => peopleRowKey(r) === key) || null; }   // as GitHub had it, last read
+/* The person a name belongs to, by key or by a folded name or alias: a typed name that is an alias of someone here */
+function peopleByName(name) {
+  const fold = peopleFold(name), key = peopleKey(name);
+  return peopleRows().find(r => peopleRowKey(r) === key || [r.display_name].concat(peopleCells(r.aliases)).some(n => peopleFold(n) === fold)) || null;
+}
+
+/* ---- the post line and Found via ---- */
+/* The followed people's folded names and aliases, each with the day they were followed (date_updated, else
+   date_added), rebuilt only when the people change */
+function peopleIndex() {
+  if (People.index) return People.index;
+  const folds = new Map();
+  if (!People.bad) peopleRows().forEach(r => {
+    if (String(r.status || '').trim() !== 'confirmed') return;
+    const since = String(r.date_updated || '').trim() || String(r.date_added || '').trim();
+    [r.display_name].concat(peopleCells(r.aliases)).forEach(n => { const f = peopleFold(n); if (f.includes(' ') && !folds.has(f)) folds.set(f, since); });
+  });
+  return People.index = folds;
+}
+/* The folded names of the people you follow on a paper that was added on or after the day you followed them, or null.
+   A heuristic on names (Sol's ruling 7): the post says "Following" and makes their names bold, nothing more. */
+function followMarks(p) {
+  if (!isPrivate() || !p || !hasText(p.authors)) return null;
+  const folds = peopleIndex(), day = String(p.date_found || '').trim().slice(0, 10);
+  if (!folds.size || !day) return null;
+  const on = new Set();
+  String(p.authors).split(PEOPLE_AUTHORS).forEach((name, i) => { const f = i % 2 ? '' : peopleFold(name); if (folds.has(f) && day >= folds.get(f)) on.add(f); });
+  return on.size ? on : null;
+}
+/* The author line with the names in `on` (folded) in bold, every character of it as written */
+function followAuthorsHTML(text, on) {
+  return String(text).split(PEOPLE_AUTHORS).map((part, i) => i % 2 || !on.has(peopleFold(part)) ? esc(part) : `<b class="by-f">${esc(part)}</b>`).join('');
+}
+/* Found via for a paper the follow lane found (source_ref follow:<run>:author:<key>): "Following" and their name from
+   the people file, else "Someone you follow" */
+function followedVia(p) {
+  const ref = String(p.source_ref || '').trim();
+  if (!ref.startsWith('follow:')) return '';
+  const key = ref.includes(':author:') ? ref.split(':author:').pop() : '', row = key && isPrivate() && !People.bad ? peopleRow(key) : null;
+  return row && hasText(row.display_name) ? 'Following ' + row.display_name.trim() : 'Someone you follow';
+}
+
+/* ---- the edits, their backup, their save ---- */
+/* One action on one person: its edit (`set`: status and date together, and for a Follow a new episode; nothing
+   else), a save, a redraw, and an Undo for it alone. row: the row to add when the person has none here. */
+function peopleAct(key, status, row, said) {
+  requireOwner();
+  const prev = People.edits.get(key), shown = peopleRow(key), day = localDay(Date.now());
+  const set = status === 'confirmed' ? { status, date_updated: day, episode: peopleEpisode() } : { status, date_updated: day };
+  const e = { id: ++People.seq, set, row: { ...(shown || row), ...set }, was: peoplePair(peopleBase(key)) };
+  People.edits.set(key, e); People.dirty = true; peopleChanged();
+  showSaveBar(); peopleRedraw();
+  const undo = { id: e.id, key, prev };
+  toast(said, () => peopleUndo(undo), { fullTarget: true });
+}
+/* The opposite of what a save did for one edit (its outcome, peopleSaved): on the row it wrote, its masked fields as
+   they were, only while that row still has what the edit wrote; or, for a row it made, the row's removal, only while
+   every field of it is still as written */
+function peopleInverse(o) {
+  return o.made ? { id: ++People.seq, inverse: true, remove: true, target: o.target, expect: { ...o.after }, row: { ...o.after } }
+    : { id: ++People.seq, inverse: true, target: o.target, set: { ...o.before }, expect: { ...o.written }, row: { ...o.after } };
+}
+/* Undo of one action: its own row and masked fields, nothing else. Not saved yet: the edit before it comes back, and
+   one whose save is on its way is marked, so peopleSaved writes the opposite of what lands. Saved: the opposite of
+   its outcome (peopleInverse), unless a newer edit for that row is pending. */
+function peopleUndo(u) {
+  requireOwner();
+  const cur = People.edits.get(u.key);
+  if (cur && cur.id === u.id) {
+    if (People.sending.has(u.id)) People.undone.add(u.id);
+    if (u.prev) People.edits.set(u.key, u.prev); else People.edits.delete(u.key);
+  } else {
+    const o = People.done.get(u.id);
+    if (!o || People.edits.has(o.target)) return;
+    People.done.delete(u.id);
+    People.edits.set(o.target, peopleInverse(o));
+  }
+  People.dirty = People.edits.size > 0 || People.dirty; peopleChanged();
+  showSaveBar(); peopleRedraw();
+}
+/* For the browser backup: each pending edit with its key, its mask and its baseline */
+function peopleBackup() { return { edits: [...People.edits].map(([key, e]) => [key, { ...e }]) }; }
+/* At start-up, a backup's edits pending again on top of the file just read. Returns whether there were any. An entry
+   this page could not have written is left out. */
+function peopleRestore(b) {
+  const saved = b && b.people && Array.isArray(b.people.edits) ? b.people.edits : [];
+  const fields = x => !!x && typeof x === 'object' && Object.values(x).every(v => typeof v === 'string');
+  const set = x => fields(x) && ['confirmed', 'rejected'].includes(x.status) && typeof x.date_updated === 'string' && (!hasOwn(x, 'episode') || /^(?:[0-9a-f]{16})?$/.test(x.episode));
+  saved.forEach(entry => {
+    const [key, e] = Array.isArray(entry) ? entry : [];
+    if (!peopleKeyOK(key) || !e || typeof e !== 'object' || !e.row || typeof e.row !== 'object' || !peopleNameOK(String(e.row.display_name || '').trim())) return;
+    if (e.remove ? !(e.inverse && peopleKeyOK(e.target) && fields(e.expect)) : !set(e.set)) return;
+    if ((e.target !== undefined && !peopleKeyOK(e.target)) || (e.expect !== undefined && !fields(e.expect))) return;
+    People.edits.set(key, { ...e, id: ++People.seq });
+  });
+  if (!People.edits.size) return false;
+  People.dirty = true; peopleChanged();
+  return true;
+}
+/* The save's merge (_ghMergePush): the file as GitHub has it now (text, or null when it has none), with each pending
+   edit applied as the module comment says. An edit with `expect` (an opposite from Undo, or an edit put back by an
+   Undo while its save was out) applies only while its row has those values, read now; else it is dropped. sent: each
+   edit it carried with its outcome ({target, made, before, written, after}, or {skipped}), for peopleSaved.
+   unchanged: GitHub already has them all, so nothing is written. A file that breaks the rules stops the save, the
+   edits kept. */
+function mergePeople(text) {
+  let remote;
+  try { remote = text === null ? { header: PEOPLE_HEADER.slice(), rows: [] } : peopleParse(text); }
+  catch (e) { throw Object.assign(new Error('The list of people you follow on GitHub couldn’t be read, so that change wasn’t saved. It’s kept in this browser.'), { fatal: true }); }
+  const header = remote.header.slice(), rows = remote.rows.map(r => ({ ...r })), sent = new Map();
+  const cell = (r, h) => String(r[h] == null ? '' : r[h]).trim(), has = (r, want) => Object.keys(want).every(h => cell(r, h) === String(want[h]).trim());
+  // A row an Undo removes must be exactly the row its Follow made, every column GitHub's file has now included, so a
+  // repair another writer made in any column (one added since, too) keeps the row
+  const whole = (r, want) => [...new Set(header.concat(Object.keys(want)))].every(h => cell(r, h) === String(want[h] == null ? '' : want[h]).trim());
+  let changed = false;
+  PEOPLE_HEADER.forEach(h => { if (!header.includes(h)) { header.push(h); changed = true; } });   // a column the file lacks joins it
+  const byName = row => {   // GitHub's row for an edit: by key, or by a name or alias that folds the same
+    const fold = peopleFold(row.display_name);
+    return rows.find(r => [r.display_name].concat(peopleCells(r.aliases)).some(n => peopleFold(n) === fold)) || null;
+  };
+  People.edits.forEach((e, key) => {
+    const t = e.target ? rows.find(r => peopleRowKey(r) === e.target) || null : rows.find(r => peopleRowKey(r) === key) || (e.remove ? null : byName(e.row));
+    if ((e.expect && (!t || !(e.remove ? whole(t, e.expect) : has(t, e.expect)))) || (e.inverse && !t)) { sent.set(key, { edit: e, outcome: { skipped: true } }); return; }
+    if (e.remove) { rows.splice(rows.indexOf(t), 1); changed = true; sent.set(key, { edit: e, outcome: { removed: true, target: peopleRowKey(t) } }); return; }
+    if (t) {
+      const before = Object.fromEntries(Object.keys(e.set).map(h => [h, cell(t, h)]));
+      if (!has(t, e.set)) { Object.assign(t, e.set); changed = true; }
+      sent.set(key, { edit: e, outcome: { target: peopleRowKey(t), made: false, before, written: { ...e.set }, after: { ...t } } });
+      return;
+    }
+    const n = Object.fromEntries(header.map(h => [h, '']));
+    PEOPLE_HEADER.forEach(h => { n[h] = String(e.row[h] == null ? '' : e.row[h]); });
+    Object.assign(n, { person_key: key }, e.set);
+    rows.push(n); changed = true;
+    sent.set(key, { edit: e, outcome: { target: key, made: true, written: { ...e.set }, after: { ...n } } });
+  });
+  rows.forEach(r => header.forEach(h => { if (r[h] == null) r[h] = ''; }));
+  sent.forEach(({ outcome }) => { const r = outcome.target && rows.find(x => peopleRowKey(x) === outcome.target); if (r && !outcome.removed) outcome.after = { ...r }; });   // as written, every column
+  People.sending = new Set([...sent.values()].map(x => x.edit.id));
+  const csv = toCSV(rows, { columns: header });
+  return { csv, header, rows, sent, text: changed ? csv : text, unchanged: !changed };
+}
+/* A people save landed (or GitHub had it all already): its rows are the new baseline. An edit it carried is done, and
+   its outcome kept for an Undo; one made since stays pending. One taken back while its save was out (People.undone)
+   gets its opposite, or, when the edit before it came back, that edit applies only while the row still has what this
+   one wrote. */
+function peopleSaved(out) {
+  People.header = out.header; People.rows = out.rows.map(r => ({ ...r })); People.text = out.text; People.bad = false;
+  out.sent.forEach(({ edit: e, outcome: o }, key) => {
+    const cur = People.edits.get(key), undone = People.undone.delete(e.id), landed = !o.skipped && !o.removed && !e.inverse;
+    if (!undone) {
+      if (cur === e) People.edits.delete(key);
+      if (landed) People.done.set(e.id, o);
+      return;
+    }
+    if (!landed) return;   // nothing of it landed: nothing to take back
+    if (cur) Object.assign(cur, { target: o.target, expect: o.made ? { ...o.after } : { ...o.written } });
+    else if (!People.edits.has(o.target)) People.edits.set(o.target, peopleInverse(o));
+  });
+  while (People.done.size > 50) People.done.delete(People.done.keys().next().value);   // an Undo toast lasts seconds
+  People.sending = new Set();
+  People.dirty = People.edits.size > 0; peopleChanged();
+  peopleRedraw();
+}
+
+/* ---- the actions ---- */
+function whoEntry(key) { const d = Activity.doc; return d && d.people ? d.people.suggested.find(x => x.key === key) || null : null; }
+function whoRow(x, status) {
+  const day = localDay(Date.now());
+  return { person_key: x.key, display_name: x.name, status, aliases: '', openalex_ids: x.openalex || '', discovered_from: x.reason ? 'Who to follow: ' + x.reason : 'Who to follow',
+    date_added: day, date_updated: day, notes: '' };
+}
+/* Follow and × on a Who to follow row: a row for that person, confirmed or rejected; the next one moves up at once */
+function followSuggested(key) {
+  const x = whoEntry(key);
+  if (!x || People.bad || peopleRow(key)) return;
+  const at = whoPlace(key);
+  peopleAct(key, 'confirmed', whoRow(x, 'confirmed'), `Following ${esc(x.name)}`);
+  whoFocus(at);
+}
+function dismissSuggested(key) {
+  const x = whoEntry(key);
+  if (!x || People.bad || peopleRow(key)) return;
+  const at = whoPlace(key);
+  peopleAct(key, 'rejected', whoRow(x, 'rejected'), `Dismissed ${esc(x.name)}`);
+  whoFocus(at);
+}
+/* A tap on a followed name: unfollowed (rejected, today), with Undo */
+function unfollowPerson(key) {
+  const r = peopleRow(key);
+  if (!r || People.bad || String(r.status).trim() !== 'confirmed') return;
+  const at = [...document.querySelectorAll('#interestsMain .fw-chip[data-pkey]')].findIndex(b => b.dataset.pkey === key);
+  peopleAct(key, 'rejected', r, `Unfollowed ${esc(r.display_name.trim())}`);
+  const chips = [...document.querySelectorAll('#interestsMain .fw-chip')], next = chips[Math.min(Math.max(at, 0), chips.length - 1)];
+  if (next) next.focus();
+}
+/* Follow on a dismissed or unfollowed person: confirmed again, from today */
+function followAgain(key) {
+  const r = peopleRow(key);
+  if (!r || People.bad || String(r.status).trim() !== 'rejected') return;
+  peopleAct(key, 'confirmed', r, `Following ${esc(r.display_name.trim())}`);
+  const next = document.querySelector('#interestsMain .fw-gone .fw-follow') || document.querySelector('#interestsMain .fw-add');
+  if (next) next.focus();
+}
+/* "+ Follow someone": a field for a name. Follow takes the name as written (spaces tidied): someone followed already
+   is said so; someone dismissed or unfollowed, or the same person by another spelling of theirs, is followed again; a
+   name in Who to follow is followed as that row is; anyone else gets a new row with no OpenAlex id, which the worker
+   looks up. A name the key rule refuses (one word, another script, too long) is asked again. */
+function peopleAddOpen() {
+  if (People.bad) return;
+  Object.assign(People, { adding: true, draft: '', msg: '' });
+  renderInterests();
+  const el = document.getElementById('fwName'); if (el) el.focus();
+}
+function peopleAddClose() {
+  Object.assign(People, { adding: false, draft: '', msg: '' });
+  renderInterests();
+  const el = document.querySelector('#interestsMain .fw-add'); if (el) el.focus();
+}
+function peopleAddKey(e) { if (e.key === 'Escape') { e.preventDefault(); peopleAddClose(); } }
+function peopleAddSubmit() {
+  requireOwner();
+  const el = document.getElementById('fwName'), name = String(el ? el.value : '').replace(/\s+/g, ' ').trim();
+  const say = msg => { People.draft = el ? el.value : ''; People.msg = msg; renderInterests(); const f = document.getElementById('fwName'); if (f) f.focus(); };
+  if (People.bad) return;
+  if (!name) return say('Type a name.');
+  if (!peopleNameOK(name)) return say('That name is too long.');
+  const key = peopleKey(name);
+  if (!key) return say('Write the first and last name, as on arXiv.');
+  const r = peopleByName(name);
+  if (r && String(r.status).trim() === 'confirmed') return say(`You already follow ${r.display_name.trim()}.`);
+  Object.assign(People, { adding: false, draft: '', msg: '' });
+  const x = r ? null : whoEntry(key), day = localDay(Date.now());
+  if (r) peopleAct(peopleRowKey(r), 'confirmed', r, `Following ${esc(r.display_name.trim())}`);
+  else if (x) peopleAct(key, 'confirmed', whoRow(x, 'confirmed'), `Following ${esc(x.name)}`);
+  else peopleAct(key, 'confirmed', { person_key: key, display_name: name, status: 'confirmed', aliases: '', openalex_ids: '', discovered_from: `manual: ${day} on the Interests page`,
+    date_added: day, date_updated: day, notes: '' }, `Following ${esc(name)}`);
+  const add = document.querySelector('#interestsMain .fw-add'); if (add) add.focus();
+}
+/* Before a redraw: what is typed in the name field */
+function keepPeopleDraft() {
+  const el = document.getElementById('fwName');
+  if (People.adding && el) People.draft = el.value;
+}
+/* Sol's Part B review, finding 6: the control that has the keyboard inside `root`, described (its id, or its tag,
+   classes, name and text, and the person or interest it belongs to) so that, drawn again, it takes the keyboard back
+   (focusBack). A save landing redraws the page; the keyboard stays where it was. */
+function focusMark(root) {
+  const el = document.activeElement;
+  if (!root || !el || el === root || typeof root.contains !== 'function' || !root.contains(el) || typeof el.closest !== 'function') return null;
+  return { id: el.id || '', tag: el.tagName, sig: focusSig(el) };
+}
+function focusSig(el) {
+  const holder = el.closest('[data-pkey], [data-iname]');
+  return [el.className, el.getAttribute('aria-label') || '', (el.textContent || '').trim(), holder ? holder.dataset.pkey || holder.dataset.iname || '' : ''].join('\u0000');
+}
+function focusBack(root, m) {
+  if (!m || !root) return;
+  const el = m.id ? document.getElementById(m.id) : [...root.querySelectorAll(m.tag.toLowerCase())].find(x => focusSig(x) === m.sig);
+  if (!el || !root.contains(el) || document.activeElement === el) return;
+  el.focus({ preventScroll: true });
+  if (el.tagName === 'INPUT' && el.setSelectionRange) { const n = el.value.length; el.setSelectionRange(n, n); }   // the typed name: its caret at the end
+}
+function peopleToggleGone() {
+  People.goneOpen = !People.goneOpen;
+  renderInterests();
+  const btn = document.querySelector('#interestsMain .fw-gone .ip-fold'); if (btn) btn.focus();
+}
+
+/* ---- the People section (mockup B): names only, no counts or reasons on screen ---- */
+function peopleSectionHTML() {
+  if (!isPrivate() || !Private.authorized) return '';
+  const own = isOwner(), head = note => `<section class="ip-sec fw-sec" aria-labelledby="fwTitle"><div class="ip-sec-head"><h3 id="fwTitle">People you follow</h3>${note ? `<span class="ip-sec-note">${note}</span>` : ''}</div>`;
+  if (People.bad) return head('') + '<p class="ip-empty">Scout couldn’t read the list of people you follow, so it can’t be changed here for now.</p></section>';
+  const rows = peopleRows(), status = r => String(r.status || '').trim(), name = r => String(r.display_name || '').trim();
+  const followed = rows.filter(r => status(r) === 'confirmed').sort((a, b) => String(a.date_updated || '').localeCompare(String(b.date_updated || '')) || name(a).localeCompare(name(b)));
+  let html = head(own && followed.length ? `${TOUCH ? 'tap' : 'click'} a name to unfollow` : '');
+  if (!followed.length) html += '<p class="ip-empty">You don’t follow anyone yet.</p>';
+  const chip = r => own ? `<button type="button" class="fw-chip" data-pkey="${dataAttr(peopleRowKey(r))}" aria-label="Unfollow ${dataAttr(name(r))}" onclick="unfollowPerson(this.dataset.pkey)">${esc(name(r))}</button>`
+    : `<span class="fw-chip">${esc(name(r))}</span>`;
+  const add = !own ? '' : People.adding ? `<form class="fw-form" onsubmit="event.preventDefault();peopleAddSubmit()">
+      <label class="sr-only" for="fwName">Name of someone to follow</label>
+      <input class="pp-input fw-input" id="fwName" type="text" maxlength="120" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Their name, as on arXiv" value="${dataAttr(People.draft)}" onkeydown="peopleAddKey(event)">
+      <button type="submit" class="ip-btn ip-btn-primary">Follow</button><button type="button" class="ip-btn" onclick="peopleAddClose()">Cancel</button>
+      <p class="fw-msg" id="fwMsg" role="status">${esc(People.msg)}</p></form>`
+    : '<button type="button" class="fw-chip fw-add" onclick="peopleAddOpen()">+ Follow someone</button>';
+  html += `<div class="fw-chips">${followed.map(chip).join('')}${add}</div>`;
+  // Sol's Part B review, finding 5: someone the worker may not know yet (no OpenAlex id in the file, and no note written
+  // after the day of the follow: a typed name, at once) or has a check for gets the one plain line, until it does
+  const d = Activity.state === 'ready' && Activity.doc && Activity.doc.people ? Activity.doc : null, checked = new Set(d ? d.people.checks.map(x => x.key) : []);
+  const missed = followed.filter(r => checked.has(peopleRowKey(r)) || (!peopleCells(r.openalex_ids).length && !noteAfter(d, r.date_updated))).map(name);
+  if (missed.length) html += `<p class="ip-legend fw-check">Scout may miss some papers from ${esc(missed.length > 1 ? missed.slice(0, -1).join(', ') + ' and ' + missed[missed.length - 1] : missed[0])} for now.</p>`;
+  html += '</section>';
+  html += `<section class="ip-sec fw-sec" aria-labelledby="fwWhoTitle"><div class="ip-sec-head"><h3 id="fwWhoTitle">Who to follow</h3></div><div id="fwWho">${whoHTML()}</div></section>`;
+  return html + goneHTML(rows);
+}
+/* What the People part was drawn from: the note's generation and state, and the people. renderInterests draws it in
+   #fwPeople; the note's arrival (activityRender) draws it again only when this changed. */
+function peopleSig() { return `${Activity.gen}.${Activity.state}.${People.ver}`; }
+function peopleRender() {
+  const el = document.getElementById('fwPeople');
+  if (!el || el.dataset.sig === peopleSig()) return;
+  keepPeopleDraft();
+  const mark = focusMark(el);
+  el.innerHTML = peopleSectionHTML(); el.dataset.sig = peopleSig();
+  focusBack(el, mark);
+}
+/* Who to follow's list from the note (people.suggested, best first): the first WHO_SHOWN with no row in the people
+   file, under no name or alias of anyone there. Each a name, its initials, Follow and ×. The note's states show
+   plainly; a note from before Phase 21 has no suggestions. */
+function whoShown() {
+  const rows = peopleRows(), keys = new Set(rows.map(peopleRowKey)), folds = new Set();
+  rows.forEach(r => [r.display_name].concat(peopleCells(r.aliases)).forEach(n => folds.add(peopleFold(n))));
+  return Activity.doc.people.suggested.filter(x => !keys.has(x.key) && !folds.has(peopleFold(x.name))).slice(0, WHO_SHOWN);
+}
+function whoHTML() {
+  const d = Activity.doc, st = Activity.state, own = isOwner();
+  if (st === 'error') return '<p class="ip-empty">Suggestions couldn’t be loaded.</p><button class="ip-btn fw-again" onclick="activityRetry()">Try again</button>';
+  if (st === 'idle' || st === 'loading') return '<p class="ip-empty">Loading…</p>';
+  if (st !== 'ready' || !d || !d.people) return '<p class="ip-empty">No suggestions yet.</p>';
+  const shown = whoShown();
+  if (!shown.length) return `<p class="ip-empty">${d.people.suggested.length ? 'No more suggestions today. Claude looks again tomorrow.' : 'No one to suggest yet.'}</p>`;
+  return `<ul class="fw-list">${shown.map(x => `<li class="fw-row" data-pkey="${dataAttr(x.key)}"><span class="fw-av fw-c${peopleShade(x.key)}" aria-hidden="true">${esc(peopleInitials(x.name))}</span><span class="fw-name">${esc(x.name)}</span>${own ? `<button type="button" class="fw-follow" aria-label="Follow ${dataAttr(x.name)}" onclick="followSuggested(this.closest('[data-pkey]').dataset.pkey)">Follow</button><button type="button" class="fw-x" aria-label="Dismiss ${dataAttr(x.name)}" onclick="dismissSuggested(this.closest('[data-pkey]').dataset.pkey)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>` : ''}</li>`).join('')}</ul>`;
+}
+function whoPlace(key) { return [...document.querySelectorAll('#fwWho .fw-row')].findIndex(li => li.dataset.pkey === key); }
+/* After Follow or ×, the keyboard goes to the row that moved up into that place, else the last, else + Follow someone */
+function whoFocus(at) {
+  const rows = [...document.querySelectorAll('#fwWho .fw-follow')], next = rows[Math.min(Math.max(at, 0), rows.length - 1)] || document.querySelector('#interestsMain .fw-add');
+  if (next) next.focus();
+}
+/* The dismissed and unfollowed, folded away, each with Follow (followAgain) */
+function goneHTML(rows) {
+  const gone = rows.filter(r => String(r.status || '').trim() === 'rejected').sort((a, b) => String(b.date_updated || '').localeCompare(String(a.date_updated || '')));
+  if (!gone.length) return '';
+  const name = r => String(r.display_name || '').trim();
+  return `<section class="ip-sec fw-gone"><button class="ip-fold" aria-expanded="${People.goneOpen}" aria-controls="fwGone" onclick="peopleToggleGone()"><span>Unfollowed and dismissed</span><svg class="ip-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></button>
+    <ul class="fw-list" id="fwGone"${People.goneOpen ? '' : ' hidden'}>${gone.map(r => `<li class="fw-row" data-pkey="${dataAttr(peopleRowKey(r))}"><span class="fw-av fw-c${peopleShade(peopleRowKey(r))}" aria-hidden="true">${esc(peopleInitials(name(r)))}</span><span class="fw-name">${esc(name(r))}</span>${isOwner() ? `<button type="button" class="fw-follow" aria-label="Follow ${dataAttr(name(r))}" onclick="followAgain(this.closest('[data-pkey]').dataset.pkey)">Follow</button>` : ''}</li>`).join('')}</ul></section>`;
+}
+/* The initials in a person's circle: the first letters of the first and last words of their name */
+function peopleInitials(name) {
+  const words = String(name || '').trim().split(/\s+/).map(w => w.replace(/^[^\p{L}\p{N}]+/u, '')).filter(Boolean);
+  if (!words.length) return '?';
+  const first = w => [...w][0];
+  return (first(words[0]) + (words.length > 1 ? first(words[words.length - 1]) : '')).toLocaleUpperCase();
+}
+function peopleShade(key) { let h = 0; for (const c of String(key)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % 6; }   // one of six circle colours, the same for a person every time
 function interestsEmptyHTML(what) {
   const msg = currentIStatus === 'suggested'
     ? `<strong>Nothing to review.</strong> When a digest run spots a new ${what === 'topics' ? 'topic' : 'interest'} in your papers, it shows up here for you to approve or dismiss.`
@@ -10101,7 +10698,7 @@ function _triggerDownload(content, filename, type) {
 }
 function resetChanges() {
   if (!confirm('Discard all unsaved changes and reload from the CSV files?')) return;
-  _stateDirty = false; _interestsDirty = false; _groupsDirty = false;
+  _stateDirty = false; _interestsDirty = false; _groupsDirty = false; People.edits.clear(); People.dirty = false; peopleChanged();
   clearBackup();
   hideSaveBar();
   _papersText = null; Layout.stateText = null; Layout.orphanPending = new Map();
@@ -10254,7 +10851,7 @@ function heldPapers() {
 }
 /* Rows deleted on GitHub that are kept for an edit made here that never reached it (papersSaved) */
 function goneKept() { return everyPaper().some(p => p._goneRemote); }
-function heldOnly() { return _stateDirty && !_interestsDirty && !_groupsDirty && heldPapers() && everyPaper().every(p => { const b = _loadedPaperFields.get(p.id) || {}; return EDITABLE_FIELDS.every(f => SCHEMA_FIELDS.includes(f) && !papersHas(f) || (p[f] || '') === (b[f] || '')); }); }
+function heldOnly() { return _stateDirty && !_interestsDirty && !_groupsDirty && !People.dirty && heldPapers() && everyPaper().every(p => { const b = _loadedPaperFields.get(p.id) || {}; return EDITABLE_FIELDS.every(f => SCHEMA_FIELDS.includes(f) && !papersHas(f) || (p[f] || '') === (b[f] || '')); }); }
 function scheduleAutoPush(delay) {
   if (!isOwner()) return; requireOwner();
   clearTimeout(_autoPushTimer);
@@ -10279,8 +10876,8 @@ function _ghFail(res, what) {
    won't inline, so the text comes from the blob its sha points at. */
 async function _ghGetFile(headers, filename) { const _authEpoch = capturePrivateEpoch(); requireOwner();
   // Phase 15 (B2): papers_state.csv may be absent (a layout 4 library): { sha: null, text: null } then, never an error.
-  // Only a private page reads it (root's ruling R1).
-  if (isPrivate()) return filename === STATE_FILE ? (await privateAwait(privateReadFile(STATE_FILE, true, null, syncedHeld(STATE_FILE)), _authEpoch)) || { sha: null, text: null } : privateReadFile(filename, false, null, syncedHeld(filename));
+  // Only a private page reads it (root's ruling R1). Phase 21: so may the people file, which the save then creates.
+  if (isPrivate()) return filename === STATE_FILE || filename === PEOPLE_FILE ? (await privateAwait(privateReadFile(filename, true, null, syncedHeld(filename)), _authEpoch)) || { sha: null, text: null } : privateReadFile(filename, false, null, syncedHeld(filename));
   const res = await privateAwait(ownerFetch(`${_ghFileUrl(filename)}?ref=${GH_BRANCH}&_=${Date.now()}`, { headers, cache: 'no-store' }), _authEpoch);
   if (!res.ok) throw _ghFail(res, `read of ${filename}`);
   const { sha } = await privateAwait(res.json(), _authEpoch); requireOwner();
@@ -10297,10 +10894,15 @@ async function _ghPutFile(headers, filename, content, sha, message) { const _aut
   // stops before the PUT, so its edits and their backup stay here, unacknowledged.
   if (isPrivate() && (LIBRARY_CSVS.includes(filename) || filename === STATE_FILE) && new TextEncoder().encode(content).length > privatePathCap(filename))
     throw Object.assign(new Error(`${filename} would be larger than the ${privatePathCap(filename) / 1048576} MB Scout can read back, so nothing was saved. Your edits are kept in this browser.`), { fatal: true });
+  // Phase 21 (Sol's correction 5): the people file's limit is the worker's, PEOPLE_CAP, checked before every write
+  if (filename === PEOPLE_FILE && new TextEncoder().encode(content).length > PEOPLE_CAP)
+    throw Object.assign(new Error('The list of people you follow is too long to save, so nothing was saved. Your change is kept in this browser.'), { fatal: true });
   const b64 = btoa(unescape(encodeURIComponent(content)));
+  // sha null: a file GitHub does not have yet (the people file's first save), created; if it was made meanwhile,
+  // GitHub refuses with a 422, which _ghMergePush takes as a conflict and merges again onto the file as it is now
   const res = await privateAwait(ownerFetch(_ghFileUrl(filename), {
     method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, content: b64, sha, branch: GH_BRANCH })
+    body: JSON.stringify(sha === null ? { message, content: b64, branch: GH_BRANCH } : { message, content: b64, sha, branch: GH_BRANCH })
   }), _authEpoch);
   if (!res.ok) throw _ghFail(res, `save of ${filename}`);
   if (!isPrivate()) return;
@@ -10531,7 +11133,8 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
 
   const btn = document.getElementById('btnPushGH');
   _pushing = true; _pushAgain = false; Refresh.saveGen++;   // a refresh fetched before now is discarded whole (refreshReceive)
-  const gen = _editGen;
+  const gen = _editGen, others = _stateDirty || _interestsDirty || _groupsDirty;   // Phase 21: whether anything but people is saved
+  let peopleWritten = false;
   btn.disabled = true;
   setSaveBar('Saving to GitHub…', 'Kept in this browser until it lands', 'Saving…');
 
@@ -10560,15 +11163,25 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
       buildGroupOrder();
       tagSavedApprovals(written);
     }
+    // Phase 21: the people you follow, last, only while their file reads (an edit made while it can't waits here)
+    if (People.dirty && isPrivate() && !People.bad) {
+      const out = await privateAwait(_ghMergePush(headers, PEOPLE_FILE, mergePeople, 'Update people_database.csv from dashboard'), _authEpoch);
+      requireOwner(); peopleSaved(out); peopleWritten = !out.unchanged;
+    }
     requireOwner(); updateInterestsBadge();
     if (_interestsDirty || _groupsDirty) renderInterests();
     if (_editGen === gen && !_pushAgain) {
       const held = heldPapers() || goneKept() || orphansHeld();   // edits to a column the file doesn't have yet, or to a row deleted there (B2: or with no row in layout 4): still pending, still backed up
-      _stateDirty = held; _interestsDirty = false; _groupsDirty = false;
-      if (held) { writeBackup(); scheduleAutoPush(HELD_RECHECK); } else clearBackup();
-      hideSaveBar();
-      privateSet(LAST_SAVED_KEY, String(Date.now()));
-      if (!auto) toast(heldPapers() ? 'Saved to GitHub. Passes wait for the library update.' : held ? 'Saved to GitHub, except changes to a paper deleted there.' : 'Saved to GitHub ✓');
+      // Phase 21 (Sol's Part B review, finding 3): a people edit held while their file can't be read stays pending and
+      // visible, with its backup, and is never called saved; an attempt that wrote nothing moves no saved time
+      const peopleHeld = People.edits.size > 0;
+      _stateDirty = held; _interestsDirty = false; _groupsDirty = false; People.dirty = peopleHeld;
+      if (held || peopleHeld) { writeBackup(); scheduleAutoPush(HELD_RECHECK); } else clearBackup();
+      if (peopleHeld) setSaveBar('Not saved yet', 'The list of people you follow can’t be read on GitHub now; your change is kept here', 'Retry now');
+      else hideSaveBar();
+      if (others || peopleWritten) privateSet(LAST_SAVED_KEY, String(Date.now()));
+      if (!auto) toast(peopleHeld ? (others ? 'Saved to GitHub, except your change to the people you follow, which is kept here.' : 'Not saved yet: the list of people you follow can’t be read on GitHub now. Your change is kept here.')
+        : heldPapers() ? 'Saved to GitHub. Passes wait for the library update.' : held ? 'Saved to GitHub, except changes to a paper deleted there.' : 'Saved to GitHub ✓');
     } else {
       scheduleAutoPush();
     }
@@ -10590,6 +11203,7 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
     }
   } finally { checkPrivateEpoch(_authEpoch);
     _pushing = false; Refresh.saveGen++;   // and one fetched while it ran
+    People.sending = new Set(); People.undone.clear();   // Phase 21: no people save is on its way now
     setTimeout(privateCallback(updateSyncStatus), 0);
     btn.disabled = false;
     if (btn.textContent === 'Saving…') btn.textContent = hasPAT() ? 'Save now' : 'Push to GitHub';
@@ -15007,7 +15621,7 @@ function paperPageHTML(p, opts) {
   // Side panel: facts + editable topics
   const sm = p.source_mode || '';
   const via = sm.includes('email') && sm.includes('web_survey') ? 'Email alert and web survey'
-    : sm.includes('email') ? 'Email alert' : sm.includes('web_survey') ? 'Web survey' : importLabel(p);
+    : sm.includes('email') ? 'Email alert' : followedVia(p) || (sm.includes('web_survey') ? 'Web survey' : importLabel(p));   // Phase 21: "Following Yann LeCun"
   const matches = effMatches(p);   // by current names, less any you marked as no match
   const facts = [];
   if (hasText(p.venue)) facts.push(['Venue', `${venueLinkHTML(p, '')}${p.venue.trim() !== rowVenueLabel(p) ? `<span class="pd-sub">${esc(p.venue)}</span>` : ''}`]);
@@ -16158,6 +16772,8 @@ Config.startup = bootstrapApp();
     'feedKeep', 'feedPass', 'feedReason', 'feedOther', 'feedUndo', 'unpassPaper',
     // projects: choosing a feed tab, making one, the save sheet
     'setProject', 'tabEdit', 'tabNewSubmit', 'openSaveSheet', 'sheetToggle', 'sheetNewSubmit',
+    // Phase 21: the people you follow (Follow, x, a tap on a name, Follow again, a typed name, Undo)
+    'followSuggested', 'dismissSuggested', 'unfollowPerson', 'followAgain', 'peopleAddOpen', 'peopleAddSubmit', 'peopleAct', 'peopleUndo',
     // notes and their password
     'vaultReady', 'openVaultModal', 'submitVault', 'unlockFromPanel', 'loadReaderNotes', 'lockNotes', 'nfSave', 'savePaperNotes', 'scheduleNotesPush', 'pushNotes',
     'reconcileNotesIndex', 'renameHlColor', 'createAnno', 'deleteAnno', 'editAnnoComment', 'setAnnoColor', 'citeAnno', 'citeSelection',
