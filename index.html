@@ -10586,7 +10586,7 @@ function addInterest(row) {
   if (aliasesKept() || !allInterests.length) i.aliases = '';
   allInterests.push(i); aliasMap.cache = null;
   _interestsDirty = true; showSaveBar(); updateInterestsBadge(); renderInterests(); refresh();
-  toast(`Added \u201c${name}\u201d. Papers already here get rated against it within the hour.`, () => {
+  toast(`Added \u201c${name}\u201d. Scout also checks the papers already in your library.`, () => {
     allInterests = allInterests.filter(x => x !== i); _interestsDirty = true; showSaveBar(); updateInterestsBadge(); renderInterests(); refresh();
   });
   return '';
@@ -10651,7 +10651,7 @@ function authorFormHTML() {
     <label for="afNotes">What it covers</label><textarea class="pp-input" id="afNotes" rows="3">${esc(val('notes', i ? i.notes : ''))}</textarea>
     <label for="afRelated">Related to</label><input class="pp-input" id="afRelated" autocomplete="off" placeholder="Other interests, separated by commas" value="${dataAttr(related)}" oninput="syncRelatedChips()">
     ${others.length ? `<div class="af-chips">${others.map(n => `<button type="button" class="tl-chip${relOn.has(n.toLowerCase()) ? ' active' : ''}" data-name="${dataAttr(n)}" onclick="toggleRelated(this.dataset.name)">${esc(n)}</button>`).join('')}</div>` : ''}
-    <p class="af-hint">${i ? 'A new name keeps the old one as an alias, so papers that match it keep their scores. Changing the notes or related interests has the papers here rated against it again.' : 'Papers already in your library get rated against it within the hour.'}</p>${btns(i ? 'Save' : 'Add interest')}</form>`;
+    <p class="af-hint">${i ? 'A new name keeps the old one as an alias, so papers that match it keep their scores. Changing the notes or related interests has the papers here rated against it again.' : 'Scout also checks the papers already in your library.'}</p>${btns(i ? 'Save' : 'Add interest')}</form>`;
 }
 function relatedItems() { return (authorValue('afRelated') || '').split(',').map(s => s.trim()).filter(Boolean); }
 function syncRelatedChips() { const on = new Set(relatedItems().map(s => s.toLowerCase())); document.querySelectorAll('.af-chips .tl-chip').forEach(b => b.classList.toggle('active', on.has(b.dataset.name.toLowerCase()))); }
