@@ -41,7 +41,7 @@ Config.promise.catch(failConfig); // Attach immediately, even if the body has no
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" defer></script>
@@ -52,7 +52,9 @@ Config.promise.catch(failConfig); // Attach immediately, even if the body has no
   --g5: #d55181; --g6: #008300; --g7: #9085e9; --g8: #e66767;
   --g9: #1fa5c4; --g10: #a8773a; --g11: #a9b33a; --g12: #c46fd6;
   --g-other: rgba(231,233,234,0.45);
-  --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  /* Phase 22 (Dhruv's pick, "One clean sans is good"): Inter for everything. The token keeps its old name so each place
+     that sets a headline or a title still names it; headlines are 650 with -0.015em, reading text 400 */
+  --serif: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
   /* X's "Lights out" palette (Phase 13d): pure black, one surface tone, a step up for hover and popovers, a hairline,
      soft white text, X's grey for secondary text, and X blue as the one accent */
   --bg: #000000;
@@ -90,7 +92,8 @@ Config.promise.catch(failConfig); // Attach immediately, even if the body has no
 *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 
 
-body { font-family: 'Google Sans', Roboto, -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }   /* the height of what shows: a browser bar coming or going moves the app bar with it */
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }   /* the height of what shows: a browser bar coming or going moves the app bar with it */
+button, input, select, textarea { font-family: inherit; }   /* Phase 22: controls in the page's type too (a browser gives them a font of its own) */
 html, body { overscroll-behavior: none; }   /* the app never rubber-bands as a whole; its own lists scroll */
 [hidden] { display: none !important; }   /* the hidden attribute always wins over a component's display rule */
 .main-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scroll-behavior: smooth; }   /* the page never scrolls sideways; wide content scrolls inside its own box */
@@ -128,15 +131,10 @@ a { color: inherit; text-decoration: none; }
 /* NAV */
 .navbar { background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); flex-shrink: 0; z-index: 100; box-shadow: 0 0.2rem 0.8rem rgba(255,255,255,0.03); }
 .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; height: 56px; gap: 24px; }
-/* the name in the portfolio's serif, so the two sites read as one; it opens the portfolio in this tab, as the portfolio opens this.
-   top: the serif's capitals sit ~2px higher in their line than the sans "Scout" beside it (measured); this levels them */
-.nav-portfolio-link { position: relative; top: 2px; font-family: var(--serif); font-optical-sizing: auto; font-size: 20px; font-weight: 500; letter-spacing: -0.01em; color: var(--text); text-decoration: none; flex-shrink: 0; margin-right: 4px; transition: color 0.3s ease-in-out; white-space: nowrap; }
-.nav-portfolio-link:hover { color: var(--accent); }
 .nav-brand { font-size: 20px; font-weight: 500; display: flex; align-items: center; gap: 8px; flex-shrink: 0; transition: color 0.15s; }
 .nav-brand:hover { color: var(--text); }
 .nav-brand svg { width: 24px; height: 24px; fill: var(--accent); transition: fill 0.15s; }   /* the spyglass of the icon (icon.svg): its four paths, all in the accent */
 .nav-brand:hover svg { fill: var(--text); }
-.nav-brand-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.2); flex-shrink: 0; margin-right: 4px; }
 .nav-tabs { display: flex; height: 56px; }
 .nav-tab { display: flex; align-items: center; padding: 0 16px; font-size: 14px; color: rgba(240,255,255,0.75); border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; transition: color 0.3s ease-in-out; white-space: nowrap; }
 .nav-tab:hover { color: var(--accent); }
@@ -147,10 +145,12 @@ a { color: inherit; text-decoration: none; }
 .nav-search input:focus { border-color: var(--accent); }
 .nav-search input::placeholder { color: var(--text-muted); }
 .nav-search-toggle { display: none; }
-/* Refresh: a Home Screen app has no reload button of its own */
-.nav-refresh { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 36px; height: 36px; margin-left: -12px; border-radius: 50%; border: none; background: none; color: var(--text-secondary); cursor: pointer; transition: background var(--t-fast), color var(--t-fast); }
-.nav-refresh:hover { background: rgba(255,255,255,0.08); color: var(--text); }
-.nav-refresh svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+/* The key to sign in, the bar's last control (html.ro shows it). Phase 22 (Sol's correction 7): its spacing is its own
+   now that the refresh button beside it is gone: 12 px from the search box on a laptop (the bar's 24 px gap less 12),
+   and on a phone right beside Scout (the bar's 8 px gap less 8, below), where it always was */
+.nav-key { display: none; align-items: center; justify-content: center; flex-shrink: 0; width: 36px; height: 36px; margin-left: -12px; border-radius: 50%; border: none; background: none; color: var(--text-secondary); cursor: pointer; transition: background var(--t-fast), color var(--t-fast); }
+.nav-key:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+.nav-key svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 html.private-locked .main-scroll, html.private-locked #reader, html.private-locked #skeleton, html.private-locked .app-bar, html.private-locked #saveBar { display:none !important; }
 /* Phase 19 (A3): the lock box: what happened, a button for the token already stored here, and the sign-in form.
    placePrivateAccess keeps it inside what shows of the screen, and it scrolls in itself, so the field and every
@@ -171,7 +171,6 @@ html.private-locked .main-scroll, html.private-locked #reader, html.private-lock
 /* ===== READ-ONLY (html.ro: no owner's GitHub token in this browser; see OWNER MODE) =====
    The key to sign in shows only then; every control that changes something is gone. The functions behind them
    are guarded as well, so this list is about what shows, not what's safe. */
-.nav-key { display: none; }
 html.ro .nav-key { display: inline-flex; }
 html.ro .owner-only,
 html.ro .p-actions, html.ro .save-anchor, html.ro .pd-act:not(.pd-nav-prev):not(.pd-nav-next), html.ro .group-remove, html.ro .group-add-wrap, html.ro .pd-edit, html.ro .pd-notes,
@@ -180,7 +179,6 @@ html.ro #libAddBtn, html.ro #libUploadBtn, html.ro .lib-head .btn-new-list, html
 html.ro .interest-actions, html.ro .group-drag-handle, html.ro .tt-line,
 html.ro #readerNotesBtn, html.ro #readerPanel, html.ro #rpResize, html.ro #selBar, html.ro .reader-change, html.ro .anno-mark,
 html.ro #vaultOverlay { display: none !important; }
-.nav-refresh.spinning svg { animation: spin 0.7s linear infinite; }
 @media (max-width: 600px) {
   .nav-search-toggle { display: inline-flex; align-items: center; justify-content: center; margin-left: auto; width: 40px; height: 40px; border-radius: 50%; border: none; background: none; color: var(--text-secondary); cursor: pointer; transition: background 0.15s, color 0.15s; }
   .nav-search-toggle:hover, body.search-open .nav-search-toggle { background: rgba(255,255,255,0.08); color: var(--text); }
@@ -453,10 +451,10 @@ html.ro #vaultOverlay { display: none !important; }
 
 /* ===== READING TYPE, GROUP COLOR, WEEKLY PULSE, VENUES ===== */
 .lead-headline, .f-headline, .tr-headline, #sec-papers .briefing h2, #sec-venues .briefing h2 { font-family: var(--serif); font-optical-sizing: auto; }
-.lead-headline { font-size: 29px; font-weight: 500; line-height: 1.18; letter-spacing: -0.005em; }
-.f-headline { font-size: 17.5px; font-weight: 500; line-height: 1.3; }
-.tr-headline { font-size: 18px; font-weight: 500; line-height: 1.3; }
-#sec-papers .briefing h2, #sec-venues .briefing h2 { font-size: 36px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.15; }
+.lead-headline { font-size: 29px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.18; }
+.f-headline { font-size: 17.5px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.3; }
+.tr-headline { font-size: 18px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.3; }
+#sec-papers .briefing h2, #sec-venues .briefing h2 { font-size: 36px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.15; }
 
 .gdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--gc, var(--g-other)); flex-shrink: 0; }
 .tr-group { display: inline-flex; align-items: center; gap: 6px; }
@@ -487,7 +485,7 @@ html.ro #vaultOverlay { display: none !important; }
 .topics-grid .topic-title:not([role]) { cursor: default; }
 .topics-grid .topic-body { max-height: none; overflow: visible; padding: 0; }
 .tc-feat { display: block; padding: 10px 26px 22px; cursor: pointer; }
-.tc-headline { font-family: var(--serif); font-optical-sizing: auto; font-size: 24px; font-weight: 500; line-height: 1.24; color: var(--text); margin: 0; text-wrap: pretty; transition: color 0.2s; }
+.tc-headline { font-family: var(--serif); font-optical-sizing: auto; font-size: 24px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.24; color: var(--text); margin: 0; text-wrap: pretty; transition: color 0.2s; }
 .tc-feat:hover .tc-headline { color: var(--text); }
 .tc-sum { font-size: 15px; line-height: 1.6; color: var(--text-secondary); margin: 12px 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .tc-feat .why-line { margin-top: 12px; }
@@ -511,7 +509,7 @@ html.ro #vaultOverlay { display: none !important; }
 .tc-row { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 12px; padding: 16px 26px; cursor: pointer; transition: background 0.2s; }
 .tc-row:hover { background: rgba(255,255,255,0.035); }
 .tc-num { font-family: var(--serif); font-size: 15px; padding-top: 2px; color: color-mix(in srgb, var(--gc) 65%, var(--text-muted)); font-variant-numeric: tabular-nums; }
-.tc-rh { font-family: var(--serif); font-optical-sizing: auto; font-size: 16.5px; font-weight: 500; line-height: 1.35; color: var(--text); margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color 0.2s; }
+.tc-rh { font-family: var(--serif); font-optical-sizing: auto; font-size: 16.5px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.35; color: var(--text); margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color 0.2s; }
 .tc-row:hover .tc-rh { color: var(--text); }
 .tc-row .tc-tags { margin-top: 7px; }
 /* hovering (or focusing) a listed paper slides its takeaway open */
@@ -602,17 +600,16 @@ html.ro #vaultOverlay { display: none !important; }
    that scrolls sideways instead of pushing the page wider than the screen */
 @media (max-width: 1080px) {
   .nav-inner { flex-wrap: wrap; height: auto; column-gap: 16px; row-gap: 0; }
-  .nav-portfolio-link, .nav-brand, .nav-brand-sep { align-self: center; }
-  .nav-portfolio-link, .nav-brand { height: 50px; display: flex; align-items: center; }
+  .nav-brand { align-self: center; height: 50px; display: flex; align-items: center; }
   .nav-search { margin-left: auto; }
   .nav-tabs { order: 3; flex-basis: 100%; height: 44px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; margin: 0 -24px; padding: 0 12px; }
   .nav-tabs::-webkit-scrollbar { display: none; }
   .nav-tab { padding: 0 12px; flex-shrink: 0; }
 }
-@media (max-width: 600px) {   /* a phone: search and refresh share the brand's line (their tap areas overlap a little) */
+@media (max-width: 600px) {   /* a phone: the search toggle and the key share the brand's line */
   .navbar .nav-inner { column-gap: 8px; }
-  .nav-search-toggle, .nav-refresh { width: 36px; height: 36px; }
-  .nav-refresh { margin-left: -8px; }
+  .nav-search-toggle { width: 36px; height: 36px; }
+  .nav-key { margin-left: -8px; }
 }
 @media (max-width: 600px) {
   .nav-tabs { margin: 0 -16px; padding: 0 4px; }
@@ -642,8 +639,9 @@ html.no-hover .pd-topic-chip:hover:not(:active) { background: rgba(255,255,255,0
 .pd-back:hover { color: var(--accent); }
 .pd-back svg { width: 16px; height: 16px; fill: currentColor; transition: transform 0.15s; }
 .pd-back:hover svg { transform: translateX(-2px); }
-/* position/top: the serif's capitals sit higher in its line than the sans Back label's; this levels them (measured) */
-.pd-bar-title { position: relative; top: 1.5px; flex: 1; min-width: 0; font-family: var(--serif); font-size: 16px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transform: translateY(4px); transition: opacity var(--t-slow) var(--ease), transform var(--t-slow) var(--ease); pointer-events: none; }
+/* position/top: the serif's capitals sat higher in its line than the sans Back label's; this leveled them (measured
+   with the old serif; kept as it was when Phase 22 made both Inter, a change of type only) */
+.pd-bar-title { position: relative; top: 1.5px; flex: 1; min-width: 0; font-family: var(--serif); font-size: 16px; font-weight: 650; letter-spacing: -0.015em; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transform: translateY(4px); transition: opacity var(--t-slow) var(--ease), transform var(--t-slow) var(--ease); pointer-events: none; }
 .pd-bar.stuck .pd-bar-title { opacity: 1; transform: none; }
 .pd-actions { display: flex; align-items: center; gap: 2px; margin-left: auto; flex-shrink: 0; }
 .pd-act-label { display: none; }
@@ -668,7 +666,7 @@ html.no-hover .pd-topic-chip:hover:not(:active) { background: rgba(255,255,255,0
 .pd-head { max-width: 840px; }
 .pd-kicker { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--text-muted); margin-bottom: 16px; font-variant-numeric: tabular-nums; }
 .pd-kicker .pd-venue { color: var(--accent); font-weight: 500; }
-.pd-title { font-family: var(--serif); font-optical-sizing: auto; font-size: 40px; line-height: 1.12; font-weight: 500; letter-spacing: -0.01em; color: var(--text); text-wrap: balance; }
+.pd-title { font-family: var(--serif); font-optical-sizing: auto; font-size: 40px; line-height: 1.12; font-weight: 650; letter-spacing: -0.015em; color: var(--text); text-wrap: balance; }
 /* the generated takeaway, the "why this matters" line: text colour, with an accent-tinted bar */
 .pd-dek { font-family: var(--serif); font-size: 22px; font-weight: 500; line-height: 1.4; color: var(--text); margin-top: 16px; padding-left: 16px; border-left: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); text-wrap: pretty; }
 .pd-authors { font-size: 14.5px; color: var(--text-secondary); margin-top: 18px; line-height: 1.55; }
@@ -742,7 +740,7 @@ button.pd-strength:hover { color: var(--text); background: rgba(255,255,255,0.1)
 .pd-topics:focus-within .group-add-wrap { opacity: 1; pointer-events: auto; }
 
 .pd-related { margin-top: 64px; padding-top: 32px; border-top: 1px solid var(--border); }
-.pd-related > h2 { font-family: var(--serif); font-size: 26px; font-weight: 500; margin-bottom: 20px; }
+.pd-related > h2 { font-family: var(--serif); font-size: 26px; font-weight: 650; letter-spacing: -0.015em; margin-bottom: 20px; }
 .pd-rel-group + .pd-rel-group { margin-top: 28px; }
 .pd-rel-more { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 22px; font-size: 13px; color: var(--text-muted); }
 .pd-rel-topic { display: inline-flex; align-items: center; gap: 7px; font: inherit; font-size: 12.5px; color: var(--text-secondary); background: rgba(255,255,255,0.05); border: 1px solid transparent; padding: 4px 11px; border-radius: 999px; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
@@ -858,7 +856,7 @@ html:not(.no-hover) .post:hover { background: rgba(255,255,255,0.02); }
 .post .meta .must { color: var(--accent); }
 .post .meta .following { color: var(--text-secondary); }   /* Phase 21 (mockup B): a post from someone you follow */
 .post .by .by-f { color: var(--text); font-weight: 700; }
-.post-t { margin: 6px 0 0; font-family: var(--serif); font-optical-sizing: auto; font-weight: 500; font-size: 20px; line-height: 1.25; color: var(--text); text-wrap: pretty; overflow-wrap: anywhere; }
+.post-t { margin: 6px 0 0; font-family: var(--serif); font-optical-sizing: auto; font-weight: 650; letter-spacing: -0.015em; font-size: 20px; line-height: 1.25; color: var(--text); text-wrap: pretty; overflow-wrap: anywhere; }
 .post .dek { margin: 6px 0 0; font-size: 14.5px; line-height: 1.45; color: var(--text); overflow-wrap: anywhere; }
 .post .by { margin: 6px 0 0; font-size: 13px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* the icons: four 44 px targets, spread under the text, none overlapping (four of 44 fit 320 px with room) */
@@ -966,7 +964,7 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 .pd-next { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; align-items: center; column-gap: 16px; width: 100%; margin-top: 48px; padding: 18px 22px; text-align: left; background: var(--bg-surface); border: 1px solid var(--line); border-radius: 12px; color: inherit; font: inherit; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
 .pd-next:hover { border-color: color-mix(in srgb, var(--accent) 50%, transparent); background: var(--bg-raise); }
 .pd-next-label { grid-column: 1; font-size: 12.5px; color: var(--text-muted); }
-.pd-next-title { grid-column: 1; font-family: var(--serif); font-size: 19px; font-weight: 500; color: var(--text); margin-top: 3px; line-height: 1.3; }
+.pd-next-title { grid-column: 1; font-family: var(--serif); font-size: 19px; font-weight: 650; letter-spacing: -0.015em; color: var(--text); margin-top: 3px; line-height: 1.3; }
 .pd-next-arrow { grid-column: 2; grid-row: 1 / 3; font-size: 28px; color: var(--accent); transition: transform 0.15s; }
 .pd-next:hover .pd-next-arrow { transform: translateX(3px); }
 @media (max-width: 600px) {
@@ -1640,7 +1638,7 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 .cr-enter { animation: ui-rise var(--t-slow) var(--ease); }   /* the next one arrives in its place */
 .cr-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 90px; z-index: -1; background: var(--gbg, none); opacity: 0.12; pointer-events: none; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
 .cr-card:hover { border-color: var(--line); }
-.cr-h { font-family: var(--serif); font-optical-sizing: auto; font-size: 16px; font-weight: 500; line-height: 1.3; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; padding-right: 22px; transition: color var(--t-fast) var(--ease); }
+.cr-h { font-family: var(--serif); font-optical-sizing: auto; font-size: 16px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.3; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; padding-right: 22px; transition: color var(--t-fast) var(--ease); }
 .cr-card:hover .cr-h { color: var(--text); }
 .cr-m { display: flex; justify-content: space-between; gap: 10px; margin-top: 8px; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .cr-m b { color: var(--accent); font-weight: 500; }
@@ -1667,7 +1665,7 @@ html.no-hover .cr-x { opacity: 0.7; }
 .lp-head { display: flex; align-items: flex-end; gap: 16px 32px; padding: 26px 0 18px; }
 .lp-head-text { flex: 1; min-width: 0; }
 .lp-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in srgb, var(--gc) 75%, var(--text)); }
-.lp-title { font-family: var(--serif); font-optical-sizing: auto; font-size: 42px; font-weight: 500; line-height: 1.15; letter-spacing: -0.01em; color: var(--text); margin: 8px 0 0; text-wrap: balance; }
+.lp-title { font-family: var(--serif); font-optical-sizing: auto; font-size: 42px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.15; color: var(--text); margin: 8px 0 0; text-wrap: balance; }
 .lp-sub { font-size: 14px; color: var(--text-secondary); margin: 6px 0 0; }
 .lp-stats { margin: 10px 0 0; font-size: 14px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .lp-stats b { color: var(--text-secondary); font-weight: 500; }
@@ -1697,7 +1695,7 @@ html.no-hover .cr-x { opacity: 0.7; }
 .lp-row:hover { background: rgba(255,255,255,0.035); }
 .lp-num { font-family: var(--serif); font-size: 15px; padding-top: 3px; color: color-mix(in srgb, var(--gc) 65%, var(--text-muted)); font-variant-numeric: tabular-nums; }
 .lp-row-main { min-width: 0; }
-.lp-h { font-family: var(--serif); font-optical-sizing: auto; font-size: 19px; font-weight: 500; line-height: 1.3; color: var(--text); text-wrap: pretty; transition: color var(--t-fast) var(--ease); }
+.lp-h { font-family: var(--serif); font-optical-sizing: auto; font-size: 19px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.3; color: var(--text); text-wrap: pretty; transition: color var(--t-fast) var(--ease); }
 .lp-row:hover .lp-h { color: var(--text); }
 .lp-row .why-line { margin-top: 4px; }
 .lp-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px; font-size: 12px; color: var(--text-muted); min-width: 0; }
@@ -1833,7 +1831,7 @@ html.no-hover .cr-x { opacity: 0.7; }
 #sec-paper.active { display: block; }
 .interests-header { }
 .interests-header .briefing { max-width: 1200px; margin: 0 auto; padding: 32px 24px 0; align-items: flex-start; }
-.interests-header .briefing h2 { font-family: var(--serif); font-optical-sizing: auto; font-size: 36px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.15; }
+.interests-header .briefing h2 { font-family: var(--serif); font-optical-sizing: auto; font-size: 36px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.15; }
 .interests-header .interest-filter-chips { max-width: 1200px; margin: 0 auto; padding: 16px 24px; justify-content: flex-start; }
 .ig-toggle-wrap { max-width: 1200px; margin: 0 auto; padding: 16px 24px 0; text-align: left; }
 .ig-toggle { display: inline-flex; background: var(--bg-surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
@@ -2047,7 +2045,7 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 /* Library header: left-aligned title like the other pages, actions beside it, wrapping below on phones */
 .lib-head { max-width: 1200px; margin: 0 auto; padding: 32px 24px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; }
-.lib-head h2 { font-family: var(--serif); font-optical-sizing: auto; font-size: 36px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.15; }
+.lib-head h2 { font-family: var(--serif); font-optical-sizing: auto; font-size: 36px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.15; }
 .lib-head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .lib-head-actions button { font-size: 14px; padding: 8px 16px; }
 @media (max-width: 600px) {
@@ -2467,8 +2465,6 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
 
 <nav class="navbar">
   <div class="nav-inner">
-    <a id="ownerLink" class="nav-portfolio-link"></a>
-    <div class="nav-brand-sep"></div>
     <div class="nav-brand" role="link" tabindex="0" aria-label="Scout home" onclick="switchTab('all')" style="cursor:pointer">
       <svg viewBox="96 96 320 320" aria-hidden="true"><path fill-rule="evenodd" d="M124.5 243.9L260.1 171.8C277.3 162.7 298.6 169.2 307.7 186.3L324.2 217.4C333.4 234.6 326.9 255.9 309.7 265L174.1 337.1C156.9 346.3 135.6 339.7 126.5 322.6L109.9 291.5C100.8 274.3 107.3 253 124.5 243.9ZM139.5 272.1L275.1 200C276.7 199.2 278.6 199.8 279.5 201.4L296 232.4C296.8 234 296.2 235.9 294.7 236.8L159 308.9C157.5 309.7 155.6 309.1 154.7 307.6L138.2 276.5C137.4 274.9 138 273 139.5 272.1Z"/><path fill-rule="evenodd" d="M287.9 138.9L321.8 120.9C339.8 111.3 362.1 118.1 371.6 136.1L401.6 192.6C411.2 210.5 404.4 232.8 386.4 242.3L352.5 260.4C334.6 269.9 312.3 263.1 302.8 245.2L272.7 188.6C263.2 170.7 270 148.4 287.9 138.9ZM302.9 167.1L336.9 149.1C339.2 147.9 342.1 148.7 343.3 151.1L373.4 207.6C374.6 209.9 373.7 212.8 371.4 214.1L337.5 232.1C335.2 233.4 332.3 232.5 331 230.1L301 173.6C299.7 171.3 300.6 168.4 302.9 167.1Z"/><path d="M219.4 285.3L171.4 374.9C167.2 382.6 170.2 392.3 177.9 396.5C185.7 400.7 195.4 397.8 199.6 390L247.6 300.4C251.8 292.6 248.8 282.9 241.1 278.7C233.3 274.5 223.6 277.5 219.4 285.3Z"/><path d="M219.4 300.4L267.4 390C271.6 397.8 281.3 400.7 289.1 396.5C296.8 392.3 299.8 382.6 295.6 374.9L247.6 285.3C243.4 277.5 233.7 274.5 225.9 278.7C218.2 282.9 215.2 292.6 219.4 300.4Z"/></svg>
       Scout
@@ -2485,8 +2481,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
       <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
       <input type="text" id="searchInput" placeholder="Search papers and authors..." oninput="debouncedSearch()" onpaste="setTimeout(debouncedSearch,0)" onkeydown="if (event.key === 'Escape') { event.preventDefault(); this.value = ''; clearTimeout(_searchTimer); hideGlobalSearch(); this.blur(); }">
     </div>
-    <button class="nav-refresh nav-key" id="navKey" onclick="connectGitHub()" title="Sign in" aria-label="Sign in"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M18 5l2 2"/></svg></button>
-    <button class="nav-refresh" id="navRefresh" onclick="refreshPage()" title="Refresh: the latest papers and the latest version of the site" aria-label="Refresh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/></svg></button>
+    <button class="nav-key" id="navKey" onclick="connectGitHub()" title="Sign in" aria-label="Sign in"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M18 5l2 2"/></svg></button>
   </div>
 </nav>
 
@@ -3967,12 +3962,12 @@ function restoreOwnerState() {
    404 (privateReadFile), and a newer result staged with Show keeps its toast. */
 async function loadPrivateLibrary() {
   const epoch = capturePrivateEpoch(), req = ++Refresh.seq, saveGen = Refresh.saveGen;
-  // overtaken: the epoch moved, or a newer result was accepted or staged (a load carries all three files, so any
-  // staged result overlaps it). Checked before an error locks, reverifies or says anything.
-  const overtaken = () => epoch !== Private.epoch || req < refreshAcceptedFor({ papers: '', interests: '', groups: '' }) || !!(Refresh.staged && Refresh.staged.req > req);
+  // overtaken: checked before an error locks, reverifies or says anything (refreshOvertaken)
+  const overtaken = refreshOvertaken(req);
   if (!_papersText) privateView('loading');
   try {
     const files = await privateReadLibrary(overtaken); checkPrivateEpoch(epoch);
+    Return.checkedAt = Date.now();   // Phase 22: a library check that answered
     const texts = files.slice(0, 4).map(file => file ? normalizeNewlines(file.text) : null);   // the fourth: papers_state.csv, or null
     const people = peopleTextOf(files[4]);   // Phase 21 (B2): the fifth, the people file: text, null, or false (unread)
     if (_papersText) {
@@ -4031,13 +4026,18 @@ window.addEventListener('storage', event => {
 });
 /* A return to the app checks the sign-in again. Phase 19 (A5): a check that could not finish locks nothing while the
    library shows (verifyPrivate), and none goes out while a wait runs (ghWaitGate) or a typed token is being checked;
-   an error that locked already keeps its lock */
-const verifyOnReturn = () => {
-  if (!isPrivate() || document.visibilityState === 'hidden' || (Private.verificationBinding && Private.verificationBinding.candidate)) return;
-  reverifyPrivate().catch(e => { if (!e || !(e.transient || e.privateAuth || e.target)) lockPrivate('unavailable'); });
-};
-window.addEventListener('focus', verifyOnReturn);
-document.addEventListener('visibilitychange', verifyOnReturn);
+   an error that locked already keeps its lock. Phase 22: the return's coordinator ("A CHECK ON RETURN") calls this
+   once a return and waits for its answer before either of its jobs: true only while the sign-in holds. A check that
+   succeeded is the quiet re-check a failed one left (A5); one that could not finish leaves it waiting, as before. */
+async function returnVerify() {
+  if (!isPrivate()) return true;
+  if (document.visibilityState === 'hidden' || (Private.verificationBinding && Private.verificationBinding.candidate)) return false;
+  try {
+    if (!await reverifyPrivate() || !Private.authorized) return false;
+    clearTimeout(Private.recheckTimer); Private.recheckTimer = null;
+    return true;
+  } catch (e) { if (!e || !(e.transient || e.privateAuth || e.target)) lockPrivate('unavailable'); return false; }
+}
 /* Back online: a quiet re-check that was waiting runs now, unless GitHub asked Scout to wait */
 window.addEventListener('online', () => { if (isPrivate() && Private.recheckTimer && GhWait.until <= Date.now()) privateRecheck(Private.epoch); });
 
@@ -4704,27 +4704,13 @@ function restorePapersFromBackup(kept = [], bases = new Map()) {
 }
 window.addEventListener('pagehide', writeBackup);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') writeBackup(); });
-/* Refresh (the button in the top bar): fetch the newest copy of the site first, so the reload shows it rather than
-   the browser's cached one. Unsaved changes are backed up here and restored after the reload, as always. */
+/* A reload Scout makes itself (Phase 22: a return that found a new version of the site, returnSite), which asks
+   nothing before the page goes */
 let _refreshing = false;
-async function refreshPage() {
-  requireTarget();
-  if (isPrivate()) {   // Phase 19 (A5): a check that cannot finish keeps the page as it is, rather than reload into a lock
-    try { if (!await reverifyPrivate()) return; }
-    catch (e) { if (!e || !e.transient) throw e; toastError(e.wait ? waitText(e) + ' Nothing changed.' : "Couldn't reach GitHub. Nothing changed."); return; }
-  }
-  const btn = document.getElementById('navRefresh');
-  if (btn) btn.classList.add('spinning');
-  try { await targetFetch(APP_ROOT, { cache: 'reload' }); } catch (e) {  requireTarget(); }
-  requireTarget();   // offline: still reload from the cache
-  writeBackup();
-  _refreshing = true;
-  location.reload();
-}
 window.addEventListener('beforeunload', e => {
   // a note being written isn't saved yet: ask before leaving
   const noteUnsaved = typeof draftUnsaved === 'function' && draftUnsaved();
-  if (!noteUnsaved && (_refreshing || !anyDirty())) return;   // a refresh keeps unsaved changes (the backup)
+  if (!noteUnsaved && (_refreshing || !anyDirty())) return;   // a reload of Scout's own keeps unsaved changes (the backup)
   if (!noteUnsaved && heldOnly()) { writeBackup(); return; }   // passes waiting for the library update are backed up
   if (anyDirty()) writeBackup();
   e.preventDefault();
@@ -4917,6 +4903,14 @@ const REFRESH_FILES = ['papers', 'interests', 'groups'];
 function refreshAcceptedFor(texts) { return Math.max(0, ...REFRESH_FILES.filter(f => texts[f] !== null).map(f => Refresh.accepted[f])); }
 /* A save is running, or one started or ended since the request took its saveGen */
 function refreshCrossesSave(saveGen) { return _pushing || saveGen !== Refresh.saveGen; }
+/* A read for request req, overtaken: the sign-in moved on, or a newer result was accepted or staged (a read carries
+   all three files, so any staged result overlaps it). Its failures then neither lock, nor start a wait, nor verify
+   again (privateBytes, privateReadFile), and say nothing. Phase 22 (Sol's correction 3): a load's rule, for pulls and
+   returns too. */
+function refreshOvertaken(req) {
+  const epoch = isPrivate() ? Private.epoch : null;
+  return () => (epoch !== null && epoch !== Private.epoch) || req < refreshAcceptedFor({ papers: '', interests: '', groups: '' }) || !!(Refresh.staged && Refresh.staged.req > req);
+}
 /* A notice a load must not lose. While a load is applied it waits for refreshHeld; otherwise it shows now. Either
    way a refresh shows no count of its own over it (Refresh.noticed). */
 function refreshNotice(msg, duration) {
@@ -4955,15 +4949,19 @@ function parseLibrary(texts) {
   return out;
 }
 /* The three files as GitHub has them now, through the readers the page starts with: the private API on a private
-   page, the raw CDN with no local fallback on a public one, the local copy where that is the only source */
-async function fetchLibraryTexts() { const _authEpoch = capturePrivateEpoch();
+   page, the raw CDN with no local fallback on a public one, the local copy where that is the only source.
+   overtaken: Phase 22 (Sol's correction 3), as for a load (refreshOvertaken): once it is true, a refusal of the private
+   reads locks nothing, starts no wait and verifies nothing again. A read that answered is the last library check
+   (Return.checkedAt). */
+async function fetchLibraryTexts(overtaken = null) { const _authEpoch = capturePrivateEpoch();
   requireTarget();
   const names = ['papers_database.csv', 'interests_database.csv', 'groups_database.csv'];
   let texts;
-  if (isPrivate()) { const files = await privateAwait(privateReadLibrary(), _authEpoch); texts = files.slice(0, 4).map(file => file ? normalizeNewlines(file.text) : null).concat([peopleTextOf(files[4])]); }
+  if (isPrivate()) { const files = await privateAwait(privateReadLibrary(overtaken), _authEpoch); texts = files.slice(0, 4).map(file => file ? normalizeNewlines(file.text) : null).concat([peopleTextOf(files[4])]); }
   else if (CSV_BASE_URL) texts = await privateAwait(Promise.all(names.map(name => fetchNormalized(csvUrl(name), { fallback: false }))), _authEpoch);
   else texts = await privateAwait(Promise.all(names.map(name => fetchLocal(name))), _authEpoch);
   requireTarget();
+  Return.checkedAt = Date.now();
   // Phase 15 (B2): the fourth, papers_state.csv, is a private library's only (root's ruling R1): a public page reads
   // the three files as before, and its pull refuses a split papers file (libraryBundle). Phase 21: so is the fifth, the
   // people file (text, null when absent, false when unread); a result without it (undefined) leaves People alone.
@@ -4971,8 +4969,9 @@ async function fetchLibraryTexts() { const _authEpoch = capturePrivateEpoch();
 }
 /* A result: { req, saveGen, how, view, texts: { papers, interests, groups } } (a text is null when the result has no
    copy of that file; Phase 21: texts.people, the people file, is undefined when the result does not carry it, which a
-   public page's never does, else its text, null or false, and goes with the result as a whole); how is 'startup', 'pull', 'button' or 'show'; view is the feed a pull or the button was asked
-   from (feedViewKey: the project, or For you's sort and interest). Returns { status, n, ids, all }:
+   public page's never does, else its text, null or false, and goes with the result as a whole); how is 'startup', 'pull', 'button', 'show' or 'return' (Phase 22); view is the feed a pull or the button was asked
+   from (feedViewKey: the project, or For you's sort and interest); plain: Phase 22, a return's result, or Show or a
+   check after one, whose words carry no count. Returns { status, n, ids, all, plain }:
      superseded  a newer result was accepted since it was requested
      stale       a save was running, or started or ended, since it was requested: nothing taken, ask again
      deferred    the view moved on (another view or feed tab, the reader open, scrolled down, a decision under way at
@@ -4981,10 +4980,13 @@ async function fetchLibraryTexts() { const _authEpoch = capturePrivateEpoch();
                  (against its ids from before) and in the rebuilt view; all: those in For you unfiltered (feedPool),
                  so a view can say what arrived outside it; n: how many ids. Off the feed, both are the library's growth.
    Show (how 'show') waives the scroll test, since the person asked, but never applies over the reader or under a
-   paper page, a list or search. */
+   paper page, a list or search.
+   Phase 22 (Sol's correction 4): a return's result (how 'return') is taken in only at For you's top with nothing under
+   way there (feedIdle); else it is staged without a word (returnOffer). One that brings nothing new keeps its number
+   and changes nothing else: no rebuild, so every post, its Undo and the place stay. */
 function refreshReceive(r) {
   requireTarget();
-  const texts = r.texts, s = Refresh.staged;
+  const texts = r.texts, s = Refresh.staged, quiet = r.how === 'return';
   if (r.req < refreshAcceptedFor(texts)) return { status: 'superseded' };
   if (refreshCrossesSave(r.saveGen)) return { status: 'stale' };
   const shares = !!s && REFRESH_FILES.some(f => s.texts[f] !== null && texts[f] !== null);
@@ -4997,9 +4999,9 @@ function refreshReceive(r) {
     || (texts.people !== undefined && texts.people !== People.text);   // Phase 21: another device followed someone
   const pulled = r.how !== 'startup', readerOpen = document.getElementById('reader').classList.contains('open'), ms = document.getElementById('mainScroll');
   const ok = !readerOpen && (r.how === 'show' ? !(_paperViewActive || _searchActive || _listViewActive)
-    : pulled ? feedActive() && (r.view === undefined || feedViewKey() === r.view) && ms.scrollTop <= 40 : quietSwapOK());
+    : pulled ? feedActive() && (r.view === undefined || feedViewKey() === r.view) && ms.scrollTop <= 40 && (!quiet || feedIdle()) : quietSwapOK());
   if (!ok) {
-    if (papersNew || metaNew) { Refresh.staged = { ...r, parsed }; refreshOffer(Refresh.staged, papersNew); }
+    if (papersNew || metaNew) { Refresh.staged = { ...r, parsed }; if (quiet) returnOffer(Refresh.staged); else refreshOffer(Refresh.staged, papersNew); }
     else if (shares) Refresh.staged = null;   // a newer copy with nothing new: the older staged one is out of date
     return { status: 'deferred', fresh: papersNew || metaNew };
   }
@@ -5007,6 +5009,7 @@ function refreshReceive(r) {
   if (texts.papers !== null) Refresh.accepted.papers = r.req;
   if (texts.interests !== null) Refresh.accepted.interests = r.req;
   if (texts.groups !== null) Refresh.accepted.groups = r.req;
+  if (quiet && !papersNew && !metaNew) return { status: 'accepted', n: 0, ids: [], all: [], fresh: false, plain: true };
   const before = new Set(everyPaper().map(p => p.id));
   Refresh.noticed = false;
   if (pulled) briefRefresh();   // Phase 14: the answers are read again too
@@ -5026,15 +5029,17 @@ function refreshReceive(r) {
   });
   const on = feedActive(), ids = on ? Feed.keys.filter(k => !before.has(k)) : everyPaper().filter(p => !before.has(p.id)).map(p => p.id);
   const all = on ? feedPool().map(paperKey).filter(k => !before.has(k)) : ids;
-  return { status: 'accepted', n: ids.length, ids, all, fresh: papersNew || metaNew };
+  return { status: 'accepted', n: ids.length, ids, all, fresh: papersNew || metaNew, plain: !!r.plain };
 }
 /* Phase 17: the pill after an accepted refresh. With an interest chosen it counts the view and the whole feed ("2 new
    in World models · 5 in all"). Under Best, new papers land by rank, often far down, so it offers New: "See them in
    New" keeps the interest when some arrived in it, "See all in New" chooses New and All when none did. The offer holds only for the
-   view it was made in: leaving or rebuilding the feed (Feed.gen) or another view ends it. */
+   view it was made in: leaving or rebuilding the feed (Feed.gen) or another view ends it. Phase 22: a plain result (a
+   return's, or Show's or a check's after one) says the same without a count (Dhruv's standing rule). */
 function refreshPill(out) {
   const chip = feedActive() && feedCtlOn() ? Feed.interest : null, v = out.ids.length, a = out.all.length;
-  const msg = chip !== null && a ? `${v} new in ${esc(chip)}&nbsp;&middot; ${a} in all` : v ? `${v} new ${v === 1 ? 'paper' : 'papers'}` : 'Nothing new yet';
+  const msg = out.plain ? (!a ? 'Nothing new yet' : chip !== null && v ? `New papers in ${esc(chip)}` : 'New papers')
+    : chip !== null && a ? `${v} new in ${esc(chip)}&nbsp;&middot; ${a} in all` : v ? `${v} new ${v === 1 ? 'paper' : 'papers'}` : 'Nothing new yet';
   if (!a || !feedActive() || !feedCtlOn() || Feed.sort !== 'best') { toast(msg, null, { pill: true }); return; }
   const gen = Feed.gen, view = feedViewKey(), keep = v > 0;
   const go = () => { if (feedActive() && Feed.gen === gen && feedViewKey() === view) setFeedView('new', keep ? Feed.interest : null); };
@@ -5050,9 +5055,9 @@ function refreshOffer(r, papersNew) {
 function refreshShow() {
   const r = Refresh.staged;
   if (!r) return;
-  if (r.req < refreshAcceptedFor(r.texts) || refreshCrossesSave(r.saveGen)) { Refresh.staged = null; feedCheckNew('show'); return; }
+  if (r.req < refreshAcceptedFor(r.texts) || refreshCrossesSave(r.saveGen)) { Refresh.staged = null; feedCheckNew('show', !!r.plain); return; }
   const out = refreshReceive({ ...r, how: 'show' });
-  if (out.status === 'stale' || out.status === 'superseded') { Refresh.staged = null; feedCheckNew('show'); }
+  if (out.status === 'stale' || out.status === 'superseded') { Refresh.staged = null; feedCheckNew('show', !!r.plain); }
   else if (out.status === 'accepted' && feedActive() && !Refresh.noticed && out.all.length) refreshPill(out);   // Phase 17: what arrived, and New under Best
 }
 /* A lock, or a new target: no text, staged result or request outlives the authorization it was read under */
@@ -5061,6 +5066,196 @@ function refreshTeardown() {
   Refresh.seq++; Refresh.accepted = { papers: Refresh.seq, interests: Refresh.seq, groups: Refresh.seq };   // every request issued before now is superseded
   pullReset();
 }
+
+/* ===== PHASE 22: A CHECK ON RETURN =====
+   Scout reads the library and runs the site it was opened with, and a Home Screen app has no reload of its own. In
+   place of the refresh button that was in the top bar, a return to the page after a while checks for both:
+   - the newest papers (returnPapers), once the page was hidden RETURN_CHECK_AFTER and the last library check of any
+     kind (the start, a pull, Show, a return) answered at least that long ago;
+   - the newest site (returnSite), once it was hidden RETURN_SITE_AFTER: a HEAD of APP_ROOT against the version this
+     page runs, and a reload only after a whole, successful GET, with the person idle on For you and nothing to lose.
+   One coordinator (returnBack) takes each return once, however it is announced (visibilitychange, a persisted
+   pageshow, focus, in any order) and only while the page shows; the first event consumes it before anything is
+   awaited (Sol's correction 2). On a private library it verifies the sign-in once (returnVerify) and both jobs wait
+   for that answer: a check that failed stops them; a definite refusal still locks, one that could not finish keeps the
+   library and its copy. The site goes first, so a refresh under way never blocks its own reload. A focus alone (a
+   window switch on a laptop: no hidden time) verifies, as a return always did, and starts neither job. Nothing new
+   shows: no indicator, and no message unless papers arrived, in words without a count (correction 4). A page the
+   system closed starts afresh, as at any start; nothing here depends on a return event. */
+const RETURN_CHECK_AFTER = 5 * 60000, RETURN_SITE_AFTER = 30 * 60000, RETURN_BASE_DELAY = 3000, RETURN_HEAD_MS = 10000, RETURN_GET_MS = 30000;
+/* away: a return is owed (the page was hidden, or lost focus, since the last one); hiddenAt: when it was first hidden;
+   checkedAt: when the last library check answered; run: the return under way; gen: the interaction generation (a key,
+   a pointer, a wheel, typing or a navigation moves it); site: the version of the page this one is, as a HEAD found it
+   ({ etag, modified }), null until one is known; based: the start's HEAD was asked; page: this page's own date, read
+   as it loads, before any HEAD (pageModified, correction 5) */
+const Return = { away: document.visibilityState === 'hidden', hiddenAt: document.visibilityState === 'hidden' ? Date.now() : null, checkedAt: 0, run: null, gen: 0, site: null, based: false, page: NaN };
+Return.page = pageModified();
+/* document.lastModified ("MM/DD/YYYY hh:mm:ss", local time): the page's Last-Modified, or the time it loaded when it
+   had none. NaN when it does not read. */
+function pageModified() {
+  const m = /^(\d\d)\/(\d\d)\/(\d{4}) (\d\d):(\d\d):(\d\d)$/.exec(String(document.lastModified || ''));
+  return m ? new Date(+m[3], m[1] - 1, +m[2], +m[4], +m[5], +m[6]).getTime() : NaN;
+}
+/* Writes to this browser's notes and PDFs, and uploads, under way (localWork): a reload never cuts one off */
+const LocalWork = { n: 0 };
+function localWork(promise) {
+  LocalWork.n++;
+  const done = () => { LocalWork.n--; };
+  promise.then(done, done);
+  return promise;
+}
+function returnAway() {
+  Return.away = true;
+  if (Return.hiddenAt === null && document.visibilityState === 'hidden') Return.hiddenAt = Date.now();
+}
+/* A return, announced: taken once, and only while the page shows. Both jobs' turns are decided here, before any time
+   moves; the five minutes count from the last library check that answered, of any kind (correction 2). */
+function returnBack(e) {
+  if (e && e.type === 'pageshow' && !e.persisted) return;   // the first load: the start reads everything
+  if (document.visibilityState === 'hidden' || !Return.away) return;
+  const now = Date.now(), hidden = Return.hiddenAt === null ? 0 : Math.max(0, now - Return.hiddenAt);
+  Return.away = false; Return.hiddenAt = null;
+  if (!configReady() || Return.run) return;   // still starting, or a return under way does the work
+  const papers = hidden >= RETURN_CHECK_AFTER && now - Return.checkedAt >= RETURN_CHECK_AFTER, site = hidden >= RETURN_SITE_AFTER;
+  Return.run = returnJobs(papers, site).finally(() => { Return.run = null; });
+}
+async function returnJobs(papers, site) {
+  if (!await returnVerify() || (!papers && !site) || !_dataLoaded) return;
+  const epoch = isPrivate() ? Private.epoch : null;
+  if (site && await returnSite(epoch)) return;   // reloading
+  if (papers) await returnPapers(epoch);
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') returnAway(); else returnBack(); });
+window.addEventListener('blur', returnAway);
+window.addEventListener('pagehide', () => { Return.away = true; if (Return.hiddenAt === null) Return.hiddenAt = Date.now(); });   // where visibilitychange never came
+window.addEventListener('focus', returnBack);
+window.addEventListener('pageshow', returnBack);
+['keydown', 'pointerdown', 'wheel', 'touchstart', 'input', 'focusin'].forEach(type => document.addEventListener(type, () => { Return.gen++; }, { capture: true, passive: true }));
+['hashchange', 'popstate'].forEach(type => window.addEventListener(type, () => { Return.gen++; }));
+/* The papers half (correction 4): the newest library, read as a pull reads it, but quiet. This return verified the
+   sign-in; nothing verifies again. No indicator, and nothing said when nothing arrived, offline, on any failure, or
+   when a save is out or starts or ends meanwhile (no retry: the next return asks again). One refresh at a time with a
+   pull (Pull.busy: a pull meanwhile is declined, as a second one is), and an old completion never ends a newer
+   operation (Pull.op). An overtaken read changes nothing and says nothing (correction 3). refreshReceive applies what
+   it brings by the return's own rule; papers new to For you are told without a count (refreshPill, plain). */
+async function returnPapers(epoch) {
+  if (Pull.busy || _pushing || !navigator.onLine) return;
+  const op = ++Pull.op;
+  Pull.busy = true;
+  try {
+    const req = ++Refresh.seq, saveGen = Refresh.saveGen, view = feedViewKey();
+    const texts = await privateAwait(fetchLibraryTexts(refreshOvertaken(req)), epoch);
+    const out = refreshReceive({ req, saveGen, how: 'return', plain: true, view, texts });
+    if (out.status === 'accepted' && out.all.length && feedActive() && !Refresh.noticed) refreshPill(out);
+  } catch (e) {}   // nothing happens; a lock, or a definite refusal, has said what it must
+  finally { if (op === Pull.op) Pull.busy = false; }
+}
+/* A return's result held for Show (refreshReceive). It is offered, in words without a count, only when it brings
+   papers new to the library and For you shows, not under the reader; else it waits without a word and is offered
+   when For you next shows (returnOfferHeld, from renderFeed and feedRefresh). One that brings no new paper is never
+   offered: the next check at For you's top takes it in. */
+function returnOffer(r) {
+  const have = new Set(everyPaper().map(paperKey));
+  r.adds = !!(r.parsed && r.parsed.papers && r.parsed.papers.some(p => !have.has(paperKey(p))));
+  r.offered = false;
+  returnOfferHeld();
+}
+function returnOfferHeld() {
+  const r = Refresh.staged;
+  if (!r || r.offered !== false || !r.adds || !feedActive() || document.getElementById('reader').classList.contains('open')) return;
+  r.offered = true;
+  toast('New papers available', refreshShow, { actionLabel: 'Show', duration: 12000 });
+}
+/* The site half. A HEAD first, and only when a reload would be safe now; then, when the page at APP_ROOT is not this
+   one, the page the reload loads, fetched whole; and the reload only if, after both, nothing changed: every condition
+   again, the sign-in's epoch, and no key, tap or navigation since (correction 1). Anything else leaves the page as it
+   is: the version known stays this page's, so the next return long enough asks again. True once reloading. */
+async function returnSite(epoch) {
+  const gen = Return.gen, still = () => Return.gen === gen && (!isPrivate() || (Private.authorized && Private.epoch === epoch)) && returnReloadSafe();
+  if (!returnReloadSafe()) return false;
+  const now = await siteHead();
+  if (!now || siteChanged(now) !== true || !still()) return false;
+  if (!await siteWarm() || !still()) return false;
+  writeBackup(); _refreshing = true;   // as the refresh button did; nothing is unsaved here
+  location.reload();
+  return true;
+}
+/* The app's page as a HEAD finds it now: { etag, modified }, or null when the request fails, is not a success, takes
+   over RETURN_HEAD_MS, or has neither header. 'no-cache' makes the browser ask the server, never its own copy. */
+async function siteHead() {
+  let timer;
+  const ctl = new AbortController(), late = new Promise((_, reject) => { timer = setTimeout(() => { ctl.abort(); reject(new Error('Timed out')); }, RETURN_HEAD_MS); });
+  late.catch(() => {});
+  try {
+    const res = await Promise.race([targetFetch(APP_ROOT, { method: 'HEAD', cache: 'no-cache', signal: ctl.signal }), late]);
+    if (!res || !res.ok) return null;
+    const etag = res.headers.get('etag') || null, modified = Date.parse(res.headers.get('last-modified') || '') || null;
+    return etag || modified ? { etag, modified } : null;
+  } catch (e) { return null; }
+  finally { clearTimeout(timer); ctl.abort(); }
+}
+/* Whether the page a HEAD found (now) is not the one running: true, false, or null when the answers cannot tell
+   (correction 6). Against the version known: the ETags when both have one, else both Last-Modified dates. With none
+   known yet (the start's HEAD failed, or found a newer page), against the page's own date (correction 5): a later
+   Last-Modified is a newer page; one no later is this page, and becomes the version known. */
+function siteChanged(now) {
+  const was = Return.site;
+  if (was) return was.etag && now.etag ? was.etag !== now.etag : was.modified && now.modified ? was.modified !== now.modified : null;
+  if (!now.modified || !Number.isFinite(Return.page)) return null;
+  if (now.modified > Return.page) return true;
+  Return.site = now;
+  return false;
+}
+/* The page the reload will load (its path and query, so the route stays), fetched whole from the server: 'reload'
+   stores the answer, so the reload runs the newest release, not the browser's copy. A success, HTML, and every byte
+   of it within RETURN_GET_MS, or false (correction 6). */
+async function siteWarm() {
+  let timer;
+  const ctl = new AbortController(), late = new Promise((_, reject) => { timer = setTimeout(() => { ctl.abort(); reject(new Error('Timed out')); }, RETURN_GET_MS); });
+  late.catch(() => {});
+  try {
+    const res = await Promise.race([targetFetch(location.pathname + location.search, { cache: 'reload', signal: ctl.signal }), late]);
+    if (!res || !res.ok || !/text\/html/i.test(res.headers.get('content-type') || '')) return false;
+    await Promise.race([res.arrayBuffer(), late]);
+    return true;
+  } catch (e) { return false; }
+  finally { clearTimeout(timer); ctl.abort(); }
+}
+/* At the start, once the library shows: the version of the page this one is, from one HEAD a little later (it never
+   competes with the library's reads). A HEAD that finds a page newer than this one's own date sets none, so the next
+   return long enough reloads into it (correction 5); a HEAD that fails sets none either, and a return then compares
+   with the page's own date. An answer with no date to compare (an ETag alone) is taken as this page's version only
+   when the page has no date of its own; else none is set, and a later HEAD with a date finds a newer page (Sol's
+   implementation review, finding 3). */
+function returnSiteStart() {
+  if (Return.based) return;
+  Return.based = true;
+  setTimeout(privateCallback(async () => {
+    const now = await siteHead();
+    if (now && !Return.site && siteChanged(now) === null && !Number.isFinite(Return.page)) Return.site = now;
+  }), RETURN_BASE_DELAY);
+}
+/* Whether a reload now would lose nothing and cut nothing off (correction 1): no unsaved change, and no save out or
+   due; no pull under way; no note being written, and nothing typed and not sent (Add paper, Follow someone, a chat
+   message or what it carries, the lock box's token field); no notes save from its start to its last write, no write
+   to this browser's PDFs, upload, reply this page asked for or added paper under way (LocalWork, and the bridge's
+   jobs, polled while they run); no Undo offered and no library result held for Show; no dialog, sheet, menu, popover
+   or reader; and the person idle on For you at its top, with no interest chosen, no decision, no selection and no
+   field in use. Each timer handle read here is cleared when its callback runs or it is cancelled, so a spent one
+   never holds a reload back (Sol's implementation review, finding 2). A reply the laptop reported when the chat
+   opened is the laptop's own work: a reload does not cut it off, and the chat checks back for it after one. */
+function returnReloadSafe() {
+  if (anyDirty() || _pushing || _autoPushTimer || Pull.busy || People.sending.size || Vault.pushing || Vault.pushTimer || Ink.saveTimer || _readerSaveTimer || LocalWork.n) return false;
+  if (_rnEditing || (AddPaper.text || '').trim() || People.adding || (People.draft || '').trim() || (Chat.draftText || '').trim() || Chat.draft.quotes.length || Chat.draft.images.length || Chat.draft.mentions.length) return false;
+  if ((AddPaper.job && AddPaper.job.state === 'running') || (TopicTag.job && TopicTag.job.state === 'running')) return false;
+  if (_toastUndo || Refresh.staged || _genericResolve || _vaultResolve) return false;
+  const token = document.getElementById('signinToken');
+  if (token && token.value) return false;
+  if (document.getElementById('reader').classList.contains('open') || document.querySelector('#pdfModal.open, #genericOverlay.open, #vaultOverlay.open')) return false;
+  return feedActive() && Feed.interest === null && !document.body.classList.contains('search-open')
+    && document.getElementById('mainScroll').scrollTop <= 40 && feedIdle();
+}
+
 let _emptyPapersCandidate = null;
 /* A copy of the papers: at start-up the first one is drawn at once; a later copy is taken through refreshReceive
    when it is newer (a later date_found; on the same date GitHub's copy, the canonical one, wins). req and saveGen:
@@ -5203,6 +5398,7 @@ function buildGroupOrder() {
 function revealContent() {
   if (_dataLoaded) return;
   _dataLoaded = true;
+  Return.checkedAt = Date.now(); returnSiteStart();   // Phase 22: the first library check, and the site's version
   setTimeout(privateCallback(() => { if (activityShown()) activityStart(); }), 0);   // Phase 16: opened on Interests, the note is read once the library is ready
   const skel = document.getElementById('skeleton');
   skel.classList.add('hidden');
@@ -5807,6 +6003,15 @@ function feedOff() {
 }
 /* Someone is deciding: a decision can still be undone, or the save sheet or the new project's field is open */
 function feedBusy() { return [...Feed.recs.values()].some(r => !r.stale) || !!Feed.sheet || !!Feed.edit; }
+/* Phase 22: nothing under way on the feed for a return to disturb: no decision, sheet or field of its own (feedBusy),
+   no menu or popover, no selection, and no field with the keyboard */
+function feedIdle() {
+  if (feedBusy() || Feed.menu || document.querySelector(POPOVERS) || document.querySelector('#hideSheet.open')) return false;
+  const sel = window.getSelection ? window.getSelection() : null;
+  if (sel && !sel.isCollapsed) return false;
+  const a = document.activeElement;
+  return !(a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName || '')));
+}
 function postEl(k) {
   const list = document.getElementById('feedList');
   return k && list ? [...list.querySelectorAll('.post')].find(el => el.dataset.key === k) || null : null;
@@ -5858,6 +6063,7 @@ function renderFeed() {
     feedHeadMeasure();
   } finally { Feed.drawing = was; }
   feedObserveMore();
+  returnOfferHeld();   // Phase 22: a return's result held while For you did not show
 }
 /* The tabs: For you, then the projects in the order they were made (a new one appears beside +), names whole; the
    row scrolls sideways when they do not fit. One is selected: the project of project mode, else For you. */
@@ -6321,6 +6527,7 @@ function feedRefresh() {
   if (!Feed.drawing) feedChipReconcile();   // an interest that went: All, from the top (Feed.switched), in one rebuild
   if (!Feed.drawing && (Feed.fresh || Feed.switched || Feed.ranked !== (projectMode() ? Feed.project : null))) { renderFeed(); return; }
   feedRedraw();
+  returnOfferHeld();   // Phase 22: back from the reader over it
 }
 function feedRedraw() { feedSync(); feedRepaintAll(); }   // the posts in place, as they are now (renderFeed's other branch)
 /* Every change passes here: a list that went is off in an open save sheet for good (after the lists and project mode
@@ -7300,21 +7507,25 @@ function pullButton(busy) {
    interleave, and a result fetched before or during a save is discarded whole and fetched again. Offline, or when
    GitHub cannot be read, it says so and changes nothing. A private page re-verifies its sign-in first, as the refresh
    button does; a lock says the rest. One refresh at a time (Pull.busy), kept busy for PULL_MIN_BUSY at least so the
-   indicator is seen; an old completion or timer never touches a newer operation (Pull.op). */
-async function feedCheckNew(how) {
+   indicator is seen; an old completion or timer never touches a newer operation (Pull.op). Phase 22: a read a newer
+   result overtook changes nothing and says nothing (refreshOvertaken); plain: Show on a return's result, whose pill
+   carries no count. */
+async function feedCheckNew(how, plain = false) {
   if (Pull.busy) return;
   const pill = msg => toast(msg, null, { pill: true });
   if (_pushing) { pullAbandon(false); pill('Saving… try again in a moment'); return; }
   const op = ++Pull.op, t0 = performance.now(), view = feedViewKey();   // view: the feed it was asked from
   Pull.busy = true; pullAbandon(false); pullShow('busy', PULL_MAX); pullButton(true);
+  let overtaken = null;
   try {
     const _authEpoch = capturePrivateEpoch();
     if (!navigator.onLine) { pill("You're offline"); return; }
     if (isPrivate() && !await privateAwait(reverifyPrivate(), _authEpoch)) return;
     for (let attempt = 0; attempt < 3; attempt++) {
       const req = ++Refresh.seq, saveGen = Refresh.saveGen;   // taken before the fetch: a save that starts or ends meanwhile shows
-      const texts = await privateAwait(fetchLibraryTexts(), _authEpoch);
-      const out = refreshReceive({ req, saveGen, how, view, texts });
+      overtaken = refreshOvertaken(req);
+      const texts = await privateAwait(fetchLibraryTexts(overtaken), _authEpoch);
+      const out = refreshReceive({ req, saveGen, how, view, texts, plain });
       if (out.status === 'stale') { if (_pushing) { pill('Saving… try again in a moment'); return; } continue; }
       if (out.status === 'accepted') { if (!Refresh.noticed) refreshPill(out); }
       else if (out.status === 'deferred' && !out.fresh) pill('Nothing new yet');
@@ -7322,7 +7533,7 @@ async function feedCheckNew(how) {
     }
     pill('Saving… try again in a moment');
   } catch (e) {
-    if (e && e.privateAuth) return;
+    if ((e && e.privateAuth) || (overtaken && overtaken())) return;
     pill(e && e.wait ? waitText(e) + ' Nothing changed.' : e && /^Invalid /.test(e.message || '') ? "Couldn't read the library. Nothing changed." : "Couldn't reach GitHub. Nothing changed.");   // Phase 19: a wait says until when
   } finally { pullSettle(op, t0); }
 }
@@ -11111,7 +11322,7 @@ function mergeRows(mineRows, loadedNames, key, parseOpts, unparseOpts, loadedFie
 
 async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
   auto = auto === true;
-  clearTimeout(_autoPushTimer);
+  clearTimeout(_autoPushTimer); _autoPushTimer = null;   // Phase 22: this is the save it was waiting to start
   if (!anyDirty()) return;
   if (_pushing) { _pushAgain = true; return; }
   if (_stateDirty && !_loadedPaperFields.size) { scheduleAutoPush(); return; }   // papers still loading
@@ -11261,7 +11472,7 @@ function pdfSourceOf(p) { return effPdf(p); }
 function pdfLinkOnRecord(p) { return hasText(p.pdf_url) ? p.pdf_url.trim() : hasText(p.machine_pdf_url) && p.pdf_removed !== 'true' ? p.machine_pdf_url.trim() : ''; }
 /* Files dropped in stay in this browser only */
 function pdfStore(mode, fn) { requireOwner(); const epoch = capturePrivateEpoch();
-  return new Promise((resolve, reject) => {
+  const work = new Promise((resolve, reject) => {
     const req = indexedDB.open('scholar_pdfs', 1);
     req.onupgradeneeded = () => { try { checkPrivateEpoch(epoch); requireOwner(); req.result.createObjectStore('files'); } catch (e) { req.transaction.abort(); req.result.close(); reject(e); } };
     req.onerror = () => reject(req.error);
@@ -11282,6 +11493,7 @@ function pdfStore(mode, fn) { requireOwner(); const epoch = capturePrivateEpoch(
       } catch (e) { if (tx) abort(e); else finish(e); }
     };
   });
+  return mode === 'readonly' ? work : localWork(work);   // Phase 22: a write a reload must not cut off
 }
 const localPdfGet = id => { requireTarget(); return isOwner() ? pdfStore('readonly', st => st.get(id)) : Promise.resolve(null); };
 const localPdfPut = (id, blob) => pdfStore('readwrite', st => st.put(blob, id));
@@ -11359,7 +11571,8 @@ function pickUploadPdf() {
   inp.onchange = () => { if (inp.files[0]) uploadPdf(inp.files[0]); };
   inp.click();
 }
-async function uploadPdf(file) { const _authEpoch = capturePrivateEpoch();
+async function uploadPdf(file) { return localWork(uploadPdfNow(file)); }   // Phase 22: a reload waits for it
+async function uploadPdfNow(file) { const _authEpoch = capturePrivateEpoch();
   requireOwner();
   let doc = null, title = '', fp = '';
   try {
@@ -11942,6 +12155,7 @@ function updateReaderPageNo() {
   document.getElementById('readerPageNo').textContent = `${n} / ${_reader.doc.numPages}`;
   clearTimeout(_readerSaveTimer);
   _readerSaveTimer = setTimeout(privateCallback(() => {
+    _readerSaveTimer = null;   // Phase 22: a spent handle is no save to wait for (returnReloadSafe)
     // the exact place: page number plus how far down it (3.25 = a quarter into page 3)
     const body = document.getElementById('readerBody'), pages = [...body.querySelectorAll('.reader-page')];
     const cur = pages.filter(d => d.offsetTop <= body.scrollTop + 1).pop();
@@ -12191,7 +12405,8 @@ async function submitPdfLink() { const _authEpoch = capturePrivateEpoch();
     msg.textContent = 'Not saved. ' + pdfErrorText(e);
   } finally { destroyPdfDocument(doc); }
 }
-async function usePdfFile(file) { const _authEpoch = capturePrivateEpoch();
+async function usePdfFile(file) { return localWork(usePdfFileNow(file)); }   // Phase 22: a reload waits for it
+async function usePdfFileNow(file) { const _authEpoch = capturePrivateEpoch();
   const p = _reader.paper, msg = document.getElementById('ppMsg');
   if (!file) return;
   if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) { msg.className = 'pp-msg err'; msg.textContent = 'That isn’t a PDF file.'; return; }
@@ -12277,7 +12492,7 @@ async function vaultDecrypt(env, key) {
 }
 /* small IndexedDB helper: 'files' holds encrypted notes files, 'keys' a remembered (non-extractable) key */
 function notesDB(store, mode, fn) { requireOwner(); const epoch = capturePrivateEpoch();
-  return new Promise((resolve, reject) => {
+  const work = new Promise((resolve, reject) => {
     const req = indexedDB.open('scholar_notes', 1);
     req.onupgradeneeded = () => { try { checkPrivateEpoch(epoch); requireOwner(); req.result.createObjectStore('files'); req.result.createObjectStore('keys'); } catch (e) { req.transaction.abort(); req.result.close(); reject(e); } };
     req.onerror = () => reject(req.error);
@@ -12298,6 +12513,7 @@ function notesDB(store, mode, fn) { requireOwner(); const epoch = capturePrivate
       } catch (e) { if (tx) abort(e); else finish(e); }
     };
   });
+  return mode === 'readonly' ? work : localWork(work);   // Phase 22: a write a reload must not cut off
 }
 const nfGet = name => notesDB('files', 'readonly', st => st.get(name)).catch(privateCallback(e => { if (isPrivate()) throw e; return null; }));
 const nfPut = (name, rec) => notesDB('files', 'readwrite', st => st.put(rec, name));
@@ -12484,12 +12700,15 @@ async function nfLoad(name, candidateKey) { const _authEpoch = capturePrivateEpo
   return local || null;
 }
 async function nfSave(name, obj) { const _authEpoch = capturePrivateEpoch(); requireOwner();
-  const generation = vaultGeneration(); await privateAwait(awaitVaultWritable(), _authEpoch); checkVaultGeneration(generation);
-  if (isPrivate()) validateVaultPlain(name, obj);
-  const env = await privateAwait(vaultEncrypt(obj), _authEpoch); requireOwner(); checkVaultGeneration(generation); assertVaultWritable();
-  await privateAwait(nfUpdate(name, cur => { checkVaultGeneration(generation); assertVaultWritable(); return { env, sha: cur ? cur.sha : null, base: cur && cur.env.ct === noteSeen(name) ? cur.base : null, dirty: true }; }), _authEpoch);
-  requireOwner(); checkVaultGeneration(generation); noteSeen(name, env);
-  scheduleNotesPush();
+  LocalWork.n++;   // Phase 22: a reload waits for the whole save: the wait for a writable copy, the encryption, the write
+  try {
+    const generation = vaultGeneration(); await privateAwait(awaitVaultWritable(), _authEpoch); checkVaultGeneration(generation);
+    if (isPrivate()) validateVaultPlain(name, obj);
+    const env = await privateAwait(vaultEncrypt(obj), _authEpoch); requireOwner(); checkVaultGeneration(generation); assertVaultWritable();
+    await privateAwait(nfUpdate(name, cur => { checkVaultGeneration(generation); assertVaultWritable(); return { env, sha: cur ? cur.sha : null, base: cur && cur.env.ct === noteSeen(name) ? cur.base : null, dirty: true }; }), _authEpoch);
+    requireOwner(); checkVaultGeneration(generation); noteSeen(name, env);
+    scheduleNotesPush();
+  } finally { LocalWork.n--; }
 }
 
 /* ---- merging two copies of the same file (edited on two devices) ---- */
@@ -12545,9 +12764,9 @@ async function ghCommitFiles(files, message) { const _authEpoch = capturePrivate
   return commit.sha;
 }
 async function pushNotes() { const _authEpoch = capturePrivateEpoch();
+  Vault.pushTimer = null;   // Phase 22: spent before any return, so notes still locked leave no handle behind
   if (isPrivate() && !Vault.ready) return;
   const generation = vaultGeneration(), key = isPrivate() ? Vault.key : undefined;
-  Vault.pushTimer = null;
   if (!hasPAT() || !Vault.key) { updateNotesSync(); return; }
   if (Vault.pushing) { Vault.pushAgain = true; return; }
   Vault.pushing = true; Vault.pushAgain = false; updateNotesSync();
@@ -13031,13 +13250,16 @@ async function clearPaperNotes(id) { const _authEpoch = capturePrivateEpoch(); r
   await privateAwait(savePaperNotes(obj), _authEpoch);
 }
 async function savePaperNotes(obj) { const _authEpoch = capturePrivateEpoch(); requireOwner();
-  const generation = vaultGeneration(); await privateAwait(awaitVaultWritable(), _authEpoch); checkVaultGeneration(generation);
-  bumpNotesGen(obj.id);
-  dropUncitedRefs(obj);
-  Vault.cache.set(obj.id, obj);
-  indexEntryFor(obj);
-  await privateAwait(nfSave(obj.id + '.json', obj), _authEpoch);
-  await privateAwait(nfSave('_index.json', Vault.index), _authEpoch);
+  LocalWork.n++;   // Phase 22: from the wait for a writable copy to the index's write, so a reload never falls between them
+  try {
+    const generation = vaultGeneration(); await privateAwait(awaitVaultWritable(), _authEpoch); checkVaultGeneration(generation);
+    bumpNotesGen(obj.id);
+    dropUncitedRefs(obj);
+    Vault.cache.set(obj.id, obj);
+    indexEntryFor(obj);
+    await privateAwait(nfSave(obj.id + '.json', obj), _authEpoch);
+    await privateAwait(nfSave('_index.json', Vault.index), _authEpoch);
+  } finally { LocalWork.n--; }
 }
 /* Sync trouble (no network, GitHub unreachable): shown in the panel, told once, retried quietly */
 function setSyncTrouble(e) {
@@ -15002,7 +15224,8 @@ async function blobToBase64(blob) { const _authEpoch = capturePrivateEpoch();
 }
 
 /* ---- one turn ---- */
-async function chatSend(text, auto) { const _authEpoch = capturePrivateEpoch();
+async function chatSend(text, auto) { return localWork(chatSendNow(text, auto)); }   // Phase 22: a reload waits for this page's own reply
+async function chatSendNow(text, auto) { const _authEpoch = capturePrivateEpoch();
   if (Chat.running || Chat.status !== 'ready' || !_reader.paper) return;
   const input = document.getElementById('chatInput');
   text = String(text != null ? text : (input ? input.value : '')).trim();
@@ -15486,19 +15709,47 @@ function normTitle(t) { return (t || '').toLowerCase().replace(/[^a-z0-9]/g, '')
 
 /* ===== PAPER DETAIL PAGE ===== */
 let _paperViewActive = false;
-/* Previous/next on the paper page follow the list the paper was opened from */
-let _navList = null;   // { keys: [...], label }
+/* Previous/next on the paper page follow the list the paper was opened from. Phase 22: from For you (or a project's
+   tab) that list is the whole feed in its order and choice (Feed.keys, every post it would draw), not only the 30 at a
+   time drawn so far, so the count is the feed's and › goes on past them; feed and at say so, and Back lands on the
+   paper last viewed (feedLand). Every other list the page draws whole, and keeps its rows as drawn. Taken when the
+   paper opens, the list stays as it was while the page shows, as before. */
+let _navList = null;   // { keys: [...], label, feed, opened, at }
 function captureNavList(fromEl) {
   const scope = fromEl && fromEl.closest && fromEl.closest('.paper-list, #papersContent, .pd-rel-grid, #lpBody');
   if (!scope) return;
-  const keys = [...new Set([...scope.querySelectorAll('[data-key]')].map(e => e.dataset.key))];
+  const feed = !!fromEl.closest('#feedList') && Feed.mounted;
+  const keys = feed ? Feed.keys.filter(k => postView(k)) : [...new Set([...scope.querySelectorAll('[data-key]')].map(e => e.dataset.key))];
   let label;
   if (fromEl.closest('#sec-list')) label = document.getElementById('lpTitle').textContent;
   else if (fromEl.closest('#sec-search')) label = 'search results';
   else if (fromEl.closest('#sec-library')) label = 'your Library';
   else if (fromEl.closest('.pd-rel-grid')) label = 'related papers';
   else label = currentTab === 'email' ? 'Email Digest' : 'For you';
-  _navList = keys.length > 1 ? { keys, label } : null;
+  const post = feed ? fromEl.closest('[data-key]') : null;
+  _navList = keys.length > 1 ? { keys, label, feed, opened: post ? post.dataset.key : null, at: null } : null;
+}
+/* Phase 22: back on For you from a paper reached with ‹ or › from the post it was opened from, the feed lands on the
+   paper last viewed: posts are drawn until its post is, and it is brought to the middle of the screen. Posts drawn
+   just now have no height of their own until they show (content-visibility), so the place is set again for a few
+   frames as they take theirs, unless the person scrolled meanwhile. False (the place it was opened from is restored)
+   when it was not stepped from, or its post is not in the feed any more. */
+function feedLand() {
+  const nav = _navList, ms = document.getElementById('mainScroll');
+  if (!nav || !nav.feed || !nav.at || nav.at === nav.opened || !feedActive() || !ms) return false;
+  while (!postEl(nav.at) && Feed.shown < Feed.keys.length && Feed.keys.includes(nav.at)) feedMountMore();
+  const el = postEl(nav.at);
+  if (!el) return false;
+  let tries = 0, at = null;
+  const place = () => {
+    if (at !== null && Math.abs(ms.scrollTop - at) > 1) return;   // the person scrolled
+    const r = el.getBoundingClientRect(), box = ms.getBoundingClientRect();
+    jumpScroll(ms, Math.max(0, ms.scrollTop + r.top - box.top - (ms.clientHeight - r.height) / 2));
+    at = ms.scrollTop;
+    if (++tries < 8) requestAnimationFrame(privateCallback(place));
+  };
+  place();
+  return true;
 }
 /* Step to another paper without adding history, so Back still returns to the list */
 function goPaper(key) { if (key) location.replace(location.pathname + location.search + '#paper/' + encodeURIComponent(key)); }   // same document: a bare '#...' would resolve against <base>
@@ -15522,6 +15773,7 @@ function showPaperDetail(id) {
   // Back returns to that page at the same place
   if (!_paperViewActive) { _savedScrollTop = document.getElementById('mainScroll').scrollTop; _paperFromList = _listViewActive ? _listKey : null; }
   _paperViewActive = true;
+  if (_navList && _navList.feed) _navList.at = paperKey(p);   // Phase 22: Back lands on it (feedLand)
   leaveListView();
 
   // Hide all other sections
@@ -16570,7 +16822,7 @@ function applyHash() {
     requestAnimationFrame(privateCallback(() => {
       const ms = document.getElementById('mainScroll');
       ms.style.scrollBehavior = 'auto';
-      ms.scrollTop = _savedScrollTop;
+      if (!feedLand()) ms.scrollTop = _savedScrollTop;
       ms.style.scrollBehavior = '';
       pageIn(document.querySelector('.tab-section.active'));
     }));
@@ -16687,11 +16939,9 @@ async function bootstrapApp() {
     const aliases = Object.assign(Object.create(null), scholar.group_aliases);
     const venues = scholar.venues.map(([short, name, kind, pattern, flags]) => [short, name, kind, new RegExp(pattern, flags)]);
     const raw = `https://raw.githubusercontent.com/${owner}/${repo}/${instance.branch}/`;
-    const link = document.getElementById('ownerLink');
     Private.enabled = ScholarConfig.isPrivate(instance); Config.instance = instance;
     CSV_BASE_URL = isPrivate() ? '' : raw; GH_OWNER = owner; GH_REPO = repo; GH_BRANCH = instance.branch;
     GROUP_NORMALIZE = aliases; VENUES = venues; SHARE_PAGES = instance.share_pages; SCHOLAR_FOCUS = scholar.focus; _venueCache = new WeakMap();
-    link.href = scholar.owner.homepage; link.textContent = scholar.owner.name;
     Config.state = 'ready';
     requireTarget();
     const pat = localStorage.getItem('gh_pat');
