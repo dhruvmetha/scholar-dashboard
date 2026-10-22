@@ -5828,7 +5828,8 @@ function _venueOf(p) {
   const vy = (raw.match(/\b(20\d{2})\b/) || [])[1];
   const py = (String(p.publishing_date || '').match(/\b(20\d{2})\b/) || [])[1];
   const year = parseInt(vy || py) || null;
-  const out = (name, full, kind) => ({ name, full: full || '', kind, year });
+  const out = (name, full, kind) => ({ name, full: full || '', kind, year,
+    ...((kind === 'journal' && /^(RA-L|T-RO|IJRR) 20\d{2}$/.test(raw)) ? { issueEdition: true } : {}) });
   if (!raw || raw === 'not specified') return out('Unknown venue', '', 'other');
   if (/ph\.?\s?d|thesis|dissertation/i.test(raw)) return out('Theses', 'PhD theses and dissertations', 'other');
   const known = VENUES.find(v => v[3].test(raw));
@@ -5855,7 +5856,7 @@ function venueOf(p) {
   return v;
 }
 /* Short label for rows: "RSS 2026", "RA-L", "arXiv" (preprints and journals skip the year) */
-function venueHasEditions(v) { return (v.kind === 'conference' || v.kind === 'workshop') && v.name !== 'Other workshops'; }
+function venueHasEditions(v) { return (v.kind === 'conference' || v.kind === 'workshop' || v.issueEdition === true) && v.name !== 'Other workshops'; }
 function venueLabel(v) { return venueHasEditions(v) && v.year ? `${v.name} ${v.year}` : v.name; }
 /* In paper rows, catch-all groups ("Other workshops", "Theses") show the paper's own venue instead */
 function rowVenueLabel(p) {
