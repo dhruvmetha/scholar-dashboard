@@ -141,7 +141,7 @@ a { color: inherit; text-decoration: none; }
 .nav-tab.active { color: var(--text); border-bottom-color: var(--accent); }
 .nav-tab .tab-badge { margin-left: 6px; font-size: 11px; background: rgba(255,255,255,0.07); padding: 1px 7px; border-radius: 10px; color: var(--text-muted); }
 .nav-search { margin-left: auto; position: relative; width: 260px; flex-shrink: 0; }
-.nav-search input { width: 100%; padding: 8px 12px 8px 36px; background: rgba(255,255,255,0.05); border: 1px solid var(--line); border-radius: 24px; color: var(--text); font-size: 13px; outline: none; transition: border-color 0.3s ease-in-out; }
+.nav-search input { width: 100%; min-height: 44px; padding: 8px 12px 8px 36px; background: rgba(255,255,255,0.05); border: 1px solid var(--line); border-radius: 24px; color: var(--text); font-size: 13px; outline: none; transition: border-color 0.3s ease-in-out; }
 .nav-search input:focus { border-color: var(--accent); }
 .nav-search input::placeholder { color: var(--text-muted); }
 .nav-search-toggle { display: none; }
@@ -1094,6 +1094,20 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 /* SEARCH RESULTS (flat list) */
 .search-filters { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .search-filters .tl-chips { align-items: center; }
+.search-results .tl-chip, .search-results .chip-select, .search-results .v-more, .search-results #searchMore .ui-btn { min-height: 44px; }
+.search-results .search-row-controls { grid-column: 1 / -1; display: flex; align-items: center; gap: 4px; min-width: 0; margin-top: 6px; }
+.search-row-controls .chip { flex: 0 1 auto; max-width: calc(100% - 112px); justify-content: flex-start; }
+.search-row-controls .save-anchor, .search-row-controls .btn-link { flex: none; }
+.search-row-controls .btn-icon, .search-row-controls .btn-link { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+.search-results .top-row { content-visibility: auto; contain-intrinsic-size: auto 110px; --text-muted: var(--text-muted-raised); }
+.search-results .paper-list .top-row.is-read { opacity: 0.85; }
+.search-results .top-row mark { color: var(--text); }
+/* Collapsed search actions need no layout. Focus or hover opens them on hover-capable screens. */
+.search-results .top-row .tr-actions { display: none; }
+@media (hover: hover) {
+  .search-results .top-row:hover .tr-actions, .search-results .top-row:focus-within .tr-actions,
+  .search-results .top-row .tr-actions:has(.p-detail-panel.open) { display: grid; }
+}
 .chip-select { -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.055) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24'%3E%3Cpath fill='%239aa0a6' d='M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z'/%3E%3C/svg%3E") no-repeat right 9px center; border: 1px solid transparent; color: var(--text-secondary); font: inherit; font-size: 12px; padding: 3px 26px 3px 10px; border-radius: 999px; cursor: pointer; transition: border-color 0.15s, color 0.15s; max-width: 240px; }
 .chip-select:hover { border-color: var(--line); color: var(--text); }
 .chip-select.active { background-color: var(--accent-dim); border-color: color-mix(in srgb, var(--accent) 70%, transparent); color: var(--accent); }
@@ -1699,7 +1713,7 @@ body.rp-splitting, body.rp-splitting * { user-select: none !important; -webkit-u
 kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text); background: rgba(255,255,255,0.07); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; }
 .chip-select option { background: var(--bg-surface); color: var(--text); }
 .search-results mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
-.search-empty { line-height: 1.6; max-width: 560px; margin: 48px auto; }
+.search-results .tl-empty { line-height: 1.6; max-width: 560px; margin: 12px auto; padding: 16px 12px; }
 .search-empty strong { display: block; color: var(--text); margin-bottom: 6px; }
 .search-results-header .v-more { margin: 0 0 0 8px; padding: 0 2px; }
 .search-results { max-width: 1200px; margin: 0 auto; padding: 0 24px 32px; }
@@ -1897,6 +1911,7 @@ html.no-hover .cr-x { opacity: 0.7; }
 .tr-group { font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 0 8px; border-radius: 999px; line-height: 19px; white-space: nowrap; }
 .tr-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; padding-top: 2px; font-size: 12px; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 0; text-align: right; }
 .tr-venue { color: var(--text-secondary); max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.search-results .tr-venue { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; white-space: normal; }
 .top-row .tr-actions { grid-column: 1 / -1; display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.2s ease, opacity 0.15s ease, margin-top 0.2s ease; }
 .top-row .tr-actions > div { overflow: hidden; min-height: 0; }
 .top-row:hover .tr-actions, .top-row:focus-within .tr-actions, .top-row .tr-actions:has(.p-detail-panel.open) { grid-template-rows: 1fr; opacity: 1; margin-top: 10px; }
@@ -2615,7 +2630,7 @@ body:has(#sec-library.active) .save-bar[data-state="saving"] { visibility: hidde
     <button class="nav-search-toggle" id="navSearchToggle" onclick="toggleMobileSearch()" aria-label="Search" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>
     <div class="nav-search">
       <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-      <input type="text" id="searchInput" placeholder="Search papers and authors..." oninput="debouncedSearch()" onpaste="setTimeout(debouncedSearch,0)" onkeydown="if (event.key === 'Escape') { event.preventDefault(); this.value = ''; clearTimeout(_searchTimer); hideGlobalSearch(); this.blur(); }">
+      <input type="text" id="searchInput" placeholder="Search papers and authors..." oninput="debouncedSearch()" onkeydown="if (event.key === 'Escape') { event.preventDefault(); this.value = ''; clearTimeout(_searchTimer); hideGlobalSearch(); this.blur(); }">
     </div>
     <button class="nav-key" id="navKey" onclick="connectGitHub()" title="Sign in" aria-label="Sign in"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M18 5l2 2"/></svg></button>
   </div>
@@ -2700,7 +2715,10 @@ body:has(#sec-library.active) .save-bar[data-state="saving"] { visibility: hidde
 
 <!-- GLOBAL SEARCH VIEW (cross-category) -->
 <div class="tab-section" id="sec-search">
-  <div class="search-results" id="globalSearchResults" style="padding-top:24px;"></div>
+  <div class="search-results" id="globalSearchResults" style="padding-top:24px;">
+    <div class="search-results-header"><span id="searchStatus" role="status" aria-live="polite" aria-atomic="true"></span><span id="searchClear"></span></div>
+    <div id="searchControls"></div><div id="searchRows"></div><div id="searchMore" class="feed-more"></div>
+  </div>
 </div>
 
 <!-- INTERESTS TAB (Phase 16): Claude's weekly note, your interests, the suggestions to add, and the dismissed ones -->
@@ -3434,6 +3452,7 @@ window.addEventListener('resize', placePrivateAccess, { passive: true });
 if (window.visualViewport) { window.visualViewport.addEventListener('resize', placePrivateAccess); window.visualViewport.addEventListener('scroll', placePrivateAccess); }
 function lockPrivate(state = 'required', detail) {
   if (!isPrivate()) return;
+  searchOff(true);
   Private.epoch++; Private.authorized = false; Private.token = null; Private.state = state; Private.verifying = null; Private.verificationBinding = null;
   Private.detail = detail === undefined ? null : detail; clearTimeout(Private.recheckTimer); Private.recheckTimer = null;   // Phase 19: any lock ends the quiet re-check
   try { Private.lockToken = localStorage.getItem('gh_pat'); } catch (e) { Private.lockToken = undefined; }
@@ -5179,6 +5198,7 @@ function isOlder(a, b) { return a.latest < b.latest; }
    the restore is announced (its save bar reconciles the lists: see bootstrapStateFromCSV). A row the new copy lacks, with
    an edit pending here, is kept as a remote deletion conflict (goneRows); one with nothing pending goes with the copy. */
 function applyPapers(rows, text, bundle) {   // its callers hold the notices it raises (refreshHeld) until the restore is announced
+  searchOff(); Search.dirty = true;
   if (anyDirty()) writeBackup();   // edits made meanwhile are re-applied by restorePapersFromBackup
   const kept = goneRows(rows), bases = new Map(kept.map(p => [p.id, _loadedPaperFields.get(p.id)]));
   _listsRead = false;
@@ -5977,15 +5997,17 @@ function sortPapers(arr) {
 /* ===== DEBOUNCED SEARCH ===== */
 let _searchTimer = null;
 function debouncedSearch() {
-  clearTimeout(_searchTimer);
-  _searchTimer = setTimeout(privateCallback(() => {
+  searchOff();
+  const gen = Search.gen, route = location.hash, epoch = Private.epoch;
+  _searchTimer = setTimeout(() => {
+    if (gen !== Search.gen || route !== location.hash || epoch !== Private.epoch || !searchBound(epoch)) return;
     const q = (document.getElementById('searchInput').value||'').trim();
     if (q) {
       showGlobalSearch(q);
     } else {
       hideGlobalSearch();
     }
-  }), 150);
+  }, 50);
 }
 
 /* ===== GLOBAL SEARCH (cross-category) ===== */
@@ -5999,33 +6021,50 @@ function toggleMobileSearch(force) {
   if (open) setTimeout(privateCallback(() => document.getElementById('searchInput').focus()), 0);
 }
 function showGlobalSearch(q, fromHash) {
+  if (fromHash) Search.entry = null;
+  else if (!location.hash.startsWith('#search?q=')) Search.entry = location.hash;
+  if (_searchActive && !_paperViewActive && location.hash.startsWith('#search?q=') && document.getElementById('sec-search').classList.contains('active')) {
+    if (!document.body.classList.contains('search-open') && window.matchMedia('(max-width: 600px)').matches) {
+      document.body.classList.add('search-open');
+      document.getElementById('navSearchToggle').setAttribute('aria-expanded', 'true');
+    }
+    renderGlobalSearch(q.toLowerCase(), { typing: !fromHash, restore: fromHash && Search.q === q.toLowerCase() });
+    return;
+  }
   const ms = document.getElementById('mainScroll');
-  if (!_searchActive && !_paperViewActive) { _tabScroll[currentTab] = ms.scrollTop; jumpScroll(ms, 0); }
+  const returning = fromHash && Search.q === q.toLowerCase();
+  if (!fromHash && !location.hash.startsWith('#search?q=')) Search.origin = { hash: location.hash, scroll: ms.scrollTop };
+  if (!_searchActive && !_paperViewActive) _tabScroll[currentTab] = ms.scrollTop;
+  leaveListView();
   _searchActive = true;
-  // on phones, keep the search row visible with its results (desktop always shows the box)
-  if (window.matchMedia('(max-width: 600px)').matches) document.body.classList.add('search-open');
-  if (!fromHash) location.hash = '#search?q=' + encodeURIComponent(q);
-  // Hide all tab sections, show search section
-  document.getElementById('sec-papers').classList.remove('active');
-  document.getElementById('sec-library').classList.remove('active');
-  document.getElementById('sec-venues').classList.remove('active');
-  document.getElementById('sec-interests').classList.remove('active');
-  document.getElementById('sec-paper').classList.remove('active');
+  if (window.matchMedia('(max-width: 600px)').matches) {
+    document.body.classList.add('search-open');
+    document.getElementById('navSearchToggle').setAttribute('aria-expanded', 'true');
+  }
+  for (const id of ['sec-papers', 'sec-library', 'sec-venues', 'sec-interests', 'sec-paper']) document.getElementById(id).classList.remove('active');
   document.getElementById('sec-search').classList.add('active');
   feedOff();
   _paperViewActive = false;
-  // Deactivate tab highlight (the app bar lights Search)
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   markAppSearch();
-  renderGlobalSearch(q.toLowerCase());
+  searchShell();
+  renderGlobalSearch(q.toLowerCase(), { typing: !fromHash, restore: returning });
 }
 function hideGlobalSearch() {
-  if (!_searchActive) return;
-  _searchActive = false;
-  markAppSearch();
-  document.getElementById('sec-search').classList.remove('active');
-  switchTab(currentTab);
-  jumpScroll(document.getElementById('mainScroll'), _tabScroll[currentTab] || 0);   // back where you were before searching
+  searchOff();
+  document.getElementById('searchInput').value = '';
+  Search.entry = null;
+  if (!_searchActive || _paperViewActive || !document.getElementById('sec-search').classList.contains('active')) return;
+  if (Search.origin && location.hash === Search.origin.hash) {
+    Search.back = Search.origin;
+    applyHash();
+  } else if (location.hash.startsWith('#search?q=') && Search.origin) {
+    Search.back = Search.origin;
+    history.back();
+  } else {
+    history.replaceState(history.state, '', APP_ROOT + location.search + '#' + currentTab);
+    applyHash();
+  }
 }
 /* Search ranks by where the words match (headline/title, then authors, then venue, then summary/abstract/
    notes), highlights them, and narrows with chips: relevance, unread, topic, year. */
@@ -6033,10 +6072,15 @@ let _searchFilters = { rel: 'all', unread: false, topic: null, year: null };
 let _lastSearchQ = '';
 function setSearchFilter(key, value) {
   _searchFilters[key] = _searchFilters[key] === value ? (key === 'rel' ? 'all' : key === 'unread' ? false : null) : value;
-  renderGlobalSearch(_lastSearchQ);
+  searchFilterRender(true);
 }
-function setSearchSelect(key, v) { _searchFilters[key] = v === '' ? null : key === 'year' ? parseInt(v) : v; renderGlobalSearch(_lastSearchQ); }
-function clearSearchFilters() { _searchFilters = { rel: 'all', unread: false, topic: null, year: null }; renderGlobalSearch(_lastSearchQ); }
+function setSearchSelect(key, v) { _searchFilters[key] = v === '' ? null : key === 'year' ? parseInt(v) : v; searchFilterRender(true); }
+function clearSearchFilters() { _searchFilters = { rel: 'all', unread: false, topic: null, year: null }; searchFilterRender(true); }
+function searchFilterRender(reset) {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (!q) { hideGlobalSearch(); return; }
+  renderGlobalSearch(q, { restore: !reset && Search.q === q });
+}
 /* Phase 15 (A7): each paper's lowercased search text, kept by row and used only while the row still has the strings
    it was made from (a received change can replace them in the same row). Notes are lowercased on every search and
    never kept: a save or a received change edits them in place. applyPapers and the lock drop every entry. */
@@ -6046,19 +6090,20 @@ function searchText(p) {
   if (!e || e.headline !== p.headline || e.title !== p.title || e.authors !== p.authors || e.venue !== p.venue || e.summary !== p.summary || e.abstract !== p.abstract) {
     const low = v => (v || '').toLowerCase();
     e = { headline: p.headline, title: p.title, authors: p.authors, venue: p.venue, summary: p.summary, abstract: p.abstract,
-      head: low(p.headline) + ' ' + low(p.title), auth: low(p.authors), ven: low(p.venue), body: low(p.summary) + ' ' + low(p.abstract) };
+      head: low(p.headline) + ' ' + low(p.title), auth: null, ven: null, body: null };
     _searchText.set(p, e);
   }
   return e;
 }
 function searchScore(p, tokens) {
-  const { head, auth, ven, body } = searchText(p), notes = (p.user_notes || '').toLowerCase();
-  let score = 0;
-  for (const t of tokens) {   // a token has no spaces, so it matches summary, abstract and notes joined only where it matches one of them
-    if (head.includes(t)) score += 4;
-    else if (auth.includes(t)) score += 3;
-    else if (ven.includes(t)) score += 2;
-    else if (body.includes(t) || notes.includes(t)) score += 1;
+  const text = searchText(p);
+  let score = 0, notes;
+  for (const t of tokens) {   // Prepare a lower-weight field only when the earlier fields did not match.
+    if (text.head.includes(t)) score += 4;
+    else if ((text.auth ??= (p.authors || '').toLowerCase()).includes(t)) score += 3;
+    else if ((text.ven ??= (p.venue || '').toLowerCase()).includes(t)) score += 2;
+    else if ((text.body ??= (p.summary || '').toLowerCase() + ' ' + (p.abstract || '').toLowerCase()).includes(t)
+        || (notes ??= (p.user_notes || '').toLowerCase()).includes(t)) score += 1;
     else return 0;
   }
   return score;
@@ -6082,40 +6127,181 @@ function highlightTokens(root, tokens) {
     });
   });
 }
-function renderGlobalSearch(q) {
-  if (q !== _lastSearchQ) { _searchFilters.topic = null; _searchFilters.year = null; }
-  if (!SHOW_TOPICS) _searchFilters.topic = null;   // Phase 16: no Topic selector, and no topic filter left over
-  _lastSearchQ = q;
-  const tokens = q.split(/\s+/).filter(Boolean);
-  const scored = allPapers.map(p => ({ p, s: searchScore(p, tokens) })).filter(x => x.s > 0);
-  const el = document.getElementById('globalSearchResults');
-  if (!scored.length) {
-    el.innerHTML = `<div class="tl-empty search-empty"><strong>No papers match "${esc(q)}".</strong>Try fewer words, an author's last name, or a venue like RSS or L4DC. Search looks at titles, headlines, authors, venues, summaries, abstracts and your notes.</div>`;
-    return;
+/* The ranked order is complete; only its drawn rows are paged. Every delayed step belongs to one input, route
+   and sign-in. Leaving search keeps its rows for Back, but stops both paging and a pending query. */
+const Search = { gen: 0, frame: 0, obs: null, job: null, q: '', records: [], shown: 0, origin: null, back: null, dirty: false, scroll: 0, entry: null, scrollMode: null, chips: new Map() };
+// History may restore scroll before hashchange. Keep the last position on the committed route.
+function searchScrollMode(active) {
+  if (Search.scrollMode === null) {
+    if (!active) return;
+    Search.scrollMode = history.scrollRestoration || 'auto';
   }
-  // chips reflect everything the words match; filters then narrow the list
-  const all = scored.map(x => x.p);
-  const f = _searchFilters;
-  const topicCounts = {}, yearCounts = {};
-  all.forEach(p => { shownTopics(p).forEach(g => topicCounts[g] = (topicCounts[g] || 0) + 1); const y = pubKey(p) ? Math.floor(pubKey(p) / 100) : null; if (y) yearCounts[y] = (yearCounts[y] || 0) + 1; });
-  const keep = p => (f.rel === 'all' || dynamicRelevance(p) === f.rel) && (!f.unread || !readSet.has(paperKey(p)))
-    && (!f.topic || groupsOfPaper(p).includes(f.topic)) && (!f.year || Math.floor(pubKey(p) / 100) === f.year);
-  const shown = scored.filter(x => keep(x.p));
-  shown.sort((a, b) => b.s - a.s || (REL_ORDER[dynamicRelevance(a.p)] ?? 9) - (REL_ORDER[dynamicRelevance(b.p)] ?? 9) || pubKey(b.p) - pubKey(a.p));
-  const chip = (key, value, label, n) => `<button class="tl-chip ${f[key] === value ? 'active' : ''}" onclick="setSearchFilter('${key}', ${typeof value === 'string' ? `'${escAttr(value)}'` : value})">${key === 'topic' ? gdot(value) : ''}${esc(label)}${n != null ? `<span class="n">${n}</span>` : ''}</button>`;
-  const rels = [['definitely', 'Must Read'], ['probably', 'Interesting'], ['mildly', 'Tangential']].filter(([r]) => all.some(p => dynamicRelevance(p) === r));
+  history.scrollRestoration = active ? 'manual' : Search.scrollMode;
+}
+function searchSaveScroll() {
+  const job = Search.job;
+  if (job && job.committed && job.gen === Search.gen && job.q === Search.q && job.route === location.hash && _searchActive && !_paperViewActive
+      && document.getElementById('sec-search').classList.contains('active')) Search.scroll = document.getElementById('mainScroll').scrollTop;
+}
+document.getElementById('mainScroll').addEventListener('scroll', searchSaveScroll, { passive: true });
+function searchOff(drop) {
+  searchSaveScroll();
+  Search.gen++;
+  clearTimeout(_searchTimer); _searchTimer = null;
+  cancelAnimationFrame(Search.frame); Search.frame = 0;
+  if (Search.obs) Search.obs.disconnect();
+  Search.obs = null;
+  if (drop) { searchScrollMode(false); Search.scrollMode = null; Search.job = null; Search.records = []; Search.shown = 0; Search.q = ''; Search.origin = Search.back = Search.entry = null; Search.scroll = 0; Search.chips.clear(); Search.dirty = true; }
+}
+function searchRestoreOrigin() {
+  const back = Search.back;
+  if (!back || back.hash !== location.hash) return;
+  Search.back = null;
+  const gen = Search.gen, epoch = Private.epoch;
+  Search.frame = requestAnimationFrame(() => {
+    if (gen !== Search.gen || back.hash !== location.hash || epoch !== Private.epoch || !searchBound(epoch)) return;
+    Search.frame = 0;
+    jumpScroll(document.getElementById('mainScroll'), back.scroll);
+  });
+}
+function searchBound(epoch) {
+  try { checkPrivateEpoch(isPrivate() ? epoch : null); return true; }
+  catch (e) { return false; }
+}
+function searchLive(job) {
+  return job && job.gen === Search.gen && job.route === location.hash && _searchActive && !_paperViewActive
+    && job.epoch === Private.epoch && (!isPrivate() || Private.authorized) && searchBound(job.epoch);
+}
+function searchShell() {
+  const el = document.getElementById('globalSearchResults');
+  if (!document.getElementById('searchStatus')) el.innerHTML = `<div class="search-results-header"><span id="searchStatus" role="status" aria-live="polite" aria-atomic="true"></span><span id="searchClear"></span></div><div id="searchControls"></div><div id="searchRows"></div><div id="searchMore" class="feed-more"></div>`;
+}
+function renderGlobalSearch(q, opts) {
+  opts = opts || {};
+  const focus = document.activeElement && document.activeElement.getAttribute('data-search-filter');
+  const extent = opts.restore ? Search.shown : FEED_PAGE;
+  searchOff();
+  if (q !== _lastSearchQ) { _searchFilters.topic = null; _searchFilters.year = null; }
+  if (!SHOW_TOPICS) _searchFilters.topic = null;
+  _lastSearchQ = q;
+  const tokens = q.split(/\s+/).filter(Boolean), f = { ..._searchFilters };
+  const scored = [];
+  const topicCounts = {}, yearCounts = {}, relCounts = {};
+  for (const p of allPapers) {
+    const s = searchScore(p, tokens);
+    if (!s) continue;
+    const rel = dynamicRelevance(p), date = pubKey(p);
+    scored.push({ p, s, rel, date });
+    relCounts[rel] = (relCounts[rel] || 0) + 1;
+    shownTopics(p).forEach(g => topicCounts[g] = (topicCounts[g] || 0) + 1);
+    const y = date ? Math.floor(date / 100) : null;
+    if (y) yearCounts[y] = (yearCounts[y] || 0) + 1;
+  }
+  const shown = scored.filter(x => (f.rel === 'all' || x.rel === f.rel) && (!f.unread || !readSet.has(paperKey(x.p)))
+    && (!f.topic || groupsOfPaper(x.p).includes(f.topic)) && (!f.year || Math.floor(x.date / 100) === f.year));
+  shown.sort((a, b) => b.s - a.s || (REL_ORDER[a.rel] ?? 9) - (REL_ORDER[b.rel] ?? 9) || b.date - a.date);
+  const chip = (key, value, label, n) => `<button data-search-filter="${key}-${value}" class="tl-chip ${f[key] === value ? 'active' : ''}" onclick="setSearchFilter('${key}', ${typeof value === 'string' ? `'${escAttr(value)}'` : value})">${esc(label)}${n != null ? `<span class="n">${n}</span>` : ''}</button>`;
+  const rels = [['definitely', 'Must Read'], ['probably', 'Interesting'], ['mildly', 'Tangential']].filter(([r]) => relCounts[r]);
   const topics = GROUP_ORDER.filter(g => topicCounts[g]);
   const years = Object.keys(yearCounts).map(Number).sort((a, b) => b - a);
   const active = f.rel !== 'all' || f.unread || f.topic || f.year;
-  let html = `<div class="search-results-header">${shown.length === all.length ? `${all.length} result${all.length !== 1 ? 's' : ''}` : `${shown.length} of ${all.length} results`} for "${esc(q)}"${active ? ` <button class="v-more" onclick="clearSearchFilters()">Clear filters</button>` : ''}</div>
-    <div class="search-filters">
-      <div class="tl-chips">${rels.map(([r, l]) => chip('rel', r, l, all.filter(p => dynamicRelevance(p) === r).length)).join('')}${chip('unread', true, 'Unread only', null)}
-      ${topics.length > 1 ? `<select class="chip-select ${f.topic ? 'active' : ''}" aria-label="Topic" onchange="setSearchSelect('topic', this.value)"><option value="">All topics</option>${topics.map(g => `<option value="${esc(g)}" ${f.topic === g ? 'selected' : ''}>${esc(g)} (${topicCounts[g]})</option>`).join('')}</select>` : ''}
-      ${years.length > 1 ? `<select class="chip-select ${f.year ? 'active' : ''}" aria-label="Year" onchange="setSearchSelect('year', this.value)"><option value="">Any year</option>${years.map(y => `<option value="${y}" ${f.year === y ? 'selected' : ''}>${y} (${yearCounts[y]})</option>`).join('')}</select>` : ''}</div>
-    </div>`;
-  html += shown.length ? paperListHTML(shown.map(x => x.p)) : `<div class="tl-empty">No results with these filters. <button class="v-more" onclick="clearSearchFilters()">Clear filters</button></div>`;
-  el.innerHTML = html;
-  highlightTokens(el, tokens);
+  const controls = scored.length ? `<div class="search-filters"><div class="tl-chips">${rels.map(([r, l]) => chip('rel', r, l, relCounts[r])).join('')}${chip('unread', true, 'Unread only', null)}
+    ${topics.length > 1 ? `<select data-search-filter="topic" class="chip-select ${f.topic ? 'active' : ''}" aria-label="Topic" onchange="setSearchSelect('topic', this.value)"><option value="">All topics</option>${topics.map(g => `<option value="${esc(g)}" ${f.topic === g ? 'selected' : ''}>${esc(g)} (${topicCounts[g]})</option>`).join('')}</select>` : ''}
+    ${years.length > 1 ? `<select data-search-filter="year" class="chip-select ${f.year ? 'active' : ''}" aria-label="Year" onchange="setSearchSelect('year', this.value)"><option value="">Any year</option>${years.map(y => `<option value="${y}" ${f.year === y ? 'selected' : ''}>${y} (${yearCounts[y]})</option>`).join('')}</select>` : ''}</div></div>` : '';
+  const count = shown.length === scored.length ? `${scored.length} result${scored.length !== 1 ? 's' : ''}` : `${shown.length} of ${scored.length} results`;
+  const job = { gen: Search.gen, route: location.hash, epoch: Private.epoch, q, tokens, records: shown, controls, active, committed: false,
+    status: `${count} for "${q}"`, empty: !scored.length, typing: opts.typing || Search.entry === location.hash || (location.hash.startsWith('#search?q=') && location.hash !== '#search?q=' + encodeURIComponent(q)), restore: opts.restore, extent, focus };
+  Search.job = job;
+  Search.frame = requestAnimationFrame(() => searchCommit(job));
+}
+function searchCommit(job) {
+  if (!searchLive(job)) return;
+  Search.frame = 0;
+  if (job.typing) {
+    const url = APP_ROOT + location.search + '#search?q=' + encodeURIComponent(job.q);
+    if (location.hash.startsWith('#search?q=')) history.replaceState(history.state, '', url);
+    else history.pushState(history.state, '', url);
+    _appliedHash = job.route = location.hash;
+    Search.entry = null;
+  }
+  searchScrollMode(location.hash.startsWith('#search?q='));
+  searchShell();
+  const rows = document.getElementById('searchRows');
+  if (!job.restore) {
+    // Collapse the outgoing pages before resetting scroll, so they need no layout at the new position.
+    rows.hidden = true;
+    Search.scroll = 0; jumpScroll(document.getElementById('mainScroll'), 0);
+  }
+  const same = job.restore && !Search.dirty && Search.q === job.q && Search.records.length === job.records.length
+    && Search.records.every((x, i) => paperKey(x.p) === paperKey(job.records[i].p));
+  Search.q = job.q; Search.records = job.records; Search.dirty = false;
+  if (!same) Search.chips = feedChipTargets(job.records.map(x => paperKey(x.p)));
+  document.getElementById('searchStatus').textContent = job.status;
+  document.getElementById('searchClear').innerHTML = job.active ? ' <button class="v-more" data-search-filter="clear" onclick="clearSearchFilters()">Clear filters</button>' : '';
+  document.getElementById('searchControls').innerHTML = job.controls;
+  if (!same) {
+    Search.shown = Math.min(job.extent || FEED_PAGE, job.records.length);
+    const html = job.records.slice(0, Search.shown).map(x => topRowHTML(x.p, shownTopics(x.p), { search: true }));
+    rows.innerHTML = job.records.length ? `<div class="paper-list flat"><section class="tl-section">${html.join('')}</section></div>`
+      : job.empty ? `<div class="tl-empty search-empty"><strong>No papers match "${esc(job.q)}".</strong>Try fewer words, an author's last name, or a venue like RSS or L4DC. Search looks at titles, headlines, authors, venues, summaries, abstracts and your notes.</div>`
+      : `<div class="tl-empty">No results with these filters. <button class="v-more" data-search-filter="clear" onclick="clearSearchFilters()">Clear filters</button></div>`;
+    highlightTokens(rows, job.tokens);
+    rows.querySelectorAll('.top-row').forEach((el, i) => { el._html = html[i]; });
+  } else {
+    rows.querySelectorAll('.top-row').forEach(el => {
+      const p = feedRow(el.dataset.key), h = topRowHTML(p, shownTopics(p), { search: true });
+      if (el._html !== h) rowsSync(rows, el.dataset.key);
+    });
+  }
+  rows.hidden = false;
+  if (job.restore) jumpScroll(document.getElementById('mainScroll'), Search.scroll);
+  searchMoreRender();
+  if (job.focus) {
+    const control = [...document.querySelectorAll('#sec-search [data-search-filter]')].find(el => el.dataset.searchFilter === job.focus)
+      || document.querySelector('#sec-search [data-search-filter]');
+    if (control) control.focus({ preventScroll: true });
+  }
+  searchObserveMore(job);
+  job.committed = true;
+  saveSheetSync();
+}
+function searchMoreRender() {
+  const more = document.getElementById('searchMore');
+  if (Search.shown < Search.records.length) {
+    if (!more.firstElementChild) more.innerHTML = '<button type="button" class="ui-btn feed-more-btn" onclick="searchMountMore(true)">Show more</button>';
+  } else more.innerHTML = '';
+}
+function searchMountMore(focus) {
+  const job = Search.job;
+  if (!searchLive(job) || Search.frame || Search.shown >= Search.records.length) return;
+  if (!focus && Search.shown + FEED_PAGE >= Search.records.length && document.activeElement === document.querySelector('#searchMore button')) return;
+  Search.frame = requestAnimationFrame(() => {
+    if (!searchLive(job)) return;
+    Search.frame = 0;
+    if (!focus && Search.shown + FEED_PAGE >= Search.records.length && document.activeElement === document.querySelector('#searchMore button')) return;
+    const list = document.querySelector('#searchRows .tl-section'), start = Search.shown;
+    if (!list) return;
+    const page = job.records.slice(start, start + FEED_PAGE);
+    for (const x of page) {
+      const h = topRowHTML(x.p, shownTopics(x.p), { search: true });
+      list.insertAdjacentHTML('beforeend', h);
+      const el = list.lastElementChild; el._html = h;
+      highlightTokens(el, job.tokens);
+    }
+    Search.shown += page.length;
+    searchMoreRender();
+    if (focus && list.children[start]) kbSelect(list.children[start]);
+    searchObserveMore(job);
+  });
+}
+function searchObserveMore(job) {
+  if (Search.obs) Search.obs.disconnect();
+  Search.obs = null;
+  if (!searchLive(job) || Search.shown >= Search.records.length || !window.IntersectionObserver) return;
+  Search.obs = new IntersectionObserver(entries => {
+    if (searchLive(job) && entries.some(e => e.isIntersecting)) searchMountMore(false);
+  }, { root: document.getElementById('mainScroll'), rootMargin: '600px 0px' });
+  Search.obs.observe(document.getElementById('searchMore'));
 }
 
 /* [6] TAB SWITCHING — crossfade */
@@ -6123,6 +6309,7 @@ function renderGlobalSearch(q) {
 const _tabScroll = {};
 function switchTab(tab, fromHash) {
   closeListMenu();   // Phase 25: a list's menu goes with the view it was opened in
+  searchOff();
   const ms = document.getElementById('mainScroll');
   const prevTab = currentTab, fromSearch = _searchActive, moved = prevTab !== tab || fromSearch;
   if (prevTab !== tab && !fromSearch && !_paperViewActive && !_listViewActive) _tabScroll[prevTab] = ms.scrollTop;
@@ -6152,6 +6339,7 @@ function switchTab(tab, fromHash) {
   else if (tab === 'venues') renderVenues();
   else if (tab === 'interests') { renderInterests(); activityEnter(); }   // Phase 16: the weekly note is read here, never at start-up
   if (moved || fromList) jumpScroll(ms, _tabScroll[tab] || 0);
+  searchRestoreOrigin();
 }
 function interestsHash() { return SHOW_TOPICS ? '#interests/' + currentIGTab : '#interests'; }
 function jumpScroll(el, y) { el.style.scrollBehavior = 'auto'; el.scrollTop = y; el.style.scrollBehavior = ''; }
@@ -9332,7 +9520,7 @@ function refresh() {
   // A list page stays live (a paper marked read leaves it, stars show); the page underneath redraws on the way back
   if (_listViewActive) { renderListPage(); return; }
   if (_paperViewActive) { paperViewSync(); return; }   // the page from its row as it is now (received topics, notes, related papers), or unavailable
-  if (_searchActive) { renderGlobalSearch(_lastSearchQ); saveDDSync(); }   // search shows over the tab it was opened from: it first, with what it filters and counts; the tab under it below, as before
+  if (_searchActive) { searchFilterRender(); saveDDSync(); }   // search shows over the tab it was opened from: it first, with what it filters and counts; the tab under it below, as before
   if (feedActive()) feedRefresh();   // the feed keeps its posts where they are
   else if (['all','email'].includes(currentTab)) applyFilters();
   else if (currentTab === 'library') renderLibrary();
@@ -9353,8 +9541,9 @@ function refreshPaper(k, what) {
 /* Search results after one paper changed: its rows in place; a read mark with "Unread only" on changes which results
    show and the counts, so the results are drawn again. The picker follows either way. */
 function searchRepaint(k, what) {
-  if (what.read && _searchFilters.unread) renderGlobalSearch(_lastSearchQ);
+  if (what.read && _searchFilters.unread) searchFilterRender();
   else rowsSync(document.getElementById('sec-search'), k);
+  saveSheetSync();
   saveDDSync();
 }
 /* Every view that shows marks follows a change: the feed's sheet, records and presses, a paper page's bar and the open
@@ -9367,10 +9556,18 @@ function rowsSync(root, k) {
   const p = feedRow(k);
   if (!p) return;
   [...root.querySelectorAll('.top-row[data-key], .feed-item[data-key]')].filter(el => el.dataset.key === k).forEach(el => {
-    const h = el.classList.contains('top-row') ? topRowHTML(p, shownTopics(p)) : feedItemHTML(p);
+    const search = !!el.closest('#sec-search');
+    const h = el.classList.contains('top-row') ? topRowHTML(p, shownTopics(p), { search }) : feedItemHTML(p);
     const had = document.activeElement && el.contains && el.contains(document.activeElement);
     el.insertAdjacentHTML('beforebegin', h);
     const fresh = el.previousElementSibling;
+    if (fresh && fresh.closest('#sec-search')) { fresh._html = h; highlightTokens(fresh, Search.job ? Search.job.tokens : []); }
+    const sh = search && Feed.sheet;
+    if (fresh && sh && sh.btn && el.contains(sh.btn)) {
+      const next = fresh.querySelector(sh.btn.classList.contains('chip') ? '.chip' : '[data-act="list"]');
+      if (sh.from === sh.btn) sh.from = next;
+      sh.btn = next;
+    }
     el.remove();
     if (fresh && had) fresh.focus({ preventScroll: true });
   });
@@ -9621,6 +9818,7 @@ function showList(key) {
   if (!returning) { jumpScroll(ms, 0); requestAnimationFrame(privateCallback(() => jumpScroll(ms, 0))); }   // after the router's restore for the paper page it left
   if (!_leftPaper && (entering || changed)) pageIn(document.getElementById('sec-list'));   // (leaving a paper page, the router fades it in)
   updateListBar();
+  searchRestoreOrigin();
 }
 function leaveListView() {
   if (!_listViewActive) return false;
@@ -9822,6 +10020,28 @@ function updateListBar() {
 }
 document.addEventListener('DOMContentLoaded', () => document.getElementById('mainScroll').addEventListener('scroll', () => updateListBar(), { passive: true }));
 
+/* Search uses the existing list choice, membership and Undo rules. The chip keeps the destination it showed. */
+function searchRowControls(p) {
+  const k = paperKey(p), held = heldLists(k), n = held.length === 1 ? held[0] : Search.chips.get(k) || TO_READ;
+  const on = listHolds(n, k), many = held.length > 1;
+  const label = many ? `In ${held.length} lists, change where` : on ? `In ${n}, remove` : `Add to ${n}`;
+  const chip = `<button type="button" class="chip${on || many ? ' in' : ''}" data-act="chip" data-n="${dataAttr(many ? '' : n)}" data-on="${on}" aria-label="${dataAttr(label)}" title="${dataAttr(label)}" onclick="event.preventDefault();event.stopPropagation();searchKeep(this)"${feedLive(k) && (many || listDestOK(n)) ? '' : ' disabled'}><span class="chip-t">${on || many ? FEED_ICON.tick : ''}<span class="chip-n">${many ? `In ${held.length} lists` : (on ? 'In ' : '+ ') + esc(n)}</span></span></button>`;
+  return `<div class="search-row-controls">${isOwner() ? chip + saveBtn(p) : ''}${linkBtn(p)}</div>`;
+}
+function searchKeep(btn) {
+  requireOwner();
+  if (!btn || !btn.isConnected || !searchLive(Search.job) || !Search.job.committed) return false;
+  const row = btn.closest('#searchRows .top-row'), k = row && row.dataset.key, n = btn.dataset.n;
+  if (!k || !feedLive(k)) return false;
+  if (!n) { openSaveTo(null, btn, k); return false; }
+  if (!listDestOK(n) || listHolds(n, k) !== (btn.dataset.on === 'true')) { searchRepaint(k, {}); return false; }
+  const on = !listHolds(n, k), at = on ? undefined : listAddedAt(n)[k] || '';
+  listSet(n, k, on);
+  searchRepaint(k, { list: n });
+  listToast(n, k, on, at);
+  return true;
+}
+
 function topRowHTML(p, groups, o) {
   o = o || {};
   const k = paperKey(p), m = paperMarks(p), ir = m.read;   // a hidden paper's marks from its own row (P1-a)
@@ -9840,8 +10060,9 @@ function topRowHTML(p, groups, o) {
       <span class="tr-venue-line">${venue && !o.hideVenue ? venueLinkHTML(p, 'tr-venue') : ''}</span>
       <span>${isNewSinceVisit(p) ? '<span class="f-new">New</span> ' : ''}${esc(o.hideVenue ? (paperDate(p) || venueOf(p).year || '') : displayDate(p))}</span>
     </div>
+    ${o.search ? searchRowControls(p) : ''}
     <div class="tr-actions"><div>
-      <div class="p-action-row">${summaryBtn(p)} ${absBtn(p)} ${linkBtn(p)} ${whyBtn(p)} <span class="p-actions has-active">${readBtn(p)} ${saveBtn(p)} ${deleteBtn(p)}</span></div>
+      <div class="p-action-row">${summaryBtn(p)} ${absBtn(p)} ${o.search ? '' : linkBtn(p)} ${whyBtn(p)} <span class="p-actions has-active">${readBtn(p)} ${o.search ? '' : saveBtn(p)} ${deleteBtn(p)}</span></div>
       <div class="p-detail-panel"></div>
     </div></div>
   </article>`;
@@ -9890,6 +10111,7 @@ document.addEventListener('keydown', e => {
   e.preventDefault();
   if (!_kbHinted) { _kbHinted = true; toast(isOwner() ? 'Keys: j / k move, o open, x mark read, s save to a list. Press ? for all.' : 'Keys: j / k move, o open. Press ? for all.', null, { duration: 5000 }); }
   const key = i >= 0 ? rows[i].dataset.key : null;
+  if (e.key === 'j' && _searchActive && i === rows.length - 1 && Search.shown < Search.records.length) { searchMountMore(true); return; }
   if (e.key === 'j') kbSelect(rows[i < 0 ? 0 : Math.min(i + 1, rows.length - 1)]);
   else if (e.key === 'k') kbSelect(rows[i < 0 ? 0 : Math.max(i - 1, 0)]);
   else if (e.key === 'o' || e.key === 'Enter') openPaper(key, { target: rows[i] });
@@ -12970,6 +13192,7 @@ function readerDark() { try { return localStorage.getItem(READER_DARK_KEY) === '
    The reader is the one place notes are written; the paper page's note buttons come here. */
 function openReader(key, notes) {
   requireTarget(); if (!_ownerDecisionDone) return;
+  if (_searchActive && !_paperViewActive) searchSaveScroll();
   _reader.under = location.hash.slice(1);   // Back returns to this view, which stays rendered underneath
   _reader.pendingNotes = notes ? { key, action: notes } : null;
   location.hash = '#read/' + encodeURIComponent(key) + (notes ? '/notes' : '');
@@ -17025,14 +17248,16 @@ let _paperViewActive = false;
 /* Previous/next on the paper page follow the list the paper was opened from. Phase 22: from For you (or a project's
    tab) that list is the whole feed in its order and choice (Feed.keys, every post it would draw), not only the 30 at a
    time drawn so far, so the count is the feed's and › goes on past them; feed and at say so, and Back lands on the
-   paper last viewed (feedLand). Every other list the page draws whole, and keeps its rows as drawn. Taken when the
+   paper last viewed (feedLand). Search keeps its complete ranked order too; other lists keep their rows as drawn. Taken when the
    paper opens, the list stays as it was while the page shows, as before. */
 let _navList = null;   // { keys: [...], label, feed, opened, at }
 function captureNavList(fromEl) {
   const scope = fromEl && fromEl.closest && fromEl.closest('.paper-list, #papersContent, .pd-rel-grid, #lpBody');
   if (!scope) return;
   const feed = !!fromEl.closest('#feedList') && Feed.mounted;
-  const keys = feed ? Feed.keys.filter(k => postView(k)) : [...new Set([...scope.querySelectorAll('[data-key]')].map(e => e.dataset.key))];
+  const search = !!fromEl.closest('#sec-search');
+  if (search) searchSaveScroll();
+  const keys = search ? Search.records.map(x => paperKey(x.p)) : feed ? Feed.keys.filter(k => postView(k)) : [...new Set([...scope.querySelectorAll('[data-key]')].map(e => e.dataset.key))];
   let label;
   if (fromEl.closest('#sec-list')) label = document.getElementById('lpTitle').textContent;
   else if (fromEl.closest('#sec-search')) label = 'search results';
@@ -17080,6 +17305,7 @@ function openPaper(id, event) {
 let _savedScrollTop = 0;
 
 function showPaperDetail(id) {
+  searchOff();
   const p = allPapers.find(pp => pp.id === id) || _hiddenPapers.find(pp => pp.id === id);
   if (!p) { history.replaceState(null, '', APP_ROOT + location.search + '#all'); applyHash(); return; }
   // Save the list's scroll position, but not when stepping from one paper to the next; opened from a list page,
@@ -17103,6 +17329,7 @@ function showPaperDetail(id) {
 
   renderPaperDetail(p);
   pageIn(document.getElementById('sec-paper'));
+  searchRestoreOrigin();
 }
 /* A view that replaces another arrives with one short fade, already at its place (no scroll animation) */
 function pageIn(el) { if (el && !reduceMotion()) replay(el, 'page-in'); }
@@ -18236,6 +18463,9 @@ function applyHash() {
   try { requireTarget(); } catch (e) { return; }
   const retired = retiredHash(location.hash);   // replaced in place, without a new Back step
   if (retired) history.replaceState(null, '', location.pathname + location.search + retired);
+  searchOff();
+  searchScrollMode(location.hash.startsWith('#search?q='));
+  if (_searchActive && Search.origin && Search.origin.hash === location.hash) Search.back = Search.origin;
   syncAddress();
   _appliedHash = location.hash;
   const hash = location.hash.slice(1); // remove '#'
@@ -18268,6 +18498,10 @@ function applyHash() {
         const pp = allPapers.find(x => x.id === decodeURIComponent(hash.slice(6)).replace(/\/questions$/, ''));
         if (pp) renderPaperDetail(pp);   // notes may have changed
         if (/\/questions$/.test(hash)) briefSheetFocusBack();   // Phase 24: the sheet a pill left, back on that pill
+      }
+      else if (hash.startsWith('search?q=') && _searchActive) {
+        document.getElementById('searchInput').value = Search.q;
+        renderGlobalSearch(Search.q, { restore: true });
       }
       else if (feedActive()) feedRefresh();   // the posts, as they are now
       return;
@@ -18367,7 +18601,7 @@ function applyHash() {
     const q = decodeURIComponent(hash.slice(9));
     if (q) {
       const si = document.getElementById('searchInput');
-      if (document.activeElement !== si) si.value = q;
+      si.value = q;
       showGlobalSearch(q, true);
       return;
     }
@@ -18498,7 +18732,7 @@ Config.startup = bootstrapApp();
     'showCopyDD', 'doCopyList', 'doCopyNew', 'updateI', 'updateG', 'updateInterestField', 'toggleInterestDropdown', 'gDragStart', 'gDrop',
     'resetChanges', 'pushToGitHub', 'showSaveBar', 'openStrengthDD', 'setMatchStrength', 'scheduleAutoPush', 'disconnectGitHub', 'submitPdfLink', 'pinPdfVersion',
     // the feed's decisions, a passed post's reasons, Undo, and putting a passed paper back
-    'feedKeep', 'feedPass', 'feedReason', 'feedOther', 'feedUndo', 'unpassPaper',
+    'feedKeep', 'searchKeep', 'feedPass', 'feedReason', 'feedOther', 'feedUndo', 'unpassPaper',
     // projects: choosing a feed tab, making one, the save sheet
     'setProject', 'tabEdit', 'tabNewSubmit', 'openSaveSheet', 'sheetToggle', 'sheetNewSubmit',
     // Phase 25: a list's tab (add a suggestion, take one off, remove, mark read, + Add a paper, Undo) and its rename and delete
