@@ -26,6 +26,7 @@
     ["CDC", "Conference on Decision and Control", "conference", "\\bCDC\\b|Conference on Decision and Control", "i"],
     ["ECC", "European Control Conference", "conference", "\\bECC\\b|European Control Conference", "i"],
     ["CVPR", "Computer Vision and Pattern Recognition", "conference", "\\bCVPR\\b", "i"],
+    ["ICCV", "International Conference on Computer Vision", "conference", "\\bICCV\\b|International Conference on Computer Vision", "i"],
     ["ECCV", "European Conference on Computer Vision", "conference", "\\bECCV\\b", "i"],
     ["AAAI", "AAAI Conference on Artificial Intelligence", "conference", "\\bAAAI\\b", "i"],
     ["IJCAI", "International Joint Conference on Artificial Intelligence", "conference", "\\bIJCAI\\b", "i"],
