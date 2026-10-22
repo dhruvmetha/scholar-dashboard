@@ -685,13 +685,13 @@ html.no-hover .pd-topic-chip:hover:not(:active) { background: rgba(255,255,255,0
 .pd-edit:hover { color: var(--accent); border-color: var(--accent); }
 .pd-empty { color: var(--text-muted); font-size: 15px; }
 /* Ten questions (Phase 14): ten native details, closed by default, the line under the heading muted, an answer at the
-   page's prose size. The button is not .pd-edit, which a signed-out page hides. Phones get 44 px summaries, and each
+   page's prose size. The button is not .pd-edit, which a signed-out page hides. Every layout gets 44 px summaries, and each
    citation pill a 44 px tall target around it. */
 .pd-q h2 { flex-wrap: wrap; }
 .pd-q-all { margin-left: auto; background: none; border: 1px solid var(--line); color: var(--text-muted); font: inherit; font-size: 13px; font-weight: 500; min-height: 36px; padding: 6px 14px; border-radius: 999px; cursor: pointer; }
 .pd-q-all:hover, .pd-q-all[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
 .pd-q-meta { color: var(--text-muted); font-size: 13px; line-height: 1.5; margin: 0 0 10px; }
-.pd-q-retry { background: none; border: none; color: var(--accent); font: inherit; padding: 0 2px; cursor: pointer; text-decoration: underline; }
+.pd-q-retry { background: none; border: none; color: var(--accent); font: inherit; min-width: 44px; min-height: 44px; padding: 0 2px; cursor: pointer; text-decoration: underline; }
 .pd-q-list { border-top: 1px solid var(--line); }
 .pd-q-item { border-bottom: 1px solid var(--line); }
 .pd-q-item > summary { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 11px 0; font-size: 15px; line-height: 1.45; color: var(--text); cursor: pointer; list-style: none; }
@@ -701,8 +701,39 @@ html.no-hover .pd-topic-chip:hover:not(:active) { background: rgba(255,255,255,0
 .pd-q-item[open] > summary::after { transform: rotate(225deg); margin-top: 10px; border-color: var(--accent); }
 .pd-q-a { padding: 0 0 18px; }
 .pd-q-wait { color: var(--text-muted); font-size: 15px; }
-@media (pointer: coarse) { .pd-q .brief-pill { position: relative; } .pd-q .brief-pill::after { content: ''; position: absolute; left: -2px; right: -2px; top: 50%; height: 44px; transform: translateY(-50%); } }
+.pd-q .brief-pill { position: relative; }
+.pd-q .brief-pill::after { content: ''; position: absolute; left: 50%; top: 50%; width: calc(100% + 4px); min-width: 44px; height: 44px; transform: translate(-50%, -50%); }
 @media (prefers-reduced-motion: reduce) { .pd-q-item > summary::after { transition: none; } }
+/* Phase 24: the "Ten questions" chip under the authors (44 px tall, no icon), and the answers in a sheet: a bottom sheet
+   on a phone, a centred dialog on a wide screen, under the reader (z 320) so a citation pill opens the PDF over it */
+.pd-tq { margin-top: 14px; display: flex; align-items: center; min-height: 44px; }
+.pd-tq:empty { display: none; }
+.pd-tq-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--line); background: none; color: var(--text); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.pd-tq-chip.done { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 60%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+button.pd-tq-chip:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+.pd-tq-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pd-tq-chip:disabled { opacity: 0.55; cursor: default; }
+.pd-tq-chip.busy { cursor: default; font-weight: 500; color: var(--text-secondary); }
+.pd-tq-note { font-size: 14px; line-height: 1.4; color: var(--text-secondary); }
+.tq-dots { display: inline-flex; gap: 3px; margin-left: 2px; }
+.tq-dots i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; animation: tq-dot 1.2s ease-in-out infinite; }
+.tq-dots i:nth-child(2) { animation-delay: 0.2s; } .tq-dots i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes tq-dot { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+.tq-sheet { position: fixed; inset: 0; z-index: 300; display: none; background: rgba(0,0,0,0.55); }
+.tq-sheet.open { display: flex; align-items: flex-end; justify-content: center; }
+.tq-panel { box-sizing: border-box; width: 100%; max-width: 760px; max-height: calc(100% - 24px); display: flex; flex-direction: column; background: var(--bg-raise); border: 1px solid var(--line); border-bottom: none; border-radius: 16px 16px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); outline: none; }
+.tq-head { position: relative; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 16px 8px 8px 20px; border-bottom: 1px solid var(--line); }
+.tq-grip { position: absolute; top: 6px; left: 50%; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: rgba(255,255,255,0.25); }
+.tq-head h2 { flex: 1; min-width: 0; margin: 0; font-size: 16px; font-weight: 600; color: var(--text); }
+.tq-head .pd-q-all { margin-left: 0; min-height: 44px; }
+.tq-done { flex-shrink: 0; min-width: 44px; min-height: 44px; padding: 0 14px; border: none; border-radius: 10px; background: none; color: var(--accent); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.tq-done:focus-visible, .tq-head .pd-q-all:focus-visible, .tq-panel .pd-q-item > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tq-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 20px 24px; }
+.tq-body .pd-prose { font-size: 17px; }
+@media (min-width: 900px) { .tq-sheet.open { align-items: center; padding: 32px; } .tq-panel { max-height: calc(100vh - 64px); border-bottom: 1px solid var(--line); border-radius: 16px; } .tq-grip { display: none; } .tq-head { padding-top: 12px; } }
+@media (max-height: 500px) { .tq-panel { max-height: 100%; border-radius: 0; } .tq-grip { display: none; } .tq-head { padding-top: 8px; } }
+@media (max-width: 380px) { .tq-head { padding-left: 14px; } .tq-body { padding: 12px 14px 20px; } .tq-head .pd-q-all { padding: 6px 10px; } }
+@media (prefers-reduced-motion: reduce) { .tq-dots i { animation: none; opacity: 0.7; } }
 .pd-gone { margin: 0 0 14px; padding: 10px 14px; border-radius: 10px; background: rgba(242,139,130,0.1); border: 1px solid rgba(242,139,130,0.35); color: #f2b5ae; font-size: 14px; line-height: 1.4; }   /* Phase 13e: deleted on GitHub, kept here for an unsaved edit */
 
 .pd-aside { position: sticky; top: 76px; display: flex; flex-direction: column; gap: 16px; }
@@ -2092,16 +2123,16 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 .la-lead { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--text-secondary); }
 .la-lead strong { color: var(--text); }
 .la-row { display: flex; gap: 8px; align-items: center; }
-.la-input { flex: 1; min-width: 0; height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; font-size: 15px; transition: border-color var(--t-fast) var(--ease); }
+.la-input { flex: 1; min-width: 0; height: 44px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; font-size: 15px; transition: border-color var(--t-fast) var(--ease); }
 .la-input:focus { outline: none; border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
 .la-input:disabled { color: var(--text-muted); }
-.la-go { height: 40px; padding: 0 18px; border-radius: 10px; border: none; background: var(--accent); color: var(--accent-ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; flex-shrink: 0; transition: filter var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease); }
+.la-go { height: 44px; padding: 0 18px; border-radius: 10px; border: none; background: var(--accent); color: var(--accent-ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; flex-shrink: 0; transition: filter var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease); }
 .la-go:hover { filter: brightness(1.08); }
 .la-go:disabled { opacity: 0.45; cursor: default; filter: none; }
-.la-plain { height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font: inherit; font-size: 14px; cursor: pointer; flex-shrink: 0; transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+.la-plain { height: 44px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font: inherit; font-size: 14px; cursor: pointer; flex-shrink: 0; transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
 .la-plain:hover { border-color: var(--line); color: var(--text); }
 .la-note { margin-top: 10px; font-size: 13px; line-height: 1.55; color: var(--text-muted); }
-.la-star { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 13px; color: var(--text-secondary); cursor: pointer; }
+.la-star { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: 4px; font-size: 13px; color: var(--text-secondary); cursor: pointer; }
 .la-status { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 14px; color: var(--text-secondary); }
 .la-spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent); animation: chat-spin 0.8s linear infinite; flex-shrink: 0; }
 .la-result { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: rgba(255,255,255,0.04); }
@@ -2318,7 +2349,7 @@ body.feed-laptop .feed-check { display: none; }
 /* X's grey for muted text is 4.6:1 on black and under 4.5:1 on a surface: inside cards, sheets, panels, popovers,
    bars and chips it takes the raised grey. So does text over a topic glow (the paper page, a list page, the lead
    card) and the count badge in the navbar. The list is what the contrast scan (tests/phase13c/chrome_feed.cjs) found. */
-.pd, .lp, .top-lead, .tab-badge, .top-card, .topic-card, .top-side, .sh-panel, .hide-box, .reader-bar, .ink-bar, .reader-panel, .reader-menu, .pop .sh-panel, .save-dd, .copy-dd, .interest-dropdown,
+.pd, .lp, .top-lead, .tab-badge, .top-card, .topic-card, .top-side, .sh-panel, .tq-panel, .hide-box, .reader-bar, .ink-bar, .reader-panel, .reader-menu, .pop .sh-panel, .save-dd, .copy-dd, .interest-dropdown,
 .auth-modal, .pd-next, .pd-card, .pd-rel-grid, .interest-group-inner, .interest-group-header, .ig-toggle, .pull-hint, .feed-check, .save-bar, .toast, .lib-add, .search-list,
 .keys-help-box, .vault-box, .pdf-modal-box, .relevance-breakdown, .group-add-dd, .abs-popup, .venue-tooltip, .sel-bar, .anno-card, .cite-dd, .chat-hist, .chat-box, .badge-venue,
 .cr-card, .cr-phone, .la-result, .rp-card, .rp-gnote, .chat-msg.you, .md-table tr, .f-topic, .tr-group, .pd-topic-chip, .pd-match, .pd-strength, .pd-topics .badge-group, .tl-chip, .why-pill,
@@ -2618,6 +2649,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
 
 <!-- GENERIC PROMPT / CONFIRM MODAL -->
 <!-- PDF READER -->
+<div class="tq-sheet" id="briefSheet" hidden onclick="if (event.target === this) briefSheetClose()" onkeydown="briefSheetKey(event)"></div>
 <div class="reader" id="reader" role="dialog" aria-modal="true" aria-labelledby="readerTitle">
   <div class="reader-bar">
     <button class="reader-btn reader-back" onclick="closeReader()" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg><span>Back</span></button>
@@ -2860,7 +2892,7 @@ function tokenDate(at) { const d = new Date(at); return d.toLocaleDateString('en
 function tokenStatusHTML() {
   if (!isPrivate()) return '';
   const meta = tokenMeta();
-  if (!meta || !meta.expires) return ' · Token end date not known here';
+  if (!meta || !meta.expires) return '';   // Phase 24: nothing to say when the end date is not known
   const soon = meta.expires - Date.now() <= TOKEN_REMIND_DAYS * DAY_MS;
   return ' · Token estimated to end ' + tokenDate(meta.expires) + (soon ? ' <button class="sync-btn sync-renew" onclick="renewToken()">Renew</button>' : '');
 }
@@ -3255,7 +3287,7 @@ function privateView(state, detail) {
     rejected: rejected[reason] || 'Scout stopped using this device’s token. Tap Try again to check it with GitHub, or sign in below.',
     unavailable: (unavailable[reason] || 'Verification temporarily unavailable.') + kept,
     loading: 'Loading the private library…',
-    load_error: 'Could not load the private library. Required files must load and decode successfully.',
+    load_error: 'Couldn’t open your library. Try again in a moment.',
     renew: 'Make a new token on GitHub, then paste it here. Your library stays open until the new token is checked.',
   };
   const form = state === 'required' || state === 'renew' || (state === 'rejected' && reason !== 'checking' && reason !== 'config_changed') || (state === 'unavailable' && (info.candidate || typed));
@@ -3312,7 +3344,7 @@ function lockPrivate(state = 'required', detail) {
   // without fades whose callbacks belong to the revoked authorization.
   closeAbsPopup(); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeRelevancePopup(); closeVenueTooltip();
   _absBtn = null; _dismissTap = null; clearTimeout(_relPopupTimer); _relPopupTimer = null;
-  feedTeardown(); refreshTeardown(); briefTeardown(); activityTeardown(); peopleTeardown();
+  feedTeardown(); refreshTeardown(); briefTeardown(); activityTeardown(); peopleTeardown(); requestsTeardown();
   const askSelection = document.getElementById('chatAskSel'); if (askSelection) askSelection.remove();
   const readerMenu = document.getElementById('readerMenu'); if (readerMenu) { clearTimeout(readerMenu._leaveT); readerMenu.classList.remove('open', 'glide', 'leaving'); }
   const readerMore = document.getElementById('readerMore'); if (readerMore) readerMore.setAttribute('aria-expanded', 'false');
@@ -3328,7 +3360,7 @@ function lockPrivate(state = 'required', detail) {
   _uploads = {}; _uploadObjs.clear(); _lastSeen = null; _listSig = null;
   _libPapers = {}; _libSent = ''; _paperTextCache.clear(); _relIndex = null; _relIndexKey = null; _interestCounts = _interestCountsKey = null; _colorSlots = null; _colorKey = ''; _kbKey = null;
   clearTimeout(AddPaper.poll); clearTimeout(TopicTag.poll); clearTimeout(Pinch.timer); clearTimeout(_reader.panelT); clearTimeout(_reader.leaveT);
-  Object.assign(AddPaper, { open: false, job: null, poll: 0, text: '', star: false }); Object.assign(TopicTag, { job: null, poll: 0, afterSave: new Set() });
+  Object.assign(AddPaper, { open: false, job: null, poll: 0, text: '', star: false, req: null }); Object.assign(TopicTag, { job: null, poll: 0, afterSave: new Set() });
   _libPanel = null; _lastSearchQ = ''; _searchFilters = { rel: 'all', unread: false, topic: null, year: null }; Pinch.active = false; Pinch.anchor = null;
   _collapsedGroups.clear(); _venuesOpen.clear(); _ipOpen.clear(); _ipDismissedOpen = false;
   for (const task of Private.renderTasks) { try { task.cancel(); } catch (e) {} } Private.renderTasks.clear();
@@ -3517,6 +3549,7 @@ function privatePathCap(path) {
   if (path === 'briefs/_index.json') return 2 * 1024 * 1024;   // Phase 14: the answers' index
   if (/^briefs\/[a-z0-9][a-z0-9-]{0,199}\.json$/.test(path) && !path.startsWith('briefs/up-')) return 64 * 1024;   // one paper's answers
   if (path === 'activity.json') return 64 * 1024;   // Phase 16: Claude's weekly note (ACTIVITY_FILE), read only
+  if (/^requests\/[0-9a-f]{32}(?:\.stop|\.status)?\.json$/.test(path)) return 8 * 1024;   // Phase 24: a request, its stop, its status
   throw new Error('Private repository path is not allowed');
 }
 /* superseded: for a load, true once a newer result was accepted or staged since it began. Its failures then neither
@@ -3528,7 +3561,7 @@ function privatePathCap(path) {
 async function privateReadFile(path, optional = false, superseded = null, held = null, ref = null) {
   const epoch = capturePrivateEpoch(), cap = privatePathCap(path);
   // Phase 15 (B2): the state file is optional (a layout 4 library has none); ref pins a read to one commit
-  if (optional && !path.startsWith('annotations/') && !path.startsWith('briefs/') && path !== STATE_FILE && path !== PEOPLE_FILE && path !== 'activity.json') throw new Error('Required private CSV cannot be optional');
+  if (optional && !path.startsWith('annotations/') && !path.startsWith('briefs/') && !path.startsWith('requests/') && path !== STATE_FILE && path !== PEOPLE_FILE && path !== 'activity.json') throw new Error('Required private CSV cannot be optional');
   const binding = { epoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token, superseded };
   const dropped = () => !!(superseded && superseded());
   const url = ghApiBase() + '/contents/' + path.split('/').map(encodeURIComponent).join('/') + '?ref=' + encodeURIComponent(ref || GH_BRANCH);
@@ -4006,7 +4039,7 @@ async function loadPrivateLibrary() {
       toastError(e.wait ? waitText(e) + ' Nothing changed.' : /^Invalid /.test(e.message || '') ? "Couldn't read the library. Nothing changed." : "Couldn't reach GitHub. Nothing changed.");
       return false;
     }
-    if (e.wait) lockPrivate('unavailable', { reason: e.reason, retryAt: e.retryAt }); else lockPrivate('load_error', e.message);
+    if (e.wait) lockPrivate('unavailable', { reason: e.reason, retryAt: e.retryAt }); else lockPrivate('load_error');   // never the error's own text (Sol's review 12)
     return false;
   }
 }
@@ -4419,7 +4452,7 @@ let _loadedInterestFields = new Map();           // interest -> its row as loade
      backup to papers no longer in the papers file, saved as orphan rows in layout 5 and kept pending in layout 4. */
 const STATE_DEFAULT_FLAGS = ['is_read', 'is_starred'];
 const MACHINE_COLUMNS = ['arxiv_id', 'doi', 'source_ref', 'machine_strengths', 'machine_topics', 'machine_pdf_url'];
-const LIBRARY_FORMATS = 'library 4+5';   // shown on Library's save line: this page reads both layouts (the cutover's check)
+const LIBRARY_FORMATS = 'library 4+5';   // on Library's save line, not shown (Phase 24): this page reads both layouts, the cutover's check
 function stateHeader(archive) { return [archive ? 'orphan_id' : 'id'].concat(EDITABLE_FIELDS); }
 function stateDefault(f) { return STATE_DEFAULT_FLAGS.includes(f) ? 'false' : ''; }
 function stateIsDefault(f, v) { return v === '' || v === stateDefault(f); }
@@ -4558,7 +4591,7 @@ function mergeState(text, canon) {
 /* A save's check of the pair it read: its layout, or a fatal error that keeps every edit pending here */
 function pairChecked(fields, stateText) {
   try { return bundleLayout(fields, stateText == null ? null : parseStateText(stateText)); }
-  catch (e) { throw Object.assign(new Error(`The library\u2019s files disagree on GitHub (${e.message.replace(/^Invalid [^:]*: /, '')}), so nothing was saved. Your edits are kept in this browser.`), { fatal: true }); }
+  catch (e) { console.error(e); throw Object.assign(plainError('The library\u2019s copies on GitHub disagree, so nothing was saved. Your edits are kept in this browser.'), { fatal: true }); }
 }
 /* Fix round (Sol's finding 3): the pair as GitHub has it now, for one save attempt, checked as one bundle before the
    save picks its file: { layout, papers: {sha, text}, state: {sha, text} or null }. A private page reads the papers
@@ -4646,7 +4679,7 @@ function writeBackup() {
     if (_groupsDirty) b.groups = { rows: allGroups, loadedNames: _loadedGroupNames, loadedFields: Object.fromEntries(_loadedGroupFields) };
     if (People.dirty) b.people = peopleBackup();   // Phase 21: each pending edit with its own baseline
     checkedStorageSet(LOCAL_BACKUP_KEY, JSON.stringify(b));
-  } catch (e) { toastError("Could not save the browser backup: " + e.message); throw e; }
+  } catch (e) { toastError("Couldn't keep a copy of your changes in this browser."); throw e; }
 }
 function readBackup() { if (!isOwner()) return null; requireOwner(); try { return JSON.parse(localStorage.getItem(LOCAL_BACKUP_KEY) || 'null'); } catch (e) { return null; } }
 function clearBackup() { requireOwner(); clearTimeout(_backupTimer); privateRemove(LOCAL_BACKUP_KEY); }
@@ -5298,7 +5331,7 @@ function loadPapers() {
     try { requireTarget(); } catch (e) { return; }
     if (--pending > 0 || _papersText) return;
     if (_emptyPapersCandidate !== null) { applyPapers([], _emptyPapersCandidate); applyHash(); document.getElementById('topStories').innerHTML = '<div class="empty-state">No papers yet</div>'; revealContent(); return; }
-    document.getElementById('topStories').innerHTML = '<div class="empty-state">Could not load papers_database.csv</div>';
+    document.getElementById('topStories').innerHTML = '<div class="empty-state">Couldn’t load your library. Reload the page to try again.</div>';
     toastError('Could not load papers — ' + (lastErr && lastErr.message ? lastErr.message : 'network error'));
     revealContent();
   };
@@ -5326,13 +5359,13 @@ function loadLocalThenGitHub(name, apply, label) {
     if (text === current || req < Refresh.accepted[file]) return;
     if (refreshCrossesSave(saveGen) && held()) return;
     try { apply(text); current = text; Refresh.accepted[file] = req; }
-    catch (err) { toastError(`Could not read the ${label} file, so it was not taken in. ` + (err && err.message ? err.message : 'It is not valid.')); }
+    catch (err) { toastError(`Couldn’t read a copy of your ${label}, so it was not taken in.`); }
   };
   const local = ++Refresh.seq, remote = ++Refresh.seq, saveGen = Refresh.saveGen;   // taken before the fetches
   fetchLocal(name).then(privateCallback(t => { if (current === null) take(t, local, saveGen); })).catch(privateCallback(() => {}));
   if (!CSV_BASE_URL) return;
   fetchNormalized(csvUrl(name)).then(privateCallback(t => take(t, remote, saveGen))).catch(privateCallback(err => {
-    if (current === null) toastError(`Could not load ${label} — ` + (err && err.message ? err.message : 'network error'));
+    if (current === null) toastError(`Couldn’t load your ${label}. Reload the page to try again.`);
   }));
 }
 function rerenderForMetadata() {
@@ -5400,6 +5433,7 @@ function revealContent() {
   _dataLoaded = true;
   Return.checkedAt = Date.now(); returnSiteStart();   // Phase 22: the first library check, and the site's version
   setTimeout(privateCallback(() => { if (activityShown()) activityStart(); }), 0);   // Phase 16: opened on Interests, the note is read once the library is ready
+  setTimeout(privateCallback(requestsLoad), 0);   // Phase 24: the requests this device was following, carried over a reload
   const skel = document.getElementById('skeleton');
   skel.classList.add('hidden');
   setTimeout(privateCallback(() => { skel.style.display = 'none'; fitTopPapers(); }), 400);   // the loader held the page's place: fit Top Papers now it's gone
@@ -9082,13 +9116,214 @@ function libGroupHTML(key, icon, label, papers, extra) {
   const body = collapsed ? '' : libBodyHTML(papers, key);
   return `<div class="interest-group${collapsed}" data-lib="${dataAttr(key)}"><div class="interest-group-inner"><div class="interest-group-header" onclick="toggleLibGroup(this,'${escAttr(key)}')"><span class="lib-icon" aria-hidden="true">${icon}</span>${esc(label)} <span class="interest-group-count">${papers.length}</span>${extra||''}<svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="interest-group-body">${body}</div></div></div>`;
 }
+/* ===== REQUESTS TO SCOUT (Phase 24) =====
+   + Add paper and the ten questions work from any signed-in device through the private data repository: the page
+   writes a small request, requests/<id>.json, and follows requests/<id>.status.json, which only the request poller on
+   the worker writes (ingest/inbox.py). An add is stopped with requests/<id>.stop.json. The id is 32 random hex
+   characters chosen before the first try, so a write whose answer was lost is sent again under the same id: GitHub
+   refuses a second file there (422), and the file read back must be the one this page meant. A request names only
+   what was asked: the kind, the text typed or the paper's id, the star, the time. Uploads never make one.
+   The requests this device follows are kept in this browser (scholar_requests_v1, ids and what was asked) until each
+   ends, so a reload carries on; signing out or a lock forgets them. While one is under way and the page shows, one
+   listing of requests/ every REQUEST_POLL_MS finds the statuses that changed, and only those are read, each checked
+   against its Git blob SHA. What the page says comes from its own words for each state and reason code
+   (REQUEST_WORDS), never from the worker's text. */
+const REQUEST_ID = /^[0-9a-f]{32}$/;
+const REQUESTS_KEY = 'scholar_requests_v1';
+const REQUEST_INPUT_BYTES = 2000;   // UTF-8 bytes of an add's input: the worker's own limit (ingest/inbox.INPUT_BYTES)
+const REQUEST_STATUS_CAP = 8 * 1024;
+const REQUEST_LISTING_CAP = 512 * 1024;
+const REQUEST_POLL_MS = 15000;
+const REQUEST_KEEP_MS = 2 * 86400000;   // a finished request is forgotten here as the worker removes its files
+const REQUEST_STATES = ['waiting', 'working', 'retrying', 'done', 'stopped', 'failed'];
+/* the reason codes a status may carry (ingest/inbox.py REASONS); anything else reads as no reason */
+const REQUEST_REASONS = ['', 'paused', 'limit', 'added', 'existing', 'later', 'not_found', 'ambiguous', 'private', 'unsaved', 'invalid', 'expired', 'gone', 'answered', 'publishing', 'retry', 'not_in_library', 'no_pdf', 'unreadable', 'rejected', 'unavailable'];
+const REQUEST_WORDS = {   // + Add paper's line for each state and reason
+  sending: 'Sending…', stopping: 'Stopping…',
+  waiting: 'Waiting to start…', paused: 'Waiting. Adding papers is paused for now; it starts on its own.',
+  limit: 'Waiting. Today’s allowance for adding papers is used up; it will be added tomorrow.',
+  working: 'Adding the paper…',
+  later: 'Saved. Scout will add it on its own.', not_found: 'Scout couldn’t find this paper yet. It keeps looking on its own.',
+  ambiguous: 'Scout couldn’t tell which paper this is yet. A direct arXiv or DOI link helps.',
+  limit_done: 'Saved. It will be added tomorrow, once today’s allowance resets.',
+  stopped: 'Stopped. Nothing was added.',
+  private: 'This paper has no public version, so it wasn’t added. Upload its PDF instead; it stays private.',
+  unsaved: 'Scout couldn’t save this request. Try again later.', invalid: 'Scout couldn’t read that. Try again.',
+  failed: 'Adding papers isn’t available right now. Try again later.', unsent: 'Couldn’t reach GitHub. Scout keeps trying while this page is open.',
+};
+const Requests = { items: [], timer: 0, polling: false, seen: new Map(), loaded: false };
+
+function requestNewId() { const a = new Uint8Array(16); crypto.getRandomValues(a); return [...a].map(b => b.toString(16).padStart(2, '0')).join(''); }
+function requestStamp(ms) { return new Date(Math.floor(ms / 1000) * 1000).toISOString().replace('.000Z', 'Z'); }
+/* An add's input as the worker takes it (Sol's review 5): no control characters, trimmed, and at most
+   REQUEST_INPUT_BYTES in UTF-8, cut between characters */
+function requestInputFit(text) {
+  const s = String(text || '').replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').trim(), enc = new TextEncoder();
+  if (enc.encode(s).length <= REQUEST_INPUT_BYTES) return s;
+  let out = '', n = 0;
+  for (const ch of s) { const b = enc.encode(ch).length; if (n + b > REQUEST_INPUT_BYTES) break; out += ch; n += b; }
+  return out.trim();
+}
+/* A stop's bytes: made once when Stop is pressed and kept with the request, so every retry and a reload write the very
+   same file, and a 422 for a stop that landed reads back equal (Sol's review 8) */
+function requestStopBody(r) { return JSON.stringify({ schema: 1, id: r.id, at: r.stopAt }); }
+function requestPath(id, part) {
+  if (!REQUEST_ID.test(String(id))) throw new Error('Not a request id');
+  return 'requests/' + id + (part ? '.' + part : '') + '.json';
+}
+/* The request file's bytes, in one fixed order: what the worker checks field by field (ingest/inbox.validate) */
+function requestBody(r) {
+  const doc = r.kind === 'brief' ? { schema: 1, id: r.id, kind: 'brief', paper: r.paper, at: r.at }
+    : { schema: 1, id: r.id, kind: 'add', input: r.input, star: !!r.star, at: r.at };
+  return JSON.stringify(doc);
+}
+function requestLive(r) { return !!r && !r.gone && (!r.status || ['waiting', 'working', 'retrying'].includes(r.status.state)); }
+function requestFor(kind, paper) {   // this device's newest request of a kind (for a paper)
+  for (let i = Requests.items.length - 1; i >= 0; i--) { const r = Requests.items[i]; if (r.kind === kind && (paper === undefined || r.paper === paper)) return r; }
+  return null;
+}
+/* This device's requests, kept in this browser while they run: a private library's signed-in owner only */
+function requestsStore() {
+  if (!isPrivate() || !isOwner()) return;
+  const keep = Requests.items.filter(r => requestLive(r) || Date.now() - (r.ended || 0) < REQUEST_KEEP_MS).slice(-20)
+    .map(r => ({ id: r.id, kind: r.kind, paper: r.paper || null, input: r.input || null, star: !!r.star, at: r.at, sent: !!r.sent, stop: !!r.stop, stopAt: r.stopAt || null, stopSent: !!r.stopSent, ended: r.ended || null }));
+  try { checkedStorageSet(REQUESTS_KEY, JSON.stringify({ v: 1, items: keep })); } catch (e) {}
+}
+function requestsLoad() {
+  if (Requests.loaded || !isPrivate() || !isOwner()) return;
+  Requests.loaded = true;
+  let doc = null;
+  try { doc = JSON.parse(localStorage.getItem(REQUESTS_KEY) || 'null'); } catch (e) { doc = null; }
+  const items = doc && doc.v === 1 && Array.isArray(doc.items) ? doc.items : [];
+  Requests.items = items.filter(r => r && REQUEST_ID.test(r.id) && (r.kind === 'brief' ? typeof r.paper === 'string' && BRIEF_ID.test(r.paper) && !r.paper.startsWith('up-')
+    : r.kind === 'add' && typeof r.input === 'string' && new TextEncoder().encode(r.input).length <= REQUEST_INPUT_BYTES) && briefStamp(r.at)
+    && (!r.stop || briefStamp(r.stopAt))).map(r => ({ ...r, status: null }));
+  if (Requests.items.length) requestsTick();
+}
+/* Signing out or a lock: nothing of this device's requests outlives the authorization */
+function requestsTeardown() {
+  clearTimeout(Requests.timer); Requests.timer = 0; Requests.polling = false; Requests.items = []; Requests.seen = new Map(); Requests.loaded = false;
+  try { localStorage.removeItem(REQUESTS_KEY); } catch (e) {}
+}
+/* A new request: kept here first, then written. Returns it. */
+function requestStart(what) {
+  requireOwner();
+  if (!isPrivate()) throw new Error('Requests need a private library');
+  const r = { id: requestNewId(), kind: what.kind, at: requestStamp(Date.now()), sent: false, stop: false, stopSent: false, status: null };
+  if (what.kind === 'brief') r.paper = what.paper; else { r.input = requestInputFit(what.input); r.star = !!what.star; }
+  Requests.items.push(r); requestsStore(); requestChanged(r);
+  requestSend(r);
+  return r;
+}
+/* One request file written: created only, never replaced. A 422 means a file is already there, from an earlier try
+   whose answer was lost: it counts only when it holds these very bytes. */
+async function requestPut(path, body, message) { const _authEpoch = capturePrivateEpoch(); requireOwner();
+  pageMayWrite(path);
+  const content = btoa(unescape(encodeURIComponent(body)));
+  const res = await privateAwait(ownerFetch(_ghFileUrl(path), { method: 'PUT', headers: { ...ghHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ message, content, branch: GH_BRANCH }) }), _authEpoch);
+  try { if (res.body && !res.body.locked) Promise.resolve(res.body.cancel()).catch(() => {}); } catch (e) {}
+  if (res.status === 201 || res.status === 200) return true;
+  if (res.status === 422) {
+    const file = await privateAwait(privateReadFile(path, true), _authEpoch);
+    if (file && file.text === body) return true;
+    throw Object.assign(new Error('Another request has this id'), { conflict: true });
+  }
+  throw new Error('Request not written (' + res.status + ')');
+}
+async function requestSend(r) { const _authEpoch = capturePrivateEpoch();
+  if (r.sending) return;
+  r.sending = true;
+  try {
+    if (!r.sent) {
+      await privateAwait(requestPut(requestPath(r.id), requestBody(r), r.kind === 'brief' ? 'Ask Scout for the ten questions' : 'Ask Scout to add a paper'), _authEpoch);
+      r.sent = true; r.unsent = false; requestsStore();
+    }
+    if (r.stop && !r.stopSent) {
+      await privateAwait(requestPut(requestPath(r.id, 'stop'), requestStopBody(r), 'Stop adding a paper'), _authEpoch);
+      r.stopSent = true; requestsStore();
+    }
+  } catch (e) {
+    checkPrivateEpoch(_authEpoch);
+    if (e && e.conflict) { r.status = { state: 'failed', reason: 'unsaved' }; r.ended = Date.now(); requestsStore(); }
+    else r.unsent = true;   // offline, a wait, a timeout: tried again on the next tick, under the same id
+  } finally { r.sending = false; }
+  requestChanged(r);
+  requestsTick();
+}
+/* A status file's text, checked as the worker writes it; null when it is not one */
+function requestStatusOK(text, r) {
+  let d;
+  try { d = JSON.parse(text); } catch (e) { return null; }
+  const keys = ['schema', 'id', 'kind', 'state', 'reason', 'at', 'next_at', 'paper', 'added', 'existing'];
+  if (!d || typeof d !== 'object' || Array.isArray(d) || d.schema !== 1 || d.id !== r.id || d.kind !== r.kind || !REQUEST_STATES.includes(d.state)
+    || !briefStamp(d.at) || !(d.next_at === null || briefStamp(d.next_at)) || Object.keys(d).some(k => !keys.includes(k))) return null;
+  if (d.paper !== undefined && (d.paper !== r.paper)) return null;
+  const ids = v => Array.isArray(v) && v.length <= 20 && v.every(x => typeof x === 'string' && BRIEF_ID.test(x));
+  if (d.added !== undefined && !(Array.isArray(d.added) && d.added.length <= 20 && d.added.every(x => x && typeof x === 'object' && BRIEF_ID.test(String(x.id)) && typeof x.title === 'string' && x.title.length <= 300))) return null;
+  if (d.existing !== undefined && !ids(d.existing)) return null;
+  return { state: d.state, reason: REQUEST_REASONS.includes(d.reason) ? d.reason : '', at: d.at, added: (d.added || []).map(x => ({ id: x.id, title: x.title })), existing: d.existing || [] };
+}
+/* One look at requests/ while a request this device follows is under way and the page shows: every request not yet
+   written is written again, and each status whose SHA changed is read. A request whose files are gone after it ended
+   is forgotten. */
+async function requestsPoll() { const _authEpoch = capturePrivateEpoch();
+  const live = Requests.items.filter(requestLive);
+  for (const r of live) if (!r.sent || (r.stop && !r.stopSent)) await privateAwait(requestSend(r), _authEpoch);
+  if (!Requests.items.some(r => r.sent && requestLive(r))) return;
+  const binding = { epoch: _authEpoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token };
+  const listing = await privateAwait(privateJSON(ghApiBase() + '/contents/requests?ref=' + encodeURIComponent(GH_BRANCH), REQUEST_LISTING_CAP, binding, true, transferBudgetMs(REQUEST_LISTING_CAP)), _authEpoch);
+  if (listing !== null && !Array.isArray(listing)) return;
+  const files = new Map((listing || []).filter(e => e && e.type === 'file' && typeof e.name === 'string' && /^[0-9a-f]{40}$/.test(e.sha) && Number.isSafeInteger(e.size)).map(e => [e.name, e]));
+  for (const r of Requests.items.filter(x => x.sent && requestLive(x))) {
+    const info = files.get(r.id + '.status.json');
+    if (!info) { if (!files.has(r.id + '.json') && r.status) { r.gone = true; r.ended = Date.now(); requestChanged(r); } continue; }
+    if (Requests.seen.get(r.id) === info.sha || info.size > REQUEST_STATUS_CAP) continue;
+    const bytes = await privateAwait(privateBytes(ghApiBase() + '/git/blobs/' + info.sha, info.size, binding, false, transferBudgetMs(info.size + 4096), GH_RAW), _authEpoch);
+    if (bytes.length !== info.size || await privateAwait(gitBlobSha(bytes), _authEpoch) !== info.sha) continue;
+    const status = requestStatusOK(new TextDecoder('utf-8', { fatal: true }).decode(bytes), r);
+    Requests.seen.set(r.id, info.sha);
+    if (!status) continue;
+    const was = r.status;
+    r.status = status;
+    if (!requestLive(r)) r.ended = Date.now();
+    requestsStore();
+    if (!was || was.state !== status.state || was.reason !== status.reason) requestChanged(r, was);
+  }
+}
+/* The next look, while something is under way and the page shows; a hidden page looks again when it shows */
+function requestsTick(delay) {
+  clearTimeout(Requests.timer); Requests.timer = 0;
+  if (!isPrivate() || !isOwner() || !Requests.items.some(requestLive)) return;
+  if (document.visibilityState === 'hidden') return;
+  Requests.timer = setTimeout(privateCallback(async () => {
+    Requests.timer = 0;
+    if (Requests.polling) return;
+    Requests.polling = true;
+    try { await requestsPoll(); } catch (e) { if (e && e.privateAuth) return; }
+    finally { Requests.polling = false; }
+    requestsTick();
+  }), delay === undefined ? REQUEST_POLL_MS : delay);
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && Requests.items.some(requestLive)) requestsTick(500); });
+/* What a change of state does where it shows: the ten questions' chip, or + Add paper's box */
+function requestChanged(r, was) {
+  if (r.kind === 'brief') {
+    if (r.status && r.status.state === 'done' && (!was || was.state !== 'done')) briefAnsweredNow(r.paper);
+    else briefRedraw(r.paper);
+    return;
+  }
+  if (AddPaper.req && AddPaper.req.id === r.id) setAddJob(r);
+  if (r.status && r.status.state === 'done' && (!was || was.state !== 'done') && (r.status.added.length || r.status.existing.length)) addPaperFinished(r);
+}
+
 /* ===== ADD A PAPER =====
-   Library → + Add paper: a link, DOI, arXiv id or title goes to the bridge on the laptop, where Claude Code finds the
-   paper and describes it for your interests (read-only), and bridge/add_paper.py checks it, adds the row and
-   publishes it. The page follows the job (it keeps going if you leave Library) and shows the paper once it's in. */
-const AddPaper = { open: false, job: null, poll: 0, text: '', star: false };
-/* Library's two header boxes share one place under the header: + Add paper (public, into the database) and Upload
-   PDF (private, To review). A button opens its box, or closes it when it's already the one showing. */
+   Library → + Add paper: a link, DOI, arXiv id or title goes to Scout as a request (above). The worker finds the paper
+   when it needs to, checks it against its sources, describes it for your interests and adds it (bridge/add_paper.py,
+   the path every add takes), from whichever device asked. The box follows the request (it keeps going if you leave
+   Library), Stop writes the request's stop, and once the paper is in the library, a quiet refresh brings it here. */
+const AddPaper = { open: false, job: null, poll: 0, text: '', star: false, req: null };
+/* Library's two header boxes share one place under the header: + Add paper (into the library) and Upload PDF
+   (private, To review). A button opens its box, or closes it when it's already the one showing. */
 let _libPanel = null;
 function toggleLibPanel(which) {
   _libPanel = _libPanel === which ? null : which;
@@ -9105,76 +9340,120 @@ function toggleLibPanel(which) {
   }
   if (!AddPaper.open) return;
   replay(box, 'la-swap');
+  addPaperSync();
   renderAddPaper();
-  addPaperSync().then(privateCallback(() => { const i = document.getElementById('laInput'); if (i && !i.disabled) i.focus(); }));
+  const i = document.getElementById('laInput'); if (i && !i.disabled) i.focus();
 }
-async function addPaperSync() { const _authEpoch = capturePrivateEpoch();   // where things stand: connected? a job already running (from before a reload)?
-  if (Chat.status !== 'ready' || !Chat.bridgeVersion) await privateAwait(bridgeCheck(), _authEpoch);
-  if (Chat.status === 'ready' && Chat.bridgeVersion >= 2) {
-    try { const j = (await privateAwait((await privateAwait(bridgeFetch('/paper/add'), _authEpoch)).json(), _authEpoch)).job; if (j && (j.state === 'running' || !AddPaper.job || AddPaper.job.id === j.id)) setAddJob(j, true); } catch (e) { checkPrivateEpoch(_authEpoch);}
-  }
-  renderAddPaper();
+function addPaperSync() {   // the newest add this device asked for, carried over a reload
+  requestsLoad();
+  const r = requestFor('add');
+  if (r && (!AddPaper.req || AddPaper.req.id !== r.id)) setAddJob(r, true);
+}
+/* The job the box shows, from its request: 'running' while it is under way, then done, stopped or error */
+function addJobOf(r) {
+  const s = r.status, live = requestLive(r);
+  const state = live ? 'running' : s && s.state === 'done' ? 'done' : s && s.state === 'stopped' ? 'stopped' : 'error';
+  return { id: r.id, state, input: r.input, reason: s ? s.reason : '', phase: !r.sent ? (r.unsent ? 'unsent' : 'sending') : r.stop && live ? 'stopping' : s ? s.state : 'waiting',
+    added: s ? s.added : [], existing: s ? s.existing : [] };
+}
+function addPaperLine(j) {
+  if (j.phase === 'stopping') return REQUEST_WORDS.stopping;
+  if (j.phase === 'sending' || j.phase === 'unsent') return REQUEST_WORDS[j.phase];
+  if (j.phase === 'working') return REQUEST_WORDS.working;
+  return j.reason === 'paused' ? REQUEST_WORDS.paused : j.reason === 'limit' ? REQUEST_WORDS.limit : REQUEST_WORDS.waiting;
 }
 function addPaperResultHTML(j) {
-  const open = id => `<button class="la-plain" onclick="openPaper('${escAttr(id)}')">Open</button>`;
-  const title = id => { const p = findPaper(id); return esc(p ? (p.title || id) : id); };
-  if (j.state === 'done') return (j.added || []).map(r => `<div class="la-result"><div class="t"><div class="k">Added to your library</div><div class="h">${esc(r.title)}</div></div>${open(r.id)}</div>`).join('')
-    + (j.existing || []).map(id => `<div class="la-result"><div class="t"><div class="k">Already in your library</div><div class="h">${title(id)}</div></div>${open(id)}</div>`).join('');
-  return `<div class="la-result warn"><div class="t"><div class="k">${j.state === 'stopped' ? 'Not added' : 'Something went wrong'}</div><div class="h" style="font-family:inherit;font-size:14px">${esc(j.message || '')}</div></div></div>`;
+  const open = id => `<button class="la-plain" onclick="addPaperOpen('${escAttr(id)}')">Open</button>`;
+  const title = (id, given) => { const p = findPaper(id); return esc(p ? (p.title || id) : given || 'The paper'); };
+  if (j.state === 'done' && (j.added.length || j.existing.length)) return j.added.map(r => `<div class="la-result"><div class="t"><div class="k">Added to your library</div><div class="h">${title(r.id, r.title)}</div></div>${open(r.id)}</div>`).join('')
+    + j.existing.map(id => `<div class="la-result"><div class="t"><div class="k">Already in your library</div><div class="h">${title(id)}</div></div>${open(id)}</div>`).join('');
+  const said = j.state === 'done' ? REQUEST_WORDS[j.reason === 'limit' ? 'limit_done' : j.reason] || REQUEST_WORDS.later
+    : j.state === 'stopped' ? REQUEST_WORDS.stopped : REQUEST_WORDS[j.reason] || REQUEST_WORDS.failed;
+  const kind = j.state === 'done' ? 'Saved for later' : 'Not added';
+  return `<div class="la-result warn"><div class="t"><div class="k">${kind}</div><div class="h" style="font-family:inherit;font-size:14px">${esc(said)}</div></div></div>`;
 }
 function renderAddPaper() {
   const box = document.getElementById('libAdd');
   if (!box || box.hidden || _libPanel !== 'add') return;
+  const a = document.activeElement, had = !!a && a !== box && box.contains(a);
+  const typing = had && a.id === 'laInput' ? [a.selectionStart, a.selectionEnd] : null;   // before the box is drawn again
   const j = AddPaper.job, running = j && j.state === 'running';
-  let body;
-  if (Chat.status === 'unknown' || Chat.status === 'checking') body = `<div class="la-status"><span class="la-spin"></span>Connecting to Claude Code on your laptop…</div>`;
-  else if (Chat.status !== 'ready') body = `<p class="la-note" style="margin:0">Adding a paper runs through Claude Code on your laptop, like Chat. ${Chat.status === 'unpaired' ? 'Connect this device first: open any paper, choose Chat, and allow it on the Mac.' : 'The laptop isn’t reachable right now: it needs to be awake' + (bridgeRemote() ? ', with Tailscale on.' : '.')}</p><div class="la-row" style="margin-top:12px"><button class="la-plain" onclick="Chat.status='unknown';addPaperSync()">Try again</button></div>`;
-  else if (Chat.bridgeVersion < 2) body = `<p class="la-note" style="margin:0">The bridge on your laptop is an older version. Restart it (log out and in, or <code>bash bridge/install_bridge.sh</code>) and try again.</p>`;
-  else body = `<form class="la-row" onsubmit="event.preventDefault();startAddPaper()">
-      <input class="la-input" id="laInput" type="text" enterkeyhint="go" autocomplete="off" spellcheck="false" placeholder="arXiv or DOI link, or the paper’s title" value="${escAttr(running ? j.input : AddPaper.text)}" oninput="AddPaper.text=this.value;document.getElementById('laGo').disabled=!this.value.trim()" ${running ? 'disabled' : ''}>
-      ${running ? `<button type="button" class="la-plain" onclick="stopAddPaper()">Stop</button>` : `<button class="la-go" id="laGo" ${AddPaper.text.trim() ? '' : 'disabled'}>Add</button>`}
+  if (!isPrivate()) { box.innerHTML = '<p class="la-note" style="margin:0">Adding papers from here works with a private library.</p>'; return; }
+  box.innerHTML = `<form class="la-row" onsubmit="event.preventDefault();startAddPaper()">
+      <label class="sr-only" for="laInput">Paper to add</label>
+      <input class="la-input" id="laInput" type="text" enterkeyhint="go" autocomplete="off" spellcheck="false" maxlength="${REQUEST_INPUT_BYTES}" placeholder="arXiv or DOI link, or the paper’s title" value="${escAttr(running ? j.input : AddPaper.text)}" oninput="AddPaper.text=this.value;document.getElementById('laGo').disabled=!this.value.trim()" ${running ? 'disabled' : ''}>
+      ${running ? `<button type="button" class="la-plain" onclick="stopAddPaper()" ${j.phase === 'stopping' ? 'disabled' : ''}>Stop</button>` : `<button class="la-go" id="laGo" ${AddPaper.text.trim() ? '' : 'disabled'}>Add</button>`}
     </form>
-    ${running ? `<div class="la-status"><span class="la-spin"></span>${esc(j.stage || 'Working…')}</div>`
+    ${j && j.state !== 'running' ? `<div role="status">${addPaperResultHTML(j)}</div>` : ''}
+    ${running ? `<div class="la-status" role="status"><span class="la-spin" aria-hidden="true"></span>${esc(addPaperLine(j))}</div>`
       : `<label class="la-star"><input type="checkbox" ${AddPaper.star ? 'checked' : ''} onchange="AddPaper.star=this.checked"> Star it</label>
-         <p class="la-note">Claude Code on your laptop finds the paper, reads its abstract, matches it to your interests and adds it (about a minute). A paper with no public version isn’t added: use Upload PDF instead, where it stays private.</p>`}
-    ${j && j.state !== 'running' ? addPaperResultHTML(j) : ''}`;
-  box.innerHTML = body;
+         <p class="la-note">Scout finds the paper, reads its abstract, matches it to your interests and adds it, usually within a few minutes, from any device. A paper with no public version isn’t added: use Upload PDF instead, where it stays private.</p>`}`;
+  if (had) addPaperFocus(box, typing);
 }
-async function startAddPaper() { const _authEpoch = capturePrivateEpoch();
-  const text = (AddPaper.text || '').trim();
-  if (!text) return;
-  try {
-    const r = await privateAwait(bridgeFetch('/paper/add', { method: 'POST', body: JSON.stringify({ input: text, star: AddPaper.star }) }), _authEpoch);
-    const j = await privateAwait(r.json(), _authEpoch);
-    if (r.status === 401) { saveBridgeToken(''); Chat.status = 'unpaired'; renderAddPaper(); return; }
-    if (j.job) setAddJob(j.job);
-  } catch (e) { checkPrivateEpoch(_authEpoch); Chat.status = 'offline'; renderAddPaper(); }
+/* A redraw keeps the focus in the box: on what was being typed, else the first control that works now (Stop while it
+   runs, Open or Add after), else the line that says where it stands */
+function addPaperFocus(box, typing) {
+  const input = document.getElementById('laInput');
+  if (typing && input && !input.disabled) {
+    input.focus({ preventScroll: true });
+    try { input.setSelectionRange(typing[0], typing[1]); } catch (e) {}
+    return;
+  }
+  const line = box.querySelector('[role="status"]');
+  const t = box.querySelector('button:not(:disabled)') || (input && !input.disabled ? input : null) || line;
+  if (!t) return;
+  if (t === line) line.setAttribute('tabindex', '-1');
+  t.focus({ preventScroll: true });
 }
-function stopAddPaper() { bridgeFetch('/paper/add/stop', { method: 'POST', body: '{}' }).catch(privateCallback(() => {})); }
-function setAddJob(j, quiet) {
+function startAddPaper() {
+  const text = requestInputFit(AddPaper.text);
+  if (!text || (AddPaper.job && AddPaper.job.state === 'running')) return;
+  setAddJob(requestStart({ kind: 'add', input: text, star: AddPaper.star }));
+}
+/* Stop: kept here and written as the request's stop; the worker stops the add, before it starts or while it runs */
+function stopAddPaper() {
+  const r = AddPaper.req;
+  if (!r || !requestLive(r) || r.stop) return;
+  r.stop = true; r.stopAt = requestStamp(Date.now()); requestsStore(); setAddJob(r);   // kept before the first write
+  requestSend(r);
+}
+function setAddJob(r, quiet) {
   const was = AddPaper.job;
-  AddPaper.job = j;
-  if (j.state === 'running') {
-    clearTimeout(AddPaper.poll);
-    AddPaper.poll = setTimeout(privateCallback(async () => { const _authEpoch = capturePrivateEpoch(); try { setAddJob((await privateAwait((await privateAwait(bridgeFetch('/paper/add'), _authEpoch)).json(), _authEpoch)).job); } catch (e) { checkPrivateEpoch(_authEpoch); AddPaper.poll = setTimeout(privateCallback(() => setAddJob(AddPaper.job)), 4000); } }), 1500);
-  } else if (was && was.state === 'running' && was.id === j.id && !quiet) addPaperFinished(j);
+  AddPaper.req = r; AddPaper.job = addJobOf(r);
+  if (was && was.id === r.id && was.state === 'running' && AddPaper.job.state !== 'running' && !quiet && AddPaper.job.state !== 'done') addPaperEnded(AddPaper.job);
   renderAddPaper();
 }
-/* The paper is on GitHub now: show it at once (GitHub's copy of the file catches up on its own) */
-function addPaperFinished(j) {
-  const rows = (j.added || []).filter(r => r.id && !findPaper(r.id));
-  rows.forEach(r => {
-    const row = {}; Object.keys(r).forEach(k => { if (typeof r[k] === 'string') row[k] = r[k]; });
-    allPapers.push(row);
-    _loadedPaperFields.set(row.id, paperFields(row));   // as saved: nothing here to push
-    if (row.is_starred === 'true') starSet.add(paperKey(row));
-  });
-  if (rows.length) { _relIndexKey = null; AddPaper.text = ''; refresh(); if (currentTab === 'library') renderLibrary(); }
-  const first = (j.added || [])[0] || (j.existing && j.existing[0] ? { id: j.existing[0] } : null);
-  if (currentTab !== 'library' || _libPanel !== 'add') {
-    if (j.state === 'done' && first) toast(j.added && j.added.length ? 'Added to your library' : 'Already in your library', () => openPaper(first.id), { actionLabel: 'Open', duration: 8000 });
-    else if (j.state !== 'done') toastError('Paper not added: ' + (j.message || 'something went wrong'));
-  }
+/* Said once, away from the box: an add that ended without a paper */
+function addPaperEnded(j) {
+  if (currentTab === 'library' && _libPanel === 'add') return;
+  toastError(j.state === 'stopped' ? 'Paper not added: stopped' : 'Paper not added. Open + Add paper to see why.');
+}
+/* The paper is in the repository: the library is read again so it shows here. On For you that is a return's quiet
+   read (its result offered with Show, never pushed under a scroll); anywhere else it is taken in as Show takes one. */
+async function addPaperRefresh() { const _authEpoch = capturePrivateEpoch();
+  if (!isPrivate() || !Private.authorized) return;
+  if (feedActive()) return returnPapers(Private.epoch);
+  if (Pull.busy || _pushing || !navigator.onLine) return;
+  const op = ++Pull.op;
+  Pull.busy = true;
+  try {
+    const req = ++Refresh.seq, saveGen = Refresh.saveGen;
+    const texts = await privateAwait(fetchLibraryTexts(refreshOvertaken(req)), _authEpoch);
+    refreshReceive({ req, saveGen, how: 'show', texts });
+  } catch (e) {}   // nothing said: the paper shows on the next read of the library
+  finally { if (op === Pull.op) Pull.busy = false; }
+}
+function addPaperFinished(r) {
+  AddPaper.text = '';
+  addPaperRefresh().then(privateCallback(renderAddPaper));
+  const s = r.status, first = s.added[0] ? s.added[0].id : s.existing[0];
+  if (currentTab !== 'library' || _libPanel !== 'add') toast(s.added.length ? 'Added to your library' : 'Already in your library', () => addPaperOpen(first), { actionLabel: 'Open', duration: 8000 });
+  renderAddPaper();
+}
+function addPaperOpen(id) {
+  if (findPaper(id)) { openPaper(id); return; }
+  toast('It will show in your library in a moment.');
+  addPaperRefresh().then(privateCallback(() => { if (findPaper(id)) openPaper(id); }));
 }
 /* ===== LIBRARY'S GROUPS (Phase 13e) =====
    Projects first (sorted as chosen; by default as made, oldest first), each with Rename, Copy and Delete, and on one
@@ -10078,7 +10357,7 @@ function peopleRestore(b) {
 function mergePeople(text) {
   let remote;
   try { remote = text === null ? { header: PEOPLE_HEADER.slice(), rows: [] } : peopleParse(text); }
-  catch (e) { throw Object.assign(new Error('The list of people you follow on GitHub couldn’t be read, so that change wasn’t saved. It’s kept in this browser.'), { fatal: true }); }
+  catch (e) { throw Object.assign(plainError('The list of people you follow on GitHub couldn’t be read, so that change wasn’t saved. It’s kept in this browser.'), { fatal: true }); }
   const header = remote.header.slice(), rows = remote.rows.map(r => ({ ...r })), sent = new Map();
   const cell = (r, h) => String(r[h] == null ? '' : r[h]).trim(), has = (r, want) => Object.keys(want).every(h => cell(r, h) === String(want[h]).trim());
   // A row an Undo removes must be exactly the row its Follow made, every column GitHub's file has now included, so a
@@ -10366,11 +10645,11 @@ function topicTagLineHTML(g) {
   if (j && j.topic === g.group_name) {
     if (j.state === 'running') return `<div class="tt-line"><span class="la-spin"></span>${esc(j.stage || 'Tagging existing papers\u2026')}</div>`;
     if (j.state === 'done') return `<div class="tt-line done">Tagged ${(j.tagged || []).length} existing paper${(j.tagged || []).length === 1 ? '' : 's'}</div>`;
-    return `<div class="tt-line warn">${esc(j.message || 'Tagging failed')} <button class="lib-hint-btn" onclick="tagWhenSaved('${escAttr(g.group_name)}')">Try again</button></div>`;
+    return `<div class="tt-line warn">${j.state === 'stopped' ? 'Tagging was stopped.' : 'Tagging didn’t finish.'} <button class="lib-hint-btn" onclick="tagWhenSaved('${escAttr(g.group_name)}')">Try again</button></div>`;
   }
   if (g.status !== 'confirmed' || /Existing papers tagged/.test(g.notes || '')) return '';
   const can = Chat.status === 'ready' && Chat.bridgeVersion >= 3;
-  return `<div class="tt-line">Its existing papers get tagged ${isPrivate() ? 'by the worker within the hour' : 'at the next weekly run'}.${can ? ` <button class="lib-hint-btn" onclick="tagWhenSaved('${escAttr(g.group_name)}')">Tag now</button>` : ''}</div>`;
+  return `<div class="tt-line">Its existing papers get tagged ${isPrivate() ? 'by Scout within the hour' : 'at the next weekly run'}.${can ? ` <button class="lib-hint-btn" onclick="tagWhenSaved('${escAttr(g.group_name)}')">Tag now</button>` : ''}</div>`;
 }
 /* Tagging is asked for only once GitHub has the topic as confirmed, since the bridge cancels a topic it doesn't find
    confirmed there. An approval made here is saved first and tagging waits for that save to land. */
@@ -10393,7 +10672,7 @@ function tagSavedApprovals(written) {
 }
 async function startTopicTag(name, quiet) { const _authEpoch = capturePrivateEpoch();
   if (Chat.status !== 'ready' || !Chat.bridgeVersion) await privateAwait(bridgeCheck(), _authEpoch);
-  if (Chat.status !== 'ready' || Chat.bridgeVersion < 3) { if (!quiet) toast(isPrivate() ? 'The bridge isn\u2019t reachable now, so the worker tags its papers within the hour' : 'Tagging runs on your laptop; it isn\u2019t reachable now, so the next weekly run will do it'); renderInterests(); return false; }
+  if (Chat.status !== 'ready' || Chat.bridgeVersion < 3) { if (!quiet) toast(isPrivate() ? 'Scout tags its papers within the hour' : 'Its papers get tagged at the next weekly run'); renderInterests(); return false; }
   try {
     const r = await privateAwait(bridgeFetch('/topic/tag', { method: 'POST', body: JSON.stringify({ topic: name }) }), _authEpoch);
     const j = await privateAwait(r.json(), _authEpoch);
@@ -10564,7 +10843,7 @@ function editInterest(oldName, edit) {
   const i = allInterests.find(x => x.interest_name === oldName); if (!i) return 'That interest is gone.';
   const name = edit.name.trim();
   // a rename needs somewhere to keep the old name: the aliases column (schema 2). A row made here and not saved has none to keep.
-  if (name !== oldName && !aliasesKept() && _loadedInterestFields.has(oldName)) return 'Renaming waits for the worker\u2019s update of this library, which adds a place for old names.';
+  if (name !== oldName && !aliasesKept() && _loadedInterestFields.has(oldName)) return 'Renaming waits for an update to your library that keeps old names.';
   const problem = name !== oldName ? interestNameProblem(name, i) : '';
   if (problem) return problem;
   const before = { name: oldName, notes: i.notes || '', related_to: i.related_to || '' };
@@ -10644,7 +10923,7 @@ function authorFormHTML() {
     <label>Level <select class="pp-input" id="afLevel">${REL_OPTIONS.map(o => `<option value="${o}"${val('level', 'probably') === o ? ' selected' : ''}>${LEVEL_NAME[o]}</option>`).join('')}</select></label></div>`;
   const fixedName = !!i && !aliasesKept() && _loadedInterestFields.has(i.interest_name);   // schema 1: no aliases column to keep an old name
   const aliases = i && nameList(i.aliases).length ? `<p class="af-hint">Also known as ${esc(nameList(i.aliases).join(', '))}.</p>`
-    : fixedName ? `<p class="af-hint">Renaming waits for the worker\u2019s update of this library, which adds a place for old names.</p>` : '';
+    : fixedName ? `<p class="af-hint">Renaming waits for an update to your library that keeps old names.</p>` : '';
   const related = val('related_to', i ? i.related_to : ''), relOn = new Set(related.split(',').map(s => s.trim().toLowerCase()).filter(Boolean));
   return `<form class="author-form" onsubmit="event.preventDefault(); submitAuthorForm()">${head}
     <label for="afName">Name</label><input class="pp-input" id="afName" maxlength="120" autocomplete="off" value="${dataAttr(val('name', i ? i.interest_name : ''))}"${fixedName ? ' readonly' : ''}>${aliases}${kinds}
@@ -10868,6 +11147,11 @@ function toast(msg, undoFn, opts) {
   _toastTimer = setTimeout(privateCallback(() => { t.classList.remove('show'); _toastUndo = null; }), duration);
 }
 function toastError(msg) { toast(msg, null, { error: true }); }
+/* Phase 24 (Sol's correction 11): what a failure says on screen. Only words this page wrote for the person (an error
+   made by plainError) show as they are; anything else (GitHub's answer, the browser's message, another program's
+   output) shows the caller's words for that kind of failure, so no file name, path or program output reaches it. */
+function plainError(message) { return Object.assign(new Error(message), { plain: message }); }
+function plainFailure(e, words) { return e && typeof e.plain === 'string' ? e.plain : words; }
 function _doToastUndo() {
   if (_toastUndo) { _toastUndo(); _toastUndo = null; }
   const t = document.getElementById('toast');
@@ -10914,7 +11198,7 @@ function resetChanges() {
   hideSaveBar();
   _papersText = null; Layout.stateText = null; Layout.orphanPending = new Map();
   if (isPrivate()) retryPrivate(); else { loadPapers(); loadInterests(); loadGroups(); }
-  toast('Changes discarded — reloaded from CSV files');
+  toast('Changes discarded. Your library is as it was last saved.');
 }
 
 /* Push changed files directly to GitHub via Contents API.
@@ -11002,7 +11286,7 @@ function updateSyncStatus() {
   } else if (anyDirty()) {
     el.innerHTML = `<span class="sync-dot warn"></span>Not saved yet <button class="sync-btn" onclick="pushToGitHub()">Save now</button>`;
   } else {
-    el.innerHTML = `<span class="sync-dot on"></span>Saves to GitHub automatically${last ? ` \u00b7 last saved ${agoText(last)}` : ''} \u00b7 <span class="sync-formats">${LIBRARY_FORMATS}</span>${tokenStatusHTML()} <button class="sync-btn quiet" onclick="disconnectGitHub()" title="Sign out on this browser: the site becomes read-only here">Sign out</button>`;   // Phase 19 (A2): and the token's estimated end
+    el.innerHTML = `<span class="sync-dot on"></span>Saves to GitHub automatically${last ? ` \u00b7 last saved ${agoText(last)}` : ''}<span class="sync-formats" data-formats="${LIBRARY_FORMATS}" hidden></span>${tokenStatusHTML()} <button class="sync-btn quiet" onclick="disconnectGitHub()" title="Sign out on this browser: the site becomes read-only here">Sign out</button>`;   // Phase 19 (A2): and the token's estimated end
   }
 }
 async function connectGitHub() {
@@ -11073,12 +11357,16 @@ window.addEventListener('online', () => { if (anyDirty()) scheduleAutoPush(1000)
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && anyDirty() && hasPAT()) pushToGitHub(true); });
 
 /* Phase 16: activity.json is the worker's alone. The page reads it (activityRead) and refuses to write it, whatever
-   a caller passes, on a private library or a public one. */
-function pageMayWrite(path) { if (String(path).replace(/^\/+/, '') === 'activity.json') throw new Error('activity.json is written by the worker only'); }
+   a caller passes, on a private library or a public one. Phase 24: so is a request's status. */
+function pageMayWrite(path) {
+  const p = String(path).replace(/^\/+/, '');
+  if (p === 'activity.json') throw new Error('activity.json is written by the worker only');
+  if (/^requests\/.*\.status\.json$/.test(p)) throw new Error('A request status is written by the worker only');   // Phase 24
+}
 function _ghFileUrl(filename) { if (isPrivate()) privatePathCap(filename); return ghApiBase() + `/contents/${filename}`; }
 function _ghFail(res, what) {
   requireOwner();
-  if (res.status === 401) { checkedStorageRemove(PAT_OK_KEY); checkedStorageRemove(PAT_VERIFIED_KEY); checkedStorageRemove('gh_pat'); _ownerAtLoad = false; ownerLost(); const e = new Error('GitHub rejected the token, so it was removed'); e.fatal = true; return e; }
+  if (res.status === 401) { checkedStorageRemove(PAT_OK_KEY); checkedStorageRemove(PAT_VERIFIED_KEY); checkedStorageRemove('gh_pat'); _ownerAtLoad = false; ownerLost(); const e = plainError('GitHub rejected the token, so it was removed'); e.fatal = true; return e; }
   const e = new Error(`GitHub ${what} failed (${res.status})`);
   e.conflict = res.status === 409 || res.status === 422;
   return e;
@@ -11104,10 +11392,10 @@ async function _ghPutFile(headers, filename, content, sha, message) { const _aut
   // worker's limits) is never sent. GitHub would take it, but no page or worker could read the library back. The save
   // stops before the PUT, so its edits and their backup stay here, unacknowledged.
   if (isPrivate() && (LIBRARY_CSVS.includes(filename) || filename === STATE_FILE) && new TextEncoder().encode(content).length > privatePathCap(filename))
-    throw Object.assign(new Error(`${filename} would be larger than the ${privatePathCap(filename) / 1048576} MB Scout can read back, so nothing was saved. Your edits are kept in this browser.`), { fatal: true });
+    throw Object.assign(plainError(`Your library would be larger than the ${privatePathCap(filename) / 1048576} MB Scout can read back, so nothing was saved. Your edits are kept in this browser.`), { fatal: true });
   // Phase 21 (Sol's correction 5): the people file's limit is the worker's, PEOPLE_CAP, checked before every write
   if (filename === PEOPLE_FILE && new TextEncoder().encode(content).length > PEOPLE_CAP)
-    throw Object.assign(new Error('The list of people you follow is too long to save, so nothing was saved. Your change is kept in this browser.'), { fatal: true });
+    throw Object.assign(plainError('The list of people you follow is too long to save, so nothing was saved. Your change is kept in this browser.'), { fatal: true });
   const b64 = btoa(unescape(encodeURIComponent(content)));
   // sha null: a file GitHub does not have yet (the people file's first save), created; if it was made meanwhile,
   // GitHub refuses with a 422, which _ghMergePush takes as a conflict and merges again onto the file as it is now
@@ -11402,14 +11690,14 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
     if (!configReady() || e.target) return;
     if (e.fatal || !hasPAT()) {
       setSaveBar('Unsaved changes', 'Kept in this browser until you push', 'Push to GitHub');
-      toastError(e.message);
+      toastError(e.fatal ? e.message : plainFailure(e, 'Couldn’t save to GitHub. Your changes are kept in this browser.'));   // a fatal error's words are this page's own
     } else if (e.wait) {   // Phase 19 (A4): GitHub asked Scout to wait: the edits stay pending, and the next try is when it ends
       setSaveBar('Not saved yet', 'GitHub asked Scout to wait; trying again then', 'Retry now');
       toastError(waitText(e) + ' Your changes are kept here.');
       scheduleAutoPush(Math.max(AUTO_PUSH_RETRY, (e.retryAt || 0) - Date.now()));
     } else {
       setSaveBar('Not saved yet', 'GitHub didn’t take it; trying again shortly', 'Retry now');
-      toastError(`Couldn’t save to GitHub: ${e.message}. Trying again in 30 s.`);
+      toastError('Couldn’t save to GitHub. Trying again in 30 s.');
       scheduleAutoPush(AUTO_PUSH_RETRY);
     }
   } finally { checkPrivateEpoch(_authEpoch);
@@ -12827,7 +13115,7 @@ async function pushNotes() { const _authEpoch = capturePrivateEpoch();
     setSyncTrouble(e);
     if (!Vault.troubleToasted) {   // once, not every retry
       Vault.troubleToasted = true;
-      toastError(Vault.trouble === 'offline' ? 'You\u2019re offline. Notes are kept in this browser and will sync when you\u2019re back.' : 'Notes not synced yet: ' + e.message + '. They are safe in this browser; retrying.');
+      toastError(Vault.trouble === 'offline' ? 'You\u2019re offline. Notes are kept in this browser and will sync when you\u2019re back.' : 'Notes not synced yet. They are safe in this browser; retrying.');
     }
     scheduleNotesPush(30000);
   } finally { checkPrivateEpoch(_authEpoch); checkVaultGeneration(generation);
@@ -12983,7 +13271,7 @@ async function submitVaultOnce() { const _authEpoch = capturePrivateEpoch();
   } catch (e) { checkPrivateEpoch(_authEpoch);
     checkVaultGeneration(generation); if (isPrivate()) { Vault.key = null; Vault.ready = false; }
     console.error(e);
-    err.textContent = 'Something went wrong: ' + e.message;
+    err.textContent = 'Something went wrong. Try again.';
   } finally { checkPrivateEpoch(_authEpoch); checkVaultGeneration(generation);
     go.disabled = false; go.textContent = _vaultMode === 'create' ? 'Encrypt my notes' : 'Unlock';
   }
@@ -14666,19 +14954,11 @@ async function deleteGeneralNote(id) { const _authEpoch = capturePrivateEpoch();
 /* ===== CHAT WITH CLAUDE: one Claude Code session per paper, through bridge/scholar_bridge.py on this laptop =====
    The page talks to the bridge on 127.0.0.1 (Chrome asks once to allow that); the bridge runs Claude Code.
    Only this laptop can do it, so the Chat tab only tries to connect after you set it up here. */
-/* On the laptop the helper is at 127.0.0.1; an iPad reaches it through a private Tailscale HTTPS address */
+/* The helper is at 127.0.0.1 where Claude runs; an address saved on this device (claude_bridge_url) overrides it */
 function bridgeRemote() { if (!isOwner()) return ''; requireOwner(); try { return localStorage.getItem('claude_bridge_url') || ''; } catch (e) { return ''; } }
 function bridgeBase() { return bridgeRemote() || 'http://127.0.0.1:7823'; }
 /* Chat runs through Claude Code on the laptop, so an iPad or phone can't reach it (iPadOS reports itself as a Mac, but with touch points) */
 function chatElsewhere() { return navigator.maxTouchPoints > 1 && !bridgeRemote(); }
-function chatSetRemote() {
-  const i = document.getElementById('chatRemote'), m = document.getElementById('chatRemoteMsg');
-  let u = (i && i.value || '').trim().replace(/\/+$/, '');
-  if (u && !/^https?:\/\//i.test(u)) u = 'https://' + u;
-  if (!/^https:\/\/[\w.-]+(:\d+)?$/i.test(u)) { if (m) m.textContent = 'Enter the https address Tailscale shows, e.g. https://my-mac.tail1234.ts.net'; return; }
-  privateSet('claude_bridge_url', u);
-  chatConnect();
-}
 function chatForgetRemote() { privateRemove('claude_bridge_url'); Chat.status = chatElsewhere() ? 'elsewhere' : 'setup'; renderChatPanel(true); }
 const Chat = {
   status: 'setup', token: '',
@@ -14808,14 +15088,14 @@ function renderChatPanel(force) {
   if (ready && pid && Chat.loadedFor !== pid) { chatOpen(); return; }   // another paper: load its chat first
   const head = `<div class="rp-head">${paneHeadStart('chat')}<span class="grow"></span><button class="rp-icon-btn ${Chat.refreshing ? 'spinning' : ''}" id="chatRefreshBtn" onclick="chatRefresh()" title="Reload this chat" aria-label="Reload chat"${Chat.refreshing ? ' disabled' : ''}>${ICON_REFRESH}</button>${ready && (Chat.history || []).some(c => c.id !== 'current') ? `<button class="rp-icon-btn" id="chatHistBtn" onclick="toggleChatHistory(event)" title="Earlier chats about this paper" aria-label="Earlier chats" aria-haspopup="true">${ICON_HISTORY}</button>` : ''}${ready ? `<button class="rp-text-btn" onclick="chatNew()" title="Start a fresh conversation about this paper (this one is kept)">${ICON_PLUS}New chat</button>` : ''}${paneClose('chat')}</div>`;
   const setup = {
-    setup: `<p>Chat with Claude about this paper, with your highlights and notes in view. It runs through Claude Code on your laptop.</p><button class="ui-btn ui-btn-primary" onclick="chatConnect()">Connect to Claude Code</button>`,
-    unknown: `<p class="chat-dim">Connecting to Claude Code…</p>`,
-    checking: `<p class="chat-dim">Connecting to Claude Code…</p>`,
-    unpaired: `<p>Claude Code is running on this laptop. Allow this page to use it:</p><button class="ui-btn ui-btn-primary" onclick="chatConnect()">Connect</button>`,
-    pairing: `<p>On Linux, run <code>python3 bridge/pair_approve.py CODE</code> from the dashboard folder, using the code below. On macOS, approve the matching code in the dialog.</p><p class="chat-code">${Chat.pairCode}</p><p class="chat-dim">It should show the same code.</p>`,
-    declined: `<p>Not connected (approval was declined or timed out).</p><button class="ui-btn ui-btn-secondary" onclick="chatConnect()">Try again</button>`,
-    elsewhere: `<p>Chat runs through Claude Code on your laptop. To use it here, connect to the laptop over Tailscale (set up once on the Mac with <code>bash bridge/tailscale_setup.sh</code>, which prints the address).</p><form class="pp-row" onsubmit="event.preventDefault(); chatSetRemote()"><input class="pp-input" id="chatRemote" placeholder="https://my-mac.tail1234.ts.net" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="ui-btn ui-btn-primary" type="submit">Connect</button></form><p class="chat-dim" id="chatRemoteMsg"></p>`,
-    offline: bridgeRemote() ? `<p>Can't reach your laptop at <code>${esc(bridgeRemote().replace(/^https:\/\//, ''))}</code>. It needs to be awake, with Tailscale on, on both devices.</p><button class="ui-btn ui-btn-secondary" onclick="chatConnect()">Try again</button> <button class="ui-btn ui-btn-secondary" onclick="chatForgetRemote()">Change address</button>` : `<p>Can't reach Claude Code on this computer. Chat works on the computer where the bridge runs. On Linux, follow <code>linux/README.md</code> to start the services. On macOS, run <code>bash bridge/install_bridge.sh</code> once from the dashboard's folder.</p><button class="ui-btn ui-btn-secondary" onclick="chatConnect()">Try again</button>`,
+    setup: `<p>Chat with Claude about this paper, with your highlights and notes in view.</p><button class="ui-btn ui-btn-primary" onclick="chatConnect()">Connect</button>`,
+    unknown: `<p class="chat-dim">Connecting…</p>`,
+    checking: `<p class="chat-dim">Connecting…</p>`,
+    unpaired: `<p>Claude is ready on this computer. Allow this page to chat with it:</p><button class="ui-btn ui-btn-primary" onclick="chatConnect()">Connect</button>`,
+    pairing: `<p>To connect, approve this code on the computer where Claude runs:</p><p class="chat-code">${Chat.pairCode}</p><p class="chat-dim">It should show the same code.</p>`,
+    declined: `<p>Not connected: the approval was declined or ran out of time.</p><button class="ui-btn ui-btn-secondary" onclick="chatConnect()">Try again</button>`,
+    elsewhere: `<p>Chat works on the computer where Claude runs, not on this device. Add paper and the ten questions work here.</p>`,
+    offline: bridgeRemote() ? `<p>Can't reach Claude at the address saved on this device.</p><button class="ui-btn ui-btn-secondary" onclick="chatConnect()">Try again</button> <button class="ui-btn ui-btn-secondary" onclick="chatForgetRemote()">Forget the address</button>` : `<p>Can't reach Claude on this computer right now. Chat works on the computer where Claude runs.</p><button class="ui-btn ui-btn-secondary" onclick="chatConnect()">Try again</button>`,
   };
   const body = ready
     ? `<div class="chat-scroll" id="chatScroll"></div>
@@ -15257,9 +15537,9 @@ async function chatSendNow(text, auto) { const _authEpoch = capturePrivateEpoch(
   let reply = '';
   try {
     const res = await privateAwait(bridgeFetch('/chat/send', { method: 'POST', body: JSON.stringify(body) }), _authEpoch);
-    if (res.status === 401) { saveBridgeToken(''); Chat.status = 'unpaired'; throw new Error('This page needs to be connected to Claude Code again.'); }
-    if (res.status === 409) throw new Error('Claude is still answering the previous message.');
-    if (!res.ok) throw new Error('Claude Code returned an error (' + res.status + ').');
+    if (res.status === 401) { saveBridgeToken(''); Chat.status = 'unpaired'; throw plainError('This page needs to connect to Claude again.'); }
+    if (res.status === 409) throw plainError('Claude is still answering the previous message.');
+    if (!res.ok) throw plainError('Claude couldn’t answer. Try again.');
     const reader = res.body.getReader(), dec = new TextDecoder(); let buf = '';
     for (;;) {
       const { value, done } = await privateAwait(reader.read(), _authEpoch);
@@ -15272,12 +15552,12 @@ async function chatSendNow(text, auto) { const _authEpoch = capturePrivateEpoch(
         const e = JSON.parse(line);
         if (e.t === 'text') { reply += e.v; if (Chat.pid === pid) { Chat.streaming = reply; Chat.tool = ''; scheduleLive(); } }
         else if (e.t === 'tool') { if (Chat.pid === pid) { Chat.tool = e.v; scheduleLive(); } }
-        else if (e.t === 'done' && e.error && !reply) throw new Error(/stopped|terminated|SIGTERM/i.test(e.error) ? 'Stopped.' : 'Claude Code: ' + e.error.slice(-200));
+        else if (e.t === 'done' && e.error && !reply) throw plainError(/stopped|terminated|SIGTERM/i.test(e.error) ? 'Stopped.' : 'Claude couldn’t answer. Try again.');
       }
     }
     Chat.fresh = false;
   } catch (e) { checkPrivateEpoch(_authEpoch);
-    if (Chat.pid === pid) Chat.error = e.message === 'Failed to fetch' ? "Lost the connection to Claude Code on this laptop." : e.message;
+    if (Chat.pid === pid) Chat.error = plainFailure(e, 'Lost the connection to Claude.');
   }
   if (Chat.pid !== pid) return;   // you moved to another paper meanwhile: its chat reloads from the bridge
   Chat.running = false; Chat.tool = '';
@@ -15859,6 +16139,7 @@ function paperPageHTML(p, opts) {
     <h1 class="pd-title">${esc(headline)}</h1>
     ${dek}
     ${hasText(p.authors) ? `<div class="pd-authors">${esc(p.authors)}</div>` : ''}
+    ${briefChipBoxHTML(p)}
     ${parseWhy(p) ? `<div class="pd-why"><span class="pd-why-label">Why it's here</span>${whyHTML(p)}</div>` : ''}
   </header>`;
 
@@ -15866,7 +16147,6 @@ function paperPageHTML(p, opts) {
   let main = '';
   if (hasText(p.summary)) main += `<section class="pd-section"><h2>Summary</h2><p class="pd-prose">${esc(p.summary)}</p></section>`;
   else if (!hasText(p.abstract) && !(hasNotes || (ix && ix.h + ix.c))) main = `<p class="pd-empty">No summary or abstract yet. Open the paper to read it at the source.</p>`;
-  main += briefSectionHTML(p);   // Phase 14: the ten questions
   if (hasText(p.abstract)) main += `<section class="pd-section"><h2>Abstract</h2><p class="pd-prose">${esc(p.abstract)}</p><p class="pd-attribution">Some abstracts are provided by Semantic Scholar and OpenAlex.</p></section>`;
   if (hasNotes || (ix && ix.h + ix.c)) main += `<section class="pd-section pd-notes"><h2>Your notes <button class="pd-edit" onclick="openReader('${ka}', 'new')">+ Add note</button></h2>${hasNotes ? vn.entries.map(e => `<div class="pd-note"><div class="pd-note-top"><span>${esc(noteDate(e))}</span><button class="rp-icon-btn sm" onclick="openReader('${ka}', '${e.id}')" title="Edit note" aria-label="Edit note">${ICON_EDIT}</button></div><div class="pd-prose md" data-pdnote="${e.id}"></div></div>`).join('') : ''}${ix && ix.h + ix.c ? `<div class="pd-notes-meta">${[ix.h && `${ix.h} highlight${ix.h === 1 ? '' : 's'}`, ix.c && `${ix.c} comment${ix.c === 1 ? '' : 's'}`].filter(Boolean).join(', ')} · <button onclick="openReader('${ka}', 'panel')">Open in the reader</button></div>` : ''}</section>`;
 
@@ -15964,7 +16244,8 @@ function repaintShownPapers() {
 }
 /* ===== TEN QUESTIONS (Phase 14) =====
    The briefs worker answers ten fixed questions about a paper from its open PDF and publishes briefs/<id>.json and
-   briefs/_index.json to the data repository. The paper page shows them after Summary. Nothing here writes. The index
+   briefs/_index.json to the data repository. Phase 24: a chip under the authors opens them in a sheet, or asks for
+   them (below). Nothing here writes but the request. The index
    is read once a session; a paper's file is read when the index names it, or by its id when there is no index at all.
    A file counts only when its sha256 is the one its index entry gives (a mismatch reads the index again, once). Each
    await checks the authorization epoch and Brief.gen: a lock, a pull or a Retry moves the generation, so an answer
@@ -16003,8 +16284,8 @@ const BRIEF_SIGNS = '+-±~<>=≤≥';
 /* gen: moved by a lock, a pull or a new target. index: the index read (a promise, null when absent). files: one
    result per paper, at most BRIEF_CACHE. loading: the reads in flight. visit: the items open on the paper shown,
    kept for this visit across redraws and the reader's Back. focus: what had the keyboard in the section. jump: a
-   pill pressed, waiting for the reader to load that paper's PDF. */
-const Brief = { gen: 0, index: null, questions: null, files: new Map(), loading: new Map(), visit: { pid: null, open: new Set() }, focus: null, jump: null };
+   pill pressed, waiting for the reader to load that paper's PDF. sheet: { pid, from } while the sheet shows. */
+const Brief = { gen: 0, index: null, questions: null, files: new Map(), loading: new Map(), visit: { pid: null, open: new Set() }, focus: null, jump: null, sheet: null, pushed: null, lostFocus: null };
 
 function briefEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function briefEligible(p) { return !!p && !p.uploaded && typeof p.id === 'string' && BRIEF_ID.test(p.id) && !p.id.startsWith('up-'); }
@@ -16216,12 +16497,10 @@ function briefMetaHTML(pid) {
   if (r.state === 'none') return 'Not answered yet.';
   if (r.state === 'outcome') return briefEsc(BRIEF_OUTCOME_TEXT[r.outcome] || 'There are no answers for this paper.');
   if (r.state === 'offline') return "You're offline, so the answers can't load." + briefRetryHTML();
-  if (r.state === 'error') return (r.why === 'mismatch' ? "The answers file doesn't match the answers index, so it isn't shown."
-    : r.why === 'invalid' ? "The answers file is malformed, so it isn't shown." : r.why === 'index' ? "The answers index is malformed, so no answers are shown."
-    : "Couldn't load the answers.") + briefRetryHTML();
+  if (r.state === 'error') return "Couldn't load the answers." + briefRetryHTML();   // Phase 24: one plain line, whatever failed
   const d = r.data, s = d.source, host = briefHost(s.url);
   const from = (s.truncated ? `the first ${s.pages_supplied} of ${s.pages_total} pages of ` : '') + 'the PDF' + (host ? ' on ' + briefEsc(host) : '');
-  let line = `Answered ${briefEsc(briefDate(d.answered_at))} by ${briefEsc(d.model)} from ${from}.`;
+  let line = `Answered ${briefEsc(briefDate(d.answered_at))} from ${from}.`;
   if (s.truncated) line += ` Pages after ${s.pages_supplied} were not read.`;
   if (r.old === 'recipe') line += ' These answers follow an earlier version of the questions.';
   else if (r.old === 'source') line += ' These answers come from an earlier PDF of this paper.';
@@ -16249,23 +16528,10 @@ function briefItemsHTML(pid) {
   const open = Brief.visit.pid === pid ? Brief.visit.open : new Set();
   return briefLabels(pid).map((label, i) => `<details class="pd-q-item" data-n="${i + 1}"${open.has(i + 1) ? ' open' : ''}><summary>${i + 1}. ${briefEsc(label)}</summary><div class="pd-q-a" data-q="${i + 1}">${briefAnswerInner(pid, i + 1)}</div></details>`).join('');
 }
-/* The section, from what is cached, so the page drawn again (a star, the reader's Back) draws it whole with the items
-   open as they were; briefMount then loads what is missing. '' for an uploaded paper. */
-function briefSectionHTML(p) {
-  if (!briefEligible(p)) return '';
-  const pid = p.id;
-  briefFocusNote(pid);
-  if (Brief.visit.pid !== pid) Brief.visit = { pid, open: new Set() };
-  const all = Brief.visit.open.size === 10;
-  return `<section class="pd-section pd-q" data-brief="${briefEsc(pid)}" aria-labelledby="pd-q-h"><h2 id="pd-q-h">Ten questions <button type="button" class="pd-q-all" aria-pressed="${all}" onclick="briefExpandAll(this)">${all ? 'Collapse all' : 'Expand all'}</button></h2><p class="pd-q-meta" aria-live="polite">${briefMetaHTML(pid)}</p><div class="pd-q-list">${briefItemsHTML(pid)}</div></section>`;
-}
-/* The section in place once the page is drawn: its toggles watched, its answers formatted, the focus put back, and
-   its answers loaded when nothing is cached. Independent of the notes and of Summary or Abstract. */
+/* Once the page is drawn: the answers are read when nothing is cached, for every library paper, so the chip can say
+   what there is. Independent of the notes and of Summary or Abstract. */
 function briefMount(root, p) {
   if (!root || !briefEligible(p)) return;
-  const sec = [...root.querySelectorAll('[data-brief]')].find(s => s.dataset.brief === p.id);
-  if (!sec) return;
-  briefWire(sec, p.id);
   if (!Brief.files.has(p.id)) briefStart(p.id);
 }
 function briefWire(sec, pid) {
@@ -16279,12 +16545,15 @@ function briefWire(sec, pid) {
   briefSync(sec);
   briefFocusRestore(sec, pid);
 }
-/* When a result arrives, or a Retry or a pull begins, the meta line, the labels and the answers change in place. The
-   items keep their open state and a focused summary keeps the focus. */
+/* When a result arrives, a request moves on, or a Retry or a pull begins: the chip, and in the sheet the meta line, the
+   labels and the answers, change in place. The items keep their open state and a focused summary keeps the focus. */
 function briefRedraw(pid) {
-  for (const sec of document.querySelectorAll('#paperDetail [data-brief]')) {
-    const page = sec.closest('[data-pid]');
-    if (sec.dataset.brief !== pid || !page || page.dataset.pid !== pid) continue;
+  briefChipSync(pid);
+  const box = document.getElementById('briefSheet');
+  for (const sec of box && Brief.sheet && Brief.sheet.pid === pid ? box.querySelectorAll('[data-brief]') : []) {
+    if (sec.dataset.brief !== pid) continue;
+    const a = document.activeElement, held = a && a !== sec && sec.contains(a) ? briefFocusKey(a) : null;   // before its control is replaced
+    const key = held || (a === sec ? Brief.lostFocus : null);   // a control an earlier redraw took away, back when it is
     const meta = sec.querySelector('.pd-q-meta'), labels = briefLabels(pid);
     if (meta) meta.innerHTML = briefMetaHTML(pid);
     sec.querySelectorAll('.pd-q-item').forEach(d => {
@@ -16293,7 +16562,16 @@ function briefRedraw(pid) {
       if (body) body.innerHTML = briefAnswerInner(pid, n);
     });
     briefWire(sec, pid);
+    if (key) { briefFocusTo(sec, key); Brief.lostFocus = sec.contains(document.activeElement) && document.activeElement !== sec ? null : key; }
+    briefSheetContain();
   }
+}
+/* The focus stays in the open sheet (Sol's review 10): when a redraw took the focused control away, the dialog takes it */
+function briefSheetContain() {
+  const s = document.getElementById('briefSheet'), panel = s && s.querySelector('.tq-panel'), reader = document.getElementById('reader');
+  if (!panel || !s.classList.contains('open') || (reader && reader.classList.contains('open'))) return;
+  const a = document.activeElement;
+  if (!a || a === document.body || !a.isConnected) panel.focus({ preventScroll: true });
 }
 /* An answer's Markdown, once the libraries arrive; the plain form stays when they never do. */
 async function renderBriefMarkdown(el, text, ctx) { const _authEpoch = capturePrivateEpoch();
@@ -16307,6 +16585,7 @@ async function renderBriefMarkdown(el, text, ctx) { const _authEpoch = capturePr
   const a = document.activeElement, key = a && a !== el && el.contains(a) ? briefFocusKey(a) : null;   // the focus inside, just before the answer is replaced
   el.innerHTML = html; mdTables(el); briefLinks(el);
   if (key) briefFocusTo(el, key);
+  briefSheetContain();
 }
 /* An answer as Markdown HTML, or null without the libraries. Raw HTML shows as text, images as their alt text, and the
    sanitizer keeps only formatting and plain links. Pills and KaTeX go in after the sanitizer, through placeholders made
@@ -16350,6 +16629,164 @@ function briefLinks(el) {
 }
 
 /* ---- the items, Expand all, the focus ---- */
+/* ---- the chip and the sheet (Phase 24) ----
+   The page no longer lists the questions at the bottom. A "Ten questions" chip sits under the authors: with answers,
+   it opens them in a sheet (the route #paper/<id>/questions, so Back closes it); without, on a private library's
+   signed-in page and for a paper with an open PDF from an allowed site, it asks Scout for them (a request, above) and
+   then says what is happening in words true to the request's state. It never asks while answers exist or while it is
+   still finding out, and it is not shown for uploads, for papers without such a PDF, or to a viewer who cannot ask
+   (who still opens answers that exist). */
+const BRIEF_PDF_HOSTS = ['arxiv.org', 'export.arxiv.org', 'proceedings.mlr.press', 'roboticsproceedings.org', 'openaccess.thecvf.com'];   // ingest/fulltext.py PDF_PROVIDERS
+const BRIEF_CHIP_WORDS = { sending: 'Asking Claude…', waiting: 'Waiting to start…', working: 'Claude is reading the paper', retry: 'Trying again soon', saving: 'Saving the answers', limit: 'Try again tomorrow', refused: 'Couldn’t answer for this paper' };
+function briefPdfOK(p) {   // the paper's effective PDF (never one kept only in this browser), on an allowed site
+  const m = /^https:\/\/([^/?#@:]+)(?::443)?\//i.exec(String(effPdf(p) || ''));
+  return !!m && BRIEF_PDF_HOSTS.includes(m[1].toLowerCase());
+}
+function briefCanAsk(p) { return isPrivate() && isOwner() && briefEligible(p) && briefPdfOK(p); }
+/* What the chip is now: answered, ask, loading, the request's phase (sending, waiting, working, retry, saving), again
+   (a request that could not start), limit, refused, error, or '' (nothing to show) */
+function briefChipState(p) {
+  if (!briefEligible(p)) return '';
+  const pid = p.id, r = Brief.files.get(pid);
+  if (r && r.state === 'answered') return 'answered';
+  if (r && (r.state === 'error' || r.state === 'offline')) return 'error';
+  if (!briefCanAsk(p)) return '';   // a viewer who cannot ask, or a paper without an open PDF from an allowed site: answers only
+  const q = requestFor('brief', pid);
+  if (q && requestLive(q)) {
+    const s = q.status;
+    if (!q.sent) return q.unsent ? 'again' : 'sending';
+    return !s || s.state === 'waiting' ? 'waiting' : s.state === 'working' ? 'working' : s.reason === 'publishing' ? 'saving' : 'retry';
+  }
+  if (q && q.status && q.status.state === 'done' && !(r && r.state === 'none')) return 'loading';   // answered: being read; a read that found none is never stuck here, a tap asks again
+  if (q && q.status && q.status.state === 'failed') {
+    const why = q.status.reason;
+    if (why === 'limit' && localDay(Date.parse(q.status.at)) === localDay(Date.now())) return 'limit';   // "tomorrow" only on the day the worker said so (Sol's review 9)
+    if (['no_pdf', 'unreadable', 'rejected', 'not_in_library'].includes(why)) return 'refused';
+    if (why !== 'limit') return 'again';
+  }
+  if (!r) return 'loading';
+  if (r.state === 'outcome') return r.outcome === 'no_open_text' ? 'ask' : 'refused';
+  return 'ask';
+}
+function briefChipHTML(p) {
+  const st = briefChipState(p), pid = escAttr(p.id);
+  if (!st) return '';
+  if (st === 'answered') return `<button type="button" class="pd-tq-chip done" aria-haspopup="dialog" onclick="briefSheetOpen('${pid}')">Ten questions</button>`;
+  if (st === 'ask') return `<button type="button" class="pd-tq-chip" aria-label="Ten questions: ask Claude to answer them" onclick="briefAsk('${pid}')">Ten questions</button>`;
+  if (st === 'again') return `<button type="button" class="pd-tq-chip" aria-label="Try again: ask Claude for the ten questions" onclick="briefAsk('${pid}')">Couldn’t ask. Try again</button>`;
+  if (st === 'loading') return `<button type="button" class="pd-tq-chip" disabled aria-busy="true">Ten questions</button>`;
+  if (st === 'error') return `<button type="button" class="pd-tq-chip" aria-label="Couldn’t load the ten questions. Retry" onclick="briefRetryChip('${pid}')">Couldn’t load. Retry</button>`;
+  if (st === 'limit' || st === 'refused') return `<span class="pd-tq-note">${BRIEF_CHIP_WORDS[st]}</span>`;
+  return `<span class="pd-tq-chip busy">${BRIEF_CHIP_WORDS[st]}${st === 'working' ? '<span class="tq-dots" aria-hidden="true"><i></i><i></i><i></i></span>' : ''}</span>`;
+}
+/* The chip's place under the authors: polite, so a screen reader hears each change of state */
+function briefChipBoxHTML(p) { return briefEligible(p) ? `<div class="pd-tq" data-tq="${escAttr(p.id)}" aria-live="polite" tabindex="-1">${briefChipHTML(p)}</div>` : ''; }
+function briefChipSync(pid) {
+  const box = [...document.querySelectorAll('#paperDetail [data-tq]')].find(b => b.dataset.tq === pid), p = box && findPaper(pid);
+  if (!box || !p) return;
+  const a = document.activeElement, had = a && box.contains(a);
+  box.innerHTML = briefChipHTML(p);
+  if (had) (box.querySelector('button:not(:disabled)') || box).focus({ preventScroll: true });   // a state with no button keeps the focus here
+}
+/* Tapping a chip with no answers: one request, never while answers exist, while it is still finding out, or while one
+   is already under way */
+function briefAsk(pid) {
+  const p = findPaper(pid);
+  if (!p || !briefCanAsk(p)) return;
+  const r = Brief.files.get(pid), q = requestFor('brief', pid);
+  if (r && r.state === 'answered') { briefSheetOpen(pid); return; }
+  if (q && requestLive(q) && !q.sent && q.unsent && !q.sending) { requestSend(q); briefChipSync(pid); return; }   // "Try again" tries now
+  if (!r || r.state === 'error' || r.state === 'offline' || (q && requestLive(q))) return;
+  requestStart({ kind: 'brief', paper: pid });
+  briefChipSync(pid);
+}
+function briefRetryChip(pid) {
+  const r = Brief.files.get(pid);
+  if (!r || (r.state !== 'error' && r.state !== 'offline')) return;
+  if (r.why === 'mismatch' || r.why === 'index') Brief.index = null;
+  Brief.files.delete(pid); Brief.loading.delete(pid);
+  briefRedraw(pid); briefStart(pid);
+}
+/* A request answered: the index and the paper's file are read again, and the chip shows the answers */
+function briefAnsweredNow(pid) {
+  Brief.index = null; Brief.files.delete(pid); Brief.loading.delete(pid);
+  briefRedraw(pid);
+  briefStart(pid);
+}
+
+/* The sheet: a modal dialog over the paper's page, the ten questions folded, Expand all, the answers through the safe
+   renderer, citation pills into the reader and back. Brief.sheet: { pid, from } while it shows. */
+function briefSheetOpen(pid) {
+  if (!findPaper(pid)) return;
+  Brief.pushed = '#paper/' + encodeURIComponent(pid) + '/questions';   // this step is Scout's own
+  location.hash = Brief.pushed;
+}
+/* Done and Escape (Sol's review 11): Back drops the sheet's step only when Scout made it; a sheet opened from a link
+   becomes the paper's page in place, so closing it never leaves Scout */
+function briefSheetClose() {
+  if (!Brief.sheet) return;
+  if (!/\/questions$/.test(location.hash)) { briefSheetHide(); return; }
+  if (Brief.pushed === location.hash) { Brief.pushed = null; history.back(); return; }
+  history.replaceState(null, '', APP_ROOT + location.search + '#paper/' + encodeURIComponent(Brief.sheet.pid));
+  applyHash();
+}
+function briefSheetHTML(pid) {
+  const all = Brief.visit.pid === pid && Brief.visit.open.size === 10;
+  return `<div class="tq-panel pd-q" role="dialog" aria-modal="true" aria-labelledby="tqTitle" data-brief="${briefEsc(pid)}" data-pid="${briefEsc(pid)}" tabindex="-1">
+    <div class="tq-head"><span class="tq-grip" aria-hidden="true"></span><h2 id="tqTitle">Ten questions</h2><button type="button" class="pd-q-all" aria-pressed="${all}" onclick="briefExpandAll(this)">${all ? 'Collapse all' : 'Expand all'}</button><button type="button" class="tq-done" onclick="briefSheetClose()">Done</button></div>
+    <div class="tq-body"><p class="pd-q-meta" aria-live="polite">${briefMetaHTML(pid)}</p><div class="pd-q-list">${briefItemsHTML(pid)}</div></div>
+  </div>`;
+}
+/* Shown by the route. The page under it goes inert; the focus moves into the sheet and comes back to the chip. */
+function briefSheetShow(pid) {
+  const p = findPaper(pid), s = document.getElementById('briefSheet');
+  if (!p || !s || !briefEligible(p)) { briefSheetHide(); return; }
+  if (Brief.visit.pid !== pid) Brief.visit = { pid, open: new Set() };
+  if (Brief.sheet && Brief.sheet.pid === pid && s.classList.contains('open')) return;
+  const from = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
+  Brief.sheet = { pid, from };
+  s.innerHTML = briefSheetHTML(pid);
+  s.hidden = false; s.classList.add('open');
+  for (const id of ['mainScroll', 'appBar']) { const el = document.getElementById(id); if (el) el.inert = true; }
+  const nav = document.querySelector('.navbar'); if (nav) nav.inert = true;
+  const panel = s.querySelector('.tq-panel');
+  briefWire(panel, pid);
+  if (!Brief.files.has(pid)) briefStart(pid);
+  panel.focus({ preventScroll: true });
+}
+function briefSheetHide() {
+  const s = document.getElementById('briefSheet'), was = Brief.sheet;
+  Brief.sheet = null; Brief.lostFocus = null;
+  for (const id of ['mainScroll', 'appBar']) { const el = document.getElementById(id); if (el) el.inert = false; }
+  const nav = document.querySelector('.navbar'); if (nav) nav.inert = false;
+  if (!s || !s.classList.contains('open')) return;
+  const inside = s.contains(document.activeElement);
+  s.classList.remove('open'); s.hidden = true; s.innerHTML = '';
+  if (was && inside) {   // back to the chip that opened it, found again by the paper's id
+    const box = [...document.querySelectorAll('#paperDetail [data-tq]')].find(b => b.dataset.tq === was.pid);
+    const to = box && box.querySelector('button:not(:disabled)');
+    if (to) to.focus({ preventScroll: true }); else if (was.from && was.from.isConnected) was.from.focus({ preventScroll: true });
+  }
+}
+/* The reader's Back onto the sheet: the focus goes back to the pill that opened the reader */
+function briefSheetFocusBack() {
+  const s = document.getElementById('briefSheet'), panel = s && s.querySelector('.tq-panel');
+  if (!panel || !Brief.sheet || !Brief.focus || Brief.focus.pid !== Brief.sheet.pid) return;
+  briefFocusTo(panel, Brief.focus.key);
+}
+/* Escape closes; Tab stays inside; the page's own keys wait while it shows */
+function briefSheetKey(e) {
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); briefSheetClose(); return; }
+  if (e.key === 'Tab') {
+    const s = document.getElementById('briefSheet');
+    const items = [...s.querySelectorAll('button, summary, a[href], [tabindex="0"]')].filter(el => !el.disabled && el.offsetParent !== null);
+    if (items.length) {
+      const i = items.indexOf(document.activeElement), next = e.shiftKey ? (i <= 0 ? items.length - 1 : i - 1) : (i === -1 || i === items.length - 1 ? 0 : i + 1);
+      e.preventDefault(); items[next].focus();
+    }
+  }
+  e.stopPropagation();
+}
 function briefOpenItems(sec) { return [...sec.querySelectorAll('.pd-q-item')]; }
 function briefSync(sec) {   // "Collapse all" only when all ten are open
   const items = briefOpenItems(sec), all = items.length > 0 && items.every(d => d.hasAttribute('open')), btn = sec.querySelector('.pd-q-all');
@@ -16383,11 +16820,6 @@ function briefFocusKey(el) {
   const d = el.tagName === 'SUMMARY' && el.closest('.pd-q-item');
   return d ? 'q' + d.dataset.n : null;
 }
-function briefFocusNote(pid) {   // before the page is drawn again: what in the section had the focus
-  const a = document.activeElement, sec = a && a.closest ? a.closest('[data-brief]') : null;
-  if (sec && sec.dataset.brief === pid) Brief.focus = { pid, key: briefFocusKey(a) };
-  else if (a && a.closest && a.closest('#paperDetail')) Brief.focus = null;   // the focus is elsewhere on the page
-}
 function briefFocusRestore(sec, pid) {   // after it: back on the same control, unless the focus went somewhere that still shows
   const f = Brief.focus, a = document.activeElement;
   if (!f || f.pid !== pid || !f.key) return;
@@ -16413,7 +16845,7 @@ function briefRetry(btn) {
 }
 
 /* ---- the pills and the reader ---- */
-/* A pill pressed on the paper page opens the reader for that paper. The jump waits for the PDF, bound to the paper,
+/* A pill pressed in the sheet opens the reader for that paper over it. The jump waits for the PDF, bound to the paper,
    the hash of the PDF the answers were made from, the authorization epoch, Brief.gen and the reader's generation. */
 function briefPillClick(btn) {
   const sec = btn.closest('[data-brief]'), page = btn.closest('[data-pid]'), pid = sec && sec.dataset.brief, r = pid && Brief.files.get(pid);
@@ -16531,10 +16963,11 @@ function briefInvalidate() {
 function briefRefresh() {
   briefInvalidate();
   if (!_paperViewActive) return;
-  for (const sec of document.querySelectorAll('#paperDetail [data-brief]')) { briefRedraw(sec.dataset.brief); briefStart(sec.dataset.brief); }
+  for (const box of document.querySelectorAll('#paperDetail [data-tq]')) { briefRedraw(box.dataset.tq); briefStart(box.dataset.tq); }
+  if (Brief.sheet && ![...document.querySelectorAll('#paperDetail [data-tq]')].some(b => b.dataset.tq === Brief.sheet.pid)) { briefRedraw(Brief.sheet.pid); briefStart(Brief.sheet.pid); }
 }
 /* Run by lockPrivate. Nothing of the session's briefs outlives the authorization. */
-function briefTeardown() { briefInvalidate(); Brief.visit = { pid: null, open: new Set() }; Brief.focus = null; }
+function briefTeardown() { briefInvalidate(); briefSheetHide(); Brief.visit = { pid: null, open: new Set() }; Brief.focus = null; Brief.pushed = null; }
 
 /* ===== the paper page follows the paper (Phase 13e) =====
    paperBarSync, on every change (viewsSync): the bar's ★, ✓ and ☰ patched from the row's marks as they are now, so a
@@ -16800,18 +17233,30 @@ function applyHash() {
     hideReader();
     const under = _reader.under; _reader.under = null;
     if (under !== null && hash === under) {   // back to the view underneath, which is still rendered
-      if (hash.startsWith('paper/')) { const pp = allPapers.find(x => x.id === decodeURIComponent(hash.slice(6))); if (pp) renderPaperDetail(pp); }   // notes may have changed
+      if (hash.startsWith('paper/')) {
+        const pp = allPapers.find(x => x.id === decodeURIComponent(hash.slice(6)).replace(/\/questions$/, ''));
+        if (pp) renderPaperDetail(pp);   // notes may have changed
+        if (/\/questions$/.test(hash)) briefSheetFocusBack();   // Phase 24: the sheet a pill left, back on that pill
+      }
       else if (feedActive()) feedRefresh();   // the posts, as they are now
       return;
     }
   }
 
-  // Paper detail route
+  // Paper detail route; Phase 24: /questions is the ten questions' sheet over the page, so Back closes it
   if (hash.startsWith('paper/')) {
-    const id = decodeURIComponent(hash.slice(6));
+    let id = decodeURIComponent(hash.slice(6));
+    const questions = /\/questions$/.test(id);
+    if (questions) id = id.slice(0, -'/questions'.length);
     if (id && uploadById(id)) { history.replaceState(null, '', '#read/' + encodeURIComponent(id)); applyHash(); return; }
-    if (id) { showPaperDetail(id); return; }
+    if (id) {
+      const page = _paperViewActive && document.querySelector('#paperDetail [data-pid]');
+      if (!page || page.dataset.pid !== id) { briefSheetHide(); showPaperDetail(id); }   // another paper: its page, from the top
+      if (questions) briefSheetShow(id); else briefSheetHide();   // the same paper: only the sheet comes or goes
+      return;
+    }
   }
+  briefSheetHide();
 
   // Clear paper view state if navigating away; restore scroll position
   const wasInPaper = _paperViewActive;
@@ -17028,9 +17473,10 @@ Config.startup = bootstrapApp();
     'vaultReady', 'openVaultModal', 'submitVault', 'unlockFromPanel', 'loadReaderNotes', 'lockNotes', 'nfSave', 'savePaperNotes', 'scheduleNotesPush', 'pushNotes',
     'reconcileNotesIndex', 'renameHlColor', 'createAnno', 'deleteAnno', 'editAnnoComment', 'setAnnoColor', 'citeAnno', 'citeSelection',
     'startNewNote', 'editNote', 'saveNoteEdit', 'deleteGeneralNote', 'setInkTool', 'setPencilHl', 'undoInk', 'toggleReaderPanel', 'setPanelTab', 'showSelBar',
-    // Claude on the laptop
-    'chatOpen', 'chatSend', 'chatSendOrStop', 'chatNew', 'chatSwitch', 'chatConnect', 'chatSetRemote', 'chatForgetRemote', 'askAboutSelection',
+    // Claude: Chat, + Add paper, topic tagging and (Phase 24) asking for the ten questions
+    'chatOpen', 'chatSend', 'chatSendOrStop', 'chatNew', 'chatSwitch', 'chatConnect', 'chatForgetRemote', 'askAboutSelection',
     'startFigureSelect', 'chatApplyBlock', 'chatSaveAsNote', 'chatAddPaper', 'chatRefresh', 'toggleLibPanel', 'startAddPaper', 'stopAddPaper', 'startTopicTag',
+    'briefAsk',
     // private papers and PDFs
     'pickUploadPdf', 'uploadPdf', 'usePdfFile', 'openPdfChange', 'removeLocalPdf', 'removeUpload', 'renameUpload', 'startReview', 'saveUploads',
     // reading places and list times
