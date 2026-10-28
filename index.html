@@ -926,6 +926,7 @@ html:not(.no-hover) .ic.keep:hover, html:not(.no-hover) .ic.save:hover, html:not
 .chip { flex: 0 0 46%; min-width: 44px; max-width: 46%; height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: none; background: none; color: var(--text); font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .chip-t { display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; height: 32px; box-sizing: border-box; padding: 0 12px; border: 1px solid #536471; border-radius: 999px; font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chip-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* a long name ends in an ellipsis (rough edge #4) */
+.saved-in.chip-t { display: inline-flex; vertical-align: middle; max-width: 100%; height: 25px; padding: 0 8px; margin: 0 0 1px 3px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-surface); color: var(--text-muted-raised); font-size: 11.5px; font-weight: 500; line-height: 23px; letter-spacing: 0; white-space: nowrap; }
 .chip-t svg { flex: none; width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .chip.in { color: var(--accent); }
 .chip.in .chip-t { border-color: transparent; background: color-mix(in srgb, var(--accent) 16%, transparent); font-weight: 600; }
@@ -973,9 +974,11 @@ html:not(.no-hover) .lb-add:hover .lb-pill, .lb-add[aria-expanded="true"] .lb-pi
 .list-none p, .list-empty p { margin: 0 0 12px; }
 .list-none .ui-btn { min-height: 44px; }
 .list-empty .le-t { margin: 32px 0 8px; font-size: 18px; font-weight: 650; color: var(--text); }
+.list-sec.sug { overflow-wrap: anywhere; }
 /* a list's paper and a suggestion: words for the controls, each a 44 px target; a paper he has read is dimmed */
 .post .acts { display: flex; flex-wrap: wrap; align-items: center; gap: 0 18px; margin: 4px 0 4px; }
 .act { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0; border: none; background: none; color: var(--text-secondary); font: inherit; font-size: 14px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.act.add { max-width: 100%; }
 .act svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 html:not(.no-hover) .act:hover { color: var(--text); }
 .act-pill { display: inline-flex; align-items: center; height: 34px; box-sizing: border-box; max-width: 100%; padding: 0 14px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -5088,6 +5091,7 @@ function takeListDefs(text, backup = null) {
 function listDefsSaved(out) {
   out.sent.forEach((e, id) => { if (ListDefs.edits.get(id) === e) ListDefs.edits.delete(id); });
   takeListDefs(out.csv);
+  feedRefresh();   // received names and deletions also change mounted suggestions' membership chips
 }
 function listDefsApply() {
   if (!ListDefs.ready) return;
@@ -6692,7 +6696,11 @@ function isPassed(p) { return !!p && p.is_passed === 'true'; }
 /* The feed holds For you's papers less the ones you like (Phase 25, F): in To read or one of your lists, or starred from
    before. Those are already liked examples, so a second look at them teaches nothing. The machine's lanes are not
    your lists. */
-function feedPool(rows = allPapers) { return followingShown() ? followingPool(rows) : forYouPool(rows).filter(p => !likedKey(paperKey(p)) && (rows === allPapers || p.is_starred !== 'true' && !(p.user_lists || '').split('|').some(n => n === TO_READ || isProjectName(n)))); }
+function feedPool(rows = allPapers) {
+  if (followingShown()) return followingPool(rows);
+  const pool = forYouPool(rows);
+  return projectMode() ? pool : pool.filter(p => !likedKey(paperKey(p)) && (rows === allPapers || p.is_starred !== 'true' && !(p.user_lists || '').split('|').some(n => n === TO_READ || isProjectName(n))));
+}
 /* ===== PHASE 31: FOLLOWING =====
    The home's second tab, as X's: every paper in the library by someone you follow, matched as the posts match them
    (followMarks: their names and aliases, regardless of when they were followed), newest added first, then the
@@ -7182,8 +7190,10 @@ function postHTML(k) {
   const follow = followMarks(p, followingShown());   // Following includes every matching paper; elsewhere the follow date still applies
   const member = view === 'member', read = (member || followingShown()) && readSet.has(k);   // Phase 31: Following keeps read papers, marked
   const meta = `<div class="meta">${venue ? `<span class="venue">${esc(venue)}</span>` : ''}${date ? `<span>${esc(date)}</span>` : ''}${added ? `<span class="added">${esc(added)}</span>` : ''}${read ? `<span class="was-read">&#10003; Read</span>` : ''}${must ? '<span class="must">Must Read</span>' : ''}${follow ? '<span class="following">Following</span>' : ''}</div>`;
+  const elsewhere = view === 'suggest' ? heldLists(k).find(n => n !== Feed.project) : null;
+  const savedIn = elsewhere ? ` <span class="chip-t saved-in">In ${esc(elsewhere)}</span>` : '';
   const body = `${meta}
-      <h2 class="post-t">${esc(title)}</h2>${dek ? `<p class="dek">${esc(dek)}</p>` : ''}${hasText(p.authors) ? `<p class="by">${follow ? followAuthorsHTML(p.authors, follow) : esc(p.authors)}</p>` : ''}`;
+      <h2 class="post-t">${esc(title)}${savedIn}</h2>${dek ? `<p class="dek">${esc(dek)}</p>` : ''}${hasText(p.authors) ? `<p class="by">${follow ? followAuthorsHTML(p.authors, follow) : esc(p.authors)}</p>` : ''}`;
   if (member || view === 'suggest') return `<article class="post ${member ? 'mine' : 'sug'}${read ? ' read' : ''}${sel}" data-key="${dataAttr(k)}" data-rec="0" tabindex="-1" onclick="feedTap(event, this)">${view === 'suggest' ? postNearHTML(k) : ''}
       ${body}
       ${isOwner() ? listActsHTML(k, p, member) : ''}</article>`;
@@ -7296,11 +7306,15 @@ function feedRepaintPost(k, el) {   // `el`: the post's element when the caller 
   const h = postHTML(k);
   if (!h) { feedDropPost(el); return; }
   if (el._html === h) return;
-  const had = document.activeElement && (document.activeElement === el || (el.contains && el.contains(document.activeElement)));
+  const ae = document.activeElement, had = ae && (ae === el || (el.contains && el.contains(ae)));
+  const act = had && ae !== el && ae.dataset ? ae.dataset.act : null;
   el.insertAdjacentHTML('beforebegin', h);
   const fresh = el.previousElementSibling;
   el.remove();
-  if (fresh) { fresh._html = h; if (had) fresh.focus({ preventScroll: true }); }
+  if (fresh) {
+    fresh._html = h;
+    if (had) ((act && fresh.querySelector(`[data-act="${act}"]`)) || fresh).focus({ preventScroll: true });
+  }
 }
 /* A post leaves the feed: its record, a sheet open for it and every press on it go with it */
 function feedDropPost(el) {
@@ -7317,9 +7331,10 @@ function feedDropPost(el) {
 function feedRepaintAll() {
   const list = document.getElementById('feedList');
   if (!list) return;
+  const sc = listTabShown() ? document.getElementById('mainScroll') : null, y = sc ? sc.scrollTop : 0;
   _listedPass = listedKeys();
   try { [...list.querySelectorAll('.post')].forEach(el => feedRepaintPost(el.dataset.key, el)); }   // each post once: no lookup per post
-  finally { _listedPass = null; }
+  finally { _listedPass = null; if (sc) jumpScroll(sc, y); }
   feedMoreRender();
   placeSheet();   // the save sheet's 🔖 may have moved: the popover goes with it
 }
@@ -8298,7 +8313,7 @@ function tasteOrder(pool, interest = null) {
 /* The feed's order. For you: its view (the interest's papers, or all of them) in its sort, Best (forYouFeed) or New
    (byNew), each post's chip list taken with it (feedChipTargets). A list's tab (Phase 25): the list's own papers, then
    the suggestions for it (listOrder): (A) papers QuickRead found near a paper now in the list, (B) papers the related
-   index puts among the ten nearest of the list's papers, by how many of them and then how near; Best inside each, and
+   index puts among the nearest of the list's papers, by how many of them and then how near; Best inside each, and
    none of the rest. Feed.near keeps A and B for the posts. */
 function feedOrder(pool) {
   Feed.near = null; Feed.split = 0; Feed.chips = new Map();
@@ -8309,10 +8324,45 @@ function feedOrder(pool) {
   if (isOwner()) Feed.chips = feedChipTargets(keys);
   return keys;
 }
-/* For each paper, how many of the project's papers (its seeds, projectSeeds) have it among their ten most related, and
+/* For each paper, how many of the project's papers (its seeds, projectSeeds) have it among their nearest neighbours (width below), and
    its best place there; kept until the seeds or the papers change. relatedTo is used as it is. */
 let _projectNear = { sig: null, rows: null, map: null };
-function projectNear(seeds) { return chipNear(seeds); }
+function projectNear(seeds) {
+  const LIST_SUGGESTION_NEIGHBOURS = 20;
+  chipNear([]);   // share the existing rows, read-state and interest invalidation
+  const cache = _chipNear, sig = `list:${LIST_SUGGESTION_NEIGHBOURS}:${seeds.map(paperKey).sort().join('|')}`;
+  if (cache.map.has(sig)) return cache.map.get(sig);
+  if (!cache.listSeeds) cache.listSeeds = new Map();
+  if (!cache.listSeeds.has(LIST_SUGGESTION_NEIGHBOURS)) cache.listSeeds.set(LIST_SUGGESTION_NEIGHBOURS, new Map());
+  const ranked = cache.listSeeds.get(LIST_SUGGESTION_NEIGHBOURS);
+  const collect = () => {
+    const map = new Map();
+    seeds.forEach(q => (ranked.get(q) || []).forEach((r, i) => {
+      const k = paperKey(r), m = map.get(k);
+      if (m) { m.count++; m.best = Math.min(m.best, i); } else map.set(k, { count: 1, best: i });
+    }));
+    cache.map.set(sig, map); return map;
+  };
+  const missing = seeds.filter(q => !ranked.has(q));
+  if (allPapers.length > 500 && missing.length > 8) {
+    if (!cache.jobs.has(sig)) {
+      cache.jobs.add(sig);
+      const epoch = capturePrivateEpoch(); let at = 0;
+      const step = () => {
+        checkPrivateEpoch(epoch); if (_chipNear !== cache) return;
+        const until = performance.now() + 8;
+        do { const q = missing[at++]; if (!ranked.has(q)) ranked.set(q, relatedTo(q, LIST_SUGGESTION_NEIGHBOURS)); } while (at < missing.length && performance.now() < until);
+        if (at < missing.length) { setTimeout(privateCallback(step), 0); return; }
+        collect(); cache.jobs.delete(sig);
+        if (typeof feedIdle === 'function' && feedActive() && feedIdle() && !pressUnresolved() && document.getElementById('mainScroll').scrollTop <= 40) { Feed.fresh = true; renderFeed(); }
+      };
+      setTimeout(privateCallback(step), 0);
+    }
+    return new Map();
+  }
+  missing.forEach(q => ranked.set(q, relatedTo(q, LIST_SUGGESTION_NEIGHBOURS)));
+  return collect();
+}
 /* On a post the project put first, why: QuickRead found it near a paper in the project, or it is like papers there */
 function postNearHTML(k) {
   const how = Feed.near && Feed.ranked && projectMode() ? Feed.near.get(k) : undefined;
@@ -8511,7 +8561,7 @@ function listActsHTML(k, p, member) {
       + `<button type="button" class="act" data-act="mark" aria-pressed="${read}" onclick="listMarkRead(this.closest('.post').dataset.key)">${FEED_ICON.tick}<span>${read ? 'Mark unread' : 'Mark read'}</span></button>`
       + `<button type="button" class="act" data-act="remove" onclick="listRemove(this.closest('.post').dataset.key)" aria-label="Remove from ${dataAttr(n)}">Remove from list</button></div>`;
   }
-  return `<div class="acts"><button type="button" class="act add" data-act="add" data-n="${dataAttr(n)}" aria-label="Add to ${dataAttr(n)}" onclick="feedKeep(this.closest('.post').dataset.key)"><span class="act-pill">+ Add</span></button>`
+  return `<div class="acts"><button type="button" class="act add" data-act="add" data-n="${dataAttr(n)}" aria-label="Add to ${dataAttr(n)}" onclick="feedKeep(this.closest('.post').dataset.key)"><span class="act-pill">+ Add to ${esc(n)}</span></button>`
     + `<button type="button" class="act" data-act="notfor" onclick="listNotForThis(this.closest('.post').dataset.key)" aria-label="Not for ${dataAttr(n)}">Not for this list</button></div>`;
 }
 /* The headings: "In this list" over his papers (with what to do when the interest chosen leaves none), "Suggested for
@@ -8522,7 +8572,7 @@ function listSections() {
   const chosen = listInterest(n);
   list.insertAdjacentHTML('beforeend', `<h3 class="list-sec mine">In this list</h3>${!Feed.split && chosen !== null ? `<div class="list-none"><p>None of your papers in ${esc(n)} are about ${esc(chosen)}.</p><button type="button" class="ui-btn" onclick="setListInterest(Feed.project, null)">Show all papers</button></div>` : ''}`);
 }
-function listSugHeadHTML() { return `<h3 class="list-sec sug">Suggested</h3>`; }   // the bar above names the list (Sol's review #8)
+function listSugHeadHTML() { return `<h3 class="list-sec sug">Suggested for ${esc(Feed.project)}</h3>`; }
 /* The end of a list's tab: an empty list says how to fill it and offers no suggestions */
 function listEndHTML() {
   const n = Feed.project;
