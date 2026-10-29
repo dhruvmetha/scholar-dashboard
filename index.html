@@ -2666,6 +2666,50 @@ h2[tabindex="-1"]:focus { outline: none; }   /* a page's heading takes focus whe
   .save-bar[data-state="saving"], .save-bar[data-state="offline"] { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }   /* Phase 31: no app bar under it */
 }
 body:has(#sec-library.active) .save-bar[data-state="saving"] { visibility: hidden; }
+
+/* Daily follows the device's color scheme; an explicit theme can be used by a host. */
+:root:has(body.daily-mode){color-scheme:light dark;--bg:light-dark(#ffffff,#000000);--bg-surface:light-dark(#f7f9fa,#16181c);--bg-card:var(--bg-surface);--bg-raise:light-dark(#eff3f4,#202327);--line:light-dark(#eff3f4,#2f3336);--text:light-dark(#0f1419,#e7e9ea);--text-secondary:light-dark(#34434f,rgb(231 233 234 / 84%));--text-muted:light-dark(#536471,#71767b);--text-muted-raised:light-dark(#536471,#8b9096);--glass:light-dark(rgba(255,255,255,.9),rgba(0,0,0,.78));--accent:light-dark(#008cff,#1d9bf0);--accent-dim:light-dark(#008cff0f,#1d9bf020)}
+:root[data-theme=light]:has(body.daily-mode){color-scheme:light}:root[data-theme=dark]:has(body.daily-mode){color-scheme:dark}
+.daily-mode .feed-tabs .tab{color:var(--text-muted)}.daily-mode .feed-tabs .tab.on{color:var(--text)}
+
+/* Daily: mockup B, scoped to its own feed. */
+.daily-feed #feedAdd,.daily-feed #feedCtl,.daily-feed #feedMore,.daily-feed #feedEnd,.daily-feed #listBar{display:none!important}
+.daily-feed .feed-head{position:static}.daily-feed #tabsMsg:empty{display:none}
+.daily-intro{padding:25px 20px 23px;border-bottom:1px solid var(--border)}
+.daily-intro h1{font-size:25px;line-height:1.2;font-weight:650;letter-spacing:-.025em}
+.daily-intro p{margin-top:8px;font-size:14px;color:var(--text-muted);line-height:1.5}
+.daily-interests{display:flex;gap:8px;padding:15px 20px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border)}
+.daily-interests::-webkit-scrollbar{display:none}
+.daily-interest{display:flex;align-items:center;gap:7px;flex-shrink:0;min-height:38px;padding:0 13px;border-radius:999px;border:1px solid var(--line);color:var(--text-secondary);background:var(--bg);font-size:13px;font-weight:500;cursor:pointer}
+.daily-interest[aria-selected=true]{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.daily-interest i{width:5px;height:5px;background:currentColor;border-radius:50%;opacity:.65}
+.daily-area{padding:23px 20px 26px;overflow:hidden}
+.daily-interest-name{display:flex;align-items:center;gap:9px;margin:0 0 15px;font-size:14px;font-weight:600}
+.daily-interest-name span{border:1px solid var(--line);padding:2px 7px;border-radius:4px;color:var(--text-muted);font-size:11px;font-weight:400}
+.daily-card{touch-action:pan-y;position:relative;padding:26px 25px 23px;border:1px solid var(--line);border-radius:18px;background:var(--bg);min-height:355px;box-shadow:0 6px 24px rgba(0,0,0,.055);transform-origin:50% 88%;cursor:grab;overflow-wrap:anywhere}
+.daily-card.dragging{cursor:grabbing;user-select:none}
+.daily-card:focus-visible,.daily-action:focus-visible,.daily-interest:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.daily-card h2{font-size:29px;font-weight:650;line-height:1.18;margin:0;letter-spacing:-.025em}
+.daily-card h2 a{color:var(--text);text-decoration:none}.daily-card h2 a:hover{text-decoration:underline;text-underline-offset:3px}
+.daily-authors{margin-top:15px;font-size:13px;color:var(--text-muted)}.daily-venue{margin-top:4px;font-size:12px;color:var(--text-secondary)}
+.daily-headline{font-size:16px;font-weight:500;line-height:1.45;letter-spacing:-.01em;padding:20px 0;margin:20px 0 0;border-top:1px solid var(--line)}
+.daily-summary{font-size:14px;line-height:1.75;color:var(--text-secondary);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
+.daily-summary.expanded{display:block}.daily-more{margin-top:10px;border:0;background:none;color:var(--accent);font-size:13px;font-weight:500;cursor:pointer;min-height:34px;padding:0}
+.daily-stamp{position:absolute;z-index:2;top:24px;max-width:80%;padding:6px 13px;border:2px solid currentColor;border-radius:7px;font-weight:650;font-size:21px;opacity:0;pointer-events:none;background:var(--bg)}
+.daily-stamp-save{left:18px;color:var(--accent);transform:rotate(-9deg)}.daily-stamp-pass{right:18px;color:var(--text-secondary);transform:rotate(9deg)}
+.daily-card.dragging .daily-stamp{opacity:var(--stamp-opacity,0)}.daily-card.dragging[data-direction=right] .daily-stamp-pass,.daily-card.dragging[data-direction=left] .daily-stamp-save{display:none}
+.daily-dots{display:flex;justify-content:center;gap:7px;padding:23px 0 19px;min-height:48px}.daily-dots i{width:5px;height:5px;border-radius:50%;background:var(--line)}.daily-dots i:first-child{background:var(--accent)}
+.daily-actions{display:flex;align-items:flex-start;justify-content:center;gap:53px}
+.daily-action{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:64px;max-width:35%;padding:0;border:0;background:none;color:var(--text-muted);font-size:12px;cursor:pointer}
+.daily-action span{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border:1px solid var(--line);border-radius:50%;color:var(--text-secondary)}
+.daily-action.save span{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line));background:var(--accent-dim)}.daily-action:hover span{color:var(--accent);border-color:var(--accent)}
+.daily-action b{font-weight:400;overflow-wrap:anywhere}.daily-action svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.daily-hints{display:flex;justify-content:space-between;gap:15px;margin-top:27px;padding:0 10px;color:var(--text-muted);font-size:12px}
+.daily-empty{display:flex;flex-direction:column;gap:15px;min-height:355px;align-items:center;justify-content:center;padding:40px;border:1px solid var(--line);border-radius:18px;text-align:center;font-size:14px;line-height:1.8;color:var(--text-muted)}
+.daily-empty button{border:0;background:none;color:var(--accent);cursor:pointer;min-height:44px}
+@media(max-width:600px){.daily-intro{padding:22px 16px 21px}.daily-intro h1{font-size:24px}.daily-interests{padding:14px 16px;gap:7px}.daily-interest{font-size:12px;padding:0 11px}.daily-area{padding:20px 16px 24px}.daily-card{padding:23px 20px 19px;min-height:366px}.daily-card h2{font-size:27px}.daily-headline{margin-top:18px;padding:17px 0;font-size:15px}.daily-summary{font-size:13px;line-height:1.7}.daily-authors{margin-top:13px;font-size:12px}.daily-venue{font-size:11px}.daily-dots{padding:21px 0 16px;min-height:42px}.daily-actions{gap:clamp(15px,10vw,43px)}.daily-action span{width:50px;height:50px}.daily-hints{margin-top:23px;padding:0 2px}}
+@media(prefers-reduced-motion:reduce){.daily-card,.daily-action{transition:none!important;animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -3529,6 +3573,7 @@ function lockPrivate(state = 'required', detail) {
   // without fades whose callbacks belong to the revoked authorization.
   closeAbsPopup(); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeRelevancePopup(); closeVenueTooltip();
   _absBtn = null; _dismissTap = null; clearTimeout(_relPopupTimer); _relPopupTimer = null;
+  if (typeof dailyTeardown === 'function') dailyTeardown();
   feedTeardown(); refreshTeardown(); briefTeardown(); activityTeardown(); tasteTeardown(); peopleTeardown(); requestsTeardown(); listDefsTeardown();
   const askSelection = document.getElementById('chatAskSel'); if (askSelection) askSelection.remove();
   const readerMenu = document.getElementById('readerMenu'); if (readerMenu) { clearTimeout(readerMenu._leaveT); readerMenu.classList.remove('open', 'glide', 'leaving'); }
@@ -3729,6 +3774,8 @@ async function reverifyPrivate() {
   try { return await work; } finally { if (Private.verifying === work) Private.verifying = null; }
 }
 function privatePathCap(path) {
+  if (path === 'daily/current.json') return 1024 * 1024;
+  if (path === 'daily_handled.json') return 4 * 1024 * 1024;
   if (path === 'papers_database.csv') return 16 * 1024 * 1024;
   if (path === 'interests_database.csv' || path === 'groups_database.csv') return 2 * 1024 * 1024;
   if (path === STATE_FILE) return STATE_CAP;   // Phase 15 (B2)
@@ -3751,7 +3798,7 @@ function privatePathCap(path) {
 async function privateReadFile(path, optional = false, superseded = null, held = null, ref = null) {
   const epoch = capturePrivateEpoch(), cap = privatePathCap(path);
   // Phase 15 (B2): the state file is optional (a layout 4 library has none); ref pins a read to one commit
-  if (optional && !path.startsWith('annotations/') && !path.startsWith('briefs/') && !path.startsWith('requests/') && path !== STATE_FILE && path !== PEOPLE_FILE && path !== LISTS_FILE && path !== 'activity.json' && path !== 'taste.json') throw new Error('Required private CSV cannot be optional');
+  if (optional && !path.startsWith('annotations/') && !path.startsWith('briefs/') && !path.startsWith('requests/') && path !== STATE_FILE && path !== PEOPLE_FILE && path !== LISTS_FILE && path !== 'daily/current.json' && path !== 'daily_handled.json' && path !== 'activity.json' && path !== 'taste.json') throw new Error('Required private CSV cannot be optional');
   const binding = { epoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token, superseded };
   const dropped = () => !!(superseded && superseded());
   const url = ghApiBase() + '/contents/' + path.split('/').map(encodeURIComponent).join('/') + '?ref=' + encodeURIComponent(ref || GH_BRANCH);
@@ -3808,6 +3855,7 @@ async function privateBlobText(path, info, binding, held) {
    changes nothing: the files are read one by one, as before (privateReadFile). superseded: as for privateReadFile. */
 const LIBRARY_LISTING_CAP = 1024 * 1024;
 async function privateReadLibrary(superseded = null) {
+  if (typeof dailyShown === 'function' && dailyShown()) return privateReadBundleByFile(superseded); // Daily and its library share one commit.
   tasteSupersede();   // late taste responses from an earlier library refresh are discarded
   const epoch = capturePrivateEpoch();
   const binding = { epoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token, superseded };
@@ -3860,10 +3908,11 @@ function libraryListing(listing) {
    commit and optional, fifth (peopleRead). */
 async function privateReadBundleByFile(superseded = null) {
   const commit = await privateHeadCommit(superseded);
+  const daily = typeof dailyShown === 'function' && dailyShown() ? await dailyReadBundle(commit, superseded) : [];
   return Promise.all(LIBRARY_CSVS.map(name => privateReadFile(name, false, superseded, syncedHeld(name), commit))
     .concat([privateReadFile(STATE_FILE, true, superseded, syncedHeld(STATE_FILE), commit),
       peopleRead(privateReadFile(PEOPLE_FILE, true, superseded, syncedHeld(PEOPLE_FILE), commit)),
-      privateReadFile(LISTS_FILE, true, superseded, syncedHeld(LISTS_FILE), commit)]));
+      privateReadFile(LISTS_FILE, true, superseded, syncedHeld(LISTS_FILE), commit)].concat(daily)));
 }
 /* Phase 21 (Sol's correction 5): the people file's read never fails the library. A lock, a definite refusal and a
    superseded load go on as they would for any file (Phase 19's guards); any other failure (a network error, a wait,
@@ -3890,7 +3939,7 @@ async function privateHeadCommit(superseded = null) {
    a lock clears them all (Synced is declared beside Private). Private libraries only: a public one reads its file
    before every save, as before. */
 const LIBRARY_CSVS = ['papers_database.csv', 'interests_database.csv', 'groups_database.csv'];
-const SYNCED_FILES = LIBRARY_CSVS.concat(['papers_state.csv', 'people_database.csv', 'reading_lists.json']);   // Phase 15 (B2): the state file keeps its pair too (and is cached, LIBCACHE_FILES); Phase 21 (B2): so does the people file
+const SYNCED_FILES = LIBRARY_CSVS.concat(['papers_state.csv', 'people_database.csv', 'reading_lists.json', 'daily_handled.json']);   // Phase 15 (B2): the state file keeps its pair too (and is cached, LIBCACHE_FILES); Phase 21 (B2): so does the people file
 function syncedKeep(file, sha, text, token) {
   if (!isPrivate() || !SYNCED_FILES.includes(file) || !/^[0-9a-f]{40}$/.test(sha) || typeof text !== 'string' || !token || token !== Private.token) return;
   Synced.set(file, Object.freeze({ sha, text, target: _acceptedTarget, epoch: Private.epoch, token }));
@@ -4202,7 +4251,7 @@ async function loadPrivateLibrary() {
     const lists = files[5] ? files[5].text : null; listDefsParse(lists);
     const people = peopleTextOf(files[4]);   // Phase 21 (B2): the fifth, the people file: text, null, or false (unread)
     if (_papersText) {
-      const out = refreshReceive({ req, saveGen, how: 'startup', texts: { papers: texts[0], interests: texts[1], groups: texts[2], state: texts[3] ?? null, people, lists } });
+      const out = refreshReceive({ req, saveGen, how: 'startup', texts: { papers: texts[0], interests: texts[1], groups: texts[2], state: texts[3] ?? null, people, lists, dailyHandled: files[6] ? files[6].text : files.length > 6 ? null : undefined, dailyCurrent: files[7] ? files[7].text : files.length > 6 ? null : undefined } });
       return out.status === 'accepted' || out.status === 'deferred';
     }
     const bundle = libraryBundle(texts[0], texts[3] ?? null), papers = bundle.rows;   // Phase 15 (B2): the pair, checked before anything is adopted
@@ -4222,6 +4271,7 @@ async function loadPrivateLibrary() {
       if (peopleRestore(backup)) announceRestore(backup);
       buildGroupOrder(); applyPapers(papers, texts[0], bundle); _ownerDecisionDone = true;
       requestsLoad();
+      if (files.length > 6) dailyReceive({ dailyHandled: files[6] ? files[6].text : null, dailyCurrent: files[7] ? files[7].text : null });
       document.getElementById('privateAccess').hidden = true; document.documentElement.classList.remove('private-locked');
       applyHash();
     });
@@ -4822,6 +4872,7 @@ async function paperFieldsPair(headers) { const _authEpoch = capturePrivateEpoch
 async function savePaperFields(headers, canon) { const _authEpoch = capturePrivateEpoch(); requireOwner();
   for (let attempt = 0; ; attempt++) {
     const pair = await privateAwait(paperFieldsPair(headers), _authEpoch); requireOwner();
+    if (typeof Daily !== 'undefined' && Daily.edits.size) { const bundle = await privateAwait(saveDailyBundle(headers, canon), _authEpoch); return { ...bundle.paperOut, dailyBundle: bundle }; }
     const file = pair.layout === 5 ? STATE_FILE : 'papers_database.csv', got = file === STATE_FILE ? pair.state : pair.papers;
     Layout.now = pair.layout;   // the layout GitHub has now (papersHas reads it)
     const out = file === STATE_FILE ? mergeState(got.text, canon) : Object.assign(mergePapers(got.text, canon), { file });
@@ -4852,7 +4903,7 @@ function rowSnapshot(rows, key, saved) {          // saved: a backup's own snaps
   return m;
 }
 let _backupTimer = null, _restoreAnnounced = false;
-function anyDirty() { return _stateDirty || _interestsDirty || _groupsDirty || People.dirty || ListDefs.edits.size > 0; }
+function anyDirty() { return _stateDirty || _interestsDirty || _groupsDirty || People.dirty || ListDefs.edits.size > 0 || (typeof Daily !== 'undefined' && Daily.edits.size > 0); }
 function paperFields(p) { const o = {}; EDITABLE_FIELDS.forEach(f => o[f] = p[f] || ''); return o; }
 function scheduleBackup() { if (!isOwner()) return; requireOwner(); clearTimeout(_backupTimer); _backupTimer = setTimeout(privateCallback(writeBackup), 250); }
 function writeBackup() {
@@ -4863,6 +4914,7 @@ function writeBackup() {
     // only a successful push or Reset clears it (clearBackup).
     if (!anyDirty()) return;
     const b = { savedAt: new Date().toISOString() };
+    if (typeof dailyBackup === 'function' && dailyBackup()) b.daily = dailyBackup();
     if (_stateDirty) {
       flushStateToCSV();
       const present = new Set(), papers = {}, loaded = {};
@@ -4909,6 +4961,7 @@ function announceRestore(b) {
 function restorePapersFromBackup(kept = [], bases = new Map()) {
   _loadedPaperFields = new Map(allPapers.map(p => [p.id, paperFields(p)]));
   const b = readBackup();
+  if (typeof dailyRestore === 'function' && dailyRestore(b)) _stateDirty = true;
   // A row deleted on GitHub with an edit here that never got there stays, flagged, with its old baseline, so the edit
   // stays pending and the next save treats it as GitHub's deletion (papersSaved), never as a row to add back. It is
   // told once. The backup's own gone rows (b.gone) come back the same way after a reload, while their edit is still
@@ -5379,8 +5432,8 @@ function parseLibrary(texts) {
 async function fetchLibraryTexts(overtaken = null) { const _authEpoch = capturePrivateEpoch();
   requireTarget();
   const names = ['papers_database.csv', 'interests_database.csv', 'groups_database.csv'];
-  let texts;
-  if (isPrivate()) { const files = await privateAwait(privateReadLibrary(overtaken), _authEpoch); texts = files.slice(0, 4).map(file => file ? normalizeNewlines(file.text) : null).concat([peopleTextOf(files[4]), files[5] ? files[5].text : null]); }
+  let texts, dailyFiles;
+  if (isPrivate()) { const files = await privateAwait(privateReadLibrary(overtaken), _authEpoch); dailyFiles = files.length > 6 ? files.slice(6) : null; texts = files.slice(0, 4).map(file => file ? normalizeNewlines(file.text) : null).concat([peopleTextOf(files[4]), files[5] ? files[5].text : null]); }
   else if (CSV_BASE_URL) texts = await privateAwait(Promise.all(names.map(name => fetchNormalized(csvUrl(name), { fallback: false }))), _authEpoch);
   else texts = await privateAwait(Promise.all(names.map(name => fetchLocal(name))), _authEpoch);
   requireTarget();
@@ -5388,7 +5441,7 @@ async function fetchLibraryTexts(overtaken = null) { const _authEpoch = captureP
   // Phase 15 (B2): the fourth, papers_state.csv, is a private library's only (root's ruling R1): a public page reads
   // the three files as before, and its pull refuses a split papers file (libraryBundle). Phase 21: so is the fifth, the
   // people file (text, null when absent, false when unread); a result without it (undefined) leaves People alone.
-  return { papers: texts[0], interests: texts[1], groups: texts[2], state: texts[3] ?? null, people: isPrivate() ? texts[4] : undefined, lists: isPrivate() ? texts[5] : undefined };
+  return { papers: texts[0], interests: texts[1], groups: texts[2], state: texts[3] ?? null, people: isPrivate() ? texts[4] : undefined, lists: isPrivate() ? texts[5] : undefined, dailyHandled: dailyFiles ? dailyFiles[0]?.text ?? null : undefined, dailyCurrent: dailyFiles ? dailyFiles[1]?.text ?? null : undefined };
 }
 /* A result: { req, saveGen, how, view, texts: { papers, interests, groups } } (a text is null when the result has no
    copy of that file; Phase 21: texts.people, the people file, is undefined when the result does not carry it, which a
@@ -5424,10 +5477,11 @@ function refreshReceive(r) {
   const metaNew = (texts.interests !== null && texts.interests !== _interestsText) || (texts.groups !== null && texts.groups !== _groupsText)
     || (texts.people !== undefined && texts.people !== People.text) || (texts.lists !== undefined && texts.lists !== ListDefs.text);   // Phase 21: another device followed someone
   const pulled = r.how !== 'startup', readerOpen = document.getElementById('reader').classList.contains('open'), ms = document.getElementById('mainScroll');
-  const ok = !readerOpen && (r.how === 'show' ? !(_paperViewActive || _searchActive || _listViewActive)
+  const ok = !(typeof Daily !== 'undefined' && (Daily.press || Daily.sheet)) && !readerOpen && (r.how === 'show' ? !(_paperViewActive || _searchActive || _listViewActive)
     : pulled ? feedActive() && (r.view === undefined || feedViewKey() === r.view) && ms.scrollTop <= 40 && (!quiet || feedIdle()) : quietSwapOK());
   if (!ok) {
     if (papersNew || metaNew) { Refresh.staged = { ...r, parsed }; if (quiet) returnOffer(Refresh.staged); else refreshOffer(Refresh.staged, papersNew); }
+    else if (texts.dailyCurrent !== undefined) Refresh.staged = { ...r, parsed };   // keep Daily's payload and request ordering even when library bytes match
     else if (shares) Refresh.staged = null;   // a newer copy with nothing new: the older staged one is out of date
     return { status: 'deferred', fresh: papersNew || metaNew };
   }
@@ -5453,6 +5507,7 @@ function refreshReceive(r) {
     // the sheets reconciled, the + editor kept), else the view that shows, as on any received data
     if (feedActive()) { Feed.fresh = true; renderFeed(); jumpScroll(ms, 0); }
     else applyHash();
+    if (typeof dailyReceive === 'function') dailyReceive(texts);
   });
   const on = feedActive(), ids = on ? Feed.keys.filter(k => !before.has(k)) : everyPaper().filter(p => !before.has(p.id)).map(p => p.id);
   const all = on ? feedPool().map(paperKey).filter(k => !before.has(k)) : ids;
@@ -6733,11 +6788,13 @@ function feedEligible(k) {
 /* Still in the library and not hidden: what 🔖, the chip and ↗ need */
 function feedLive(k) { const p = feedRow(k); return !!p && !p._goneRemote && !isHiddenRow(p); }
 function feedLayout() { return matchMedia(FEED_PHONE).matches ? 'phone' : matchMedia(FEED_LAND).matches ? 'land' : 'laptop'; }
-function feedActive() { return currentTab === 'all' && Feed.mounted && !_paperViewActive && !_listViewActive && !_searchActive; }
+function feedActive() { return Feed.mode !== 'daily' && currentTab === 'all' && Feed.mounted && !_paperViewActive && !_listViewActive && !_searchActive; }
 /* Leaving the feed (another tab, a paper, search, a list), opening the reader over it, choosing another tab: the save
    sheet, the new project's field and an Other sheet for a post close, and every press under way ends (Feed.gen).
    The records stay: back from a paper page or the reader each post shows its decision with its Undo again. */
 function feedLeave() {
+  document.body.classList.remove('daily-mode');
+  if (typeof dailyCancelPress === 'function') { dailyCancelPress(); clearTimeout(Daily.timer); Daily.timer = 0; }
   Feed.pressDeferred = false;
   Feed.gen++;
   pullAbandon();
@@ -6777,6 +6834,7 @@ function sheetBtn(sh) { return sh.btn || postSaveBtn(sh.key); }
    other time it is drawn again where it is, the same posts in the same order, so Back from a paper page lands where
    it was. The head (the tabs and the new project's field) is never drawn over while that field is open. */
 function renderFeed() {
+  if (Feed.mode === 'daily' && typeof dailyView === 'function' && dailyView() && typeof dailyRender === 'function') { dailyRender(); return; }
   const layout = feedLayout(), b = document.body.classList;
   b.add('feed-mode');
   ['phone', 'land', 'laptop'].forEach(l => b.toggle('feed-' + l, layout === l));
@@ -6790,6 +6848,7 @@ function renderFeed() {
     if (Feed.obs) { Feed.obs.disconnect(); Feed.obs = null; }   // it watched the old sentinel
     feedHeadWatch();
   }
+  feed.classList.remove('daily-feed'); document.body.classList.remove('daily-mode');
   // Phase 17: the interest is reconciled first (renamed: it follows; gone: All, and Feed.switched), so the decision below
   // sees it and one rebuild draws the view the controls show. Nothing called from here draws the feed again (drawing).
   const was = Feed.drawing;
@@ -6831,9 +6890,9 @@ function renderFeed() {
    (#list/<name>, from Lists): on it the row hides and the list's bar has a way back to Lists. */
 function feedTabNames() { return followingOn() ? ['following'] : []; }
 function feedTabsHTML() {
-  const sel = projectMode() ? null : Feed.mode === 'following' && followingOn() ? 'following' : '';   // a list's page: none (the row hides)
+  const sel = projectMode() ? null : Feed.mode === 'daily' && typeof dailyShown === 'function' && dailyShown() ? 'daily' : Feed.mode === 'following' && followingOn() ? 'following' : '';   // a list's page: none (the row hides)
   const tab = (v, label) => { const on = v === sel; return `<button type="button" class="tab${on ? ' on' : ''}" role="tab" aria-selected="${on}" data-n="${v}" onclick="feedTabTap(this)">${label}</button>`; };
-  return tab('', 'For you') + Feed.tabNames.map(v => tab(v, 'Following')).join('');
+  return tab('', 'For you') + Feed.tabNames.map(v => tab(v, 'Following')).join('') + (typeof dailyShown === 'function' && dailyShown() ? tab('daily', 'Daily') : '');
 }
 function feedTabsShow() {
   const row = document.getElementById('feedTabs');
@@ -6874,7 +6933,7 @@ function feedTabsSync() {
   if (!el || !Feed.tabNames) return;
   const names = feedTabNames();
   if (names.length !== Feed.tabNames.length || names.some((n, i) => n !== Feed.tabNames[i])) { const row = document.getElementById('feedTabs'), x = row ? row.scrollLeft : 0; feedTabsRender(); if (row) row.scrollLeft = x; return; }
-  const sel = projectMode() ? null : Feed.mode === 'following' && followingOn() ? 'following' : '';
+  const sel = projectMode() ? null : Feed.mode === 'daily' && typeof dailyShown === 'function' && dailyShown() ? 'daily' : Feed.mode === 'following' && followingOn() ? 'following' : '';
   el.querySelectorAll('.tab').forEach(b => {
     const on = (b.dataset.n || '') === sel;
     b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on));
@@ -6892,9 +6951,9 @@ function revealFeedTab() {
    one it goes back to the top of the feed, as X does */
 function feedTabTap(btn) {
   if (!btn || btn.disabled) return;
-  const mode = btn.dataset.n === 'following' ? 'following' : 'foryou';
+  const mode = btn.dataset.n === 'daily' && typeof dailyShown === 'function' && dailyShown() ? 'daily' : btn.dataset.n === 'following' ? 'following' : 'foryou';
   if (mode === Feed.mode && !projectMode()) { jumpScroll(document.getElementById('mainScroll'), 0); return; }
-  homeGo(mode === 'following' ? '#following' : '#all', true);
+  homeGo(mode === 'daily' ? '#daily' : mode === 'following' ? '#following' : '#all', true);
 }
 /* [ and ]: the other home tab */
 function feedTabStep(d) {
@@ -7579,7 +7638,7 @@ document.addEventListener('keydown', e => {
 const Presses = new Map();
 function pressControl(t) {
   if (!t || !t.closest) return null;
-  return t.closest('#feedList .post .ic, #feedList .post .chip, #feedList .post .act, #feedList .post.gone button, #feedTabs .tab, #feedTabs .tab-add, #feedCtl button, #feedSortMenu button, #feedInterestMenu button, #listBar button, .list-menu button, #saveSheet [data-guard], #hideSheet [data-guard], #hideSheet .hide-own input')
+  return t.closest('.daily-action, .daily-interest, .daily-more') || t.closest('#feedList .post .ic, #feedList .post .chip, #feedList .post .act, #feedList .post.gone button, #feedTabs .tab, #feedTabs .tab-add, #feedCtl button, #feedSortMenu button, #feedInterestMenu button, #listBar button, .list-menu button, #saveSheet [data-guard], #hideSheet [data-guard], #hideSheet .hide-own input')
     || t.closest('.sh-panel') || t.closest('#saveSheet') || t.closest('.hide-box') || t.closest('#hideSheet') || t.closest('#feedList .post')
     || t.closest('.save-dd .save-dd-item, .copy-dd .copy-dd-item, #paperDetail .pd-bar .pd-act[data-act], #libraryContent .top-row .p-actions [data-act]')   // Phase 13e: the picker, the Copy menu, the paper page's bar and Library's row icons
     || t.closest('#paperDetail .pd-related .feed-item [data-act], #libraryContent [data-lib] .library-actions button[data-act]')   // and a page's related papers, and a Library group's header actions
@@ -7604,6 +7663,7 @@ function markOf(k, act) {   // a control's value as it shows now: the paper's st
 }
 function pressWhat(el) {
   if (!el || !el.closest) return null;
+  if (el.closest('.daily-feed') && el.matches('.daily-action, .daily-interest, .daily-more')) return { kind: 'daily', dailyGen: Number(el.dataset.dailyGen), ident: 'daily:' + el.dataset.dailyGen + ':' + (el.dataset.dailyPaper || '') + ':' + (el.dataset.dailyAction || el.dataset.interest || 'more') };
   const post = el.closest('#feedList .post');
   if (post) { const act = el === post ? 'page' : el.dataset.act || ''; return { kind: 'post', act, key: post.dataset.key || '', n: act === 'chip' ? el.dataset.n || '' : undefined, ident: `post:${post.dataset.key || ''}:${act}:${el.dataset.reason || ''}:${act === 'chip' ? el.dataset.n || '' : ''}` }; }
   // Phase 25: a list's bar (its ⋯, + Add a paper, its interest), and a row of a list's menu, to that opening of it
@@ -7641,7 +7701,7 @@ function pressBegin(id, el) {
   const key = w.kind === 'post' || w.kind === 'dd' || w.kind === 'pd' || w.kind === 'lib' || w.kind === 'rel' ? w.key : w.kind === 'sheet' ? (Feed.sheet ? Feed.sheet.key : null) : hs ? hs.dataset.key || null : null;
   const r = w.kind === 'post' ? Feed.recs.get(key) : null;
   const on = w.kind === 'sheet' && w.n !== null && w.n !== undefined ? sheetHas(w.n, key) : w.kind === 'dd' && w.n ? ddHas(w.n, key) : w.kind === 'pd' || w.kind === 'lib' || w.kind === 'rel' ? markOf(key, w.act) : w.kind === 'libhead' ? libHeadMark(w.group) : w.kind === 'post' ? postMark(key, w.act, w.n) : null;
-  Presses.set(id, { ident: w.ident, kind: w.kind, act: w.act || '', key, n: w.n === undefined ? null : w.n, gen: Feed.gen, project: Feed.project,
+  Presses.set(id, { ident: w.ident, dailyGen: w.dailyGen, kind: w.kind, act: w.act || '', key, n: w.n === undefined ? null : w.n, gen: Feed.gen, project: Feed.project,
     rec: r ? r.id : 0, tabsGen: Feed.tabsGen, edit: Feed.edit ? Feed.edit.id : 0, sheet: Feed.sheet ? Feed.sheet.id : 0, sedit: w.sedit || 0,
     hs: hs ? Number(hs.dataset.hs || 0) : 0, hrec: hs ? Number(hs.dataset.rec || 0) : 0,
     dd: w.dd || 0, copy: w.copy || 0, group: w.group || '', page: w.page || '', ctlGen: Feed.ctlGen, menu: w.menu || 0, on, up: 0, dead: false, el });
@@ -7659,7 +7719,8 @@ function postMark(k, act, n) {
 function feedRecLive(id, kind) { const r = id ? feedRecById(id) : null; return !!r && Feed.recs.get(r.key) === r && !r.stale && (!kind || r.kind === kind); }
 /* What a press was bound to still holds */
 function pressStill(pr) {
-  if (pr.anon) return false;   // from before a lock: nothing it could act on survives
+  if (pr.anon) return false;
+  if (pr.kind === 'daily') return pr.gen === Feed.gen && typeof dailyView === 'function' && dailyView() && pr.dailyGen === Daily.generation;   // from before a lock: nothing it could act on survives
   if (pr.kind === 'sheet') {   // the same sheet; for a row its list still a place to save to with the paper in it or not, as when the press began; for Add the same opening of the field
     if (pr.sheet !== (Feed.sheet ? Feed.sheet.id : 0)) return false;
     if (pr.act === 'add') return !!pr.sedit && pr.sedit === (Feed.sheet.edit || 0);
@@ -7761,6 +7822,7 @@ function pressLostCapture(e) {
 }
 function pressResumeFeed() {
   setTimeout(privateCallback(() => {
+    if (typeof dailyAdopt === 'function' && typeof dailyView === 'function' && dailyView()) dailyAdopt();
     if (Feed.pressDeferred && !pressUnresolved() && feedActive() && quietSwapOK() && feedIdle()
         && !document.getElementById('reader').classList.contains('open')) renderFeed();
   }), 0);   // the release's click and its action finish first
@@ -7840,7 +7902,7 @@ function openSaveSheet(ev, btn, k) {
   requireOwner();
   if (Feed.sheet) { closeSaveSheet(); return; }   // 🔖 or b again: it closes
   k = k || Feed.focus;
-  const out = btn && btn.closest && !btn.closest('#feedList') ? btn : null;   // opened outside the feed: its button is its place
+  const out = btn && btn.closest && (!btn.closest('#feedList') || btn.closest('.daily-feed')) ? btn : null;   // opened outside the feed: its button is its place
   if (!k || !feedLive(k) || (out ? !out.isConnected : !feedActive() || !postEl(k))) return;
   hideToast();
   const names = projectNames(), keyed = !ev || ev.detail === 0, from = document.activeElement;
@@ -7913,6 +7975,8 @@ function sheetToggle(n, sid) {
   const sh = Feed.sheet;
   if (!sh || sh.id !== sid || !sheetPlace(sh) || !feedLive(sh.key) || !sheetDestOK(n)) return false;
   const k = sh.key, on = !(hasList(n) && libraryLists[n].includes(k));
+  const dailyDelta = typeof Daily !== 'undefined' && Daily.sheet ? { fields: {}, lists: [dailyListDelta(n, k, !on, on)] } : null;
+  if (dailyDelta && !dailyTrySheetChange(k, dailyDelta)) return false;
   if (on) (hasList(n) ? libraryLists[n] : (libraryLists[n] = [])).push(k);
   else libraryLists[n] = libraryLists[n].filter(x => x !== k);
   persistLists(); updateLibraryBadge();
@@ -7968,6 +8032,8 @@ function sheetNewSubmit() {
   if (listGone(typed) || sh.dead.has(typed)) { say(goneMessage(typed)); input.focus(); return false; }   // its old rows stay off, and so does the name
   const name = checkListName(input.value, { say });
   if (!name) { input.focus(); return false; }
+  const dailyDelta = typeof Daily !== 'undefined' && Daily.sheet ? { fields: {}, lists: [dailyListDelta(name, sh.key, false, true)] } : null;
+  if (dailyDelta && !dailyTrySheetChange(sh.key, dailyDelta)) return false;
   libraryLists[name] = [sh.key];
   sh.names.push(name);
   s.querySelector('.sh-list').insertAdjacentHTML('beforeend', sheetRowHTML(name));
@@ -8037,6 +8103,7 @@ function closeSaveSheet() {
   const inside = s.contains(document.activeElement);
   if (inside) document.activeElement.blur();   // the feed's keys work again
   s.classList.remove('open', 'pop'); s.innerHTML = ''; delete s.dataset.sheet;
+  if (typeof dailySheetClosed === 'function') dailySheetClosed();
   if (sh && sh.from && inside) { const to = sh.from.isConnected ? sh.from : save; if (to) to.focus(); }   // opened by a key: back where it was
 }
 /* The Other sheet of a passed post closes when its pass is no longer the post's live record */
@@ -8164,11 +8231,11 @@ function projectDrop(name) {
    #all is For you, #following Following, #list/<name> a list's page (the feed's project mode). The view follows the
    address (applyHash, through setHomeView); a change made here (a list renamed or deleted, a list that went
    elsewhere) puts the address right in place (homeAddressSync). */
-function homeHash() { return projectMode() ? '#list/' + encodeURIComponent(Feed.project) : Feed.mode === 'following' && followingOn() ? '#following' : '#all'; }
-function isHomeHash(h) { return h === '' || h === '#' || h === '#all' || h === '#following' || h.startsWith('#list/'); }
+function homeHash() { if (Feed.mode === 'daily' && typeof dailyShown === 'function' && dailyShown()) return '#daily'; return projectMode() ? '#list/' + encodeURIComponent(Feed.project) : Feed.mode === 'following' && followingOn() ? '#following' : '#all'; }
+function isHomeHash(h) { return h === '' || h === '#' || h === '#all' || h === '#following' || h === '#daily' || h.startsWith('#list/'); }
 /* Sets the home's view from its address: For you or Following, and a list's page or none. True when it changed. */
 function setHomeView(mode, project) {
-  mode = mode === 'following' && followingOn() ? 'following' : 'foryou';
+  mode = mode === 'daily' && typeof dailyShown === 'function' && dailyShown() ? 'daily' : mode === 'following' && followingOn() ? 'following' : 'foryou';
   project = isOwner() && project ? project : null;
   if (mode === Feed.mode && project === Feed.project) return false;
   Feed.mode = mode; Feed.project = project; Feed.switched = true;
@@ -8370,6 +8437,492 @@ function postNearHTML(k) {
   const name = esc(Feed.ranked), found = how === 'found' ? foundHTML(feedRow(k) || {}) : '';
   return `<p class="near"><span aria-hidden="true">&#9670;</span> ${found ? found.charAt(0).toUpperCase() + found.slice(1) : `Similar to a paper in ${name}`}</p>`;
 }
+/* ===== DAILY: private recommendations and owner decisions =====
+   Worker output stays in memory. Only the owner's immutable operation ledger is cached and saved.
+   Root controls exposure independently of the worker. */
+const SHOW_DAILY_TAB = true;
+const DAILY_CURRENT = 'daily/current.json';
+const DAILY_HANDLED = 'daily_handled.json';
+const DAILY_CURRENT_CAP = 1024 * 1024;
+const DAILY_HANDLED_CAP = 4 * 1024 * 1024;
+const Daily = { timer: 0, generation: 0, seq: 0, pending: null, active: null, interest: null, press: null, undo: null, handled: { schema: 1, operations: {}, undone: [] }, edits: new Map(), status: 'waiting', destinations: new Map(), sheet: null };
+function dailyShown() { return SHOW_DAILY_TAB && isPrivate() && Private.authorized && isOwner(); }
+function dailyView() { return dailyShown() && Feed.mode === 'daily' && currentTab === 'all' && !_paperViewActive && !_listViewActive && !_searchActive; }
+function dailyCanonical(v) {
+  if (v && typeof v === 'object') return Array.isArray(v) ? '[' + v.map(dailyCanonical).join(',') + ']' : '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + dailyCanonical(v[k])).join(',') + '}';
+  return JSON.stringify(v);
+}
+async function dailyHash(v) { const bytes = new TextEncoder().encode(typeof v === 'string' ? v : dailyCanonical(v)); return [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(n => n.toString(16).padStart(2, '0')).join(''); }
+function dailyJSON(raw, cap) {
+  if (typeof raw !== 'string' || new TextEncoder().encode(raw).length > cap) throw new Error('Invalid Daily document');
+  const tokens = raw.match(/"(?:\\.|[^"\\])*"|[{}\[\]:,]/g) || [], stack = [];
+  tokens.forEach((t, i) => { if (t === '{') stack.push(new Set()); else if (t === '[') stack.push(null); else if (t === '}' || t === ']') stack.pop(); else if (t[0] === '"' && tokens[i + 1] === ':') { const key = JSON.parse(t), seen = stack[stack.length - 1]; if (!seen || seen.has(key)) throw new Error('Invalid Daily document'); seen.add(key); } });
+  const numbers = raw.replace(/"(?:\\.|[^"\\])*"/g, '""').match(/-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g) || [];
+  if (numbers.some(n => /[.eE]/.test(n))) throw new Error('Invalid Daily document');
+  return JSON.parse(raw);
+}
+function dailyCheck(doc, handled) {
+  const bad = () => { throw new Error('Invalid Daily document'); };
+  const obj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+  const exact = (v, keys) => { if (!obj(v) || Object.keys(v).length !== keys.length || !keys.every(k => hasOwn(v, k))) bad(); };
+  const match = (v, re) => { if (typeof v !== 'string' || !re.test(v)) bad(); };
+  const text = (v, cap = 400) => { if (typeof v !== 'string' || !v.length || [...v].length > cap || /[\x00-\x1f]/.test(v)) bad(); };
+  const hex = v => match(v, /^[0-9a-f]{64}$/), slot = v => match(v, /^[0-9a-f]{32}$/), uid = v => match(v, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+  const paper = v => { match(v, /^[a-z0-9][a-z0-9-]{0,199}$/); if (v.startsWith('up-')) bad(); };
+  const date = v => { match(v, /^\d{4}-\d{2}-\d{2}$/); const d = new Date(v + 'T00:00:00Z'); if (v.startsWith('0000') || !Number.isFinite(+d) || d.toISOString().slice(0, 10) !== v) bad(); };
+  const stamp = v => { match(v, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/); date(v.slice(0, 10)); const d = new Date(v); if (!Number.isFinite(+d) || d.toISOString().replace('.000Z', 'Z') !== v) bad(); };
+  if (handled) {
+    exact(doc, ['schema', 'operations', 'undone']); if (doc.schema !== 1 || !obj(doc.operations) || !Array.isArray(doc.undone)) bad();
+    doc.undone.forEach(uid);
+    Object.entries(doc.operations).forEach(([id, o]) => {
+      uid(id); exact(o, ['paper', 'pool', 'kind', 'at', 'predecessor', 'card', 'delta'].concat(hasOwn(o, 'predecessors') ? ['predecessors'] : [])); paper(o.paper); hex(o.pool); stamp(o.at);
+      if (!['pass', 'save', 'read'].includes(o.kind)) bad(); if (o.predecessor !== null) { uid(o.predecessor); if (o.predecessor === id) bad(); }
+      if (hasOwn(o, 'predecessors')) {
+        if (!Array.isArray(o.predecessors)) bad();
+        o.predecessors.forEach(p => { uid(p); if (p === id) bad(); });
+        if (JSON.stringify(o.predecessors) !== JSON.stringify([...new Set(o.predecessors)].sort()) || (o.predecessor !== null && !o.predecessors.includes(o.predecessor))) bad();
+      }
+      exact(o.card, ['day', 'interest', 'slot', 'position']); date(o.card.day); text(o.card.interest); slot(o.card.slot); if (!Number.isInteger(o.card.position) || o.card.position < 0 || o.card.position >= 10) bad();
+      exact(o.delta, ['fields', 'lists']); if (!obj(o.delta.fields) || !Array.isArray(o.delta.lists)) bad();
+      Object.entries(o.delta.fields).forEach(([f, v]) => { if (!['is_read', 'is_passed'].includes(f)) bad(); exact(v, ['before', 'after']); if (![v.before, v.after].every(x => ['', 'false', 'true'].includes(x))) bad(); });
+      const ids = new Set(); o.delta.lists.forEach(l => { exact(l, ['id', 'name', 'before', 'after', 'added_at']); text(l.id, 200); text(l.name, 200); if (ids.has(l.id)) bad(); ids.add(l.id); if (typeof l.before !== 'boolean' || typeof l.after !== 'boolean') bad(); if (l.added_at !== null) stamp(l.added_at); });
+    });
+    doc = { ...doc, undone: [...new Set(doc.undone)].sort() };
+  } else {
+    exact(doc, ['schema', 'day', 'generated_at', 'generation', 'library_commit', 'handled_sha256', 'blocked', 'sections']); if (doc.schema !== 1) bad(); date(doc.day); stamp(doc.generated_at); hex(doc.generation); hex(doc.handled_sha256); match(doc.library_commit, /^[0-9a-f]{40}$/);
+    if (!Array.isArray(doc.blocked) || !Array.isArray(doc.sections)) bad(); doc.blocked.forEach(hex); if (JSON.stringify(doc.blocked) !== JSON.stringify([...new Set(doc.blocked)].sort())) bad();
+    const names = new Set(), papers = new Set(), pools = new Set(), slots = new Set();
+    doc.sections.forEach(s => { exact(s, ['interest', 'level', 'cards']); text(s.interest); if (names.has(s.interest) || !['definitely', 'probably', 'mildly', 'maybe'].includes(s.level) || !Array.isArray(s.cards) || s.cards.length > 10) bad(); names.add(s.interest);
+      s.cards.forEach(c => { exact(c, ['paper', 'pool', 'slot']); paper(c.paper); hex(c.pool); slot(c.slot); if (papers.has(c.paper) || pools.has(c.pool) || slots.has(c.slot) || doc.blocked.includes(c.pool)) bad(); papers.add(c.paper); pools.add(c.pool); slots.add(c.slot); });
+    });
+  }
+  if (new TextEncoder().encode(dailyCanonical(doc)).length > (handled ? DAILY_HANDLED_CAP : DAILY_CURRENT_CAP)) bad();
+  return doc;
+}
+async function dailyParse(raw) {
+  const d = dailyCheck(dailyJSON(raw, DAILY_CURRENT_CAP), false), bare = { ...d }; delete bare.generation;
+  if (await dailyHash(bare) !== d.generation) throw new Error('Invalid Daily generation'); return d;
+}
+function dailyHandledParse(raw) { return dailyCheck(raw === null ? { schema: 1, operations: {}, undone: [] } : dailyJSON(raw, DAILY_HANDLED_CAP), true); }
+async function dailyReadBundle(commit, superseded) {
+  const read = name => privateReadFile(name, true, superseded, name === DAILY_HANDLED ? syncedHeld(name) : null, commit).catch(e => { if (e.privateAuth || e.definite || e.target || superseded && superseded()) throw e; return { text: false }; });
+  return Promise.all([read(DAILY_HANDLED), read(DAILY_CURRENT)]);
+}
+async function dailyReceive(texts) {
+  if (!isPrivate() || !Private.authorized || !isOwner() || texts.dailyCurrent === undefined) return;
+  const epoch = capturePrivateEpoch(), seq = ++Daily.seq;
+  try {
+    const handled = dailyHandledParse(texts.dailyHandled ?? null), current = texts.dailyCurrent === null ? null : await dailyParse(texts.dailyCurrent);
+    checkPrivateEpoch(epoch); if (seq !== Daily.seq) return;
+    // Snapshot digests bind the worker's input, not the latest owner commit. Keep every newer decision.
+    Daily.handled = dailyMergeHandled(dailyUnion(handled, Daily.handled), Daily.edits);
+    Daily.pending = { current, epoch }; dailyAdopt();
+  } catch (e) { try { checkPrivateEpoch(epoch); } catch (_) { return; } if (seq === Daily.seq) { dailyCancelPress(); Daily.generation++; Daily.active = Daily.pending = null; Daily.status = 'retry'; if (typeof dailyRender === 'function' && dailyView()) dailyRender(); } }
+}
+function dailySections() {
+  if (!Daily.active) return [];
+  const rank = { definitely: 0, probably: 1, mildly: 2, maybe: 2 };
+  return Daily.active.sections.filter(s => allInterests.some(i => i.status === 'confirmed' && i.interest_name === s.interest && i.relevance_mapping === s.level)).slice().sort((a, b) => rank[a.level] - rank[b.level] || a.interest.localeCompare(b.interest));
+}
+function dailyRowMatches(p, interest) {
+  const strengths = strengthView(p).strengths, confirmed = allInterests.filter(i => i.status === 'confirmed').map(i => i.interest_name);
+  const best = confirmed.some(n => strengths[n] === 'about') ? 'about' : 'partly';
+  return strengths[interest] === best;
+}
+function dailyControlHeld() { return typeof Presses !== 'undefined' && [...Presses.values()].some(p => p.kind === 'daily' && !p.up && !p.dead); }
+function dailyAdopt() {
+  if (!Daily.pending || Daily.press || Daily.sheet || dailyControlHeld()) return false;
+  const { current, epoch } = Daily.pending; checkPrivateEpoch(epoch);
+  const valid = !current || current.sections.every(s => s.cards.every(c => { const p = feedRow(c.paper); return p && !p._goneRemote; }));
+  if (!valid) { Daily.status = 'waiting'; Daily.active = null; Daily.pending = null; return false; }
+  Daily.pending = null;
+  const changed = !Daily.active || !current || Daily.active.generation !== current.generation;
+  Daily.active = current; Daily.status = current ? 'ready' : 'waiting';
+  if (changed) { Daily.generation++; Daily.destinations = new Map(); }
+  const sections = dailySections(); if (!sections.some(s => s.interest === Daily.interest)) Daily.interest = sections[0]?.interest || null;
+  if (typeof dailyRender === 'function' && dailyView()) dailyRender(); return true;
+}
+function dailyCards() {
+  if (!Daily.active || Daily.status === 'waiting') return [];
+  const blocked = new Set(Daily.active.blocked);
+  return dailySections().flatMap(s => s.cards.map((c, position) => ({ ...c, interest: s.interest, position, day: Daily.active.day }))).filter(c => {
+    const p = feedRow(c.paper); return p && !p._goneRemote && !isHiddenRow(p) && !readSet.has(c.paper) && !starSet.has(c.paper) && p.is_passed !== 'true' && dailyRowMatches(p, c.interest) && !Object.entries(libraryLists).some(([n, ids]) => !isMachineLane(n) && ids.includes(c.paper)) && !blocked.has(c.pool);
+  });
+}
+function dailySetInterest(name) {
+  if (!dailyShown() || !dailySections().some(s => s.interest === name)) return false;
+  dailyCancelPress(); if (Feed.sheet) closeSaveSheet(); Daily.interest = name; Daily.generation++; if (typeof dailyRender === 'function') dailyRender(); return true;
+}
+async function dailyRefresh() {
+  if (!isPrivate() || !Private.authorized || !isOwner()) return;
+  const epoch = capturePrivateEpoch(), req = ++Refresh.seq, saveGen = Refresh.saveGen;
+  try { const texts = await fetchLibraryTexts(refreshOvertaken(req)); checkPrivateEpoch(epoch); const out = refreshReceive({ req, saveGen, how: 'show', texts }); if (out.status === 'accepted' || (out.status === 'deferred' && out.fresh === false)) await dailyReceive(texts); }
+  catch (e) { try { checkPrivateEpoch(epoch); } catch (_) { return; } Daily.status = 'retry'; if (typeof dailyRender === 'function' && dailyView()) dailyRender(); }
+}
+function dailyCancelPress() {
+  const p = Daily.press; Daily.press = null;
+  if (p && p.el) { p.el.style.transform = ''; p.el.classList.remove('dragging'); p.el.style.setProperty('--stamp-opacity', '0'); }
+}
+function dailyTeardown() {
+  document.body.classList.remove('daily-mode'); clearTimeout(Daily.timer); Daily.timer = 0;
+  dailyCancelPress(); Daily.seq++; Daily.generation++; Daily.active = Daily.pending = Daily.interest = Daily.undo = Daily.sheet = null; Daily.status = 'waiting'; Daily.edits.clear(); Daily.destinations.clear(); Daily.handled = { schema: 1, operations: {}, undone: [] };
+  const body = document.getElementById('dailyBody'); if (body) body.innerHTML = '';
+}
+function dailyUnion(a, b) {
+  a = dailyCheck(a, true); b = dailyCheck(b, true);
+  const operations = { ...a.operations };
+  Object.entries(b.operations).forEach(([id, o]) => { if (hasOwn(operations, id) && dailyCanonical(operations[id]) !== dailyCanonical(o)) throw new Error('Conflicting Daily decision'); operations[id] = o; });
+  return dailyCheck({ schema: 1, operations, undone: [...new Set(a.undone.concat(b.undone))].sort() }, true);
+}
+function dailyMergeHandled(remote, edits) {
+  const operations = {}, undone = [];
+  edits.forEach((e, id) => { if (e.operation) operations[id] = e.operation; if (e.undo) undone.push(id); });
+  return dailyUnion(remote, { schema: 1, operations, undone });
+}
+function dailyRecord(paper, kind, delta) {
+  requireOwner(); const epoch = capturePrivateEpoch();
+  if (!isPrivate() || !Private.authorized || !Daily.active) throw new Error('Daily is unavailable');
+  const card = Daily.sheet?.card?.paper === paper ? Daily.sheet.card : dailyCards().find(c => c.paper === paper);
+  if (!card) throw new Error('That paper has changed');
+  const id = crypto.randomUUID(), active = Object.entries(Daily.handled.operations).filter(([uid, o]) => o.paper === paper && !Daily.handled.undone.includes(uid));
+  const parents = new Set(active.map(([, o]) => o.predecessor)), tips = active.filter(([uid]) => !parents.has(uid)).map(([uid]) => uid).sort();
+  const operation = { paper, pool: card.pool, kind, at: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'), predecessor: tips[0] || null, predecessors: active.map(([uid]) => uid).sort(), card: { day: card.day, interest: card.interest, slot: card.slot, position: card.position }, delta: JSON.parse(JSON.stringify(delta)) };
+  const edits = new Map(Daily.edits); edits.set(id, { operation });
+  const handled = dailyMergeHandled(Daily.handled, edits); checkPrivateEpoch(epoch);
+  Daily.edits = edits; Daily.handled = handled; Daily.undo = id; _stateDirty = true; _editGen++; scheduleBackup(); showSaveBar();
+  return id;
+}
+function dailyListName(l) {
+  if (l.id === 'to-read') return TO_READ;
+  const r = ListDefs.rows[l.id];
+  if (r) return r.deleted ? null : r.name;
+  return listDefName(l.name);
+}
+function dailyUndoValues(id, ledger, values) {
+  const o = ledger.operations[id]; if (!o) return values;
+  const ancestors = new Set(o.predecessors || []);
+  for (let previous = o.predecessor; previous && previous !== id && !ancestors.has(previous); previous = ledger.operations[previous]?.predecessor) ancestors.add(previous);
+  const active = Object.entries(ledger.operations).filter(([uid, other]) => uid !== id && !ancestors.has(uid) && other.pool === o.pool && !ledger.undone.includes(uid)).map(([, other]) => other);
+  const out = { ...values };
+  Object.entries(o.delta.fields).forEach(([f, v]) => {
+    const other = active.some(a => hasOwn(a.delta.fields, f));
+    if (!other && (out[f] || '') === v.after) out[f] = v.before;
+  });
+  const lists = new Set((out.user_lists || '').split('|').filter(Boolean));
+  o.delta.lists.forEach(l => {
+    const name = dailyListName(l); if (!name || active.some(a => a.delta.lists.some(x => x.id === l.id))) return;
+    if (lists.has(name) !== l.after) return;
+    if (l.before) lists.add(name); else lists.delete(name);
+  });
+  out.user_lists = [...lists].join('|'); return out;
+}
+function dailyUndo(id) {
+  requireOwner(); const epoch = capturePrivateEpoch();
+  if (!isPrivate() || !Private.authorized || !id || Daily.handled.undone.includes(id) || !Daily.handled.operations[id]) return false;
+  const o = Daily.handled.operations[id], p = feedRow(o.paper), edited = { ...(Daily.edits.get(id) || {}), operation: o, undo: true };
+  const edits = new Map(Daily.edits); edits.set(id, edited);
+  const handled = dailyMergeHandled(Daily.handled, edits); checkPrivateEpoch(epoch);
+  if (p && !p._goneRemote) {
+    const listSig = _listSig;
+    flushStateToCSV(); const v = dailyUndoValues(id, handled, paperFields(p));
+    edited.restored = { fields: Object.fromEntries(Object.keys(o.delta.fields).map(f => [f, v[f] || ''])),
+      lists: Object.fromEntries(o.delta.lists.map(l => [l.id, (v.user_lists || '').split('|').includes(dailyListName(l))])) };
+    Object.assign(p, v); bootstrapStateFromCSV();
+    o.delta.lists.forEach(l => { const name = dailyListName(l); if (name && l.before && listHolds(name, o.paper)) _listAddAt.set(name + '\u0000' + o.paper, l.added_at || ''); });
+    _listSig = listSig; touchListMeta();
+  }
+  Daily.edits = edits; Daily.handled = handled; if (Daily.undo === id) Daily.undo = null;
+  _stateDirty = true; _editGen++; scheduleBackup(); showSaveBar(); tasteSupersede();
+  if (Daily.sheet) closeSaveSheet(); dailyCancelPress();
+  if (typeof dailyRender === 'function' && dailyView()) dailyRender(true);
+  return true;
+}
+function dailyBackup() { return Daily.edits.size ? { document: dailyMergeHandled({ schema: 1, operations: {}, undone: [] }, Daily.edits), restored: Object.fromEntries([...Daily.edits].filter(([, e]) => e.undo && e.restored).map(([id, e]) => [id, e.restored])) } : null; }
+function dailyRestore(b) {
+  if (!b || !b.daily) return false;
+  requireOwner(); if (!isPrivate() || !Private.authorized) throw new Error('Private authorization is required'); const epoch = capturePrivateEpoch();
+  try {
+    const d = dailyCheck(b.daily.document, true); const edits = new Map(Daily.edits);
+    Object.entries(d.operations).forEach(([id, operation]) => edits.set(id, { operation, ...(d.undone.includes(id) ? { undo: true } : {}) }));
+    d.undone.forEach(id => { if (!edits.has(id)) edits.set(id, { undo: true }); });
+    const snapshots = b.daily.restored || {}, obj = v => v && typeof v === 'object' && !Array.isArray(v);
+    if (!obj(snapshots)) throw new Error('Invalid Undo backup');
+    Object.entries(snapshots).forEach(([id, v]) => {
+      const e = edits.get(id), o = e?.operation || Daily.handled.operations[id];
+      if (!e?.undo || !o || !obj(v) || !obj(v.fields) || !obj(v.lists) || Object.keys(v).length !== 2 ||
+          Object.keys(v.fields).length !== Object.keys(o.delta.fields).length || Object.keys(v.lists).length !== o.delta.lists.length ||
+          Object.entries(v.fields).some(([f, x]) => !hasOwn(o.delta.fields, f) || !['', 'false', 'true'].includes(x)) ||
+          Object.entries(v.lists).some(([key, x]) => !o.delta.lists.some(l => l.id === key) || typeof x !== 'boolean')) throw new Error('Invalid Undo backup');
+      edits.set(id, { ...e, restored: JSON.parse(JSON.stringify(v)) });
+    });
+    const handled = dailyMergeHandled(Daily.handled, edits); checkPrivateEpoch(epoch);
+    Daily.handled = handled; Daily.edits = edits; return !!edits.size;
+  } catch (e) { throw Object.assign(new Error('Your changes could not be restored. Try again.'), { fatal: true }); }
+}
+async function dailyAPI(path, method, body, headers) {
+  requireOwner(); const epoch = capturePrivateEpoch();
+  const res = await privateAwait(ownerFetch(ghApiBase() + '/git/' + path, { method, headers: { ...headers, 'Content-Type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) }), epoch);
+  if (!res.ok) throw _ghFail(res, 'save');
+  if (!res.body || !res.body.getReader) throw new Error('Could not read save acknowledgement');
+  const reader = res.body.getReader(), chunks = []; let size = 0;
+  try { for (;;) { const r = await privateAwait(reader.read(), epoch); if (r.done) break; size += r.value.byteLength; if (size > 65536) throw new Error('Save acknowledgement is too large'); chunks.push(r.value); } }
+  finally { try { await reader.cancel(); } catch (_) {} }
+  const bytes = new Uint8Array(size); let at = 0; chunks.forEach(c => { bytes.set(c, at); at += c.byteLength; });
+  checkPrivateEpoch(epoch); return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+}
+function dailyReconcileOut(out, remote, merged, sent, raw) {
+  const parsed = Papa.parse(out.csv, { header: true, skipEmptyLines: true }), rows = new Map(parsed.data.filter(p => p.id).map(p => [p.id, p]));
+  const original = new Map(Papa.parse(raw, { header: true, skipEmptyLines: true }).data.filter(p => p.id).map(p => [p.id, p]));
+  sent.forEach((e, id) => {
+    const o = merged.operations[id], row = o && rows.get(o.paper), theirs = o && original.get(o.paper); if (!row || !theirs) return;
+    if (merged.undone.includes(id)) {
+      // The remote's live decisions own their effects even if this device undid a sibling.
+      const undone = dailyUndoValues(id, merged, theirs);
+      const captured = out.sent?.get(o.paper)?.now, localLists = new Set((captured?.user_lists || '').split('|').filter(Boolean));
+      Object.entries(o.delta.fields).forEach(([f, v]) => { if (hasOwn(row, f) && (!e.undo || (captured && (captured[f] || '') === (e.restored?.fields[f] ?? v.before)))) row[f] = undone[f] || ''; });
+      const names = new Set((row.user_lists || '').split('|').filter(Boolean)), desired = new Set((undone.user_lists || '').split('|').filter(Boolean));
+      o.delta.lists.forEach(l => { const n = dailyListName(l); if (n && (!e.undo || (captured && localLists.has(n) === (e.restored?.lists[l.id] ?? l.before)))) { if (desired.has(n)) names.add(n); else names.delete(n); } }); row.user_lists = [...names].join('|');
+    }
+  });
+  out.rows.forEach(row => { const r = rows.get(row.id); if (r) EDITABLE_FIELDS.forEach(f => { if (hasOwn(r, f)) row[f] = r[f]; }); });
+  out.csv = toCSV(parsed.data, { columns: parsed.meta.fields }); return out;
+}
+function dailyCanonicalizePendingLists(remote) {
+  requireOwner(); const epoch = capturePrivateEpoch(), edits = new Map(Daily.edits), operations = { ...Daily.handled.operations }; let changed = false;
+  edits.forEach((entry, id) => {
+    if (!entry.operation || hasOwn(remote.operations, id)) return;
+    const operation = JSON.parse(JSON.stringify(entry.operation)), restored = entry.restored && JSON.parse(JSON.stringify(entry.restored)); let moved = false;
+    operation.delta.lists.forEach(l => { if (ListDefs.rows[l.id]) return; const name = listDefName(l.name), live = name && listDefLive(name); if (live && live[0] !== l.id) {
+      if (restored && hasOwn(restored.lists, l.id)) { restored.lists = { ...restored.lists, [live[0]]: restored.lists[l.id] }; delete restored.lists[l.id]; }
+      l.id = live[0]; moved = true;
+    } });
+    if (moved) { edits.set(id, { ...entry, operation, ...(restored ? { restored } : {}) }); operations[id] = operation; changed = true; }
+  });
+  if (changed) { const handled = dailyCheck({ ...Daily.handled, operations }, true); checkPrivateEpoch(epoch); Daily.edits = edits; Daily.handled = handled; scheduleBackup(); }
+}
+async function saveDailyBundle(headers, canon) {
+  requireOwner(); const epoch = capturePrivateEpoch();
+  if (!isPrivate() || !Private.authorized || Daily.sheet) throw new Error('Finish choosing your lists to save');
+  const validSHA = v => { if (typeof v !== 'string' || !/^[0-9a-f]{40}$/.test(v)) throw new Error('Invalid save acknowledgement'); return v; };
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (ListDefs.ready && ListDefs.edits.size) {
+      const defs = await privateAwait(_ghMergePush(headers, LISTS_FILE, mergeListDefs, 'Update reading lists from dashboard'), epoch);
+      requireOwner(); listDefsSaved(defs);
+    }
+    if (Daily.sheet) throw new Error('Finish choosing your lists to save');
+    const parent = await privateAwait(privateHeadCommit(), epoch);
+    const [head, papers, state, owner, definitions] = await privateAwait(Promise.all([
+      dailyAPI('commits/' + parent, 'GET', undefined, headers),
+      privateReadFile('papers_database.csv', false, null, syncedHeld('papers_database.csv'), parent),
+      privateReadFile(STATE_FILE, true, null, syncedHeld(STATE_FILE), parent),
+      privateReadFile(DAILY_HANDLED, true, null, syncedHeld(DAILY_HANDLED), parent),
+      privateReadFile(LISTS_FILE, true, null, syncedHeld(LISTS_FILE), parent)
+    ]), epoch); requireOwner();
+    if (Daily.sheet) throw new Error('Finish choosing your lists to save');
+    if (ListDefs.edits.size) { if (attempt === 2) throw new Error('Your lists changed during saving. Try again.'); continue; }
+    const layout = pairChecked(papersHeader(papers.text), state ? state.text : null), remote = dailyHandledParse(owner ? owner.text : null);
+    takeListDefs(definitions ? definitions.text : null); dailyCanonicalizePendingLists(remote);
+    const sent = new Map(Daily.edits), handledOut = dailyMergeHandled(dailyUnion(remote, Daily.handled), sent), handledText = dailyCanonical(handledOut);
+    Layout.now = layout;
+    const paperOut = layout === 5 ? mergeState(state.text, canon) : Object.assign(mergePapers(papers.text, canon), { file: 'papers_database.csv' });
+    dailyReconcileOut(paperOut, remote, handledOut, sent, layout === 5 ? state.text : papers.text); listDefsFields(paperOut);
+    const files = [{ path: paperOut.file, text: paperOut.csv }, { path: DAILY_HANDLED, text: handledText }];
+    files.forEach(f => { if (![DAILY_HANDLED, STATE_FILE, 'papers_database.csv'].includes(f.path) || new TextEncoder().encode(f.text).length > privatePathCap(f.path)) throw Object.assign(new Error('Your changes could not be saved. Try again.'), { fatal: true }); });
+    const tree = [];
+    for (const f of files) {
+      const blob = await privateAwait(dailyAPI('blobs', 'POST', { content: f.text, encoding: 'utf-8' }, headers), epoch);
+      const expected = await privateAwait(gitBlobSha(new TextEncoder().encode(f.text)), epoch);
+      if (validSHA(blob.sha) !== expected) throw new Error('Invalid save acknowledgement');
+      tree.push({ path: f.path, mode: '100644', type: 'blob', sha: blob.sha }); f.sha = blob.sha;
+    }
+    const made = await privateAwait(dailyAPI('trees', 'POST', { base_tree: validSHA(head.tree?.sha), tree }, headers), epoch);
+    const commit = await privateAwait(dailyAPI('commits', 'POST', { message: 'Update Daily decisions from dashboard', tree: validSHA(made.sha), parents: [parent] }, headers), epoch);
+    validSHA(commit.sha);
+    try { await privateAwait(dailyAPI('refs/heads/' + GH_BRANCH.split('/').map(encodeURIComponent).join('/'), 'PATCH', { sha: commit.sha, force: false }, headers), epoch); }
+    catch (e) {
+      checkPrivateEpoch(epoch);
+      // A lost response may have committed. Only byte-identical state AND ledger can acknowledge this send.
+      if (!e.conflict) {
+        const now = await privateAwait(privateHeadCommit(), epoch);
+        const got = await privateAwait(Promise.all(files.map(f => privateReadFile(f.path, false, null, null, now))), epoch);
+        if (got.some((f, i) => !f || f.text !== files[i].text)) throw e;
+      } else { if (attempt === 2) throw e; continue; }
+    }
+    requireOwner(); return { paperOut, handledOut, sent, commit: commit.sha, files, epoch, target: _acceptedTarget };
+  }
+}
+function dailySaved(result) {
+  requireOwner(); checkPrivateEpoch(result.epoch); if (result.target !== _acceptedTarget) throw new Error('Private authorization changed');
+  paperFieldsSaved(result.paperOut);
+  result.sent.forEach((entry, id) => { if (Daily.edits.get(id) === entry) Daily.edits.delete(id); });
+  Daily.handled = dailyMergeHandled(dailyUnion(result.handledOut, Daily.handled), Daily.edits);
+  let restored = false;
+  Daily.edits.forEach((e, id) => {
+    if (!e.undo) return;
+    const o = Daily.handled.operations[id], row = o && feedRow(o.paper), saved = o && result.paperOut.rows.find(r => r.id === o.paper);
+    if (!row || !saved) return;
+    const wanted = dailyUndoValues(id, Daily.handled, saved);
+    const undoState = e.restored && { fields: { ...e.restored.fields }, lists: { ...e.restored.lists } }; let adjusted = false;
+    Object.entries(o.delta.fields).forEach(([f, v]) => { if ((row[f] || '') === (undoState?.fields[f] ?? v.before) && row[f] !== wanted[f]) { row[f] = wanted[f]; restored = adjusted = true; if (undoState) undoState.fields[f] = wanted[f] || ''; } });
+    const names = new Set((row.user_lists || '').split('|').filter(Boolean)), desired = new Set((wanted.user_lists || '').split('|').filter(Boolean));
+    o.delta.lists.forEach(l => { const n = dailyListName(l); if (n && names.has(n) === (undoState?.lists[l.id] ?? l.before) && names.has(n) !== desired.has(n)) { if (desired.has(n)) names.add(n); else names.delete(n); restored = adjusted = true; if (undoState) undoState.lists[l.id] = desired.has(n); } });
+    row.user_lists = [...names].join('|');
+    if (adjusted && undoState) Daily.edits.set(id, { ...e, restored: undoState });
+  });
+  if (restored) bootstrapStateFromCSV();
+  result.files.forEach(f => { syncedKeep(f.path, f.sha, f.text, Private.token); libCachePut(f.path, f.sha, new TextEncoder().encode(f.text)); });
+  if (Daily.edits.size) { _stateDirty = true; scheduleBackup(); }
+  if (dailyView() && typeof dailyRender === 'function') dailyRender();
+}
+
+function dailyDestination(paper) {
+  if (!Daily.destinations.has(paper)) Daily.destinations.set(paper, feedChipTargets([paper]).get(paper) || TO_READ);
+  return Daily.destinations.get(paper);
+}
+function dailyValidCard(card, generation, sheet = false) {
+  if (!card || generation !== Daily.generation || !dailyView() || !Daily.active || card.interest !== Daily.interest) return false;
+  const section = dailySections().find(s => s.interest === card.interest), live = section && section.cards.find(c => c.slot === card.slot && c.paper === card.paper && c.pool === card.pool);
+  if (!live || Daily.active.blocked.includes(card.pool)) return false;
+  const p = feedRow(card.paper); if (!p || p._goneRemote || isHiddenRow(p)) return false;
+  return sheet || dailyCards().some(c => c.paper === card.paper && c.slot === card.slot);
+}
+function dailyListDelta(name, paper, before, after) {
+  requireOwner(); capturePrivateEpoch();
+  if (!ListDefs.ready) throw new Error('Your lists are still loading. Try again.');
+  if (!listDefLive(name)) listDefsChange({ [name]: { created: listDates(name).created || new Date().toISOString() } });
+  const def = listDefLive(name), added = listAddedAt(name)[paper];
+  return { id: def ? def[0] : name === TO_READ ? 'to-read' : 'legacy:' + name, name, before, after, added_at: typeof added === 'string' && Number.isFinite(Date.parse(added)) ? new Date(added).toISOString().replace(/\.\d{3}Z$/, 'Z') : null };
+}
+function dailyAct(kind, card, generation) {
+  requireOwner(); const epoch = capturePrivateEpoch();
+  if (!['pass', 'save', 'read'].includes(kind) || Daily.sheet || !dailyValidCard(card, generation)) return false;
+  const p = feedRow(card.paper), destination = kind === 'save' ? dailyDestination(card.paper) : null;
+  if (destination && !listDestOK(destination)) { dailyCancelPress(); toast('That list is no longer available. Choose a list with Save.'); return false; }
+  flushStateToCSV();
+  const delta = { fields: {}, lists: [] };
+  if (kind === 'pass') delta.fields.is_passed = { before: p.is_passed || '', after: 'true' };
+  if (kind === 'read') delta.fields.is_read = { before: p.is_read || '', after: 'true' };
+  if (kind === 'save') delta.lists.push(dailyListDelta(destination, card.paper, listHolds(destination, card.paper), true));
+  checkPrivateEpoch(epoch); let id;
+  try { id = dailyRecord(card.paper, kind, delta); } catch (e) { checkPrivateEpoch(epoch); toastError('Your changes could not be saved. Try again.'); return false; }
+  if (kind === 'save') listSet(destination, card.paper, true);
+  else { if (kind === 'read') readSet.add(card.paper); else p.is_passed = 'true'; persistRead(); }
+  tasteSupersede(); dailyCancelPress();
+  if (typeof dailyRender === 'function') dailyRender(true);
+  toast(kind === 'save' ? 'Saved to ' + esc(destination) : kind === 'read' ? 'Marked read' : 'Passed', privateCallback(() => dailyUndo(id)), { actionLabel: 'Undo', duration: 8000 });
+  dailyFocusUndo();
+  return true;
+}
+function dailyOpenSaveSheet(event, button, card) {
+  requireOwner(); const epoch = capturePrivateEpoch();
+  if (Daily.sheet) { closeSaveSheet(); return; }
+  if (!dailyValidCard(card, Daily.generation)) return;
+  dailyCancelPress(); openSaveSheet(event, button, card.paper); checkPrivateEpoch(epoch);
+  if (Feed.sheet && Feed.sheet.key === card.paper) Daily.sheet = { card: { ...card }, generation: Daily.generation, epoch, operation: null };
+}
+function dailyTrySheetChange(paper, delta) {
+  requireOwner(); const epoch = capturePrivateEpoch();
+  try { return dailySheetChanged(paper, delta); } catch (e) { checkPrivateEpoch(epoch); toastError('Your changes could not be saved. Try again.'); return false; }
+}
+function dailySheetChanged(paper, delta) {
+  requireOwner(); const epoch = capturePrivateEpoch(), sh = Daily.sheet;
+  if (!sh || sh.card.paper !== paper || sh.epoch !== epoch || !dailyValidCard(sh.card, sh.generation, true)) return false;
+  if (!sh.operation) { sh.operation = dailyRecord(paper, 'save', delta); return true; }
+  // An open sheet cannot be sent. Extend its one pending immutable-on-send operation before closing it.
+  const old = Daily.handled.operations[sh.operation], operation = JSON.parse(JSON.stringify(old));
+  for (const l of delta.lists) { const found = operation.delta.lists.find(x => x.id === l.id); if (found) found.after = l.after; else operation.delta.lists.push(l); }
+  const handled = dailyCheck({ ...Daily.handled, operations: { ...Daily.handled.operations, [sh.operation]: operation } }, true); checkPrivateEpoch(epoch);
+  Daily.handled = handled; Daily.edits.set(sh.operation, { operation }); _editGen++; scheduleBackup(); return true;
+}
+function dailySheetClosed() {
+  const sh = Daily.sheet; Daily.sheet = null;
+  if (!sh) return;
+  dailyCancelPress(); dailyAdopt();
+  if (dailyView() && typeof dailyRender === 'function') dailyRender(true);
+  if (sh.operation) { scheduleAutoPush(); const id = sh.operation; toast('Saved', privateCallback(() => dailyUndo(id)), { actionLabel: 'Undo', duration: 8000 }); dailyFocusUndo(); }
+}
+
+function dailyTick() {
+  if (Daily.timer || !dailyView()) return;
+  Daily.timer = setTimeout(privateCallback(async () => { Daily.timer = 0; if (dailyView() && document.visibilityState !== 'hidden') await dailyRefresh(); if (dailyView()) dailyTick(); }), 300000);
+}
+function dailyFocusUndo() {
+  if (dailyCards().some(c => c.interest === Daily.interest)) return;
+  const undo = document.querySelector('#toast .toast-undo'); if (undo) undo.focus({ preventScroll: true });
+}
+function dailyCardHTML(card, row) {
+  const headline = hasText(row.headline) ? row.headline : '', summary = hasText(row.summary) ? row.summary : '';
+  return `<article class="daily-card" tabindex="0" aria-label="${dataAttr(row.title || headline)}">
+    <span class="daily-stamp daily-stamp-save" aria-hidden="true">${esc(dailyDestination(card.paper))}</span><span class="daily-stamp daily-stamp-pass" aria-hidden="true">Pass</span>
+    <h2><a href="#paper/${encodeURIComponent(card.paper)}">${esc(row.title || headline)}</a></h2>
+    ${hasText(row.authors) ? `<p class="daily-authors">${esc(row.authors)}</p>` : ''}${hasText(row.venue) ? `<p class="daily-venue">${esc(row.venue)}</p>` : ''}
+    ${headline ? `<p class="daily-headline">${esc(headline)}</p>` : ''}${summary ? `<p class="daily-summary">${esc(summary)}</p><button type="button" class="daily-more" aria-expanded="false">Read more</button>` : ''}
+  </article>`;
+}
+function dailyRender(focus) {
+  if (!dailyView() || Daily.press || Daily.sheet) return;
+  dailyTick();
+  const box = document.getElementById('topStories'); if (!box) return;
+  const old = box.querySelector('.daily-card'), hadFocus = !!focus || old && old.contains(document.activeElement);
+  if (!box.querySelector('#dailyBody')) {
+    box.innerHTML = `<div class="feed daily-feed" id="feed"><div class="feed-head" id="feedHead"><div class="feed-tabs home" id="feedTabs" role="tablist" aria-label="Feeds"><div class="ft-tabs" id="feedTabsIn"></div><div class="ft-add" id="feedAdd"></div></div><div id="feedCtl" hidden></div><p id="tabsMsg" role="status"></p></div><div id="listBar" hidden></div><div class="feed-list" id="feedList"><div id="dailyBody" role="tabpanel" aria-label="Daily"></div></div><div id="feedMore"></div><div id="feedEnd"></div></div>`;
+  }
+  document.body.classList.add('feed-mode', 'daily-mode'); document.body.classList.toggle('feed-phone', feedLayout() === 'phone'); document.body.classList.toggle('feed-land', feedLayout() === 'land'); document.body.classList.toggle('feed-laptop', feedLayout() === 'laptop');
+  Feed.mounted = true; Feed.fresh = Feed.switched = false; Feed.tabNames = feedTabNames(); feedTabsRender();
+  const sections = dailySections(), section = sections.find(s => s.interest === Daily.interest), cards = dailyCards().filter(c => c.interest === Daily.interest), card = cards[0], row = card && feedRow(card.paper), root = box.querySelector('#dailyBody');
+  const empty = Daily.status === 'retry' ? `Couldn't load your picks. <button type="button" data-daily-retry>Try again</button>` : !Daily.active || !section || Daily.status === 'waiting' || section.cards.length === 0 ? 'Your next picks are on the way.' : "That's all for today. More tomorrow.";
+  const icon = kind => kind === 'save' ? '<path d="M6 3h12v18l-6-4-6 4z"/>' : kind === 'pass' ? '<path d="m6 6 12 12M18 6 6 18"/>' : '<path d="m5 12 4 4L19 6"/>';
+  root.innerHTML = `<header class="daily-intro"><h1>For today</h1><p>Fresh picks each morning. Pick up where you left off.</p></header>
+    <div class="daily-interests" role="tablist" aria-label="Interests">${sections.map(s => `<button type="button" role="tab" class="daily-interest" aria-selected="${s.interest === Daily.interest}" data-interest="${dataAttr(s.interest)}">${s.level === 'definitely' ? '<i aria-hidden="true"></i>' : ''}${esc(s.interest)}</button>`).join('')}</div>
+    <section class="daily-area"><h2 class="daily-interest-name">${esc(Daily.interest || '')}${section?.level === 'definitely' ? '<span>Core</span>' : ''}</h2>
+    ${card && row ? dailyCardHTML(card, row) + `<div class="daily-dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="daily-actions">${['pass', 'save', 'read'].map(kind => `<button type="button" class="daily-action ${kind}" data-daily-action="${kind}"${kind === 'save' ? ' aria-label="Choose a list" aria-haspopup="dialog" aria-expanded="false"' : ''}><span><svg viewBox="0 0 24 24" aria-hidden="true">${icon(kind)}</svg></span><b>${kind === 'pass' ? 'Pass' : kind === 'read' ? 'Mark read' : esc(dailyDestination(card.paper))}</b></button>`).join('')}</div><p class="daily-hints"><span>&larr; Swipe to pass</span><span>Swipe to save &rarr;</span></p>` : `<div class="daily-empty" role="status">${empty}</div>`}</section>`;
+  root.querySelectorAll('.daily-action, .daily-interest, .daily-more').forEach(b => { b.dataset.dailyGen = String(Daily.generation); b.dataset.dailyPaper = card ? card.paper : ''; });
+  root.querySelectorAll('.daily-interest').forEach(b => { b.onclick = () => dailySetInterest(b.dataset.interest); });
+  const retry = root.querySelector('[data-daily-retry]'); if (retry) retry.onclick = privateCallback(dailyRefresh);
+  if (card) {
+    const generation = Daily.generation, el = root.querySelector('.daily-card'); dailyBindGestures(el, card, generation);
+    root.querySelectorAll('[data-daily-action]').forEach(b => { b.onclick = privateCallback(e => { if (b.dataset.dailyAction === 'save') dailyOpenSaveSheet(e, b, card); else dailyAct(b.dataset.dailyAction, card, generation); }); });
+    const more = root.querySelector('.daily-more'); if (more) more.onclick = () => { const p = root.querySelector('.daily-summary'), expanded = more.getAttribute('aria-expanded') !== 'true'; p.classList.toggle('expanded', expanded); more.setAttribute('aria-expanded', String(expanded)); more.textContent = expanded ? 'Read less' : 'Read more'; };
+    if (hadFocus) el.focus({ preventScroll: true });
+  } else if (hadFocus) { const undo = document.querySelector('#toast button'); if (undo) undo.focus({ preventScroll: true }); }
+}
+function dailyBindGestures(el, card, generation) {
+  if (!el) return;
+  el.onpointerdown = e => {
+    if (e.button !== 0 || e.isPrimary === false || Daily.press || Daily.sheet || !dailyValidCard(card, generation) || e.target?.closest?.('button,a,input,textarea,select,[contenteditable="true"]') || !window.getSelection()?.isCollapsed) return;
+    Daily.press = { id: e.pointerId, x: e.clientX, y: e.clientY, dx: 0, intent: null, el, card, generation, epoch: capturePrivateEpoch() };
+  };
+  el.onpointermove = e => {
+    const p = Daily.press; if (!p || p.el !== el || p.id !== e.pointerId) return;
+    if (!dailyValidCard(card, generation) || document.visibilityState === 'hidden' || !window.getSelection()?.isCollapsed || p.epoch !== Private.epoch) { dailyCancelPress(); return; }
+    const dx = e.clientX - p.x, dy = e.clientY - p.y;
+    if (!p.intent && Math.max(Math.abs(dx), Math.abs(dy)) >= 10) {
+      if (Math.abs(dy) >= Math.abs(dx)) { dailyCancelPress(); dailyAdopt(); return; }
+      p.intent = 'horizontal'; try { el.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+    if (p.intent !== 'horizontal') return;
+    p.dx = dx; e.preventDefault(); el.classList.add('dragging'); el.dataset.direction = dx >= 0 ? 'right' : 'left';
+    el.style.setProperty('--stamp-opacity', String(Math.min(1, Math.abs(dx) / 75)));
+    if (!reduceMotion()) el.style.transform = `translateX(${Math.max(-180, Math.min(180, dx))}px) rotate(${Math.max(-9, Math.min(9, dx / 18))}deg)`;
+  };
+  el.onpointerup = e => {
+    const p = Daily.press; if (!p || p.el !== el || p.id !== e.pointerId) return;
+    const dx = e.clientX - p.x, commit = p.intent === 'horizontal' && Math.abs(dx) >= 75 && p.epoch === Private.epoch && document.visibilityState !== 'hidden' && dailyValidCard(card, generation) && window.getSelection()?.isCollapsed;
+    dailyCancelPress();
+    if (commit) dailyAct(dx > 0 ? 'save' : 'pass', card, generation);
+    dailyAdopt();
+  };
+  el.onpointercancel = el.onlostpointercapture = e => { const p = Daily.press; if (p && p.el === el && p.id === e.pointerId) { dailyCancelPress(); dailyAdopt(); } };
+  el.onkeydown = e => {
+    if (e.target !== el || document.activeElement !== el || e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.isComposing || Daily.sheet || document.querySelector('.save-sheet.open, .reader.open') || !window.getSelection()?.isCollapsed) return;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); dailyAct(e.key === 'ArrowRight' ? 'save' : 'pass', card, generation); }
+  };
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') dailyCancelPress(); });
+window.addEventListener('blur', dailyCancelPress);
+window.addEventListener('pagehide', dailyCancelPress);
+
+/* ===== END DAILY ===== */
 /* ===== PHASE 25: YOUR LISTS =====
    His words: "These lists are made by me to read in detail later", and "We should separate added to the list papers and
    suggested within the same tab" (his pick A). A list's tab is one page: "In this list" first, his papers newest added
@@ -13125,7 +13678,7 @@ function heldPapers() {
 }
 /* Rows deleted on GitHub that are kept for an edit made here that never reached it (papersSaved) */
 function goneKept() { return everyPaper().some(p => p._goneRemote); }
-function heldOnly() { return _stateDirty && !_interestsDirty && !_groupsDirty && !People.dirty && !ListDefs.edits.size && heldPapers() && everyPaper().every(p => { const b = _loadedPaperFields.get(p.id) || {}; return EDITABLE_FIELDS.every(f => SCHEMA_FIELDS.includes(f) && !papersHas(f) || (p[f] || '') === (b[f] || '')); }); }
+function heldOnly() { return !(typeof Daily !== 'undefined' && Daily.edits.size) && _stateDirty && !_interestsDirty && !_groupsDirty && !People.dirty && !ListDefs.edits.size && heldPapers() && everyPaper().every(p => { const b = _loadedPaperFields.get(p.id) || {}; return EDITABLE_FIELDS.every(f => SCHEMA_FIELDS.includes(f) && !papersHas(f) || (p[f] || '') === (b[f] || '')); }); }
 function scheduleAutoPush(delay) {
   if (!isOwner()) return; requireOwner();
   clearTimeout(_autoPushTimer);
@@ -13143,6 +13696,7 @@ function pageMayWrite(path) {
   try { tastePath = decodeURIComponent(tastePath); } catch (e) {}
   const tasteParts = [];
   tastePath.split(/[?#]/)[0].split('/').forEach(part => { if (part === '..') tasteParts.pop(); else if (part && part !== '.') tasteParts.push(part); });
+  if (tasteParts.join('/') === 'daily/current.json') throw new Error('Daily picks are written by the worker only');
   if (tasteParts.join('/') === 'taste.json') throw new Error('taste.json is written by the worker only');
   if (p === 'activity.json') throw new Error('activity.json is written by the worker only');
   if (/^requests\/.*\.status\.json$/.test(p)) throw new Error('A request status is written by the worker only');   // Phase 24
@@ -13181,6 +13735,7 @@ async function _ghPutFile(headers, filename, content, sha, message) { const _aut
   if (filename === PEOPLE_FILE && new TextEncoder().encode(content).length > PEOPLE_CAP)
     throw Object.assign(plainError('Your change to the people you follow wasn’t saved. Try again.'), { fatal: true });
   if (filename === LISTS_FILE) listDefsParse(content);
+  if (filename === 'daily_handled.json') throw new Error('Daily decisions require a paired save');
   const b64 = btoa(unescape(encodeURIComponent(content)));
   // sha null: a file GitHub does not have yet (the people file's first save), created; if it was made meanwhile,
   // GitHub refuses with a 422, which _ghMergePush takes as a conflict and merges again onto the file as it is now
@@ -13413,6 +13968,7 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
   auto = auto === true;
   clearTimeout(_autoPushTimer); _autoPushTimer = null;   // Phase 22: this is the save it was waiting to start
   if (!anyDirty()) return;
+  if (typeof Daily !== 'undefined' && Daily.sheet && Daily.edits.size) { scheduleAutoPush(); return; }
   if (_pushing) { _pushAgain = true; return; }
   if (_stateDirty && !_loadedPaperFields.size && !_dataLoaded) { scheduleAutoPush(); return; }   // papers still loading
 
@@ -13444,16 +14000,18 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
       const out = await privateAwait(_ghMergePush(headers, LISTS_FILE, mergeListDefs, 'Update reading lists from dashboard'), _authEpoch);
       requireOwner(); listDefsSaved(out); listsWritten = !out.unchanged;
     }
-    if (_stateDirty) {
+    if (_stateDirty || (typeof Daily !== 'undefined' && Daily.edits.size)) {
       // A strength edit is saved under the interest's name as GitHub has it now, so read its interests (and aliases) first
       const fresh = await privateAwait(freshInterests(headers), _authEpoch); requireOwner();
       const canon = fresh ? aliasIndex(fresh) : undefined;
       // Phase 15 (B2): the file that holds the person's fields now, looked at on every attempt (savePaperFields)
-      const out = await privateAwait(savePaperFields(headers, canon), _authEpoch);
+      const dailySend = typeof Daily !== 'undefined' && Daily.edits.size > 0;
+      const result = dailySend ? await privateAwait(saveDailyBundle(headers, canon), _authEpoch) : null;
+      const out = result ? result.paperOut : await privateAwait(savePaperFields(headers, canon), _authEpoch);
       // The edits just saved are the new baseline; anything changed since stays unsaved
       requireOwner();
       if (fresh && !_interestsDirty) adoptInterests(fresh);   // nothing pending here: show the interests as saved (a rename made elsewhere)
-      paperFieldsSaved(out);
+      if (result || out.dailyBundle) dailySaved(result || out.dailyBundle); else paperFieldsSaved(out);
     }
     if (_interestsDirty) {
       const sent = definitionSend(allInterests), baseline = new Map([..._loadedInterestFields].map(([k, v]) => [k, { ...v }]));
@@ -13487,7 +14045,7 @@ async function pushToGitHub(auto) { const _authEpoch = capturePrivateEpoch();
     requireOwner(); updateInterestsBadge();
     if (_interestsDirty || _groupsDirty) renderInterests();
     if (_editGen === gen && !_pushAgain) {
-      const held = heldPapers() || goneKept() || orphansHeld();   // edits to a column the file doesn't have yet, or to a row deleted there (B2: or with no row in layout 4): still pending, still backed up
+      const held = heldPapers() || goneKept() || orphansHeld() || (typeof Daily !== 'undefined' && Daily.edits.size > 0);   // edits to a column the file doesn't have yet, or to a row deleted there (B2: or with no row in layout 4): still pending, still backed up
       // Phase 21 (Sol's Part B review, finding 3): a people edit held while their file can't be read stays pending and
       // visible, with its backup, and is never called saved; an attempt that wrote nothing moves no saved time
       const peopleHeld = People.edits.size > 0;
@@ -19511,6 +20069,7 @@ function applyHash() {
       if (isOwner() && list) refreshNotice(`"${esc(list)}" is no longer one of your lists.`);
       history.replaceState(null, '', APP_ROOT + location.search + '#lists'); applyHash(); return;
     }
+    if (hash === 'daily' && dailyShown()) { setHomeView('daily', null); switchTab('all', true); if (wasInList) backFromList(); return; }
     setHomeView(hash === 'following' ? 'following' : 'foryou', list);
     switchTab('all', true);
     if (wasInList) backFromList();
