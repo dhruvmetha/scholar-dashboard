@@ -7770,7 +7770,7 @@ function pressStill(pr) {
   if (pr.kind === 'lbar') return listTabShown() && pr.project === Feed.project;   // the same list's bar
   if (pr.kind === 'ctl') return pr.ctlGen === Feed.ctlGen && feedCtlOn();   // the same row
   if (pr.kind === 'ctlmenu') return !!Feed.menu && Feed.menu.id === pr.menu && feedCtlOn();   // the same opening of the menu, still open
-  if (pr.kind === 'tab') return pr.tabsGen === Feed.tabsGen && (pr.n === '' || (pr.n === 'following' && followingOn()));   // Phase 31: For you and Following
+  if (pr.kind === 'tab') return pr.tabsGen === Feed.tabsGen && (pr.n === '' || (pr.n === 'following' && followingOn()) || (pr.n === 'daily' && typeof dailyShown === 'function' && dailyShown()));   // Phase 31: For you and Following; Daily while it shows
   if (pr.kind === 'tabnew') return !Feed.edit && !pr.edit;
   if (pr.kind === 'tabadd') return !!Feed.edit && pr.edit === Feed.edit.id;
   // a post: still there, showing the same decision (or none), in the same feed tab
