@@ -2675,9 +2675,6 @@ body:has(#sec-library.active) .save-bar[data-state="saving"] { visibility: hidde
 /* Daily: mockup B, scoped to its own feed. */
 .daily-feed #feedAdd,.daily-feed #feedCtl,.daily-feed #feedMore,.daily-feed #feedEnd,.daily-feed #listBar{display:none!important}
 .daily-feed .feed-head{position:static}.daily-feed #tabsMsg:empty{display:none}
-.daily-intro{padding:25px 20px 23px;border-bottom:1px solid var(--border)}
-.daily-intro h1{font-size:25px;line-height:1.2;font-weight:650;letter-spacing:-.025em}
-.daily-intro p{margin-top:8px;font-size:14px;color:var(--text-muted);line-height:1.5}
 .daily-interests{display:flex;gap:8px;padding:15px 20px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border)}
 .daily-interests::-webkit-scrollbar{display:none}
 .daily-interest{display:flex;align-items:center;gap:7px;flex-shrink:0;min-height:38px;padding:0 13px;border-radius:999px;border:1px solid var(--line);color:var(--text-secondary);background:var(--bg);font-size:13px;font-weight:500;cursor:pointer}
@@ -2693,8 +2690,7 @@ body:has(#sec-library.active) .save-bar[data-state="saving"] { visibility: hidde
 .daily-card h2 a{color:var(--text);text-decoration:none}.daily-card h2 a:hover{text-decoration:underline;text-underline-offset:3px}
 .daily-authors{margin-top:15px;font-size:13px;color:var(--text-muted)}.daily-venue{margin-top:4px;font-size:12px;color:var(--text-secondary)}
 .daily-headline{font-size:16px;font-weight:500;line-height:1.45;letter-spacing:-.01em;padding:20px 0;margin:20px 0 0;border-top:1px solid var(--line)}
-.daily-summary{font-size:14px;line-height:1.75;color:var(--text-secondary);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
-.daily-summary.expanded{display:block}.daily-more{margin-top:10px;border:0;background:none;color:var(--accent);font-size:13px;font-weight:500;cursor:pointer;min-height:34px;padding:0}
+.daily-summary{font-size:14px;line-height:1.75;color:var(--text-secondary)}
 .daily-stamp{position:absolute;z-index:2;top:24px;max-width:80%;padding:6px 13px;border:2px solid currentColor;border-radius:7px;font-weight:650;font-size:21px;opacity:0;pointer-events:none;background:var(--bg)}
 .daily-stamp-save{left:18px;color:var(--accent);transform:rotate(-9deg)}.daily-stamp-pass{right:18px;color:var(--text-secondary);transform:rotate(9deg)}
 .daily-card.dragging .daily-stamp{opacity:var(--stamp-opacity,0)}.daily-card.dragging[data-direction=right] .daily-stamp-pass,.daily-card.dragging[data-direction=left] .daily-stamp-save{display:none}
@@ -2707,7 +2703,7 @@ body:has(#sec-library.active) .save-bar[data-state="saving"] { visibility: hidde
 .daily-hints{display:flex;justify-content:space-between;gap:15px;margin-top:27px;padding:0 10px;color:var(--text-muted);font-size:12px}
 .daily-empty{display:flex;flex-direction:column;gap:15px;min-height:355px;align-items:center;justify-content:center;padding:40px;border:1px solid var(--line);border-radius:18px;text-align:center;font-size:14px;line-height:1.8;color:var(--text-muted)}
 .daily-empty button{border:0;background:none;color:var(--accent);cursor:pointer;min-height:44px}
-@media(max-width:600px){.daily-intro{padding:22px 16px 21px}.daily-intro h1{font-size:24px}.daily-interests{padding:14px 16px;gap:7px}.daily-interest{font-size:12px;padding:0 11px}.daily-area{padding:20px 16px 24px}.daily-card{padding:23px 20px 19px;min-height:366px}.daily-card h2{font-size:27px}.daily-headline{margin-top:18px;padding:17px 0;font-size:15px}.daily-summary{font-size:13px;line-height:1.7}.daily-authors{margin-top:13px;font-size:12px}.daily-venue{font-size:11px}.daily-dots{padding:21px 0 16px;min-height:42px}.daily-actions{gap:clamp(15px,10vw,43px)}.daily-action span{width:50px;height:50px}.daily-hints{margin-top:23px;padding:0 2px}}
+@media(max-width:600px){.daily-interests{padding:14px 16px;gap:7px}.daily-interest{font-size:12px;padding:0 11px}.daily-area{padding:20px 16px 24px}.daily-card{padding:23px 20px 19px;min-height:366px}.daily-card h2{font-size:27px}.daily-headline{margin-top:18px;padding:17px 0;font-size:15px}.daily-summary{font-size:13px;line-height:1.7}.daily-authors{margin-top:13px;font-size:12px}.daily-venue{font-size:11px}.daily-dots{padding:21px 0 16px;min-height:42px}.daily-actions{gap:clamp(15px,10vw,43px)}.daily-action span{width:50px;height:50px}.daily-hints{margin-top:23px;padding:0 2px}}
 @media(prefers-reduced-motion:reduce){.daily-card,.daily-action{transition:none!important;animation:none!important}}
 
 </style>
@@ -6841,14 +6837,14 @@ function renderFeed() {
   Feed.layout = layout;
   const box = document.getElementById('topStories');
   let feed = document.getElementById('feed');
-  if (!feed || !box.contains(feed)) {
+  if (!feed || !box.contains(feed) || feed.classList.contains('daily-feed')) {   // Daily's frame lacks the feed's controls: draw the feed's own
     box.innerHTML = `<div class="feed" id="feed"><div class="pull-hint" id="pullHint" aria-hidden="true"><svg class="pull-arrow" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span class="pull-text"></span></div><div class="feed-head" id="feedHead"><div class="feed-tabs" id="feedTabs" role="tablist" aria-label="Feeds"><div class="ft-tabs" id="feedTabsIn"></div><div class="ft-add" id="feedAdd"></div></div><div class="feed-ctl" id="feedCtl" hidden></div><button type="button" class="feed-check" onclick="feedCheckNew('button')">Check for new papers</button><p class="tabs-msg" id="tabsMsg" role="status" aria-live="polite"></p></div><div class="list-bar" id="listBar" hidden></div><div class="feed-list" id="feedList"></div><div class="feed-more" id="feedMore"></div><div class="feed-end" id="feedEnd"></div></div>`;
     feed = document.getElementById('feed');
     Feed.mounted = false; Feed.edit = null; Feed.tabNames = null;
     if (Feed.obs) { Feed.obs.disconnect(); Feed.obs = null; }   // it watched the old sentinel
     feedHeadWatch();
   }
-  feed.classList.remove('daily-feed'); document.body.classList.remove('daily-mode');
+  document.body.classList.remove('daily-mode');
   // Phase 17: the interest is reconciled first (renamed: it follows; gone: All, and Feed.switched), so the decision below
   // sees it and one rebuild draws the view the controls show. Nothing called from here draws the feed again (drawing).
   const was = Feed.drawing;
@@ -7591,6 +7587,11 @@ function feedStep(d) {
   feedFocus(posts[i].dataset.key);
 }
 function feedFocusedPass() { const r = Feed.focus ? Feed.recs.get(Feed.focus) : null; return r && r.kind === 'pass' && !r.hide && !r.stale ? r : null; }
+/* The page's own keyboard shortcuts are off (29 October 2026, his words: "Disable keyboard shortcuts ... I dont need
+   any"): the feed's keys, the lists' and the paper page's j and k, / and ?, Daily's arrows and the reader's + and -.
+   Their code stays, and true brings them back. Tab, Enter and Space on a focused control, Esc, the menus' arrows, the
+   reader's scrolling keys and the note editor's keys are the browser's and the page's ordinary ways and stay. */
+const KEYBOARD_SHORTCUTS = false;
 const FEED_KEYS = {
   j: { run: () => feedStep(1) }, k: { run: () => feedStep(-1) },
   s: { decide: true, run: () => Feed.focus && feedKeep(Feed.focus) }, x: { decide: true, run: () => Feed.focus && (Feed.ranked ? listNotForThis(Feed.focus) : feedPass(Feed.focus)) },
@@ -7608,6 +7609,7 @@ const FEED_KEYS = {
 };
 document.addEventListener('keydown', e => {
   if (!feedActive() || e.defaultPrevented || e.isComposing || e.keyCode === 229 || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (!KEYBOARD_SHORTCUTS) return;
   const t = e.target;
   if (t && (/^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t.tagName) || t.isContentEditable)) return;
   if (t && t.hasAttribute && t.hasAttribute('onclick') && t.tabIndex >= 0) return;   // a focused row's Enter and Space are its own
@@ -7638,7 +7640,7 @@ document.addEventListener('keydown', e => {
 const Presses = new Map();
 function pressControl(t) {
   if (!t || !t.closest) return null;
-  return t.closest('.daily-action, .daily-interest, .daily-more') || t.closest('#feedList .post .ic, #feedList .post .chip, #feedList .post .act, #feedList .post.gone button, #feedTabs .tab, #feedTabs .tab-add, #feedCtl button, #feedSortMenu button, #feedInterestMenu button, #listBar button, .list-menu button, #saveSheet [data-guard], #hideSheet [data-guard], #hideSheet .hide-own input')
+  return t.closest('.daily-action, .daily-interest') || t.closest('#feedList .post .ic, #feedList .post .chip, #feedList .post .act, #feedList .post.gone button, #feedTabs .tab, #feedTabs .tab-add, #feedCtl button, #feedSortMenu button, #feedInterestMenu button, #listBar button, .list-menu button, #saveSheet [data-guard], #hideSheet [data-guard], #hideSheet .hide-own input')
     || t.closest('.sh-panel') || t.closest('#saveSheet') || t.closest('.hide-box') || t.closest('#hideSheet') || t.closest('#feedList .post')
     || t.closest('.save-dd .save-dd-item, .copy-dd .copy-dd-item, #paperDetail .pd-bar .pd-act[data-act], #libraryContent .top-row .p-actions [data-act]')   // Phase 13e: the picker, the Copy menu, the paper page's bar and Library's row icons
     || t.closest('#paperDetail .pd-related .feed-item [data-act], #libraryContent [data-lib] .library-actions button[data-act]')   // and a page's related papers, and a Library group's header actions
@@ -7663,7 +7665,7 @@ function markOf(k, act) {   // a control's value as it shows now: the paper's st
 }
 function pressWhat(el) {
   if (!el || !el.closest) return null;
-  if (el.closest('.daily-feed') && el.matches('.daily-action, .daily-interest, .daily-more')) return { kind: 'daily', dailyGen: Number(el.dataset.dailyGen), ident: 'daily:' + el.dataset.dailyGen + ':' + (el.dataset.dailyPaper || '') + ':' + (el.dataset.dailyAction || el.dataset.interest || 'more') };
+  if (el.closest('.daily-feed') && el.matches('.daily-action, .daily-interest')) return { kind: 'daily', dailyGen: Number(el.dataset.dailyGen), ident: 'daily:' + el.dataset.dailyGen + ':' + (el.dataset.dailyPaper || '') + ':' + (el.dataset.dailyAction || el.dataset.interest || '') };
   const post = el.closest('#feedList .post');
   if (post) { const act = el === post ? 'page' : el.dataset.act || ''; return { kind: 'post', act, key: post.dataset.key || '', n: act === 'chip' ? el.dataset.n || '' : undefined, ident: `post:${post.dataset.key || ''}:${act}:${el.dataset.reason || ''}:${act === 'chip' ? el.dataset.n || '' : ''}` }; }
   // Phase 25: a list's bar (its ⋯, + Add a paper, its interest), and a row of a list's menu, to that opening of it
@@ -8856,7 +8858,7 @@ function dailyCardHTML(card, row) {
     <span class="daily-stamp daily-stamp-save" aria-hidden="true">${esc(dailyDestination(card.paper))}</span><span class="daily-stamp daily-stamp-pass" aria-hidden="true">Pass</span>
     <h2><a href="#paper/${encodeURIComponent(card.paper)}">${esc(row.title || headline)}</a></h2>
     ${hasText(row.authors) ? `<p class="daily-authors">${esc(row.authors)}</p>` : ''}${hasText(row.venue) ? `<p class="daily-venue">${esc(row.venue)}</p>` : ''}
-    ${headline ? `<p class="daily-headline">${esc(headline)}</p>` : ''}${summary ? `<p class="daily-summary">${esc(summary)}</p><button type="button" class="daily-more" aria-expanded="false">Read more</button>` : ''}
+    ${headline ? `<p class="daily-headline">${esc(headline)}</p>` : ''}${summary ? `<p class="daily-summary">${esc(summary)}</p>` : ''}
   </article>`;
 }
 function dailyRender(focus) {
@@ -8872,17 +8874,15 @@ function dailyRender(focus) {
   const sections = dailySections(), section = sections.find(s => s.interest === Daily.interest), cards = dailyCards().filter(c => c.interest === Daily.interest), card = cards[0], row = card && feedRow(card.paper), root = box.querySelector('#dailyBody');
   const empty = Daily.status === 'retry' ? `Couldn't load your picks. <button type="button" data-daily-retry>Try again</button>` : !Daily.active || !section || Daily.status === 'waiting' || section.cards.length === 0 ? 'Your next picks are on the way.' : "That's all for today. More tomorrow.";
   const icon = kind => kind === 'save' ? '<path d="M6 3h12v18l-6-4-6 4z"/>' : kind === 'pass' ? '<path d="m6 6 12 12M18 6 6 18"/>' : '<path d="m5 12 4 4L19 6"/>';
-  root.innerHTML = `<header class="daily-intro"><h1>For today</h1><p>Fresh picks each morning. Pick up where you left off.</p></header>
-    <div class="daily-interests" role="tablist" aria-label="Interests">${sections.map(s => `<button type="button" role="tab" class="daily-interest" aria-selected="${s.interest === Daily.interest}" data-interest="${dataAttr(s.interest)}">${s.level === 'definitely' ? '<i aria-hidden="true"></i>' : ''}${esc(s.interest)}</button>`).join('')}</div>
+  root.innerHTML = `<div class="daily-interests" role="tablist" aria-label="Interests">${sections.map(s => `<button type="button" role="tab" class="daily-interest" aria-selected="${s.interest === Daily.interest}" data-interest="${dataAttr(s.interest)}">${s.level === 'definitely' ? '<i aria-hidden="true"></i>' : ''}${esc(s.interest)}</button>`).join('')}</div>
     <section class="daily-area"><h2 class="daily-interest-name">${esc(Daily.interest || '')}${section?.level === 'definitely' ? '<span>Core</span>' : ''}</h2>
     ${card && row ? dailyCardHTML(card, row) + `<div class="daily-dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="daily-actions">${['pass', 'save', 'read'].map(kind => `<button type="button" class="daily-action ${kind}" data-daily-action="${kind}"${kind === 'save' ? ' aria-label="Choose a list" aria-haspopup="dialog" aria-expanded="false"' : ''}><span><svg viewBox="0 0 24 24" aria-hidden="true">${icon(kind)}</svg></span><b>${kind === 'pass' ? 'Pass' : kind === 'read' ? 'Mark read' : esc(dailyDestination(card.paper))}</b></button>`).join('')}</div><p class="daily-hints"><span>&larr; Swipe to pass</span><span>Swipe to save &rarr;</span></p>` : `<div class="daily-empty" role="status">${empty}</div>`}</section>`;
-  root.querySelectorAll('.daily-action, .daily-interest, .daily-more').forEach(b => { b.dataset.dailyGen = String(Daily.generation); b.dataset.dailyPaper = card ? card.paper : ''; });
+  root.querySelectorAll('.daily-action, .daily-interest').forEach(b => { b.dataset.dailyGen = String(Daily.generation); b.dataset.dailyPaper = card ? card.paper : ''; });
   root.querySelectorAll('.daily-interest').forEach(b => { b.onclick = () => dailySetInterest(b.dataset.interest); });
   const retry = root.querySelector('[data-daily-retry]'); if (retry) retry.onclick = privateCallback(dailyRefresh);
   if (card) {
     const generation = Daily.generation, el = root.querySelector('.daily-card'); dailyBindGestures(el, card, generation);
     root.querySelectorAll('[data-daily-action]').forEach(b => { b.onclick = privateCallback(e => { if (b.dataset.dailyAction === 'save') dailyOpenSaveSheet(e, b, card); else dailyAct(b.dataset.dailyAction, card, generation); }); });
-    const more = root.querySelector('.daily-more'); if (more) more.onclick = () => { const p = root.querySelector('.daily-summary'), expanded = more.getAttribute('aria-expanded') !== 'true'; p.classList.toggle('expanded', expanded); more.setAttribute('aria-expanded', String(expanded)); more.textContent = expanded ? 'Read less' : 'Read more'; };
     if (hadFocus) el.focus({ preventScroll: true });
   } else if (hadFocus) { const undo = document.querySelector('#toast button'); if (undo) undo.focus({ preventScroll: true }); }
 }
@@ -8914,7 +8914,7 @@ function dailyBindGestures(el, card, generation) {
   };
   el.onpointercancel = el.onlostpointercapture = e => { const p = Daily.press; if (p && p.el === el && p.id === e.pointerId) { dailyCancelPress(); dailyAdopt(); } };
   el.onkeydown = e => {
-    if (e.target !== el || document.activeElement !== el || e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.isComposing || Daily.sheet || document.querySelector('.save-sheet.open, .reader.open') || !window.getSelection()?.isCollapsed) return;
+    if (!KEYBOARD_SHORTCUTS || e.target !== el || document.activeElement !== el || e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.isComposing || Daily.sheet || document.querySelector('.save-sheet.open, .reader.open') || !window.getSelection()?.isCollapsed) return;
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); dailyAct(e.key === 'ArrowRight' ? 'save' : 'pass', card, generation); }
   };
 }
@@ -11128,6 +11128,7 @@ document.addEventListener('keydown', e => {
   const t = e.target;
   if (t && (/^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t.tagName) || t.isContentEditable)) return;
   if (document.querySelector('.auth-overlay.open, .reader.open')) return;
+  if (!KEYBOARD_SHORTCUTS) return;
   if (_paperViewActive) {
     if (e.key === 'j' || e.key === 'k') {
       const b = document.querySelector(e.key === 'j' ? '.pd-nav-next' : '.pd-nav-prev');
@@ -11163,7 +11164,7 @@ document.addEventListener('keydown', e => {
 
 /* "/" jumps to search, "?" lists the keys */
 document.addEventListener('keydown', e => {
-  if (AppMenu.open) return;
+  if (AppMenu.open || !KEYBOARD_SHORTCUTS) return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const t = e.target;
   if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) return;
@@ -11307,7 +11308,8 @@ function libGroupRedraw(key) {
    refuses a second file there (422), and the file read back must be the one this page meant. A request names only
    what was asked: the kind, the text typed or the paper's id, the star, the time. Uploads never make one.
    The requests this device follows are kept in this browser (scholar_requests_v1, ids and what was asked) until each
-   ends, so a reload carries on; signing out or a lock forgets them. While one is under way and the page shows, one
+   ends, and then with how it ended (its state, reason and paper ids, never a title) for REQUEST_KEEP_MS, so a reload
+   carries on and never says an ending twice; signing out or a lock forgets them. While one is under way and the page shows, one
    listing of requests/ every REQUEST_POLL_MS finds the statuses that changed, and only those are read, each checked
    against its Git blob SHA. What the page says comes from its own words for each state and reason code
    (REQUEST_WORDS), never from the worker's text. */
@@ -11369,7 +11371,8 @@ function requestFor(kind, paper) {   // this device's newest request of a kind (
 function requestsStore() {
   if (!isPrivate() || !isOwner()) return;
   const keep = Requests.items.filter(r => r.destination || requestLive(r) || Date.now() - (r.ended || 0) < REQUEST_KEEP_MS).filter((r, i, a) => r.destination || i >= a.length - 20)
-    .map(r => ({ id: r.id, kind: r.kind, paper: r.paper || null, input: r.input || null, star: !!r.star, at: r.at, sent: !!r.sent, stop: !!r.stop, stopAt: r.stopAt || null, stopSent: !!r.stopSent, ended: r.ended || null, destination: r.destination || null }));
+    .map(r => ({ id: r.id, kind: r.kind, paper: r.paper || null, input: r.input || null, star: !!r.star, at: r.at, sent: !!r.sent, stop: !!r.stop, stopAt: r.stopAt || null, stopSent: !!r.stopSent, ended: r.ended || null, destination: r.destination || null,
+      status: r.status && !requestLive(r) ? { state: r.status.state, reason: r.status.reason, at: r.status.at, added: (r.status.added || []).map(p => p.id), existing: r.status.existing || [] } : null }));
   try { checkedStorageSet(REQUESTS_KEY, JSON.stringify({ v: 1, items: keep })); } catch (e) {}
 }
 function requestsLoad() {
@@ -11378,9 +11381,12 @@ function requestsLoad() {
   let doc = null;
   try { doc = JSON.parse(localStorage.getItem(REQUESTS_KEY) || 'null'); } catch (e) { doc = null; }
   const items = doc && doc.v === 1 && Array.isArray(doc.items) ? doc.items : [];
+  const ids = v => Array.isArray(v) && v.length <= 20 && v.every(x => typeof x === 'string' && BRIEF_ID.test(x));
+  const kept = s => s && typeof s === 'object' && ['done', 'stopped', 'failed'].includes(s.state) && REQUEST_REASONS.includes(s.reason) && briefStamp(s.at) && ids(s.added) && ids(s.existing)
+    ? { state: s.state, reason: s.reason, at: s.at, added: s.added.map(id => ({ id, title: '' })), existing: [...s.existing] } : null;
   Requests.items = items.filter(r => r && REQUEST_ID.test(r.id) && (r.kind === 'brief' ? typeof r.paper === 'string' && BRIEF_ID.test(r.paper) && !r.paper.startsWith('up-')
     : r.kind === 'add' && typeof r.input === 'string' && new TextEncoder().encode(r.input).length <= REQUEST_INPUT_BYTES) && briefStamp(r.at)
-    && (!r.stop || briefStamp(r.stopAt))).map(r => ({ ...r, status: null }));
+    && (!r.stop || briefStamp(r.stopAt))).map(r => { const status = kept(r.status); return { ...r, status, quiet: !!r.ended && !status }; });   // quiet: ended before this load, kept without how
   Requests.items.forEach(r => { const d = r.destination; if (d && !(r.kind === 'add' && d.job === r.id && typeof d.list === 'string' && listTabName(d.list) && (d.listId === null || typeof d.listId === 'string') && (!d.ids || Array.isArray(d.ids) && d.ids.every(k => typeof k === 'string' && k.length <= 300)))) delete r.destination; });
   if (Requests.items.length) requestsTick();
   listAddSettle();
@@ -11465,7 +11471,7 @@ async function requestsPoll() { const _authEpoch = capturePrivateEpoch();
   const files = new Map((listing || []).filter(e => e && e.type === 'file' && typeof e.name === 'string' && /^[0-9a-f]{40}$/.test(e.sha) && Number.isSafeInteger(e.size)).map(e => [e.name, e]));
   for (const r of Requests.items.filter(x => x.sent && requestLive(x))) {
     const info = files.get(r.id + '.status.json');
-    if (!info) { if (!files.has(r.id + '.json') && r.status) { r.gone = true; r.ended = Date.now(); requestChanged(r); } continue; }
+    if (!info) { if (!files.has(r.id + '.json') && (r.status || r.ended)) { r.gone = true; r.ended = Date.now(); requestChanged(r); } continue; }
     if (Requests.seen.get(r.id) === info.sha || info.size > REQUEST_STATUS_CAP) continue;
     const bytes = await privateAwait(privateBytes(ghApiBase() + '/git/blobs/' + info.sha, info.size, binding, false, transferBudgetMs(info.size + 4096), GH_RAW), _authEpoch);
     if (bytes.length !== info.size || await privateAwait(gitBlobSha(bytes), _authEpoch) !== info.sha) continue;
@@ -11640,7 +11646,7 @@ function addPaperFinished(r) {
   listAddFinished(r);
   addPaperRefresh().then(privateCallback(renderAddPaper));
   const s = r.status, first = s.added[0] ? s.added[0].id : s.existing[0];
-  if (!forList && (currentTab !== 'library' || _libPanel !== 'add')) toast(s.added.length ? 'Added to your library' : 'Already in your library', () => addPaperOpen(first), { actionLabel: 'Open', duration: 8000 });
+  if (!forList && !r.quiet && (currentTab !== 'library' || _libPanel !== 'add')) toast(s.added.length ? 'Added to your library' : 'Already in your library', () => addPaperOpen(first), { actionLabel: 'Open', duration: 8000 });
   renderAddPaper();
 }
 function addPaperOpen(id) {
@@ -15094,8 +15100,8 @@ document.addEventListener('keydown', e => {
     else if (document.getElementById('reader').classList.contains('zen')) exitZen();   // full screen: Esc leaves it first
     else closeReader();
   }
-  else if ((e.key === '+' || e.key === '=') && !e.metaKey && !e.ctrlKey) { e.preventDefault(); readerZoom(1); }
-  else if (e.key === '-' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); readerZoom(-1); }
+  else if (KEYBOARD_SHORTCUTS && (e.key === '+' || e.key === '=') && !e.metaKey && !e.ctrlKey) { e.preventDefault(); readerZoom(1); }
+  else if (KEYBOARD_SHORTCUTS && e.key === '-' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); readerZoom(-1); }
 });
 
 /* No PDF yet, or the one we have fails: paste an open link (checked before it's saved) or drop a file */
