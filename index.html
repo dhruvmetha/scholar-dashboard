@@ -8288,8 +8288,8 @@ function setProject(name) {
    No arrival redraws mounted posts. Nothing here changes eligibility, labels or shared scoring. */
 const TASTE_CAP = 4 * 1024 * 1024;
 const Taste = { gen: 0, pending: null, active: null, newest: null };
-const TASTE_FIXED = { format: 'scout-taste-v1', recipe: 'cosine-contrast-weak-pass-v1', model: 'Qwen/Qwen3-Embedding-4B',
-  revision: '5cf2132abc99cad020ac570b19d031efec650f2b', dim: 2560, preprocessing: 'qr-scholar-v1:document:512' };
+const TASTE_FIXED = { format: 'scout-taste-v1', recipe: 'cosine-contrast-weak-pass-v1', model: 'Qwen/Qwen3-Embedding-0.6B',
+  revision: '97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3', dim: 1024, preprocessing: 'qr-scholar-v1:document:512' };
 function tasteText(p) { return JSON.stringify([p.title || '', p.abstract || '']); }
 function tasteFeedback() {
   const lists = new Map();
