@@ -233,8 +233,11 @@ html.ro #vaultOverlay { display: none !important; }
 .p-authors { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
 .p-detail-panel { font-size: 13px; color: var(--text-secondary); line-height: 1.55; max-height: 0; overflow: hidden; opacity: 0; margin-top: 0; transition: max-height 0.4s ease, opacity 0.25s ease, margin-top 0.3s ease; }
 .p-detail-panel.open { max-height: 500px; opacity: 1; margin-top: 10px; }
+.p-detail-panel.open[data-active-type="abstract"] { max-height: none; }
 .btn-abs.btn-why { min-width: 26px; justify-content: center; padding: 2px 7px; font-weight: 600; }
 .p-detail-panel .why { font-size: 13px; }
+.abs-tex .katex { font-size: 1.05em; }   /* an abstract's math (renderAbstractText): KaTeX's 1.21em towers over the line */
+.abs-tex .katex-display { margin: 0.6em 0; overflow-x: auto; overflow-y: hidden; max-width: 100%; }
 .btn-abs.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .btn-link, .btn-abs { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; background: none; border: 1px solid var(--border); color: rgb(216 217 221 / 82%); font-size: 13px; line-height: 1.4; padding: 2px 9px; border-radius: 4px; cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s; }
 .btn-abs:hover, .btn-abs.active:hover { background: none; color: var(--accent); border-color: var(--accent); }
@@ -300,7 +303,7 @@ html.ro #vaultOverlay { display: none !important; }
 .topic-body { padding: 0 0 4px; max-height: 620px; overflow-y: auto; }
 .topic-item { padding: 16px 16px 16px; border-top: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 10px; transition: background 0.15s, opacity 0.3s; cursor: pointer; }
 .topic-item:first-child { border-top: none; }
-.topic-item:hover { background: var(--bg-hover); }
+:where(#mainScroll:not(.scrolling)) .topic-item:hover { background: var(--bg-hover); }
 .topic-item.is-read { opacity: var(--read-opacity); }
 .topic-item .p-title { font-size: 15px; color: var(--text-secondary); font-weight: 500; margin-top: 7px; }
 .topic-item .p-authors { font-size: 13px; margin-top: 12px; }
@@ -405,13 +408,13 @@ html.ro #vaultOverlay { display: none !important; }
 .feed-body { max-height: none; overflow: visible; padding: 0; }
 .topic-item.feed-item { display: block; padding: 15px 18px 14px 36px; border-top: 1px solid var(--line); position: relative; gap: 0; }
 .topic-item.feed-item:first-child { border-top: none; }
-.topic-item.feed-item:hover { background: rgba(255,255,255,0.035); }
+:where(#mainScroll:not(.scrolling)) .topic-item.feed-item:hover { background: rgba(255,255,255,0.035); }
 /* unread / read marker, same language as the Top Papers reading rail */
 .feed-item::before { content: ''; position: absolute; left: 16px; top: 22px; width: 7px; height: 7px; box-sizing: border-box; border-radius: 50%; background: var(--accent); transition: transform 0.2s; }
 .feed-item.is-read::before { background: none; border: 1.5px solid color-mix(in srgb, var(--accent) 60%, transparent); }
-.feed-item:hover::before { transform: scale(1.3); }
+:where(#mainScroll:not(.scrolling)) .feed-item:hover::before { transform: scale(1.3); }
 .f-headline { font-size: 15.5px; font-weight: 500; line-height: 1.38; color: var(--text); text-wrap: pretty; transition: color 0.15s; }
-.feed-item:hover .f-headline { color: var(--text); }
+:where(#mainScroll:not(.scrolling)) .feed-item:hover .f-headline { color: var(--text); }
 .f-title { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .f-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-muted); margin-top: 8px; min-width: 0; font-variant-numeric: tabular-nums; }
 .top-lead .f-meta { margin-top: 0; font-size: 12.5px; }
@@ -429,7 +432,7 @@ html.ro #vaultOverlay { display: none !important; }
 .top-side .f-rel { display: none; }
 .f-actions { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.2s ease, opacity 0.15s ease, margin-top 0.2s ease; }
 .f-actions > div { overflow: hidden; min-height: 0; }
-.feed-item:hover .f-actions, .feed-item:focus-within .f-actions, .f-actions:has(.p-detail-panel.open) { grid-template-rows: 1fr; opacity: 1; margin-top: 12px; }
+:where(#mainScroll:not(.scrolling)) .feed-item:hover .f-actions, .feed-item:focus-within .f-actions, .f-actions:has(.p-detail-panel.open) { grid-template-rows: 1fr; opacity: 1; margin-top: 12px; }
 .topic-item.feed-item.is-read, .top-lead.is-read { opacity: 0.55; }
 
 /* topic cards: quieter frame, header count on the right */
@@ -880,7 +883,7 @@ body.feed-land .tabs-msg { flex: 0 0 100%; box-sizing: border-box; }
    as the height given here; after that, as the height it last had. Not Library rows: renderLibrary draws them anew,
    so they would lose the heights they had and a restored scroll position would land on another paper. */
 .post { content-visibility: auto; contain-intrinsic-size: auto 160px; }
-html:not(.no-hover) .post:hover { background: rgba(255,255,255,0.02); }
+html:not(.no-hover) :where(#mainScroll:not(.scrolling)) .post:hover { background: rgba(255,255,255,0.02); }
 .post.kb-sel { box-shadow: inset 3px 0 0 var(--accent); background: rgba(255,255,255,0.025); }   /* the post the keys act on */
 .post:focus-visible { outline: none; }   /* (kb-sel marks it) */
 .post .near { margin: 0 0 6px; font-size: 12.5px; color: var(--accent); }
@@ -1108,7 +1111,7 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 /* Collapsed search actions need no layout. Focus or hover opens them on hover-capable screens. */
 .search-results .top-row .tr-actions { display: none; }
 @media (hover: hover) {
-  .search-results .top-row:hover .tr-actions, .search-results .top-row:focus-within .tr-actions,
+  :where(#mainScroll:not(.scrolling)) .search-results .top-row:hover .tr-actions, .search-results .top-row:focus-within .tr-actions,
   .search-results .top-row .tr-actions:has(.p-detail-panel.open) { display: grid; }
 }
 .chip-select { -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.055) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24'%3E%3Cpath fill='%239aa0a6' d='M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z'/%3E%3C/svg%3E") no-repeat right 9px center; border: 1px solid transparent; color: var(--text-secondary); font: inherit; font-size: 12px; padding: 3px 26px 3px 10px; border-radius: 999px; cursor: pointer; transition: border-color 0.15s, color 0.15s; max-width: 240px; }
@@ -1177,6 +1180,17 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 .inkLayer { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: visible; }
 .inkLayer path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .reader.dark .inkLayer { filter: invert(0.9) hue-rotate(180deg); }   /* like the page: dark ink turns light */
+/* WRITTEN NOTES: ink shown as on dark pages (the same filter), so the pens look the same on the page and here */
+.hw-view, .hw-pad { position: relative; width: 100%; border-radius: 8px; overflow: hidden; }
+.hw-view { margin-top: 2px; }
+.pd-note .hw-view { background: rgba(255,255,255,0.03); margin-top: 8px; }
+.hw-pad { border: 1px solid var(--border); background: rgba(255,255,255,0.025); touch-action: pan-y; cursor: crosshair; -webkit-user-select: none; user-select: none; }
+.hw-svg { display: block; width: 100%; height: 100%; filter: invert(0.9) hue-rotate(180deg); pointer-events: none; }   /* the card itself is what's touched: strokes come and go under the Pencil, and Safari would scroll a touch whose element is taken away */
+.hw-svg path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.hw-tools { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+.hw-tools .sel-dot { width: 22px; height: 22px; margin: 0 2px; }
+.hw-tools .sel-dot.on.resting { border-color: var(--line); }
+.hw-tools .sel-icon[aria-disabled="true"] { opacity: 0.35; pointer-events: none; }
 .reader-body.inking .textLayer, .reader-body.inking .textLayer span { cursor: crosshair; user-select: none; -webkit-user-select: none; }
 .reader-col { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .reader-col .reader-body { flex: 1; min-height: 0; }
@@ -1209,6 +1223,11 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 .ink-bar .ink-size.on i { background: var(--text); }
 .sel-dot { flex-shrink: 0; }   /* colour dots stay round however tight their row is */
 .ink-bar .sel-dot.on { border-color: #fff; }
+/* a pen's colour is drawn inside its ring, so on dark pages (and in written notes) it can be shown as the ink will
+   look, through the same filter as the ink, without the filter touching the white ring that marks the chosen one */
+.sel-dot.pen-dot { position: relative; background: none; }
+.sel-dot.pen-dot::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--hc); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3); }
+.reader.dark .ink-bar .pen-dot::before, .hw-tools .pen-dot::before { filter: invert(0.9) hue-rotate(180deg); }
 .ink-bar .sel-icon.on { background: rgba(255,255,255,0.12); color: var(--text); }
 .ink-bar .sel-icon.ink-eraser.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
 .ink-bar .sel-dot.on.resting { border-color: var(--line); }
@@ -1299,22 +1318,44 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 #readerNotesBtn[aria-pressed="true"] { color: var(--accent); border-color: transparent; }
 /* Notes and chat: the panel's icon, which shows or hides the panel (no count: a number means nothing on a panel) */
 .rt-panel-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.annoLayer { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.annoLayer { position: absolute; inset: 0; z-index: 0; pointer-events: none; mix-blend-mode: screen; }
+/* Highlights sit under the words. The layer (not each highlight: a layer is its own group, so a highlight inside
+   it would only blend with the layer's empty ground and lie over the text) blends with the page: on light pages
+   multiply keeps black words black and tints the paper; on dark pages screen keeps light words light (measured) */
+.reader:not(.dark) .annoLayer { mix-blend-mode: multiply; }
 /* comments and citations are lines in navy, apart from the highlight colours and the site's amber */
 .annoLayer, .annoMarks { --note-line: #8aa4f0; --note-ink: #0f1b3d; --ref-tint: rgba(138,164,240,0.16); }
-.anno-rect { position: absolute; border-radius: 2px; background: var(--hc); opacity: 0.38; transition: opacity 0.15s, box-shadow 0.15s; }
+.anno-hl { position: absolute; inset: 0; opacity: 0.38; transition: opacity 0.2s; }   /* one highlight: its lines inside, at full strength (see annoShapeHTML) */
+.anno-hl.note, .anno-hl.ref { opacity: 1; }   /* lines, not fills */
+.anno-rect { position: absolute; border-radius: 2px; background: var(--hc); }
 .anno-rect:not(.note) { box-sizing: content-box; padding: 0 3px; margin-left: -3px; border-radius: 3px; }   /* a little room either side of the words */
-.reader:not(.dark) .anno-rect { mix-blend-mode: multiply; }   /* opacity from .anno-rect, so .hover/.flash still apply */
-.anno-rect.note { background: none; opacity: 1; border-bottom: 2px dashed var(--note-line, var(--accent)); border-radius: 0; mix-blend-mode: normal !important; }
-.anno-rect.flash { animation: hl-pulse 0.8s cubic-bezier(0.2, 0.7, 0.3, 1); }   /* jumped to: one soft pulse (quick rise, slow ease back), ending exactly as it was */
-.anno-rect.note.flash { animation-name: note-pulse; }
-.anno-rect.ref.flash { animation-name: ref-pulse; }
+.anno-rect.note { background: none; opacity: 1; border-bottom: 2px dashed var(--note-line, var(--accent)); border-radius: 0; }
+.anno-hl.flash:not(.note):not(.ref), .anno-hl.flash > .anno-rect.note, .anno-hl.flash > .anno-rect.ref { animation: hl-pulse 0.8s cubic-bezier(0.2, 0.7, 0.3, 1); }   /* jumped to: one soft pulse (quick rise, slow ease back), ending exactly as it was */
+.anno-hl.flash > .anno-rect.note { animation-name: note-pulse; }
+.anno-hl.flash > .anno-rect.ref { animation-name: ref-pulse; }
 @keyframes hl-pulse { 0% { opacity: 0.38; } 18% { opacity: 0.85; } 100% { opacity: 0.38; } }
 @keyframes note-pulse { 0% { background-color: transparent; } 18% { background-color: color-mix(in srgb, var(--note-line, #8aa4f0) 28%, transparent); } 100% { background-color: transparent; } }
 @keyframes ref-pulse { 0% { background-color: var(--ref-tint); } 18% { background-color: color-mix(in srgb, var(--note-line, #8aa4f0) 36%, transparent); } 100% { background-color: var(--ref-tint); } }
-.anno-rect.hover { opacity: 0.6; }
-.anno-rect.note.hover { opacity: 1; border-bottom-style: solid; }
-.anno-rect.ref.hover { opacity: 1; box-shadow: inset 0 -1px 0 var(--note-line, var(--accent)); }
+.anno-hl.hover:not(.note):not(.ref) { opacity: 0.6; }
+.anno-live { position: absolute; inset: 0; }
+.anno-hl.adj { opacity: 0.34; }
+.anno-rect.adj { padding: 0; margin-left: 0; border-radius: 1px; }   /* Adjust: the highlight as a selection, edge to edge so the handles stand at its ends */
+/* Adjust's handles: a line at each end with a knob (above the start, below the end), the knob inside the button so
+   it can be taken hold of; wider for a finger */
+.adj-handle { position: absolute; width: 28px; margin-left: -14px; margin-top: -14px; padding: 0; border: none; background: none; pointer-events: auto; touch-action: none; -webkit-user-select: none; user-select: none; cursor: ew-resize; box-sizing: content-box; padding-top: 14px; }
+.adj-handle.end { margin-top: 0; padding-top: 0; padding-bottom: 14px; }
+.adj-handle::before { content: ''; position: absolute; left: 13px; top: 14px; bottom: 0; width: 2px; border-radius: 1px; background: #2f7cf6; }
+.adj-handle.end::before { top: 0; bottom: 14px; }
+.adj-handle::after { content: ''; position: absolute; left: 8px; top: 1px; width: 12px; height: 12px; border-radius: 50%; background: #2f7cf6; box-shadow: 0 1px 3px rgba(0,0,0,0.35); transition: transform var(--t-fast); }
+.adj-handle.end::after { top: auto; bottom: 1px; }
+.adj-handle:hover::after, .adj-handle.dragging::after { transform: scale(1.2); }
+.adj-handle:focus { outline: none; }
+@media (pointer: coarse) { .adj-handle { width: 40px; margin-left: -20px; } .adj-handle::before { left: 19px; } .adj-handle::after { left: 13px; width: 14px; height: 14px; } }
+.ac-adjust { gap: 8px; }
+.ac-hint { font-size: 12.5px; color: var(--text-muted); padding-left: 4px; }   /* Adjust: the highlight shown as a selection while its ends move */
+.reader.dark .anno-hl.adj { opacity: 0.5; }
+.anno-hl.hover > .anno-rect.note { border-bottom-style: solid; }
+.anno-hl.hover > .anno-rect.ref { box-shadow: inset 0 -1px 0 var(--note-line, var(--accent)); }
 .reader-page.over-anno .textLayer, .reader-page.over-anno .textLayer span { cursor: pointer; }
 .annoMarks { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .anno-mark { position: absolute; width: 18px; height: 18px; margin-top: -9px; padding: 0; border: none; border-radius: 5px; background: var(--hc, var(--accent)); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.35); transition: transform 0.15s, box-shadow 0.15s; }
@@ -1346,6 +1387,15 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 .sel-icon.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
 .sel-icon.danger:hover { color: #f28b82; }
 .anno-card textarea#acNote { display: block; margin-top: 4px; min-height: 0; height: 32px; resize: none; overflow-y: hidden; padding: 6px 9px; line-height: 1.45; font-size: 13.5px; border-radius: 7px; }
+.ac-comment { display: flex; align-items: flex-start; gap: 4px; }
+.ac-comment textarea#acNote { flex: 1; min-width: 0; }
+.ac-write { flex-shrink: 0; margin-top: 4px; }
+/* writing a comment in the card: its pens and the card to write on under the comment box; a long comment scrolls
+   inside the card (a finger), it never runs off the screen */
+.anno-card.writing { max-height: calc(100vh - 76px); max-height: calc(100dvh - 76px); overflow-y: auto; overscroll-behavior: contain; }
+.anno-card .hw-editor { margin-top: 6px; }
+.anno-card .hw-tools { margin-bottom: 6px; padding: 0 1px; }
+.anno-card > .hw-view { margin-top: 6px; background: rgba(255,255,255,0.03); }
 .anno-card.open { display: block; }
 .ac-quote { font-family: var(--serif); font-size: 14px; line-height: 1.5; color: var(--text); border-left: 3px solid var(--hc, var(--accent)); padding-left: 10px; max-height: 6.2em; overflow: auto; }
 .ac-meta { display: flex; align-items: center; gap: 6px; margin: 10px 0 8px; font-size: 12px; color: var(--text-muted); }
@@ -1372,7 +1422,8 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 .rp-skel:nth-child(3) { animation-delay: 0.15s; } .rp-skel:nth-child(4) { animation-delay: 0.3s; }
 @keyframes skel { 50% { background: rgba(255,255,255,0.08); } }
 @media (prefers-reduced-motion: reduce) { .rp-skel, .rp-skel-bar { animation: none; } }
-.rp-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.rp-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+.rp-toolbar .rp-seg { margin-left: auto; }   /* a narrow panel: the order switch goes to its own line, on the right */
 .rp-toolbar .grow { flex: 1; }
 .rp-count-l { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
 .rp-seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
@@ -1399,9 +1450,9 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 .sel-act.primary { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .sel-act.primary:hover { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); }
 .rp-icon-btn svg path[d^="M9.5"] { fill: currentColor; stroke: none; }
-.anno-rect.ref { background: var(--ref-tint, color-mix(in srgb, var(--accent) 20%, transparent)); border-bottom: 1.5px solid var(--note-line, var(--accent)); border-radius: 2px 2px 0 0; mix-blend-mode: normal !important; }
+.anno-rect.ref { background: var(--ref-tint, color-mix(in srgb, var(--accent) 20%, transparent)); border-bottom: 1.5px solid var(--note-line, var(--accent)); border-radius: 2px 2px 0 0; }
 /* lines (comments, citations) are not translucent fills: the highlight opacity rules must not fade them */
-.reader .anno-rect.note, .reader .anno-rect.ref, .reader:not(.dark) .anno-rect.note, .reader:not(.dark) .anno-rect.ref { opacity: 1; }
+.reader .anno-hl.note, .reader .anno-hl.ref { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .rp-card.fresh { animation: none; } }
 .rp-gnote { position: relative; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.025); border: 1px solid var(--line); margin-bottom: 8px; transition: border-color 0.15s, background 0.15s; }
 .rp-gnote:hover { border-color: var(--line); background: rgba(255,255,255,0.035); }
@@ -1583,7 +1634,7 @@ body.rp-splitting, body.rp-splitting * { user-select: none !important; -webkit-u
 .chat-att img { height: 34px; border-radius: 4px; display: block; background: #fff; }
 .chat-att button { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 3px; border-radius: 50%; }
 .chat-att button:hover { color: var(--text); }
-.chat-box { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; padding: 7px 8px 5px 10px; transition: border-color 0.15s; }
+.chat-box { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; padding: 7px 8px 5px 10px; transition: border-color 0.15s; container-type: inline-size; }
 .chat-box:focus-within { border-color: var(--accent); }
 .chat-box textarea { width: 100%; box-sizing: border-box; background: none; border: none; resize: none; color: var(--text); font: inherit; font-size: 13.5px; line-height: 1.5; outline: none; max-height: 180px; }
 .chat-box-row { display: flex; align-items: center; gap: 4px; }
@@ -1593,7 +1644,14 @@ body.rp-splitting, body.rp-splitting * { user-select: none !important; -webkit-u
 .chat-select.effort { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 17a8 8 0 1 1 16 0'/%3E%3Cpath d='M12 17l4-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 4px center, left 5px center; padding-left: 21px; }
 .chat-select:hover, .chat-select:focus-visible { background-color: rgba(255,255,255,0.07); color: var(--text); outline: none; }
 .chat-select option { background: var(--bg-raise); color: var(--text); }
-.chat-send { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: var(--accent); color: var(--accent-ink); cursor: pointer; transition: filter 0.15s, background 0.15s; }
+/* A narrow composer (an iPad's panel): tighter menus, and Effort shows only its gauge (its level is in the menu) */
+@container (max-width: 300px) {
+  .chat-box-row { gap: 2px; }
+  .chat-box-row .rp-icon-btn { width: 30px; height: 32px; }
+  .chat-box-row .chat-select { padding-left: 3px; padding-right: 13px; background-position: right 2px center; }
+  .chat-box-row .chat-select.effort { width: 30px; flex-shrink: 0; padding: 4px 0; color: transparent; background-position: right 2px center, left 3px center; }
+}
+.chat-send { width: 28px; height: 28px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: var(--accent); color: var(--accent-ink); cursor: pointer; transition: filter 0.15s, background 0.15s; }
 .chat-send:hover { filter: brightness(1.08); }
 .chat-send.stop { background: rgba(255,255,255,0.12); color: var(--text); }
 .chat-send svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
@@ -1678,13 +1736,13 @@ body.rp-splitting, body.rp-splitting * { user-select: none !important; -webkit-u
 .reader-panel.tab-swap .rp-pane > :not(:first-child) { animation: tools-swap var(--t-fast) var(--ease); }
 .anno-rect.fresh { animation: hl-sweep 0.24s var(--ease) backwards; }   /* drawn on left to right by clipping, so its own opacity never jumps */
 @keyframes hl-sweep { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
-.anno-rect.gone, .anno-mark.gone { opacity: 0 !important; transition: opacity 0.15s ease-in; }
+.anno-hl.gone, .anno-mark.gone { opacity: 0 !important; transition: opacity 0.15s ease-in; }
 .anno-mark.fresh { animation: ui-pop 0.2s ease-out both; }
 .rp-item.fresh { animation: item-in 0.5s ease-out; }
-.anno-rect { transition: opacity 0.2s, box-shadow 0.2s; }
+.anno-rect { transition: box-shadow 0.2s; }
 @media (prefers-reduced-motion: reduce) {
   .vault-overlay.open, .vault-overlay.open .vault-box, .sel-bar.open, .anno-card.open, .cite-dd.open, .reader.panel-open .reader-panel,
-  .anno-rect.fresh, .anno-mark.fresh, .rp-item.fresh, .anno-rect.flash { animation: none; }
+  .anno-rect.fresh, .anno-mark.fresh, .rp-item.fresh, .anno-hl.flash, .anno-hl.flash > .anno-rect { animation: none; }
 }
 .pd-note { padding: 10px 0 12px; border-top: 1px solid var(--border-subtle, rgba(255,255,255,0.06)); }
 .pd-note:first-of-type { border-top: none; padding-top: 0; }
@@ -1819,11 +1877,11 @@ html.no-hover .cr-x { opacity: 0.7; }
 /* a row: the headline, why it's here, then its tags; hovering opens the paper's own title and actions */
 .lp-row { display: grid; grid-template-columns: minmax(0, 1fr); padding: 12px 18px; margin: 0 -18px; border-radius: 12px; cursor: pointer; transition: background-color var(--t-fast) var(--ease); }
 .lp-body.ranked .lp-row { grid-template-columns: 30px minmax(0, 1fr); column-gap: 14px; }
-.lp-row:hover { background: rgba(255,255,255,0.035); }
+:where(#mainScroll:not(.scrolling)) .lp-row:hover { background: rgba(255,255,255,0.035); }
 .lp-num { font-family: var(--serif); font-size: 15px; padding-top: 3px; color: color-mix(in srgb, var(--gc) 65%, var(--text-muted)); font-variant-numeric: tabular-nums; }
 .lp-row-main { min-width: 0; }
 .lp-h { font-family: var(--serif); font-optical-sizing: auto; font-size: 19px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.3; color: var(--text); text-wrap: pretty; transition: color var(--t-fast) var(--ease); }
-.lp-row:hover .lp-h { color: var(--text); }
+:where(#mainScroll:not(.scrolling)) .lp-row:hover .lp-h { color: var(--text); }
 .lp-row .why-line { margin-top: 4px; }
 .lp-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px; font-size: 12px; color: var(--text-muted); min-width: 0; }
 .lp-meta .tc-tags { flex-wrap: nowrap; min-width: 0; }
@@ -1833,7 +1891,7 @@ html.no-hover .cr-x { opacity: 0.7; }
 .lp-also .gdot { width: 6px; height: 6px; background: color-mix(in srgb, var(--gc) 70%, var(--bg-surface)); }
 .lp-more { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--t-slow) var(--ease), opacity var(--t-slow) var(--ease); }
 .lp-more > div { overflow: hidden; min-height: 0; }
-.lp-row:hover .lp-more, .lp-row:focus-within .lp-more, .lp-more:has(.p-detail-panel.open) { grid-template-rows: 1fr; opacity: 1; }
+:where(#mainScroll:not(.scrolling)) .lp-row:hover .lp-more, .lp-row:focus-within .lp-more, .lp-more:has(.p-detail-panel.open) { grid-template-rows: 1fr; opacity: 1; }
 .lp-orig { margin: 10px 0 0; font-size: 13.5px; color: var(--text-secondary); }
 .lp-orig i { font-style: normal; margin-right: 6px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
 .lp-more .p-action-row { margin-top: 10px; }
@@ -1898,15 +1956,15 @@ html.no-hover .cr-x { opacity: 0.7; }
 .tl-section-head .rule { flex: 1; height: 1px; background: var(--border); margin-left: 6px; }
 
 .paper-list .top-row { display: grid; grid-template-columns: minmax(0, 1fr) 140px; column-gap: 28px; row-gap: 0; padding: 13px 20px 13px 52px; margin: 0 8px; border: none; border-radius: 10px; position: relative; }
-.paper-list .top-row:hover { background: rgba(255,255,255,0.05); }
+:where(#mainScroll:not(.scrolling)) .paper-list .top-row:hover { background: rgba(255,255,255,0.05); }
 .top-row::before { content: ''; position: absolute; left: 24px; top: 20px; width: 9px; height: 9px; box-sizing: border-box; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--list-bg); transition: background 0.2s, transform 0.2s; }
 .top-row.is-read::before { background: var(--list-bg); border: 1.5px solid color-mix(in srgb, var(--accent) 60%, transparent); }
-.top-row:hover::before { transform: scale(1.3); }
+:where(#mainScroll:not(.scrolling)) .top-row:hover::before { transform: scale(1.3); }
 .paper-list .top-row.is-read { opacity: 0.5; }
 .paper-list .top-row.is-read:hover { opacity: 0.85; }
 .tr-main { min-width: 0; }
 .tr-headline { font-size: 16px; font-weight: 500; line-height: 1.38; color: var(--text); text-wrap: pretty; transition: color 0.15s; }
-.top-row:hover .tr-headline { color: var(--text); }
+:where(#mainScroll:not(.scrolling)) .top-row:hover .tr-headline { color: var(--text); }
 .tr-title { font-size: 13px; color: var(--text-muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tr-line { display: flex; align-items: center; gap: 12px; margin-top: 7px; font-size: 12.5px; color: var(--text-secondary); min-width: 0; }
 .tr-authors { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
@@ -1917,7 +1975,7 @@ html.no-hover .cr-x { opacity: 0.7; }
 .search-results .tr-venue { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; white-space: normal; }
 .top-row .tr-actions { grid-column: 1 / -1; display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.2s ease, opacity 0.15s ease, margin-top 0.2s ease; }
 .top-row .tr-actions > div { overflow: hidden; min-height: 0; }
-.top-row:hover .tr-actions, .top-row:focus-within .tr-actions, .top-row .tr-actions:has(.p-detail-panel.open) { grid-template-rows: 1fr; opacity: 1; margin-top: 10px; }
+:where(#mainScroll:not(.scrolling)) .top-row:hover .tr-actions, .top-row:focus-within .tr-actions, .top-row .tr-actions:has(.p-detail-panel.open) { grid-template-rows: 1fr; opacity: 1; margin-top: 10px; }
 .paper-list.flat .tl-section::before { top: 18px; bottom: 14px; }
 .search-results .paper-list, .interest-group-body .paper-list { padding: 4px 0 8px; }
 .search-results .paper-list .top-row, .interest-group-body .paper-list .top-row { padding-left: 48px; }
@@ -2350,8 +2408,17 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 .btn-icon.has-notes { color: var(--accent); }
 .btn-triage-info { color: var(--text-muted); }
 .triage-anchor { display: inline-flex; }
-.relevance-popup { position: fixed; z-index: 200; width: 360px; max-height: 70vh; overflow-y: auto; animation: dropdown-in 0.15s ease forwards; pointer-events: auto; }
-.relevance-breakdown { background: var(--bg-surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; box-shadow: 0 12px 36px rgba(0,0,0,0.6); }
+/* The score breakdown is one framed panel (from Sumanth's 01d9180). Where there's no room for all of it
+   (showRelevancePopup) the panel is made shorter and its content scrolls inside the frame, which stays whole; a fade at
+   an edge says there's more that way, and reaching the end doesn't carry on into the page (scrolling the page closes it). */
+@property --rail-up { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --rail-down { syntax: '<length>'; inherits: false; initial-value: 0px; }
+.relevance-popup { position: fixed; z-index: 200; width: 360px; max-height: calc(100vh - 16px); display: flex; flex-direction: column; overflow: hidden; background: var(--bg-surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 36px rgba(0,0,0,0.6); animation: dropdown-in 0.15s ease forwards; pointer-events: auto; }
+.relevance-breakdown { flex: 1 1 auto; min-height: 0; padding: 16px 18px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--rail-up), #000 calc(100% - var(--rail-down)), transparent); mask-image: linear-gradient(to bottom, transparent, #000 var(--rail-up), #000 calc(100% - var(--rail-down)), transparent); transition: --rail-up 0.2s var(--ease), --rail-down 0.2s var(--ease); }
+.relevance-breakdown.more-up { --rail-up: 28px; }
+.relevance-breakdown.more-down { --rail-down: 36px; }
+@media (prefers-reduced-motion: reduce) { .relevance-breakdown { transition: none; } }
 .relevance-score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .relevance-score-val { font-size: 28px; font-weight: 700; line-height: 1; }
 .relevance-score-val.sc-3 { color: var(--accent); }
@@ -2500,6 +2567,8 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   .group-add-dd .group-opt, .copy-dd-item { padding: 11px 14px; font-size: 14px; }
   .badge-group-edit, .pd-topics .group-add-btn, .group-add-btn { height: 32px; }
   .anno-card textarea#acNote { min-height: 64px; }
+  .anno-card.writing textarea#acNote:placeholder-shown { min-height: 0; }   /* writing: the typed box stays one line until it has words */
+  .ac-write { width: 36px; height: 36px; }
   .anno-card { width: max-content; min-width: 300px; }   /* room to write a comment by hand (Scribble turns it into text) */
   .ac-row { height: auto; gap: 4px; }
   .ac-row .sel-dot { width: 26px; height: 26px; margin: 0 4px; }
@@ -9669,9 +9738,10 @@ function pullBind() {
 pullBind();
 /* ===== MENUS AND PICKERS: a tap outside only closes them =====
    While one is open, a tap anywhere else closes it and does nothing more: it never also opens the paper or presses the
-   button underneath (as on iOS). Scrolling outside still closes it and scrolls. Short-lived hints (the venue tooltip)
-   don't count. */
-const POPOVERS = '#saveSheet.open, #feedSortMenu, #feedInterestMenu, .list-menu, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup, #chatHist';
+   button underneath (as on iOS). Scrolling outside still closes it and scrolls. Short-lived hints don't count: the venue
+   tooltip, and the score breakdown while it's only hovered (counted, a mouse click on its (i) closed it instead of
+   keeping it open). */
+const POPOVERS = '#saveSheet.open, #feedSortMenu, #feedInterestMenu, .list-menu, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup[data-pinned], #chatHist';
 let _dismissTap = null;
 function closePopovers() {
   closeSaveSheet(); closeFeedMenu(); closeListMenu(); toggleReaderMenu(false); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeAbsPopup(); closeRelevancePopup();
@@ -10077,12 +10147,59 @@ function toggleDetail(btn, type) {
     } else {
       // the text comes from the paper's row, looked up by the card's key (Phase 15, A6): rows no longer carry it
       const p = detailPaper(card.dataset.key), text = p ? (type === 'summary' ? p.summary : p.abstract) : '';
-      panel.textContent = hasText(text) ? text : '';
+      if (type === 'abstract' && hasText(text)) renderAbstractText(panel, text); else panel.textContent = hasText(text) ? text : '';
     }
     panel.dataset.activeType = type;
     panel.classList.add('open');
     btn.classList.add('active');
   }
+}
+
+/* ===== AN ABSTRACT'S TEX =====
+   Abstracts carry TeX: math through KaTeX, and \textbf, \textit, \emph and \texttt as bold, italic and code (from
+   Sumanth's ff51fe0). The plain text shows at once and stays when the libraries don't come (offline, a CDN refusal).
+   Nothing in the abstract is parsed as HTML: text goes in as text nodes, the formatting as elements made here, and each
+   formula through katex.render, which builds its own nodes, with the brief renderer's options (trust off, so no \href,
+   \url or \html*). Delimiters: those of the chat and notes renderers ($$..$$, and $..$ with no space just inside either
+   $; a \$ never closes one), plus \(..\) and \[..\]. */
+const ABS_TEX_RE = /\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\\\(([\s\S]+?)\\\)|(^|[^\\$])\$([^\s$](?:[^$\n]*?[^\s$\\])?)\$/g;
+const ABS_PROSE_RE = /\\(textbf|textit|emph|texttt)\{([^{}]*)\}|\\([%&#_$])/g;
+const ABS_PROSE_TAG = { textbf: 'strong', textit: 'em', emph: 'em', texttt: 'code' };
+async function renderAbstractText(el, text) {
+  if (!el) return;
+  const source = String(text || '');
+  el.classList.add('abs-tex');
+  el.textContent = source;
+  if (!/[$\\]/.test(source)) return;
+  try { const epoch = capturePrivateEpoch(); await privateAwait(loadMdLibs(), epoch); } catch (e) { return; }   // the plain text stays
+  if (!el.isConnected || el.textContent !== source || typeof katex === 'undefined' || !katex || typeof katex.render !== 'function') return;   // redrawn or closed meanwhile
+  el.replaceChildren(abstractTexNodes(source));
+}
+function abstractTexNodes(source) {
+  const out = document.createDocumentFragment();
+  let at = 0;
+  for (const m of source.matchAll(ABS_TEX_RE)) {
+    const pre = m[4] || '', start = m.index + pre.length, display = m[1] !== undefined || m[2] !== undefined;
+    abstractProse(out, source.slice(at, start));
+    const span = document.createElement('span');
+    try { katex.render(m[1] ?? m[2] ?? m[3] ?? m[5], span, { displayMode: display, throwOnError: false, trust: false, strict: 'ignore', maxExpand: 500 }); }
+    catch (e) { span.textContent = source.slice(start, m.index + m[0].length); }
+    out.append(span);
+    at = m.index + m[0].length;
+  }
+  abstractProse(out, source.slice(at));
+  out.normalize();   // adjacent text nodes as one
+  return out;
+}
+function abstractProse(out, s) {
+  let at = 0;
+  for (const m of s.matchAll(ABS_PROSE_RE)) {
+    out.append(s.slice(at, m.index));
+    if (m[1]) { const tag = document.createElement(ABS_PROSE_TAG[m[1]]); tag.textContent = m[2].replace(/\\([%&#_$])/g, '$1'); out.append(tag); }
+    else out.append(m[3]);
+    at = m.index + m[0].length;
+  }
+  out.append(s.slice(at));
 }
 
 /* ===== ABSTRACT POPUP ===== */
@@ -10383,6 +10500,15 @@ function menuScrollIntent(e) {
 }
 ['wheel', 'touchmove', 'keydown'].forEach(t => document.addEventListener(t, menuScrollIntent, { capture: true, passive: true }));
 document.addEventListener('click', () => { closeSaveDD(); closeAbsPopup(); closeVenueTooltip(); closeRelevancePopup(); });
+/* While the page moves, rows sliding under a still mouse don't open or light up (from Sumanth's ba20392): each one
+   opening pushed every row below it down and laid the list out again every frame. #mainScroll carries .scrolling until
+   160 ms after the last scroll; the rows' hover rules skip it (:where, so their specificity and the touch overrides are
+   as before), and the row under the cursor opens once scrolling stops. Focus and an open panel still hold a row open. */
+let _scrollStill = 0;
+document.getElementById('mainScroll').addEventListener('scroll', e => {
+  const ms = e.currentTarget; ms.classList.add('scrolling');
+  clearTimeout(_scrollStill); _scrollStill = setTimeout(() => ms.classList.remove('scrolling'), 160);
+}, { passive: true });
 document.getElementById('mainScroll').addEventListener('scroll', () => { if (_activeSaveDD) saveDDPlace(); if (_copyDD && _copyDD.place) _copyDD.place(); if (ListMenu.cur) placeListMenu(); closeAbsPopup(); closeVenueTooltip(); closeRelevancePopup(); }, { passive: true });
 
 /* [5] Micro-interaction: pop animation on toggle. A star or a read mark made here draws only what shows the paper
@@ -14396,6 +14522,7 @@ function runPendingNotes() {
   if (!p || !_reader.paper || (paperKey(_reader.paper) !== p.key && _reader.paper.id !== p.key)) return;
   _reader.pendingNotes = null;
   if (p.action === 'new') startNewNote('');
+  else if (p.action === 'write') startHandwritten();
   else if (p.action !== 'panel') editNote(p.action);
 }
 function closeReader() {
@@ -14428,6 +14555,7 @@ document.addEventListener('keydown', e => {
 function hideReader() {
   const el = document.getElementById('reader');
   hidePdfModal();
+  endAdjust(true);
   finishNotesEdit();
   closeAnnoCard(); hideSelBar(); closeCiteDD(); endInk(); exitZen(true);
   Brief.jump = null;   // a brief pill's jump belongs to the reader it opened
@@ -14457,7 +14585,7 @@ async function showReader(id) { const _authEpoch = capturePrivateEpoch();
   noteRecentRead(p.id);
   const el = document.getElementById('reader');
   if (_reader.paper !== p) {
-    try { await privateAwait(finishNotesEdit(), _authEpoch); }
+    try { await privateAwait(endAdjust(true), _authEpoch); await privateAwait(finishNotesEdit(), _authEpoch); }
     catch (e) { checkPrivateEpoch(_authEpoch); toastError('Couldn’t save your note. Try again before changing papers.'); return; }
     if (visit !== _reader.visit) return;
     closeAnnoCard(); endInk();
@@ -14506,6 +14634,8 @@ async function showReader(id) { const _authEpoch = capturePrivateEpoch();
     if (!reader || !reader.classList.contains('open') || e.touches.length > 1 || !e.cancelable) return;
     const t = e.touches[0], dx = t.clientX - x0, dy = t.clientY - y0;
     if (!dx && !dy) return;
+    // a Pencil tap wobbles a little; cancelling that move would cancel the tap (Safari then sends no click)
+    if (t.touchType === 'stylus' && Math.hypot(dx, dy) <= PEN_TAP_SLOP) return;
     const tgt = e.target;
     if (tgt === document.activeElement && (tgt.tagName === 'TEXTAREA' || tgt.tagName === 'INPUT' || tgt.isContentEditable)) return;   // moving the caret or a selection
     for (let el = tgt; el && el !== document.body; el = el.parentElement) {
@@ -14514,6 +14644,47 @@ async function showReader(id) { const _authEpoch = capturePrivateEpoch();
     }
     e.preventDefault();
   }, { passive: false, capture: true });
+})();
+/* Apple Pencil taps in the reader. Safari loses the click of a quick Pencil tap on a button (holding the Pencil down
+   a moment gets it through). So a quick Pencil tap that stays put is made the click here, at once: Safari's own is
+   cancelled (and swallowed should it come anyway), so nothing is pressed twice. Safari keeps: text fields, menus and
+   sliders (focus, the keyboard, Scribble); a press long enough to select text or show a link's menu; and Pencil
+   touches the page already took for itself (writing, highlighting, a written note). Only while the reader is open:
+   the feed and Daily have their own press handling. */
+const PEN_TAP_SLOP = 10;   // px a Pencil tap may wobble and still be a tap
+(function () {
+  const SAFARI_OWN = 'textarea, select, [contenteditable]:not([contenteditable="false"]), input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"])';
+  let down = null, given = null;   // given: the click made for the last tap (Safari's own, if it follows, is dropped)
+  const touchOf = (e, id) => [...e.changedTouches].find(t => t.identifier === id);
+  document.addEventListener('touchstart', e => {
+    const t = e.changedTouches[0];
+    down = e.touches.length === 1 && t && t.touchType === 'stylus' ? { ev: e, id: t.identifier, x: t.clientX, y: t.clientY, at: e.timeStamp } : null;
+  }, { capture: true, passive: true });
+  document.addEventListener('touchmove', e => {
+    const t = down && touchOf(e, down.id);
+    if (t && Math.hypot(t.clientX - down.x, t.clientY - down.y) > PEN_TAP_SLOP) down = null;   // a stroke or a drag
+  }, { capture: true, passive: true });
+  document.addEventListener('touchcancel', () => { down = null; }, { capture: true, passive: true });
+  document.addEventListener('touchend', e => {
+    const reader = document.getElementById('reader');
+    if (!reader || !reader.classList.contains('open')) { down = null; return; }
+    const d = down, t = d && touchOf(e, d.id);
+    down = null;
+    if (!t || d.ev.defaultPrevented || !e.cancelable || e.touches.length || e.timeStamp - d.at > 450) return;
+    if (Math.hypot(t.clientX - d.x, t.clientY - d.y) > PEN_TAP_SLOP) return;
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    if (!el || el.closest(SAFARI_OWN)) return;
+    e.preventDefault();
+    given = { until: e.timeStamp + 800, x: t.clientX, y: t.clientY };
+    const o = { bubbles: true, cancelable: true, composed: true, view: window, detail: 1, clientX: t.clientX, clientY: t.clientY, screenX: t.screenX, screenY: t.screenY, pointerType: 'pen', isPrimary: true };
+    el.dispatchEvent(new MouseEvent('mousedown', { ...o, buttons: 1 })); el.dispatchEvent(new MouseEvent('mouseup', o));   // as a tap brings them (a card closes on a press outside it)
+    el.dispatchEvent(typeof PointerEvent === 'function' ? new PointerEvent('click', o) : new MouseEvent('click', o));
+  }, { capture: true, passive: false });
+  // (on window, so it runs before any other click handler)
+  window.addEventListener('click', e => {
+    if (!given || !e.isTrusted || e.timeStamp > given.until || Math.hypot(e.clientX - given.x, e.clientY - given.y) > 24) return;
+    given = null; e.preventDefault(); e.stopImmediatePropagation();
+  }, true);
 })();
 function readerStatus(html) { document.getElementById('readerBody').innerHTML = `<div class="reader-status">${html}</div>`; }
 function destroyPdfDocument(doc) {
@@ -15076,6 +15247,7 @@ async function toggleReaderDark() { const _authEpoch = capturePrivateEpoch();
   document.getElementById('reader').classList.toggle('dark', on);
   if (!reduceMotion() && body.animate) body.animate([{ opacity: 0.12 }, { opacity: 1 }], { duration: 170, easing: 'ease-out' });
   document.getElementById('readerDarkBtn').setAttribute('aria-pressed', on ? 'true' : 'false');
+  renderInkBar();   // (the black pen is called white on dark pages)
 }
 document.addEventListener('keydown', e => {
   if (!document.getElementById('reader').classList.contains('open')) return;
@@ -15094,8 +15266,10 @@ document.addEventListener('keydown', e => {
   }
   if (e.key === 'Escape') {
     e.preventDefault();
+    if (Adj) { endAdjust(false); return; }   // Adjust: Esc puts the highlight back, as Cancel does
     if (document.getElementById('readerMenu').classList.contains('open')) toggleReaderMenu(false);
     else if (_acId) closeAnnoCard();
+    else if (_hw && _hw.where === 'panel') cancelHandwritten();   // the written note's Cancel (with Undo)
     else if (document.getElementById('selBar').classList.contains('open')) { hideSelBar(); window.getSelection().removeAllRanges(); }
     else if (document.getElementById('reader').classList.contains('zen')) exitZen();   // full screen: Esc leaves it first
     else closeReader();
@@ -15280,13 +15454,18 @@ async function vaultDerive(pw, salt, iter) {
   return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
 }
 async function vaultEncrypt(obj, key) {
+  // Older pages prune comments by typed text alone. Keep a nonprinting word joiner on disk for writing-only
+  // comments, including merge writes; decode it before any current-page display or editing. Never mutate callers.
+  if (obj && Array.isArray(obj.annos)) obj = { ...obj, annos: obj.annos.map(a => a && hasHand(a) && !(a.note || '').trim() ? { ...a, note: '\u2060' } : a) };
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key || Vault.key, new TextEncoder().encode(JSON.stringify(obj)));
   return { v: 1, iv: b64e(iv), ct: b64e(ct), updated: new Date().toISOString() };
 }
 async function vaultDecrypt(env, key) {
   const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64d(env.iv) }, key || Vault.key, b64d(env.ct));
-  return JSON.parse(new TextDecoder().decode(pt));
+  const obj = JSON.parse(new TextDecoder().decode(pt));
+  if (obj && Array.isArray(obj.annos)) obj.annos.forEach(a => { if (a && a.note === '\u2060' && hasHand(a)) a.note = ''; });
+  return obj;
 }
 /* small IndexedDB helper: 'files' holds encrypted notes files, 'keys' a remembered (non-extractable) key */
 function notesDB(store, mode, fn) { requireOwner(); const epoch = capturePrivateEpoch();
@@ -15416,6 +15595,20 @@ function validateVaultPlain(name, obj) {
   const listName = value => typeof value === 'string' && value !== '';
   const itemIds = new Set();
   const item = record => { check(vaultObject(record) && memberId(record.id) && !itemIds.has(record.id)); itemIds.add(record.id); strings(record, ['created', 'updated']); };
+  const inkColor = value => typeof value === 'string' && /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value);
+  // A note or comment written with the Pencil: its strokes are drawn into SVG attributes and its sizes into a style
+  // (hwPaths, hwViewHTML), so they are checked like the page's ink, without a page, ids distinct within the hand.
+  const hand = record => {
+    if (record.hand === undefined) return;
+    const h = record.hand;
+    check(vaultObject(h) && Number.isFinite(h.h) && h.h > 0 && (h.px === undefined || (Number.isSafeInteger(h.px) && h.px >= 0)) && Array.isArray(h.strokes));
+    const ids = new Set();
+    for (const stroke of h.strokes) {
+      check(vaultObject(stroke) && memberId(stroke.id) && !ids.has(stroke.id)); ids.add(stroke.id); strings(stroke, ['created', 'updated']);
+      check(inkColor(stroke.color) && Number.isFinite(stroke.w) && stroke.w > 0);
+      check(Array.isArray(stroke.pts) && Array.from(stroke.pts).every(point => tuple(point, 2)));
+    }
+  };
   if (name === '_index.json') {
     check(vaultObject(obj.papers)); strings(obj, ['colorsUpdated']);
     for (const field of ['colors', 'uploads', 'reading', 'lists']) check(obj[field] === undefined || vaultObject(obj[field]));
@@ -15439,12 +15632,13 @@ function validateVaultPlain(name, obj) {
     check(paperId(obj.id) && obj.id === name.replace(/\.json$/, '') && Array.isArray(obj.annos) && (obj.entries === undefined ? typeof obj.notes === 'string' : Array.isArray(obj.entries)) && vaultObject(obj.deleted) && (obj.ink === undefined || Array.isArray(obj.ink)));
     strings(obj, ['notes', 'notesUpdated']);
     for (const [id, deletedAt] of Object.entries(obj.deleted)) check(memberId(id) && typeof deletedAt === 'string');
-    for (const entry of obj.entries || []) { item(entry); check(typeof entry.text === 'string'); }
+    for (const entry of obj.entries || []) { item(entry); check(typeof entry.text === 'string'); hand(entry); }
     if (!(obj.entries || []).length && typeof obj.notes === 'string' && obj.notes.trim() && obj.notesUpdated) itemIds.add('n' + Date.parse(obj.notesUpdated).toString(36));
     for (const anno of obj.annos) {
       item(anno); check(typeof anno.kind === 'string' && typeof anno.quote === 'string' && Number.isSafeInteger(anno.page) && anno.page >= 1);
       strings(anno, ['note', 'prefix', 'suffix']); check(anno.color === undefined || anno.color === null || anno.color === '' || colorName(anno.color));
       check(Array.isArray(anno.rects) && anno.rects.length > 0 && Array.from(anno.rects).every(rect => tuple(rect, 4) && rect[2] > 0 && rect[3] > 0));
+      hand(anno);
     }
     for (const stroke of obj.ink || []) {
       item(stroke); check(typeof stroke.color === 'string' && /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(stroke.color) && Number.isSafeInteger(stroke.page) && stroke.page >= 1 && Number.isFinite(stroke.w) && stroke.w > 0);
@@ -15866,6 +16060,7 @@ async function afterUnlock(candidateKey) { const _authEpoch = capturePrivateEpoc
 }
 async function lockNotes() { const _authEpoch = capturePrivateEpoch(); requireOwner();
   const generation = vaultGeneration();
+  await privateAwait(endAdjust(true), _authEpoch); requireOwner();   // a highlight being adjusted keeps its new extent, as on leaving the paper
   await privateAwait(closeAnnoCard(), _authEpoch); requireOwner();   // the open comment is settled (kept, restored or discarded) while the key is still here
   await privateAwait(finishNotesEdit(), _authEpoch); requireOwner(); checkVaultGeneration(generation);
   endDraft('discard');
@@ -15954,7 +16149,7 @@ async function revalidatePaperNotes(id, seen) { const _authEpoch = capturePrivat
   const cur = Vault.cache.get(id);
   const local = await privateAwait(nfGet(id + '.json'), _authEpoch); requireOwner();
   checkVaultGeneration(generation); if ((local && local.dirty) || notesGen(id) !== g0) return;
-  if (_rn && _rn === cur && (_rnEditing || _acId || _acPending)) return;   // never swap under someone typing; the next save merges instead
+  if (_rn && _rn === cur && (_rnEditing || _acId || _acPending || _hw || Adj)) return;   // never swap under someone typing, writing or adjusting; the next save merges instead
   Vault.cache.set(id, obj); noteSeen(id + '.json', rec.env);
   if (_rn && _rn === cur) { _rn = obj; redrawAnnoLayers(); renderReaderPanel(); }
   repaintPaper(allPapers.find(x => x.id === id));
@@ -15962,7 +16157,7 @@ async function revalidatePaperNotes(id, seen) { const _authEpoch = capturePrivat
 /* What the index says about a paper: counts of highlights, comments and notes (chats and citation anchors don't count) */
 function indexCounts(obj) {
   const live = (obj.annos || []);
-  return { h: live.filter(a => a.kind === 'hl').length, c: live.filter(a => a.kind === 'note' || (a.note || '').trim()).length, g: (obj.entries || []).length, d: (obj.ink || []).length };
+  return { h: live.filter(a => a.kind === 'hl').length, c: live.filter(a => a.kind === 'note' || annoHasComment(a)).length, g: (obj.entries || []).length, d: (obj.ink || []).length };
 }
 function indexEntryFor(obj) {
   assertVaultWritable();
@@ -16000,7 +16195,9 @@ let _rnPendingRefs = [];
    new comment, restores a highlight that was switched to comment-only but left empty, and removes an
    emptied existing comment (with Undo). Empty comments are never drawn except the one being written. */
 let _acPending = null, _acOrigin = null;
-function isEmptyComment(a) { return a.kind === 'note' && !(a.note || '').trim(); }
+function hasHand(x) { return !!(x && x.hand && x.hand.strokes && x.hand.strokes.length); }   // written with the Pencil
+function annoHasComment(a) { return !!(a.note || '').trim() || hasHand(a); }   // typed words, writing, or both
+function isEmptyComment(a) { return a.kind === 'note' && !annoHasComment(a); }
 function citedIds(obj, draft, editing) {
   const cited = new Set();
   const scan = t => { for (const m of String(t || '').matchAll(/\[\[cite:([\w-]+)/g)) cited.add(m[1]); };
@@ -16193,19 +16390,25 @@ function renderAnnoLayer(pageDiv) {
     pageDiv.insertBefore(layer, pageDiv.querySelector('.textLayer'));
   }
   const page = +pageDiv.dataset.page;
-  const list = visibleAnnos().filter(a => a.page === page);
-  layer.innerHTML = list.map(a => a.rects.map(r =>
-    `<div class="anno-rect ${a.kind === 'note' ? 'note' : a.kind === 'ref' ? 'ref' : ''}" data-anno="${dataAttr(a.id)}" style="--hc:${annoHc(a)};left:${r[0] * 100}%;top:${r[1] * 100}%;width:${r[2] * 100}%;height:${r[3] * 100}%"></div>`).join('')).join('');
+  const list = visibleAnnos().filter(a => a.page === page && !(Adj && Adj.id === a.id));
+  layer.innerHTML = list.map(a => annoShapeHTML(a.rects, a.kind === 'note' ? 'note' : a.kind === 'ref' ? 'ref' : '', annoHc(a), a.id)).join('');
   // a marker in the right margin, level with the first line, for anything that carries a comment
   let marks = pageDiv.querySelector('.annoMarks');
   if (!marks) { marks = document.createElement('div'); marks.className = 'annoMarks'; pageDiv.appendChild(marks); }
   const rows = [], step = matchMedia('(pointer: coarse)').matches ? 30 : 20;   // markers side by side when they share a line
-  marks.innerHTML = list.filter(a => a.kind === 'note' || (a.note || '').trim()).sort((x, y) => x.rects[0][1] - y.rects[0][1]).map(a => {
+  marks.innerHTML = list.filter(a => a.kind === 'note' || annoHasComment(a)).sort((x, y) => x.rects[0][1] - y.rects[0][1]).map(a => {
     const y = a.rects[0][1] + a.rects[0][3] / 2;
     const slot = rows.filter(v => Math.abs(v - y) < 0.012).length; rows.push(y);
-    return `<button class="anno-mark ${a.kind === 'note' ? 'note' : ''}" data-anno="${dataAttr(a.id)}" style="--hc:${annoHc(a)};top:${y * 100}%;right:${6 + slot * step}px" title="${dataAttr((a.note || 'Comment').replace(CITE_RE, (m, id, rest) => '\u201c' + ((rest.match(/"([^"]*)/) || [])[1] || '\u2026') + '\u201d').slice(0, 120))}" aria-label="Open comment" onclick="event.stopPropagation();openAnnoCard('${escAttr(a.id)}', true)" onmouseenter="markHover('${escAttr(a.id)}',true)" onmouseleave="markHover('${escAttr(a.id)}',false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3v-3H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></button>`;
+    return `<button class="anno-mark ${a.kind === 'note' ? 'note' : ''}" data-anno="${dataAttr(a.id)}" style="--hc:${annoHc(a)};top:${y * 100}%;right:${6 + slot * step}px" title="${dataAttr(((a.note || '').trim() || (hasHand(a) ? 'Written comment' : 'Comment')).replace(CITE_RE, (m, id, rest) => '\u201c' + ((rest.match(/"([^"]*)/) || [])[1] || '\u2026') + '\u201d').slice(0, 120))}" aria-label="Open comment" onclick="event.stopPropagation();openAnnoCard('${escAttr(a.id)}', true)" onmouseenter="markHover('${escAttr(a.id)}',true)" onmouseleave="markHover('${escAttr(a.id)}',false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3v-3H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></button>`;
   }).join('');
   renderInkLayer(pageDiv);
+  if (Adj && Adj.pg === pageDiv) drawAdjust();
+}
+/* A highlight is painted as one shape: its line boxes are opaque inside a group that has the highlight's opacity,
+   so where two of its lines overlap (they often do by a pixel or two) the colour doesn't double into a darker band.
+   Two different highlights over the same words still show as two. */
+function annoShapeHTML(rects, cls, hc, id) {
+  return `<div class="anno-hl ${cls}"${id ? ` data-anno="${dataAttr(id)}"` : ''} style="--hc:${hc}">${rects.map(r => `<div class="anno-rect ${cls}" style="left:${r[0] * 100}%;top:${r[1] * 100}%;width:${r[2] * 100}%;height:${r[3] * 100}%"></div>`).join('')}</div>`;
 }
 /* Ink strokes: points as fractions of the page, drawn as smooth paths in an SVG over the text */
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -16252,7 +16455,7 @@ function renderInkLayer(pageDiv) {
   const ar = pageDiv.offsetHeight / pageDiv.offsetWidth;
   svg.replaceChildren(...strokes.map(k => inkPathEl(k, ar)));
 }
-function markHover(id, on) { document.querySelectorAll(`.anno-rect[data-anno="${id}"]`).forEach(r => r.classList.toggle('hover', on)); }
+function markHover(id, on) { document.querySelectorAll(`.anno-hl[data-anno="${id}"]`).forEach(r => r.classList.toggle('hover', on)); }
 function redrawAnnoLayers() { _rnDrawnSig = refSig(); document.querySelectorAll('#readerBody .reader-page[data-drawn]').forEach(renderAnnoLayer); }
 
 /* --- selection toolbar --- */
@@ -16264,20 +16467,50 @@ function selInfo() {
   if (range !== live && (range.startContainer !== live.startContainer || range.startOffset !== live.startOffset || range.endContainer !== live.endContainer || range.endOffset !== live.endOffset)) {
     sel.removeAllRanges(); sel.addRange(range);
   }
+  return rangeInfo(range, sel.toString());
+}
+/* The text in a range as a selection would copy it (a line break in the text layer is a space) */
+function rangeText(range) {
+  const root = range.commonAncestorContainer.nodeType === 1 ? range.commonAncestorContainer : range.commonAncestorContainer.parentNode;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+  let out = '', n;
+  while ((n = w.nextNode())) {
+    if (!range.intersectsNode(n)) continue;
+    if (n.nodeType === 1) { if (n.tagName === 'BR') out += ' '; continue; }
+    out += n.data.slice(n === range.startContainer ? range.startOffset : 0, n === range.endContainer ? range.endOffset : n.data.length);
+  }
+  return out;
+}
+/* What a highlight of this range would be: its page, its line boxes (fractions of the page), its words */
+function rangeInfo(range, selText) {
   const el = n => (n.nodeType === 1 ? n : n.parentElement);
   const a = el(range.startContainer) && el(range.startContainer).closest('.reader-page');
   const b = el(range.endContainer) && el(range.endContainer).closest('.reader-page');
   if (!a || !b) return null;
   if (a !== b) return { error: 'Select within one page to highlight.' };
-  const pr = a.getBoundingClientRect();
-  const raw = [...range.getClientRects()].filter(r => r.width > 1 && r.height > 1).map(r => [(r.left - pr.left) / pr.width, (r.top - pr.top) / pr.height, r.width / pr.width, r.height / pr.height]);
-  const rects = mergeLineRects(raw);
-  const quote = sel.toString().replace(/\s+/g, ' ').trim();
+  const rects = pageRects(a, range);
+  const quote = (selText == null ? rangeText(range) : selText).replace(/\s+/g, ' ').trim();
   if (!quote || !rects.length) return null;
   const text = (a.querySelector('.textLayer') || {}).textContent || '';
   const flat = text.replace(/\s+/g, ' '), i = flat.indexOf(quote);
   return { page: +a.dataset.page, rects, quote, prefix: i > 0 ? flat.slice(Math.max(0, i - 40), i) : '', suffix: i >= 0 ? flat.slice(i + quote.length, i + quote.length + 40) : '', end: range.getClientRects()[range.getClientRects().length - 1], box: range.getBoundingClientRect() };
 }
+/* a range's line boxes as fractions of its page */
+function pageRects(pg, range) {
+  const pr = pg.getBoundingClientRect();
+  return mergeLineRects([...range.getClientRects()].filter(r => r.width > 1 && r.height > 1).map(r => [(r.left - pr.left) / pr.width, (r.top - pr.top) / pr.height, r.width / pr.width, r.height / pr.height]));
+}
+/* Drawn over the page while the Pencil marks (or Adjust moves an end): shown as the highlight will look, under the
+   words, in the page's own layer. One per page; a redraw of the layer takes it away. */
+function drawLiveMark(pg, rects, look) {   // look: a highlight colour, 'note' (an underline) or 'adjust' (a selection)
+  const layer = pg && pg.querySelector('.annoLayer');
+  if (!layer) return;
+  let live = layer.querySelector('.anno-live');
+  if (!live) { live = document.createElement('div'); live.className = 'anno-live'; layer.appendChild(live); }
+  const cls = look === 'note' ? 'note' : look === 'adjust' ? 'adj' : '', hc = look === 'note' || look === 'adjust' ? 'var(--note-line, #8aa4f0)' : `var(--hl-${HL_COLORS.includes(look) ? look : 'orange'})`;
+  live.innerHTML = annoShapeHTML(rects, cls, hc);
+}
+function clearLiveMark() { document.querySelectorAll('#readerBody .anno-live').forEach(el => el.remove()); }
 /* one box per line: text layers give a rect per span, often overlapping */
 function mergeLineRects(rs) {
   rs = rs.filter(r => r[2] > 0.001 && r[3] > 0.001).sort((p, q) => p[1] - q[1] || p[0] - q[0]);
@@ -16375,7 +16608,7 @@ async function citeSelection() { const _authEpoch = capturePrivateEpoch();
   if (!editorInsertCite(tok)) { _rnDraft += (_rnDraft && !/\s$/.test(_rnDraft) ? ' ' : '') + tok + ' '; renderReaderPanel(); }
   draftChanged();
 }
-async function createAnno(kind, color) { const _authEpoch = capturePrivateEpoch();
+async function createAnno(kind, color, drawn) { const _authEpoch = capturePrivateEpoch();   // drawn: the Pencil's marker already shows it
   if (notesBusy()) return;
   const info = _selPending || selInfo();
   if (!info || info.error) return;
@@ -16392,7 +16625,7 @@ async function createAnno(kind, color) { const _authEpoch = capturePrivateEpoch(
     if (_acId) closeAnnoCard();
     _acPending = a;
     redrawAnnoLayers();
-    openAnnoCard(a.id, true);
+    openAnnoCard(a.id, !drawn, drawn && pencilDevice());   // underlined with the Pencil: write it with the Pencil
     return;
   }
   if (kind === 'hl') rememberHlColor(color);
@@ -16400,18 +16633,18 @@ async function createAnno(kind, color) { const _authEpoch = capturePrivateEpoch(
   await privateAwait(savePaperNotes(notes), _authEpoch);
   if (!owner.current()) return;
   redrawAnnoLayers(); renderReaderPanel();
-  annoArrives(a.id);
+  if (!drawn) annoArrives(a.id);
   const item = document.querySelector(`.rp-item[data-id="${a.id}"]`); if (item) item.classList.add('fresh');
-  if (kind === 'note') openAnnoCard(a.id, true);
+  if (kind === 'note') openAnnoCard(a.id, !drawn, drawn && pencilDevice());
 }
 /* A new (or restored) highlight sweeps on along its lines, one after another, like a marker; its comment marker pops */
 function annoArrives(id) {
-  document.querySelectorAll(`.anno-rect[data-anno="${id}"]`).forEach((el, i) => { el.style.animationDelay = Math.min(i, 6) * 45 + 'ms'; el.classList.add('fresh'); });
+  document.querySelectorAll(`.anno-hl[data-anno="${id}"] > .anno-rect`).forEach((el, i) => { el.style.animationDelay = Math.min(i, 6) * 45 + 'ms'; el.classList.add('fresh'); });
   document.querySelectorAll(`.anno-mark[data-anno="${id}"]`).forEach(el => el.classList.add('fresh'));
 }
 /* ...and a deleted one fades before it's gone */
 function annoLeaves(id) {
-  const els = document.querySelectorAll(`.anno-rect[data-anno="${id}"], .anno-mark[data-anno="${id}"]`);
+  const els = document.querySelectorAll(`.anno-hl[data-anno="${id}"], .anno-mark[data-anno="${id}"]`);
   if (!els.length || reduceMotion()) return Promise.resolve();
   els.forEach(el => el.classList.add('gone'));
   return new Promise(r => setTimeout(privateCallback(r), 150));
@@ -16439,13 +16672,16 @@ function annoAt(pageDiv, clientX, clientY) {
   const hits = visibleAnnos().filter(a => a.page === page && a.rects.some(r => x >= r[0] - 0.003 && x <= r[0] + r[2] + 0.003 && y >= r[1] - 0.003 && y <= r[1] + r[3] + 0.006));
   return hits.length ? hits[hits.length - 1] : null;
 }
-let _acId = null, _acTimer = null;
-function openAnnoCard(id, focusNote) {
+let _acId = null, _acTimer = null, _acHandTimer = null;
+function openAnnoCard(id, focusNote, write) {   // write: open its writing card (a comment begun with the Pencil)
   const a = annoById(id);
   if (!a) return;
   if (_acId && _acId !== id) closeAnnoCard();
-  if (_acId !== id) _acOrigin = { id, kind: a.kind, color: a.color, note: a.note || '' };
+  if (_acId !== id) _acOrigin = { id, kind: a.kind, color: a.color, note: a.note || '', hand: a.hand };
   _acId = id;
+  // a comment with writing opens ready to write on (where something can write: not a phone's finger)
+  if (!(_hw && _hw.where === 'card' && _hw.id === 'a:' + id) && (write || hasHand(a)) && (pencilDevice() || !matchMedia('(pointer: coarse)').matches)) acStartWriting(a);
+  const writing = !!(_hw && _hw.where === 'card' && _hw.id === 'a:' + id);
   const card = document.getElementById('annoCard');
   card.style.setProperty('--hc', annoHc(a));
   // minimal: the passage is already visible on the page, so the card is just controls and a growing one-line box
@@ -16454,19 +16690,159 @@ function openAnnoCard(id, focusNote) {
     <div class="ac-row">${HL_COLORS.map(c => `<button class="sel-dot ${cur === c ? 'on' : ''}" style="--hc:var(--hl-${c})" title="${dataAttr(hlLabel(c))}" aria-label="${dataAttr(hlLabel(c))}" onclick="setAnnoColor('${escAttr(id)}','${c}')"></button>`).join('')}
       <button class="sel-icon ${a.kind === 'note' ? 'on' : ''}" title="Comment only (underline, no colour)" aria-label="Comment only" onclick="setAnnoColor('${escAttr(id)}',null)">${ICON_UNDERLINE}</button>
       <span class="sel-sep"></span>
+      ${_acPending && _acPending.id === id ? '' : `<button class="sel-icon" onclick="adjustAnno('${escAttr(id)}')" title="Adjust: drag its ends to take in more or less" aria-label="Adjust what it covers">${ICON_ADJUST}</button>`}
       <button class="sel-icon sel-cite" onclick="citeAnno('${escAttr(id)}')" title="Cite in a note" aria-label="Cite in a note">${ICON_QUOTE}</button>
       <button class="sel-icon" onclick="copyAnnoQuote('${escAttr(id)}')" title="Copy quote" aria-label="Copy quote">${ICON_COPY}</button>
       <button class="sel-icon danger" onclick="deleteAnno('${escAttr(id)}')" title="Delete" aria-label="Delete">${ICON_TRASH}</button></div>
-    <textarea id="acNote" rows="1" placeholder="Add a comment\u2026" title="Markdown and $math$ work \u00b7 ${MOD_KEY}\u21b5 or Esc to close" oninput="acGrow(this); acNoteInput()" onkeydown="if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) { event.preventDefault(); closeAnnoCard(); }">${esc(a.note || '')}</textarea>`;
+    <div class="ac-comment"><textarea id="acNote" rows="1" placeholder="${writing ? 'Type a comment\u2026' : 'Add a comment\u2026'}" title="Markdown and $math$ work \u00b7 ${MOD_KEY}\u21b5 or Esc to close" oninput="acGrow(this); acNoteInput()" onkeydown="if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) { event.preventDefault(); closeAnnoCard(); }">${esc(a.note || '')}</textarea>${pencilDevice() && !writing ? `<button class="sel-icon ac-write" onclick="acWrite('${escAttr(id)}')" title="Write the comment with the Pencil" aria-label="Write the comment">${ICON_WRITE}</button>` : ''}</div>
+    ${writing ? hwEditorHTML() : hasHand(a) ? hwViewHTML({ id: 'a:' + id, hand: a.hand }) : ''}`;
+  card.classList.toggle('writing', writing);
   popIn(card);
   acGrow(document.getElementById('acNote'));
   positionAnnoCard(a);
-  document.querySelectorAll(`.anno-rect[data-anno="${id}"]`).forEach(r => r.classList.add('hover'));
+  document.querySelectorAll(`.anno-hl[data-anno="${id}"]`).forEach(r => r.classList.add('hover'));
   if (focusNote) setTimeout(privateCallback(() => { const t = document.getElementById('acNote'); if (!t) return; t.focus(); t.setSelectionRange(t.value.length, t.value.length); }), 0);
 }
+/* --- Adjust: move a highlight's ends ---
+   From its card: the highlight shows as a selection with a handle at each end; drag one (Pencil, finger or mouse)
+   and the highlight follows word by word. Done, or a tap elsewhere on the paper, keeps the new extent; Cancel or Esc
+   (the reader's Esc) puts it back. A comment's underline adjusts the same way. */
+const ICON_ADJUST = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6v14M17.5 4v14"/><circle cx="6.5" cy="4.5" r="2"/><circle cx="17.5" cy="19.5" r="2"/></svg>';
+let Adj = null;
+/* A caret in the text under a point of this page (null in a margin or a gap: the browser would pick some text far away) */
+function caretOnText(pg, x, y) {
+  const over = document.elementFromPoint(x, y), span = over && over.closest && over.closest('.textLayer span');
+  if (!span || !pg.contains(span)) return null;
+  const c = caretAt(x, y);
+  return c && c.node.nodeType === 3 && span.contains(c.node) ? c : null;
+}
+/* The words a highlight covers, found from its first and last line boxes */
+function annoRange(a, pg) {
+  const pr = pg.getBoundingClientRect(), f = a.rects[0], l = a.rects[a.rects.length - 1];
+  const at = (r, end) => caretOnText(pg, pr.left + (end ? r[0] + r[2] - 0.003 : r[0] + 0.003) * pr.width, pr.top + (r[1] + r[3] / 2) * pr.height);
+  const s = at(f, false), e = at(l, true);
+  if (!s || !e) return null;
+  const r = document.createRange(); r.setStart(s.node, s.offset); r.setEnd(e.node, e.offset);
+  if (r.collapsed) return null;
+  wholeWords(r);
+  return r;
+}
+function adjRange() {
+  const { s, e } = Adj, r = document.createRange();
+  r.setStart(s.node, s.offset); r.setEnd(e.node, e.offset);
+  if (r.collapsed && (s.node !== e.node || s.offset !== e.offset)) { r.setStart(e.node, e.offset); r.setEnd(s.node, s.offset); }
+  wholeWords(r);
+  return r;
+}
+function adjustAnno(id) {
+  const a = annoById(id), pg = a && document.querySelector(`#readerBody .reader-page[data-page="${a.page}"]`);
+  if (!a || !pg) return;
+  closeAnnoCard();
+  const first = document.querySelector(`.anno-hl[data-anno="${id}"] > .anno-rect`);
+  if (first) { const b = first.getBoundingClientRect(), body = document.getElementById('readerBody').getBoundingClientRect(); if (b.top < body.top + 40 || b.bottom > body.bottom - 80) first.scrollIntoView({ block: 'center' }); }
+  const r = annoRange(a, pg);
+  if (!r) { toast('Couldn\u2019t find its words on the page to adjust.'); return; }
+  Adj = { id, pg, s: { node: r.startContainer, offset: r.startOffset }, e: { node: r.endContainer, offset: r.endOffset } };
+  renderAnnoLayer(pg);   // without the highlight itself; the selection and handles stand in for it
+  const card = document.getElementById('annoCard');
+  card.style.removeProperty('--hc'); card.classList.remove('writing');
+  card.innerHTML = `<div class="ac-row ac-adjust"><span class="ac-hint">Drag the ends</span><span class="grow"></span><button class="ui-btn ui-btn-secondary ui-btn-sm" onclick="endAdjust(false)">Cancel</button><button class="ui-btn ui-btn-primary ui-btn-sm" onclick="endAdjust(true)">Done</button></div>`;
+  popIn(card);
+  placeAdjBar();
+}
+function drawAdjust() {
+  if (!Adj) return;
+  const pg = Adj.pg, r = adjRange(), rects = pageRects(pg, r);
+  if (!rects.length) return;
+  drawLiveMark(pg, rects, 'adjust');
+  const marks = pg.querySelector('.annoMarks');
+  if (!marks) return;
+  const f = rects[0], l = rects[rects.length - 1];
+  [['start', f[0], f[1], f[3]], ['end', l[0] + l[2], l[1], l[3]]].forEach(([k, x, y, hgt]) => {
+    let h = marks.querySelector('.adj-handle.' + k);
+    if (!h) {   // dragged, never tabbed to: the arrow keys do nothing here (KEYBOARD_SHORTCUTS)
+      h = document.createElement('button'); h.type = 'button'; h.className = 'adj-handle ' + k; h.tabIndex = -1;
+      h.setAttribute('aria-label', k === 'start' ? 'Start of the highlight' : 'End of the highlight');
+      marks.appendChild(h);
+    }
+    Object.assign(h.style, { left: x * 100 + '%', top: y * 100 + '%', height: hgt * 100 + '%' });
+  });
+}
+function placeAdjBar() {
+  const card = document.getElementById('annoCard'), live = Adj && Adj.pg.querySelectorAll('.anno-live .anno-rect');
+  if (!Adj || !live || !live.length) return;
+  const f = live[0].getBoundingClientRect(), l = live[live.length - 1].getBoundingClientRect(), cw = card.offsetWidth, ch = card.offsetHeight;
+  let x = Math.min(window.innerWidth - cw - 12, Math.max(12, l.right - cw)), y = l.bottom + 22;   // clear of the end handle's knob
+  if (y + ch > window.innerHeight - 12) y = Math.max(64, f.top - ch - 22);
+  card.style.left = x + 'px'; card.style.top = y + 'px';
+}
+/* Adjust ends: keep (Done, a tap elsewhere, leaving the paper) saves the new extent; Cancel and Esc put it back */
+async function endAdjust(keep) { const _authEpoch = capturePrivateEpoch();
+  const A = Adj;
+  if (!A) return;
+  const owner = captureNotesOwner(), notes = owner.notes;
+  const info = keep ? rangeInfo(adjRange()) : null;
+  Adj = null;
+  A.pg.querySelectorAll('.adj-handle').forEach(h => h.remove());
+  clearLiveMark();
+  fadeAway(document.getElementById('annoCard'));
+  const a = annoById(A.id);
+  if (info && info.error) toast(info.error);
+  else if (a && info && info.quote.length > 1 && (info.quote !== a.quote || JSON.stringify(info.rects) !== JSON.stringify(a.rects))) {
+    if (owner.current() && notes && (notes.annos || []).includes(a)) {   // (a comment not written yet is saved with its text)
+      const before = JSON.parse(JSON.stringify(notes));
+      Object.assign(a, { rects: info.rects, quote: info.quote, prefix: info.prefix, suffix: info.suffix, updated: new Date().toISOString() });
+      try { await privateAwait(savePaperNotes(notes), _authEpoch); }
+      catch (e) { checkPrivateEpoch(_authEpoch);
+        if (owner.current() && !Adj && !_acId) {
+          Object.assign(notes, before); Adj = A; renderAnnoLayer(A.pg);
+          popIn(document.getElementById('annoCard')); placeAdjBar(); toastError('Couldn’t save your note. Try again.');
+        }
+        throw e;
+      }
+      if (!owner.current()) return;
+      renderReaderPanel();
+    }
+  }
+  redrawAnnoLayers();
+}
+(function () {   // dragging a handle; a tap elsewhere on the paper (Esc is the reader's own key handler)
+  let drag = null;
+  const reset = () => { if (drag) { cancelAnimationFrame(drag.raf); drag.h.classList.remove('dragging'); } drag = null; };
+  Private.interactionResets.add(() => {
+    reset();
+    if (Adj) { Adj.pg.querySelectorAll('.adj-handle').forEach(h => h.remove()); Adj = null; }
+    clearLiveMark();
+  });
+  document.addEventListener('pointerdown', e => {
+    const h = e.target.closest && e.target.closest('.adj-handle');
+    if (!h || !Adj) return;
+    let epoch; try { epoch = capturePrivateEpoch(); } catch (error) { return; }
+    e.preventDefault(); e.stopPropagation();
+    try { h.setPointerCapture(e.pointerId); } catch (err) {}
+    const b = h.getBoundingClientRect();
+    drag = { epoch, id: e.pointerId, h, end: h.classList.contains('end'), dy: b.top + (h.classList.contains('end') ? (b.height - 14) / 2 : 14 + (b.height - 14) / 2) - e.clientY, raf: 0 };   // aim at the handle's line, wherever it was taken hold of
+    h.classList.add('dragging');
+  }, true);
+  window.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id || !Adj) return;
+    if (!privateInteractionCurrent(drag.epoch, reset)) return;
+    e.preventDefault();
+    const c = caretOnText(Adj.pg, e.clientX, e.clientY + drag.dy);
+    if (!c) return;
+    Adj[drag.end ? 'e' : 's'] = c;
+    if (!drag.raf) drag.raf = requestAnimationFrame(privateCallback(() => { if (drag) drag.raf = 0; if (Adj) { drawAdjust(); placeAdjBar(); } }));
+  }, { passive: false });
+  const up = e => { if (!drag || e.pointerId !== drag.id) return; drag.h.classList.remove('dragging'); drag = null; };
+  window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+  const body = document.getElementById('readerBody');
+  // before the reader's own handlers (capture): a tap elsewhere on the paper keeps the new extent
+  body.addEventListener('pointerdown', e => { if (Adj && !(e.target.closest && e.target.closest('.adj-handle'))) endAdjust(true); }, true);
+  body.addEventListener('scroll', () => { if (Adj) placeAdjBar(); }, { passive: true });
+})();
 function positionAnnoCard(a) {
   const card = document.getElementById('annoCard');
-  const rect = document.querySelector(`.anno-rect[data-anno="${a.id}"]`);
+  const rect = document.querySelector(`.anno-hl[data-anno="${a.id}"] > .anno-rect`);
   const r = rect ? rect.getBoundingClientRect() : { left: window.innerWidth / 2, bottom: 120, top: 120 };
   const cw = card.offsetWidth, ch = card.offsetHeight;
   let x = Math.min(window.innerWidth - cw - 12, Math.max(12, r.left)), y = r.bottom + 10;
@@ -16477,19 +16853,25 @@ function positionAnnoCard(a) {
 function closeAnnoCard() {
   const id = _acId, t = document.getElementById('acNote'), text = t && document.getElementById('annoCard').classList.contains('open') ? t.value : null;
   if (_acTimer) { clearTimeout(_acTimer); _acTimer = null; }
-  fadeAway(document.getElementById('annoCard'));
-  document.querySelectorAll('.anno-rect.hover').forEach(r => r.classList.remove('hover'));
+  if (_acHandTimer) { clearTimeout(_acHandTimer); _acHandTimer = null; }
+  if (!Adj) fadeAway(document.getElementById('annoCard'));   // (while adjusting, the card is Adjust's bar: endAdjust puts it away)
+  document.querySelectorAll('.anno-hl.hover').forEach(r => r.classList.remove('hover'));
   _acId = null;
   return id ? endCommentSession(id, text) : Promise.resolve();
 }
 /* The one way a comment card's session ends (click away, Esc, scroll, opening another, leaving the reader) */
 async function endCommentSession(id, text) { const _authEpoch = capturePrivateEpoch();
+  const hw = _hw && _hw.where === 'card' && _hw.id === 'a:' + id ? _hw : null;   // its writing card closes with it
+  if (hw) _hw = null;
   const owner = captureNotesOwner(), notes = owner.notes; if (!owner.current() || !notes) return;
   const a = annoById(id), origin = _acOrigin && _acOrigin.id === id ? _acOrigin : null, now = new Date().toISOString();
+  const before = JSON.parse(JSON.stringify(notes)), pending = _acPending;
   _acOrigin = null;
   if (!a || !_rn) { if (_acPending && _acPending.id === id) _acPending = null; return; }
+  try {
   let changed = false;
   if (text != null && (a.note || '') !== text) { a.note = text; a.updated = now; changed = true; }
+  if (hw && hw.dirty) { setHand(a, hwHandOf(hw)); a.updated = now; changed = true; }
   if (a === _acPending) {
     _acPending = null;
     if (isEmptyComment(a)) { redrawAnnoLayers(); return; }        // nothing typed: it never existed
@@ -16503,6 +16885,7 @@ async function endCommentSession(id, text) { const _authEpoch = capturePrivateEp
       if (!owner.current()) return;
     } else {                                                        // an existing comment emptied: remove it; Undo brings its words back
       if (origin && origin.note.trim()) a.note = origin.note;
+      if (origin && hasHand(origin)) a.hand = origin.hand;          // ...and its writing
       await privateAwait(deleteAnno(id, 'Empty comment removed'), _authEpoch);
       return;
     }
@@ -16511,6 +16894,16 @@ async function endCommentSession(id, text) { const _authEpoch = capturePrivateEp
     if (!owner.current()) return;
   }
   redrawAnnoLayers(); renderReaderPanel();
+  } catch (e) { checkPrivateEpoch(_authEpoch);
+    if (owner.current() && !_acId && !_hw) {
+      Object.assign(notes, before); _acPending = pending; _hw = hw;
+      if (hw) hw.dirty = true;
+      openAnnoCard(id); _acOrigin = origin;
+      const t = document.getElementById('acNote'); if (t && text != null) { t.value = text; acGrow(t); }
+      redrawAnnoLayers(); renderReaderPanel(); toastError('Couldn’t save your note. Try again.');
+    }
+    throw e;
+  }
 }
 /* the comment box starts as one line and grows with the text, up to ~8 lines, then scrolls */
 function acGrow(t) { if (!t) return; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight + 2, 190) + 'px'; t.style.overflowY = t.scrollHeight + 2 > 190 ? 'auto' : 'hidden'; }
@@ -16547,6 +16940,7 @@ async function deleteAnno(id, message) { const _authEpoch = capturePrivateEpoch(
   if (notesBusy()) return;
   const a = annoById(id);
   if (!a) return;
+  if (_hw && _hw.id === 'a:' + id) { const where = _hw.where; _hw = null; clearTimeout(_acHandTimer); _acHandTimer = null; if (where === 'panel') renderReaderPanel(); }   // its writing goes with it
   if (a === _acPending) { _acPending = null; if (_acId === id) { _acId = null; fadeAway(document.getElementById('annoCard')); } await privateAwait(annoLeaves(id), _authEpoch); redrawAnnoLayers(); return; }
   const notes = _rn;
   notes.annos = notes.annos.filter(x => x.id !== id);
@@ -16554,7 +16948,7 @@ async function deleteAnno(id, message) { const _authEpoch = capturePrivateEpoch(
   if (_acId === id) { _acId = null; _acOrigin = null; if (_acTimer) { clearTimeout(_acTimer); _acTimer = null; } fadeAway(document.getElementById('annoCard')); }
   await privateAwait(Promise.all([savePaperNotes(notes), annoLeaves(id)]), _authEpoch);
   if (_rn === notes) { redrawAnnoLayers(); renderReaderPanel(); }
-  toast(message || (a.kind === 'note' ? 'Comment deleted' : a.note ? 'Highlight and comment deleted' : 'Highlight deleted'), async () => { const _authEpoch = capturePrivateEpoch();
+  toast(message || (a.kind === 'note' ? 'Comment deleted' : annoHasComment(a) ? 'Highlight and comment deleted' : 'Highlight deleted'), async () => { const _authEpoch = capturePrivateEpoch();
     delete notes.deleted[id];
     a.updated = new Date().toISOString();
     notes.annos = notes.annos.concat(a);
@@ -16578,7 +16972,7 @@ function jumpToAnno(id) {
   const pg = body.querySelector(`.reader-page[data-page="${a.page}"]`);
   if (!pg) return;
   const top = Math.max(0, pg.offsetTop + a.rects[0][1] * pg.offsetHeight - body.clientHeight * 0.3);
-  const blink = () => document.querySelectorAll(`.anno-rect[data-anno="${id}"]`).forEach(r => {
+  const blink = () => document.querySelectorAll(`.anno-hl[data-anno="${id}"]`).forEach(r => {
     r.classList.remove('flash'); void r.offsetWidth; r.classList.add('flash');
     r.addEventListener('animationend', () => r.classList.remove('flash'), { once: true });
   });
@@ -16599,7 +16993,7 @@ function jumpToAnno(id) {
   body.addEventListener('pointerup', e => {
     if (!downAt) return;
     try { checkPrivateEpoch(gestureEpoch); } catch (error) { return; }
-    if (e.target.closest && e.target.closest('.anno-mark')) return;   // a margin marker opens its card by its own click
+    if (e.target.closest && e.target.closest('.anno-mark, .adj-handle')) return;   // a margin marker opens its card by its own click; a handle being let go isn't a tap
     if (Ink.on && e.pointerType !== 'touch') return;                    // the pen is writing
     const tapped = downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) <= 6;
     if (e.pointerType !== 'mouse' && tapped && hadSel) { window.getSelection().removeAllRanges(); hideSelBar(); hadSel = false; return; }   // touch: a tap puts a selection away
@@ -16666,7 +17060,9 @@ function jumpToAnno(id) {
    - normally a stroke across text highlights it at once, in the colour you used last; a tap opens a highlight
    - with the pen on (the pen button, shown on touch screens), it writes and draws: ink strokes are kept in your
      encrypted notes as fractions of the page, so they sit right at any zoom; the eraser removes strokes it touches */
-const PEN_COLORS = { ink: '#1f2a44', red: '#d93025', blue: '#1a73e8' };
+const PEN_COLORS = { black: '#000000', ink: '#1f2a44', red: '#d93025', blue: '#1a73e8' };   // black writes white on dark pages (ink is shown as the page is)
+/* what a pen is called where it shows: black writes white wherever ink is shown inverted (dark pages, written notes) */
+function penName(k, inverted) { return k === 'black' ? (inverted ? 'white' : 'black') : k === 'ink' ? 'navy' : k; }
 const INK_SIZES = { fine: 0.0013, medium: 0.0024, bold: 0.0042 };   // stroke width as a share of the page width
 const Ink = { on: false, tool: 'pen', color: 'ink', size: 'medium', smooth: 1, undo: [], saveTimer: null };   // smooth: 0 (raw) .. 1 (smoothest); fixed at the smoothest
 /* What the Pencil does, chosen in the strip above the paper: 'read' (like a finger: scroll, select), 'hl' (strokes
@@ -16746,7 +17142,7 @@ function inkToolsHTML() {
   }
   if (Pencil.mode === 'write') {
     const pen = Ink.tool === 'pen', rest = pen ? '' : ' resting';   // while erasing, the pen's colour and size stay marked, faded
-    return Object.entries(PEN_COLORS).map(([k, c]) => `<button class="sel-dot${Ink.color === k ? ' on' + rest : ''}" style="--hc:${c}" title="Pen" aria-label="Pen, ${k}" aria-pressed="${pen && Ink.color === k}" onclick="setInkTool('pen','${k}')"></button>`).join('')
+    return Object.entries(PEN_COLORS).map(([k, c]) => `<button class="sel-dot pen-dot${Ink.color === k ? ' on' + rest : ''}" style="--hc:${c}" title="Pen: ${penName(k, readerDark())}" aria-label="Pen, ${penName(k, readerDark())}" aria-pressed="${pen && Ink.color === k}" onclick="setInkTool('pen','${k}')"></button>`).join('')
       + `<span class="sel-sep"></span>` + Object.entries({ fine: 4, medium: 7, bold: 11 }).map(([k, d]) => `<button class="ink-size${Ink.size === k ? ' on' + rest : ''}" onclick="setInkTool('pen',null,'${k}')" title="${k[0].toUpperCase() + k.slice(1)} line" aria-label="${k} line" aria-pressed="${pen && Ink.size === k}"><i style="width:${d}px;height:${d}px"></i></button>`).join('')
       + `<span class="sel-sep"></span><button class="sel-icon ink-eraser ${Ink.tool === 'eraser' ? 'on' : ''}" onclick="setInkTool('eraser')" title="Stroke eraser: removes every stroke it touches (tap again for the pen)" aria-label="Stroke eraser" aria-pressed="${Ink.tool === 'eraser'}">${ICON_ERASER}</button>`
       + `<button class="sel-icon ink-eraser ${Ink.tool === 'erasePart' ? 'on' : ''}" onclick="setInkTool('erasePart')" title="Partial eraser: rubs out just the part it passes over (tap again for the pen)" aria-label="Partial eraser" aria-pressed="${Ink.tool === 'erasePart'}">${ICON_ERASE_PART}</button>`
@@ -16912,9 +17308,16 @@ function caretAt(x, y) {
 (function () {
   const body = document.getElementById('readerBody');
   const onPage = t => t && t.closest && !t.closest('.anno-mark, button, a') && t.closest('.reader-page');
-  // Safari: the Pencil would scroll or start a text selection; stop that (fingers still scroll), buttons stay tappable
-  // Safari would turn a Pencil drag into a text selection: the page takes Pencil strokes itself (in Read they scroll)
-  body.addEventListener('touchstart', e => { stopGlide(); if ([...e.changedTouches].some(t => t.touchType === 'stylus') && onPage(e.target)) e.preventDefault(); }, { passive: false });
+  const control = t => t && t.closest && t.closest('.anno-mark, button, a, input, textarea, select, [contenteditable]');
+  /* Safari would turn a Pencil drag into a text selection or a scroll: the page takes Pencil strokes itself (in Read
+     they scroll it). While the Pencil highlights or writes it never scrolls, between the pages either (a finger
+     does), so an eraser can start beside a page. Buttons stay tappable. */
+  const papersOut = () => _reader.doc && !document.getElementById('reader').classList.contains('no-doc');
+  body.addEventListener('touchstart', e => {
+    stopGlide();
+    if (![...e.changedTouches].some(t => t.touchType === 'stylus')) return;
+    if (onPage(e.target) || (Pencil.mode !== 'read' && papersOut() && !control(e.target))) e.preventDefault();
+  }, { passive: false });
   body.addEventListener('wheel', () => stopGlide(), { passive: true });
   /* Read mode: the Pencil scrolls the paper like a finger, with the same glide after a flick */
   let glide = 0;
@@ -16930,7 +17333,7 @@ function caretAt(x, y) {
     glide = requestAnimationFrame(privateCallback(step));
   }
   let st = null;
-  Ink.cancelGesture = () => { st = null; stopGlide(); eraseCursor(null); };
+  Ink.cancelGesture = () => { if (st && st.raf) cancelAnimationFrame(st.raf); st = null; stopGlide(); eraseCursor(null); };
   body.addEventListener('pointerdown', e => {
     let epoch; try { epoch = capturePrivateEpoch(); } catch (error) { return; }
     if (e.pointerType === 'pen' && Pencil.mode === 'read' && onPage(e.target)) {
@@ -16939,13 +17342,13 @@ function caretAt(x, y) {
       return;
     }
     const pen = (e.pointerType === 'pen' && Pencil.mode !== 'read') || (Ink.on && e.pointerType === 'mouse' && e.button === 0);
-    const pg = pen && onPage(e.target);
-    if (!pg || !_reader.doc) return;
+    const pg = pen && onPage(e.target), rub = pen && Ink.on && Ink.tool !== 'pen' && papersOut() && !control(e.target);   // an eraser may start between pages
+    if ((!pg && !rub) || !_reader.doc) return;
     if (Ink.on && !_rn) { e.preventDefault(); setPencilMode('write'); return; }   // notes locked: unlock first
     e.preventDefault();
     try { body.setPointerCapture(e.pointerId); } catch (err) {}
-    const r = pg.getBoundingClientRect();
-    st = { epoch, id: e.pointerId, pg, r, x0: e.clientX, y0: e.clientY, moved: false, mode: Ink.on ? Ink.tool : 'hl', erased: [], added: [] };
+    const r = pg ? pg.getBoundingClientRect() : null;
+    st = { epoch, id: e.pointerId, pg, r, x0: e.clientX, y0: e.clientY, moved: false, mode: Ink.on ? Ink.tool : 'hl', erased: [], added: [], from: false, line: null, range: null, raf: 0 };
     if (st.mode === 'pen') {
       st.stroke = { id: 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), page: +pg.dataset.page, color: PEN_COLORS[Ink.color], w: INK_SIZES[Ink.size], pts: [], pr: [] };
       st.ar = pg.offsetHeight / pg.offsetWidth;
@@ -16991,6 +17394,9 @@ function caretAt(x, y) {
     return false;
   }
   function eraseAt(e) {
+    const under = document.elementFromPoint(e.clientX, e.clientY), on = under && under.closest && under.closest('.reader-page');
+    if (!on || !body.contains(on)) return;   // between pages: it rubs out on whichever page it passes over
+    if (on !== st.pg) { st.pg = on; st.r = on.getBoundingClientRect(); }
     const page = +st.pg.dataset.page, W = st.r.width, H = st.r.height, px = e.clientX - st.r.left, py = e.clientY - st.r.top;
     const hit = (_rn.ink || []).filter(k => k.page === page && strokeHit(k, px, py, W, H));
     if (!hit.length) return;
@@ -17005,7 +17411,10 @@ function caretAt(x, y) {
     removeInk(hit);
     hit.forEach(k => { const i = st.added.indexOf(k); if (i >= 0) st.added.splice(i, 1); else st.erased.push(k); });   // pieces made earlier in this gesture just go
     if (pieces.length) { _rn.ink = _rn.ink.concat(pieces); st.added.push(...pieces); }
-    renderInkLayer(st.pg);
+    // only the strokes that changed are redrawn (not the page's every stroke at each move)
+    const svg = inkSvg(st.pg, true), ar = st.pg.offsetHeight / st.pg.offsetWidth;
+    hit.forEach(k => { const el = svg.querySelector(`[data-ink="${k.id}"]`); if (el) el.remove(); });
+    pieces.forEach(k => svg.appendChild(inkPathEl(k, ar)));
   }
   /* A caret only where the Pencil is over a line of text: in a margin or a gap the browser would pick the "nearest"
      text, which can be anywhere on the page (the title, typically) */
@@ -17015,18 +17424,28 @@ function caretAt(x, y) {
     const c = caretAt(x, y);
     return c && c.node.nodeType === 3 && span.contains(c.node) ? c : null;
   }
+  /* Highlight mode is a marker: the words under the Pencil fill with the colour as it moves, and what you see when
+     you lift is the highlight (no selection on the way, nothing sweeping in after). A stroke keeps to the line it
+     started on: drifting down a little stays there; moving most of a line height onto another line takes the
+     highlight on to there. It may start in a margin: it begins at the first word it reaches. */
+  function markCaret(x, y) {
+    if (st.line && Math.abs(y - st.line.mid) < st.line.h * 0.85) y = st.line.mid;   // still on its line
+    const c = textCaretAt(x, y);
+    if (c && (!st.line || y !== st.line.mid)) { const r = c.node.parentElement.getBoundingClientRect(); st.line = { mid: r.top + r.height / 2, h: r.height }; }
+    return c;
+  }
   function highlightTo(e) {
-    if (st.a === undefined) st.a = textCaretAt(st.x0, st.y0);
-    if (!st.a) return;                                   // started off the text (a margin): not a highlight
-    const b = textCaretAt(e.clientX, e.clientY) || st.b;  // off the text for a moment: keep the last word it touched
-    if (!b) return;
-    st.b = b;
-    const a = st.a;
-    const r = document.createRange();
-    r.setStart(a.node, a.offset); r.setEnd(b.node, b.offset);
-    if (r.collapsed && (a.node !== b.node || a.offset !== b.offset)) { r.setStart(b.node, b.offset); r.setEnd(a.node, a.offset); }   // stroked right to left
+    if (!st.from) { st.from = true; st.a = markCaret(st.x0, st.y0); }   // from where it touched down (the first 6px only decide it's a stroke)
+    const b = markCaret(e.clientX, e.clientY);
+    if (!st.a) { if (!b) return; st.a = b; }   // not on the text yet (a margin)
+    if (b) st.b = b;                            // off the text for a moment: keep the last word it touched
+    if (!st.b) return;
+    const a = st.a, z = st.b, r = document.createRange();
+    r.setStart(a.node, a.offset); r.setEnd(z.node, z.offset);
+    if (r.collapsed && (a.node !== z.node || a.offset !== z.offset)) { r.setStart(z.node, z.offset); r.setEnd(a.node, a.offset); }   // stroked right to left
     wholeWords(r);   // a stroke is coarser than a cursor: take in the words it touches
-    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    st.range = r;
+    if (!st.raf) { const s = st; s.raf = requestAnimationFrame(privateCallback(() => { s.raf = 0; if (st === s && s.range) drawLiveMark(s.pg, pageRects(s.pg, s.range), pencilHl()); })); }
   }
   body.addEventListener('pointermove', e => {
     if (!st || e.pointerId !== st.id) return;
@@ -17060,11 +17479,13 @@ function caretAt(x, y) {
     } else if (s.mode === 'eraser' || s.mode === 'erasePart') {
       eraseCursor(null);
       if (s.erased.length || s.added.length) { Ink.undo.push(s.added.length ? { erased: s.erased, added: s.added } : { erased: s.erased }); scheduleInkSave(); renderInkBar(); }
-    } else if (s.moved && e.type !== 'pointercancel') {   // a stroke across text: highlight it
-      const info = selInfo();
-      window.getSelection().removeAllRanges();
-      const tool = pencilHl();
-      if (info && !info.error && info.quote.length > 1) { _selPending = info; tool === 'note' ? createAnno('note') : createAnno('hl', tool); }
+    } else {   // Highlight: what the marker shows becomes the highlight (or the underline of a comment)
+      if (s.raf) cancelAnimationFrame(s.raf);
+      const info = s.moved && e.type !== 'pointercancel' && s.range ? rangeInfo(s.range) : null, tool = pencilHl();
+      if (!info || info.error || info.quote.length < 2) { clearLiveMark(); return; }
+      drawLiveMark(s.pg, info.rects, tool);   // exactly what will be saved, until the page redraws with it
+      _selPending = info;
+      (tool === 'note' ? createAnno('note', null, true) : createAnno('hl', tool, true)).finally(privateCallback(() => { const l = s.pg.querySelector('.anno-live'); if (l && !st) l.remove(); }));
     }
   };
   body.addEventListener('pointerup', finish); body.addEventListener('pointercancel', finish);
@@ -17319,10 +17740,10 @@ function renderReaderPanel() {
   const filtering = f.colors.size || f.comments || f.notes || f.q;
   const showFilters = total >= 6 || filtering;
   const kept = keepLiveEditor(() => { panel.innerHTML = head + `<div class="rp-scroll">
-    <div class="rp-toolbar">${_rnEditing === 'new' ? '<span class="rp-count-l">New note</span>' : `<button class="rp-add" onclick="startNewNote()">${ICON_PLUS}Add note</button>${_reader.paper && _reader.paper.uploaded && !(n.entries || []).some(e => REVIEW_MARK.test(e.text)) ? '<button class="rp-text-btn" onclick="startReview()" title="A note laid out as a review">Start review</button>' : ''}`}<span class="grow"></span>
+    <div class="rp-toolbar">${_rnEditing === 'new' || (_hw && _hw.id === 'new') ? '<span class="rp-count-l">New note</span>' : `${pencilDevice() ? `<button class="rp-add" onclick="startNewNote()" title="Type a note">${ICON_PLUS}Type</button><button class="rp-add" onclick="startHandwritten()" title="Write or draw a note with the Pencil">${ICON_WRITE}Write</button>` : `<button class="rp-add" onclick="startNewNote()">${ICON_PLUS}Add note</button>`}${_reader.paper && _reader.paper.uploaded && !(n.entries || []).some(e => REVIEW_MARK.test(e.text)) ? '<button class="rp-text-btn" onclick="startReview()" title="A note laid out as a review">Start review</button>' : ''}`}<span class="grow"></span>
       ${total >= 3 ? `<div class="rp-seg" role="group" aria-label="Order"><button class="${_rnSort === 'page' ? 'on' : ''}" onclick="setRnSort('page')" title="Notes first, then in page order">Page</button><button class="${_rnSort === 'recent' ? 'on' : ''}" onclick="setRnSort('recent')" title="Newest first">Recent</button></div>` : ''}</div>
     ${showFilters ? `<div class="rp-filters">${HL_COLORS.filter(c => used.has(c) || f.colors.has(c)).map(c => `<button class="sel-dot ${f.colors.has(c) ? 'on' : ''}" style="--hc:var(--hl-${c})" title="${dataAttr(hlLabel(c))}" aria-pressed="${f.colors.has(c)}" onclick="toggleRnColor('${c}')"></button>`).join('')}${hasComments || f.comments ? chip(f.comments, 'Comments', "_rnFilter.comments=!_rnFilter.comments;renderReaderPanel()") : ''}${hasNotes || f.notes ? chip(f.notes, 'Notes', "_rnFilter.notes=!_rnFilter.notes;renderReaderPanel()") : ''}<input class="rp-search" id="rpSearch" placeholder="Search" value="${dataAttr(f.q)}" oninput="_rnFilter.q=this.value;keepLiveEditor(() => renderRnList())"></div>` : ''}
-    ${_rnEditing === 'new' ? noteEditorHTML() : ''}
+    ${_rnEditing === 'new' ? noteEditorHTML() : _hw && _hw.id === 'new' ? hwEditorHTML() : ''}
     <div class="rp-list" id="rpList"></div>
     ${used.size ? `<div class="rp-colors">${HL_COLORS.map(c => `<button onclick="renameHlColor('${c}')" title="Rename this colour"><i style="--hc:var(--hl-${c})"></i>${esc(hlLabel(c))}</button>`).join('')}</div>` : ''}
   </div><div class="rp-foot"><span id="rpSync">${esc(_notesSyncText)}</span></div>`;
@@ -17347,7 +17768,7 @@ function rnItems(n) {
 function rnFilterItems(items) {
   const f = _rnFilter, q = f.q.toLowerCase();
   const typed = f.colors.size || f.comments || f.notes;
-  const editing = it => _rnEditing === it.id || _rnEditing === 'a:' + it.id;   // the item being edited never filters away
+  const editing = it => _rnEditing === it.id || _rnEditing === 'a:' + it.id || !!(_hw && (_hw.id === it.id || _hw.id === 'a:' + it.id));   // the item being edited never filters away
   return items.filter(it => editing(it) || !typed || (it.type === 'hl' ? f.colors.has(it.a.color === 'yellow' ? 'orange' : it.a.color) : it.type === 'comment' ? f.comments : f.notes))
     .filter(it => editing(it) || !q || (it.type === 'note' ? it.e.text : it.a.quote + ' ' + (it.a.note || '')).toLowerCase().includes(q));
 }
@@ -17375,24 +17796,29 @@ function renderRnList(shown, total, anyFilter) {
   const list = document.getElementById('rpList');
   if (!list) return;
   if (!shown) { const n = _rn || emptyPaperNotes(''); const items = rnItems(n); shown = rnFilterItems(items); total = items.length; }
-  if (!total) { list.innerHTML = _rnEditing === 'new' ? '' : (_reader.doc ? '<div class="rp-empty">Select text in the paper to highlight, comment on or cite it. Notes take Markdown and $math$.</div>' : '<div class="rp-empty">Add a PDF to highlight and cite passages, or write a note with <strong>Add note</strong>.</div>'); return; }
+  if (!total) { list.innerHTML = _rnEditing === 'new' || (_hw && _hw.id === 'new') ? '' : (_reader.doc ? '<div class="rp-empty">Select text in the paper to highlight, comment on or cite it. Notes take Markdown and $math$.</div>' : '<div class="rp-empty">Add a PDF to highlight and cite passages, or write a note with <strong>Add note</strong>.</div>'); return; }
   if (!shown.length) { list.innerHTML = '<div class="rp-empty">Nothing matches this filter.</div>'; return; }
   const acts = (it) => {
-    const edit = `<button class="rp-icon-btn sm" onclick="${it.type === 'note' ? `editNote('${escAttr(it.id)}')` : `editAnnoComment('${escAttr(it.id)}')`}" title="${it.type === 'note' ? 'Edit note' : (it.a.note || '').trim() ? 'Edit comment' : 'Add a comment'}" aria-label="Edit">${ICON_EDIT}</button>`;
+    const canDraw = pencilDevice() || !matchMedia('(pointer: coarse)').matches;   // (a finger doesn't write: no editing a written note on a phone)
+    const edit = (it.type === 'note' && it.e.hand && !it.e.text.trim() && !canDraw ? '' : `<button class="rp-icon-btn sm" onclick="${it.type === 'note' ? `editNote('${escAttr(it.id)}')` : `editAnnoComment('${escAttr(it.id)}')`}" title="${it.type === 'note' ? 'Edit note' : (it.a.note || '').trim() ? 'Edit comment' : 'Add a comment'}" aria-label="Edit">${ICON_EDIT}</button>`)
+      + (it.type === 'note' && it.e.hand && it.e.text.trim() && canDraw ? `<button class="rp-icon-btn sm" onclick="editHandwritten('${escAttr(it.id)}')" title="Edit the writing" aria-label="Edit the writing">${ICON_WRITE}</button>` : '')
+      + (it.type !== 'note' && (pencilDevice() || (hasHand(it.a) && canDraw)) ? `<button class="rp-icon-btn sm" onclick="writeAnnoComment('${escAttr(it.id)}')" title="${hasHand(it.a) ? 'Edit the writing' : 'Write a comment with the Pencil'}" aria-label="${hasHand(it.a) ? 'Edit the writing' : 'Write a comment'}">${ICON_WRITE}</button>` : '');
     const cite = it.type === 'note' ? '' : `<button class="rp-icon-btn sm" onclick="citeAnno('${escAttr(it.id)}')" title="Cite in a note" aria-label="Cite in a note">${ICON_QUOTE}</button>`;
     const del = `<button class="rp-icon-btn sm" onclick="${it.type === 'note' ? `deleteGeneralNote('${escAttr(it.id)}')` : `deleteAnno('${escAttr(it.id)}')`}" title="Delete" aria-label="Delete">${ICON_TRASH}</button>`;
     return `<span class="rp-item-acts">${edit}${cite}${del}</span>`;
   };
   list.innerHTML = shown.map(it => {
     const editing = _rnEditing === it.id || _rnEditing === 'a:' + it.id;
-    if (it.type === 'note') return `<div class="rp-card rp-card-note ${_rnFresh === it.id ? 'fresh' : ''}" data-id="${dataAttr(it.id)}">
-        <div class="rp-card-top"><span>Note · ${esc(noteDate(it.e))}</span><span class="grow"></span>${editing ? '' : acts(it)}</div>
-        ${editing ? noteEditorHTML() : `<div class="md rp-card-body" data-md-note="${dataAttr(it.id)}"></div>`}</div>`;
-    const a = it.a, label = a.kind === 'hl' ? esc(hlLabel(a.color)) : 'Comment';
-    return `<div class="rp-card rp-card-anchor ${a.kind === 'note' ? 'is-comment' : ''} ${_rnFresh === it.id ? 'fresh' : ''}" data-id="${dataAttr(it.id)}" style="--hc:${annoHc(a)}" tabindex="0" onclick="if (!event.target.closest('button, textarea, a, .cite-chip')) jumpToAnno('${escAttr(it.id)}')">
-        <div class="rp-card-top"><span>p. ${a.page} · ${label}</span><span class="grow"></span>${editing ? '' : acts(it)}</div>
+    if (it.type === 'note') { const writing = !!(it.e.hand && _hw && _hw.id === it.id);
+      return `<div class="rp-card rp-card-note ${_rnFresh === it.id ? 'fresh' : ''}" data-id="${dataAttr(it.id)}">
+        <div class="rp-card-top"><span>Note · ${esc(noteDate(it.e))}</span><span class="grow"></span>${editing || writing ? '' : acts(it)}</div>
+        ${writing ? hwEditorHTML() : (it.e.hand ? hwViewHTML(it.e) : '') + (editing ? noteEditorHTML() : it.e.text.trim() || !it.e.hand ? `<div class="md rp-card-body" data-md-note="${dataAttr(it.id)}"></div>` : '')}</div>`; }
+    const a = it.a, label = a.kind === 'hl' ? esc(hlLabel(a.color)) : 'Comment', writing = !!(_hw && _hw.where === 'panel' && _hw.id === 'a:' + it.id);
+    return `<div class="rp-card rp-card-anchor ${a.kind === 'note' ? 'is-comment' : ''} ${_rnFresh === it.id ? 'fresh' : ''}" data-id="${dataAttr(it.id)}" style="--hc:${annoHc(a)}" tabindex="0" onclick="if (!event.target.closest('button, textarea, a, .cite-chip, .hw-editor')) jumpToAnno('${escAttr(it.id)}')">
+        <div class="rp-card-top"><span>p. ${a.page} · ${label}</span><span class="grow"></span>${editing || writing ? '' : acts(it)}</div>
         <div class="rp-quote">${esc(a.quote)}</div>
-        ${editing ? noteEditorHTML() : (a.note || '').trim() ? `<div class="md rp-card-body" data-md-anno="${dataAttr(it.id)}"></div>` : ''}</div>`;
+        ${editing ? noteEditorHTML() : (a.note || '').trim() ? `<div class="md rp-card-body" data-md-anno="${dataAttr(it.id)}"></div>` : ''}
+        ${writing ? hwEditorHTML() : hasHand(a) ? hwViewHTML({ id: 'a:' + it.id, hand: a.hand }) : ''}</div>`;
   }).join('');
   list.querySelectorAll('[data-md-note]').forEach(el => { const e = (_rn.entries || []).find(x => x.id === el.dataset.mdNote); if (e) renderNotesMarkdown(el, e.text, _rn); });
   list.querySelectorAll('[data-md-anno]').forEach(el => { const a = annoById(el.dataset.mdAnno); if (a) renderNotesMarkdown(el, a.note, _rn); });
@@ -17429,8 +17855,8 @@ async function startNewNote(prefill) { const _authEpoch = capturePrivateEpoch();
   const owner = captureNotesOwner();
   const notes = await privateAwait(readyReaderNotes(owner, _authEpoch), _authEpoch);
   if (!notes || !owner.current()) return;
-  if (_rnEditing) await privateAwait(finishNotesEdit(), _authEpoch);
-  if (!owner.current()) return;
+  await privateAwait(finishNotesEdit(), _authEpoch);   // a note being typed or written is kept first
+  if (!owner.current() || _hw || _rnEditing) return;
   _rnEditing = 'new'; _rnDraft = prefill || ''; _rnRange = null;
   if (!document.getElementById('reader').classList.contains('panel-open')) toggleReaderPanel(true);
   else renderReaderPanel();
@@ -17438,8 +17864,12 @@ async function startNewNote(prefill) { const _authEpoch = capturePrivateEpoch();
 async function editNote(id) { const _authEpoch = capturePrivateEpoch();
   const owner = captureNotesOwner(); if (!owner.current()) return;
   if (notesBusy()) return;
+  if (String(id).startsWith('a:')) return writeAnnoComment(id.slice(2));   // a highlight's written comment
   const e = _rn && (_rn.entries || []).find(x => x.id === id);
   if (!e) return;
+  if (e.hand && !e.text.trim()) return editHandwritten(id);
+  if (_hw) await privateAwait(saveHandwritten(true), _authEpoch);
+  if (!owner.current()) return;
   if (_rnEditing && _rnEditing !== id) await privateAwait(finishNotesEdit(), _authEpoch);
   if (!owner.current()) return;
   _rnEditing = id; _rnDraft = e.text;
@@ -17451,7 +17881,7 @@ function draftOriginal() {
   const ed = String(_rnEditing || '');
   return !ed || ed === 'new' ? '' : ed.startsWith('a:') ? ((annoById(ed.slice(2)) || {}).note || '') : (((_rn && _rn.entries) || []).find(e => e.id === ed) || {}).text || '';
 }
-function draftUnsaved() { return !!_rnEditing && _rnDraft.trim() !== draftOriginal().trim(); }
+function draftUnsaved() { return (!!_rnEditing && _rnDraft.trim() !== draftOriginal().trim()) || !!(_hw && _hw.dirty); }
 /* Cancel is one keystroke (Esc), so a changed draft can be brought back */
 function cancelNoteEdit() {
   const snap = { editing: _rnEditing, draft: _rnDraft, refs: _rnPendingRefs.slice(), pid: _rn && _rn.id };
@@ -17472,6 +17902,8 @@ async function editAnnoComment(id) { const _authEpoch = capturePrivateEpoch();
   const a = annoById(id);
   if (!a) return;
   closeAnnoCard();
+  if (_hw) await privateAwait(saveHandwritten(true), _authEpoch);
+  if (!owner.current()) return;
   if (_rnEditing && _rnEditing !== 'a:' + id) await privateAwait(finishNotesEdit(), _authEpoch);
   if (!owner.current()) return;
   _rnEditing = 'a:' + id; _rnDraft = a.note || ''; _rnRange = null;
@@ -17485,13 +17917,13 @@ async function saveNoteEdit(quiet) { const _authEpoch = capturePrivateEpoch();
   _rn.entries = _rn.entries || [];
   if (String(editing).startsWith('a:')) {
     const a = annoById(editing.slice(2));
-    if (a && a.kind === 'note' && !text) { if (!quiet) renderReaderPanel(); return deleteAnno(a.id, 'Empty comment removed'); }
+    if (a && a.kind === 'note' && !text && !hasHand(a)) { if (!quiet) renderReaderPanel(); return deleteAnno(a.id, 'Empty comment removed'); }   // (a comment with writing keeps it)
     if (a && (a.note || '') !== text) { a.note = text; a.updated = now; _rnFresh = a.id; }
   } else if (editing === 'new') {
     if (text) { const e = { id: newNoteId(), text, created: now, updated: now }; _rn.entries.push(e); _rnFresh = e.id; }
   } else {
     const e = _rn.entries.find(x => x.id === editing);
-    if (e && !text) { if (!quiet) renderReaderPanel(); return deleteGeneralNote(editing); }
+    if (e && !text && !hasHand(e)) { if (!quiet) renderReaderPanel(); return deleteGeneralNote(editing); }
     if (e && e.text !== text) { e.text = text; e.updated = now; _rnFresh = e.id; }
   }
   await privateAwait(savePaperNotes(notes), _authEpoch);
@@ -17501,10 +17933,17 @@ async function saveNoteEdit(quiet) { const _authEpoch = capturePrivateEpoch();
 }
 async function finishNotesEdit() { const _authEpoch = capturePrivateEpoch();
   if (_rnFinish) return privateAwait(_rnFinish, _authEpoch);
-  if (!_rnEditing) return;
-  if (!_rnDraft.trim() && !String(_rnEditing).startsWith('a:')) { endDraft('discard'); return; }
-  const snap = { notes: _rn, before: JSON.parse(JSON.stringify(_rn)), editing: _rnEditing, text: _rnDraft, refs: _rnPendingRefs.slice() };
-  const work = (async () => {
+  const owner = captureNotesOwner();
+  // Install the shared operation before either editor can save or yield. Every caller waits for handwriting too.
+  let resolveWork, rejectWork;
+  const work = new Promise((resolve, reject) => { resolveWork = resolve; rejectWork = reject; });
+  _rnFinish = work;
+  const run = (async () => {
+    if (!owner.current()) return;
+    if (_hw && _hw.where === 'panel') await privateAwait(saveHandwritten(true), _authEpoch);
+    if (!owner.current() || !_rnEditing) return;
+    if (!_rnDraft.trim() && !String(_rnEditing).startsWith('a:') && !hasHand((owner.notes.entries || []).find(e => e.id === _rnEditing))) { endDraft('discard'); return; }
+    const snap = { notes: _rn, before: JSON.parse(JSON.stringify(_rn)), editing: _rnEditing, text: _rnDraft, refs: _rnPendingRefs.slice() };
     try { await privateAwait(saveNoteEdit(true), _authEpoch); }
     catch (e) { checkPrivateEpoch(_authEpoch);
       Object.assign(snap.notes, snap.before);
@@ -17512,7 +17951,7 @@ async function finishNotesEdit() { const _authEpoch = capturePrivateEpoch();
       throw e;
     }
   })();
-  _rnFinish = work;
+  run.then(resolveWork, rejectWork);   // promise settlement only; the writer itself checks its owner after awaits
   try { await privateAwait(work, _authEpoch); }
   finally { if (_rnFinish === work) _rnFinish = null; }
 }
@@ -17541,6 +17980,326 @@ async function deleteGeneralNote(id) { const _authEpoch = capturePrivateEpoch();
     await privateAwait(savePaperNotes(notes), _authEpoch); if (_rn === notes) renderReaderPanel();
   });
 }
+
+/* ===== WRITTEN NOTES =====
+   A note can be written with the Pencil (or drawn with a mouse) instead of typed: Write opens a card as wide as the
+   panel to write and draw on, and it grows as you near its bottom. Strokes are kept the way the page keeps ink (the
+   same pens; points as fractions of the card's width) in the note's entry, as hand: { h, strokes, px }, h being the
+   card's height as a share of its width and px the width it was written at; its text stays '' so whatever reads
+   notes as text still works. The panel is dark, so a card shows ink as dark pages do (the same filter): the black
+   pen writes white. On an iPad the Pencil writes and a finger scrolls the panel; the Pencil on a written note opens
+   it to write on. A highlight's comment can be written the same way (its hand, beside or instead of its words):
+   in the panel (Save / Cancel, like a note) or in the highlight's own card over the paper (kept as you go, like
+   its typed words). Esc is the reader's own: it cancels the panel's card, and closes a highlight's. */
+const HW_W = 0.0058, HW_START_H = 0.7, HW_CARD_H = 0.42, HW_GROW = 0.4;   // line width (share of the card's width), first height (a note's, a comment's), room added
+const ICON_WRITE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.2 3.6l3.4 3.4-7.8 7.8-4.3.9.9-4.3z"/><path d="M3 20.2c1.4-1.7 2.8-1.7 4.2 0s2.8 1.7 4.2 0 2.8-1.7 4.2 0 2.8 1.7 4.4-.2"/></svg>';   // a pen and its line of writing (apart from Edit's pencil)
+let _hw = null;   // what's open to write on: { id ('new', a note's id or 'a:' + a highlight's id), where ('panel' | 'card'), h, strokes, undo, tool ('pen' | 'eraser'), color, dirty (not saved yet), px, px0, hand0 }
+function hwRoot() { return _hw && document.querySelector(_hw.where === 'card' ? '#annoCard .hw-editor' : '#notesPane .hw-editor'); }
+function hwPadEl() { const r = hwRoot(); return r && r.querySelector('.hw-pad'); }
+function hwOpen(id, where, hand) {   // room to go on writing under what's there (a comment's card starts lower: a line or two)
+  const h0 = where === 'card' ? HW_CARD_H : HW_START_H;
+  return { id, where, h: hand ? Math.max(h0, Number(hand.h) + 0.3) : h0, strokes: hand ? (hand.strokes || []).slice() : [], undo: [], tool: 'pen', color: hwColor(), dirty: false, px: 0, px0: hand && hand.px, hand0: hand || null };
+}
+/* What's written, to keep: as tall as the writing (no empty card below it); nothing written, nothing */
+function hwHandOf(hw, px0) {
+  if (!hw.strokes.length) return null;
+  const low = Math.max(0, ...hw.strokes.flatMap(k => k.pts.map(q => q[1])));
+  return { h: Math.max(0.18, Math.min(hw.h, Math.round((low + 0.06) * 100) / 100)), strokes: hw.strokes.slice(), px: Math.max(hw.px, hw.px0 || 0, px0 || 0) || 380 };   // shown no wider than its widest writing
+}
+function setHand(x, hand) { if (hand) x.hand = hand; else delete x.hand; }
+function hwPaths(strokes) { return strokes.map(k => `<path data-k="${dataAttr(k.id)}" d="${inkD(k.pts, 1)}" stroke="${dataAttr(k.color)}" stroke-width="${(Number(k.w) * 1000).toFixed(2)}"/>`).join(''); }
+function hwSvgHTML(hand) { return `<svg class="hw-svg" viewBox="0 0 1000 ${(1000 * Number(hand.h)).toFixed(1)}" preserveAspectRatio="xMinYMin slice" aria-hidden="true">${hwPaths(hand.strokes || [])}</svg>`; }
+/* shown no wider than it was written (px), so a note from the narrow panel isn't blown up on the paper's page */
+function hwViewHTML(e) { return `<div class="hw-view" data-hw="${dataAttr(e.id)}" style="aspect-ratio:1 / ${Number(e.hand.h)};max-width:${Number(e.hand.px) || 380}px" role="img" aria-label="Handwritten note">${hwSvgHTML(e.hand)}</div>`; }
+function hwColor() { try { const c = localStorage.getItem('scholar_hw_color'); return PEN_COLORS[c] ? c : 'black'; } catch (e) { return 'black'; } }
+function hwToolsHTML() {
+  const hw = _hw, pen = hw.tool === 'pen';
+  return Object.entries(PEN_COLORS).map(([k, c]) => `<button class="sel-dot pen-dot${hw.color === k ? (pen ? ' on' : ' on resting') : ''}" style="--hc:${c}" title="Pen: ${penName(k, true)}" aria-label="Pen, ${penName(k, true)}" aria-pressed="${pen && hw.color === k}" onclick="hwTool('pen','${k}')"></button>`).join('')
+    + `<span class="sel-sep"></span><button class="sel-icon ${pen ? '' : 'on'}" onclick="hwTool('eraser')" title="Eraser: removes the strokes it touches (tap again for the pen)" aria-label="Eraser" aria-pressed="${!pen}">${ICON_ERASER}</button>`
+    + `<button class="sel-icon" onclick="hwUndo()" ${hw.undo.length ? '' : 'aria-disabled="true"'} title="Undo" aria-label="Undo">${ICON_UNDO}</button>`;
+}
+function hwEditorHTML() {   // (in a highlight's card it saves as you go: no Save or Cancel, and Esc closes the card)
+  const card = _hw.where === 'card';
+  return `<div class="hw-editor">
+    <div class="hw-tools" role="toolbar" aria-label="Pens">${hwToolsHTML()}</div>
+    <div class="hw-pad" style="aspect-ratio:1 / ${Number(_hw.h)}" aria-label="Writing area">${hwSvgHTML(_hw)}</div>
+    ${card ? '' : `<div class="rp-editor-foot"><span class="grow"></span><button class="ui-btn ui-btn-secondary ui-btn-sm" onclick="cancelHandwritten()">Cancel</button><button class="ui-btn ui-btn-primary ui-btn-sm" onclick="saveHandwritten()">Save</button></div>`}</div>`;
+}
+function hwRedraw() {
+  const root = hwRoot(), pad = root && root.querySelector('.hw-pad'), tools = root && root.querySelector('.hw-tools');
+  if (pad) pad.innerHTML = hwSvgHTML(_hw);
+  if (tools) morphInto(tools, hwToolsHTML());
+}
+/* Something was written, rubbed out or undone */
+function hwChanged() { _hw.revision = (_hw.revision || 0) + 1; _hw.dirty = true; if (_hw.where === 'card') acHandInput(); }
+function hwTool(tool, color) {
+  if (!_hw) return;
+  _hw.tool = tool === 'eraser' && _hw.tool === 'eraser' ? 'pen' : tool;   // the eraser is a toggle, as on the page
+  if (color && PEN_COLORS[color]) { _hw.color = color; try { privateSet('scholar_hw_color', color); } catch (e) {} }
+  hwRedraw();
+}
+function hwUndo() {
+  const last = _hw && _hw.undo.pop();
+  if (!last) return;
+  if (last.added) _hw.strokes = _hw.strokes.filter(k => !last.added.includes(k));
+  if (last.erased) _hw.strokes = _hw.strokes.concat(last.erased);
+  hwChanged(); hwRedraw();
+}
+/* More room as you near the bottom: the card grows smoothly (the drawing keeps its scale, held by the width) */
+function hwGrowFor(maxY) {
+  if (!_hw || maxY < _hw.h - 0.15) return;
+  const pad = hwPadEl(), before = pad ? pad.offsetHeight : 0;
+  _hw.h = Math.round((maxY + HW_GROW) * 100) / 100;
+  if (!pad) return;
+  pad.style.aspectRatio = `1 / ${_hw.h}`;
+  const svg = pad.querySelector('svg'); if (svg) svg.setAttribute('viewBox', `0 0 1000 ${(1000 * _hw.h).toFixed(1)}`);
+  const after = pad.offsetHeight;
+  if (_hw.where === 'card') fitAnnoCard(after - before);
+  if (!reduceMotion() && pad.animate) pad.animate([{ height: before + 'px' }, { height: after + 'px' }], { duration: 240, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+}
+async function startHandwritten() { const _authEpoch = capturePrivateEpoch();
+  if (notesBusy()) return;
+  const owner = captureNotesOwner();
+  const notes = await privateAwait(readyReaderNotes(owner, _authEpoch), _authEpoch);
+  if (!notes || !owner.current()) return;
+  if (_acId) await privateAwait(closeAnnoCard(), _authEpoch);   // a comment being written in its card is kept first
+  if (!owner.current()) return;
+  await privateAwait(finishNotesEdit(), _authEpoch);
+  if (!owner.current() || _hw || _rnEditing) return;
+  _hw = hwOpen('new', 'panel');
+  if (!document.getElementById('reader').classList.contains('panel-open')) toggleReaderPanel(true); else renderReaderPanel();
+  hwFocus();
+}
+async function editHandwritten(id) { const _authEpoch = capturePrivateEpoch();
+  if (notesBusy()) return;
+  const owner = captureNotesOwner();
+  const notes = await privateAwait(readyReaderNotes(owner, _authEpoch), _authEpoch);
+  if (!notes || !owner.current()) return;
+  const e = (notes.entries || []).find(x => x.id === id);
+  if (!e || !e.hand || (_hw && _hw.id === id)) return;
+  if (_acId) await privateAwait(closeAnnoCard(), _authEpoch);
+  if (!owner.current()) return;
+  await privateAwait(finishNotesEdit(), _authEpoch);
+  if (!owner.current() || _hw || _rnEditing || !(notes.entries || []).includes(e)) return;
+  _hw = hwOpen(id, 'panel', e.hand);
+  if (!document.getElementById('reader').classList.contains('panel-open')) toggleReaderPanel(true); else renderReaderPanel();
+  hwFocus();
+}
+/* A highlight's comment, written in the panel */
+async function writeAnnoComment(id) { const _authEpoch = capturePrivateEpoch();
+  if (notesBusy()) return;
+  const owner = captureNotesOwner();
+  const notes = await privateAwait(readyReaderNotes(owner, _authEpoch), _authEpoch);
+  if (!notes || !owner.current()) return;
+  const a = annoById(id);
+  if (!a || (_hw && _hw.where === 'panel' && _hw.id === 'a:' + id)) return;
+  await privateAwait(closeAnnoCard(), _authEpoch);
+  if (!owner.current()) return;
+  await privateAwait(finishNotesEdit(), _authEpoch);
+  if (!owner.current() || _hw || _rnEditing || annoById(id) !== a) return;   // (an emptied comment its card removed)
+  _hw = hwOpen('a:' + id, 'panel', hasHand(a) ? a.hand : null);
+  if (!document.getElementById('reader').classList.contains('panel-open')) toggleReaderPanel(true); else renderReaderPanel();
+  hwFocus();
+}
+function hwFocus() { setTimeout(privateCallback(() => { const ed = hwRoot(); if (!ed) return; if (_hw.where === 'panel') ed.scrollIntoView({ block: 'nearest' }); const b = ed.querySelector('.pen-dot.on'); if (b && !matchMedia('(pointer: coarse)').matches) b.focus({ preventScroll: true }); }), 0); }
+async function saveHandwritten(quiet) { const _authEpoch = capturePrivateEpoch();
+  const hw = _hw;
+  if (hw && hw.where === 'card') return closeAnnoCard();   // the card keeps it as it closes
+  if (!hw) return;
+  if (hw.saving) return privateAwait(hw.saving, _authEpoch);
+  const owner = captureNotesOwner(), notes = owner.notes;
+  if (!owner.current() || !notes) return;
+  const work = (async () => {
+    if (!owner.current() || _hw !== hw) return;
+    const before = JSON.parse(JSON.stringify(notes)), revision = hw.revision || 0, now = new Date().toISOString();
+    const pad = document.querySelector('#notesPane .hw-pad'), hand = hwHandOf(hw, pad && pad.offsetWidth ? Math.round(pad.offsetWidth) : 0);
+    notes.entries = notes.entries || [];
+    try {
+      if (hw.id === 'new') {
+        if (hand) {
+          const id = hw.savedId || (hw.savedId = newNoteId());   // the same id on retry, including a partial local save
+          notes.entries.push({ id, text: '', hand, created: now, updated: now }); _rnFresh = id;
+        }
+      } else if (hw.id.startsWith('a:')) {
+        const a = annoById(hw.id.slice(2));
+        if (a && hw.dirty) {
+          setHand(a, hand); a.updated = now; _rnFresh = a.id;
+          if (isEmptyComment(a)) {
+            if (hw.hand0) a.hand = hw.hand0;
+            await privateAwait(deleteAnno(a.id, 'Empty comment removed'), _authEpoch);
+            if (_hw === hw) _hw = null;
+            if (!owner.current()) return;
+            if (!quiet) renderReaderPanel();
+            return;
+          }
+          redrawAnnoLayers();
+        }
+      } else {
+        const e = notes.entries.find(x => x.id === hw.id);
+        if (e && !hand && !e.text.trim()) {
+          await privateAwait(deleteGeneralNote(hw.id), _authEpoch);
+          if (_hw === hw) _hw = null;
+          if (!owner.current()) return;
+          if (!quiet) renderReaderPanel();
+          return;
+        }
+        if (e && hw.dirty) { setHand(e, hand); e.updated = now; _rnFresh = e.id; }
+      }
+      if (hw.dirty) await privateAwait(savePaperNotes(notes), _authEpoch);
+      if (_hw === hw && (hw.revision || 0) === revision) { hw.dirty = false; _hw = null; }
+      else if (hw.id === 'new' && hand) hw.id = hw.savedId;   // writing added during the save belongs to this entry
+      if (!owner.current()) { if (_hw === hw) _hw = null; return; }
+      if (!quiet) renderReaderPanel();
+    } catch (e) { checkPrivateEpoch(_authEpoch);
+      if (owner.current() && (!_hw || _hw === hw)) {
+        Object.assign(notes, before); _hw = hw; hw.dirty = true;
+        renderReaderPanel(); redrawAnnoLayers(); toastError('Couldn’t save your note. Try again.');
+      } else if (_hw === hw) _hw = null;   // a departed session cannot become the next paper's draft
+      throw e;
+    }
+  })();
+  hw.saving = work;
+  try { await privateAwait(work, _authEpoch); }
+  finally { if (hw.saving === work) delete hw.saving; }
+}
+/* Writing a highlight's comment in its card, over the paper: Write (or a comment begun with the Pencil, or one
+   that has writing) opens a card to write on under the comment box. It's kept as you go and as the card closes;
+   a comment left with nothing goes, as an emptied typed one does. */
+function acStartWriting(a) {
+  if (_hw && _hw.where === 'panel') saveHandwritten();   // one place to write at a time
+  _hw = hwOpen('a:' + a.id, 'card', hasHand(a) ? a.hand : null);
+}
+function acWrite(id) {
+  const a = annoById(id);
+  if (!a || notesBusy()) return;
+  const t = document.getElementById('acNote'), typed = t && _acId === id ? t.value : null;   // words typed a moment ago stay in the box
+  acStartWriting(a);
+  openAnnoCard(id);
+  const t2 = document.getElementById('acNote'); if (t2 && typed !== null && t2.value !== typed) { t2.value = typed; acGrow(t2); }
+  hwFocus();
+}
+function acHandInput() { const owner = captureNotesOwner(), id = _acId; clearTimeout(_acHandTimer); _acHandTimer = setTimeout(privateCallback(() => { _acHandTimer = null; if (owner.current() && _acId === id) acSaveHand().catch(privateCallback(() => {})); }), 600); }
+async function acSaveHand() { const _authEpoch = capturePrivateEpoch();
+  const owner = captureNotesOwner(), notes = owner.notes; if (!owner.current() || !notes) return;
+  const hw = _hw, a = annoById(_acId);
+  if (!a || !hw || hw.where !== 'card' || hw.id !== 'a:' + a.id || !hw.dirty) return;
+  const before = JSON.parse(JSON.stringify(notes)), pending = _acPending, revision = hw.revision || 0;
+  setHand(a, hwHandOf(hw)); a.updated = new Date().toISOString();
+  if (a === _acPending) {                      // the first stroke: the comment now exists
+    if (!annoHasComment(a)) return;
+    _acPending = null;
+    notes.annos = (notes.annos || []).concat(a);
+  }
+  try { await privateAwait(savePaperNotes(notes), _authEpoch); }
+  catch (e) { checkPrivateEpoch(_authEpoch);
+    if (owner.current() && _hw === hw && _acId === a.id) {
+      Object.assign(notes, before); _acPending = pending; hw.dirty = true;
+      toastError('Couldn’t save your note. Try again.');
+    }
+    throw e;
+  }
+  if (!owner.current()) return;
+  if (_hw === hw && (hw.revision || 0) === revision) hw.dirty = false;
+  // The opening card may have been blank. Keep the last saved nonempty comment for deletion Undo.
+  if (_hw === hw && _acOrigin && _acOrigin.id === a.id && annoHasComment(a)) _acOrigin = { ..._acOrigin, note: a.note || '', hand: a.hand };
+  if (!_rnEditing && !(_hw && _hw.where === 'panel')) renderReaderPanel();
+}
+/* The card grows as you write: it moves up to stay on screen (never above the Pencil's tools) */
+function fitAnnoCard(grow) {
+  const card = document.getElementById('annoCard'), r = card.getBoundingClientRect(), tools = document.getElementById('inkBar');
+  const ceil = tools.classList.contains('open') ? tools.getBoundingClientRect().bottom + 8 : 64;
+  const top = Math.max(ceil, Math.min(r.top, window.innerHeight - 12 - (r.height + grow)));
+  if (Math.abs(top - r.top) < 1) return;
+  card.style.top = top + 'px';
+  if (!reduceMotion() && card.animate) card.animate([{ top: r.top + 'px' }, { top: top + 'px' }], { duration: 240, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+}
+/* Cancel (and the reader's Esc) puts a written note away; changes made can be brought back */
+function cancelHandwritten() {
+  const hw = _hw, pid = _rn && _rn.id;
+  if (hw && hw.where === 'card') return;   // (the card has no Cancel: Esc closes it, keeping what's written)
+  _hw = null;
+  renderReaderPanel();
+  if (hw && hw.dirty) toast(hw.id === 'new' ? 'Note discarded' : 'Changes discarded', () => {
+    if (_hw || _rnEditing || !_rn || _rn.id !== pid) return;
+    if (hw.id.startsWith('a:') && !annoById(hw.id.slice(2))) return;
+    if (hw.id !== 'new' && !hw.id.startsWith('a:') && !(_rn.entries || []).some(x => x.id === hw.id)) return;
+    _hw = hw;
+    if (!document.getElementById('reader').classList.contains('panel-open')) toggleReaderPanel(true); else renderReaderPanel();
+    hwFocus();
+  });
+}
+(function () {   // writing: the Pencil or a mouse draws, a finger scrolls; a stroke is one undo step, as is one rub of the eraser
+  let st = null;
+  const reset = () => { st = null; };
+  Private.interactionResets.add(() => { reset(); _hw = null; clearTimeout(_acHandTimer); _acHandTimer = null; });
+  const padOf = t => { const p = t && t.closest && t.closest('.hw-pad'); return p && p === hwPadEl() ? p : null; };
+  const viewOf = t => t && t.closest && t.closest('#notesPane .hw-view[data-hw]');
+  document.addEventListener('touchstart', e => { if ((padOf(e.target) || viewOf(e.target)) && [...e.changedTouches].some(t => t.touchType === 'stylus')) e.preventDefault(); }, { passive: false });   // Safari would scroll or select with it
+  document.addEventListener('pointerdown', e => {
+    const view = viewOf(e.target);
+    // the Pencil on a written note: write on it (once this touch has begun: the note it touched is about to be redrawn)
+    if (view && e.pointerType === 'pen') { e.preventDefault(); const id = view.dataset.hw; setTimeout(privateCallback(() => id.startsWith('a:') ? editNote(id) : editHandwritten(id)), 0); return; }
+    const pad = padOf(e.target);
+    if (!pad || !_hw || e.pointerType === 'touch' || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    let epoch; try { epoch = capturePrivateEpoch(); } catch (error) { return; }
+    e.preventDefault();
+    try { pad.setPointerCapture(e.pointerId); } catch (err) {}
+    st = { epoch, id: e.pointerId, r: pad.getBoundingClientRect(), svg: pad.querySelector('svg'), erased: [] };
+    _hw.px = Math.round(st.r.width);   // the width it's being written at
+    if (_hw.tool === 'pen') {
+      st.k = { id: 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), color: PEN_COLORS[_hw.color], w: HW_W, pts: [], pr: [] };
+      st.path = document.createElementNS(SVGNS, 'path'); st.path.setAttribute('stroke', st.k.color); st.path.setAttribute('data-k', st.k.id);   // (so a rub can take it away at once)
+      if (st.svg) st.svg.appendChild(st.path);
+      add(e);
+    } else erase(e);
+  });
+  function add(e, final) {
+    const evs = (e.getCoalescedEvents && e.getCoalescedEvents().length) ? e.getCoalescedEvents() : [e], k = st.k, W = st.r.width;
+    evs.forEach(ev => {
+      const rx = (ev.clientX - st.r.left) / W, ry = (ev.clientY - st.r.top) / W;   // both as shares of the width
+      st.sm = st.sm ? [st.sm[0] + 0.18 * (rx - st.sm[0]), st.sm[1] + 0.18 * (ry - st.sm[1])] : [rx, ry];   // as the page's ink: a light average takes out the jitter
+      const [x, y] = final ? [rx, ry] : st.sm, last = k.pts[k.pts.length - 1];
+      if (last && Math.hypot(x - last[0], y - last[1]) * W < 1.5) return;
+      k.pts.push([+x.toFixed(5), +y.toFixed(5)]); k.pr.push(ev.pressure || 0.5);
+    });
+    const p = k.pr.reduce((a, b) => a + b, 0) / k.pr.length;
+    k.w = +(HW_W * (0.75 + 0.5 * Math.min(1, p))).toFixed(5);
+    st.path.setAttribute('d', inkD(k.pts, 1)); st.path.setAttribute('stroke-width', (k.w * 1000).toFixed(2));
+  }
+  function erase(e) {
+    const W = st.r.width, px = e.clientX - st.r.left, py = e.clientY - st.r.top;
+    const near = (k) => { const R = 10 + k.w * W / 2, P = k.pts.map(q => [q[0] * W, q[1] * W]);
+      if (P.length === 1) return Math.hypot(P[0][0] - px, P[0][1] - py) < R;
+      for (let i = 1; i < P.length; i++) { const [ax, ay] = P[i - 1], [bx, by] = P[i], dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, t = l2 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l2)) : 0; if (Math.hypot(px - ax - t * dx, py - ay - t * dy) < R) return true; }
+      return false; };
+    const hit = _hw.strokes.filter(near);
+    if (!hit.length) return;
+    _hw.strokes = _hw.strokes.filter(k => !hit.includes(k)); st.erased.push(...hit);
+    hit.forEach(k => { const el = st.svg && st.svg.querySelector(`[data-k="${k.id}"]`); if (el) el.remove(); });   // (the rest redraws when it lifts)
+  }
+  window.addEventListener('pointermove', e => {
+    if (!st || e.pointerId !== st.id || !_hw) return;
+    if (!privateInteractionCurrent(st.epoch, reset)) return;
+    if (st.k) add(e); else erase(e);
+  });
+  const done = e => {
+    if (!st || e.pointerId !== st.id) return;
+    if (!privateInteractionCurrent(st.epoch, reset)) return;
+    const s = st; st = null;
+    if (!_hw) return;
+    if (s.k) {
+      if (e.type === 'pointercancel') { s.path.remove(); return; }
+      st = s; add(e, true); st = null;
+      const k = s.k; delete k.pr;
+      k.pts = simplifyInk(k.pts, s.r.width, s.r.width, 0.6);
+      _hw.strokes.push(k); _hw.undo.push({ added: [k] }); hwChanged();
+      hwGrowFor(Math.max(...k.pts.map(q => q[1])));
+      if (!s.path.isConnected) hwRedraw();   // (the panel was redrawn while writing)
+      else { const r = hwRoot(), t = r && r.querySelector('.hw-tools'); if (t) morphInto(t, hwToolsHTML()); }
+    } else if (s.erased.length) { _hw.undo.push({ erased: s.erased }); hwChanged(); hwRedraw(); }
+  };
+  window.addEventListener('pointerup', done); window.addEventListener('pointercancel', done);
+})();
 
 /* ===== CHAT WITH CLAUDE: one Claude Code session per paper, through bridge/scholar_bridge.py on this laptop =====
    The page talks to the bridge on 127.0.0.1 (Chrome asks once to allow that); the bridge runs Claude Code.
@@ -17582,14 +18341,18 @@ function saveBridgeToken(t) { requireOwner(); t ? privateSet('claude_bridge_toke
 function bridgeFetch(path, opts = {}) {
   requireOwner(); return ownerFetch(bridgeBase() + path, { ...opts, headers: { 'content-type': 'application/json', ...(Chat.token ? { authorization: 'Bearer ' + Chat.token } : {}), ...(opts.headers || {}) } });
 }
-async function bridgeCheck() { const _authEpoch = capturePrivateEpoch();
-  requireOwner();
-  const ctl = new AbortController(), t = setTimeout(privateCallback(() => ctl.abort()), 2500);
-  try { const j = await privateAwait((await privateAwait(bridgeFetch('/health', { signal: ctl.signal }), _authEpoch)).json(), _authEpoch); Chat.status = j.paired ? 'ready' : 'unpaired'; Chat.bridgeVersion = j.version || 1; }
-  catch (e) { checkPrivateEpoch(_authEpoch); Chat.status = 'offline'; }
-  clearTimeout(t);
-  if (Chat.status === 'ready') retryUploadRemovals().catch(privateCallback(() => {}));
-  return Chat.status;
+let _bridgeChecking = null;   // one check at a time: the panel and a click may both ask
+Private.interactionResets.add(() => { _bridgeChecking = null; });   // (a check a lock cut short never settles its own)
+function bridgeCheck() {
+  return _bridgeChecking || (_bridgeChecking = (async () => { const _authEpoch = capturePrivateEpoch();
+    requireOwner();
+    const ctl = new AbortController(), t = setTimeout(privateCallback(() => ctl.abort()), 2500);
+    try { const j = await privateAwait((await privateAwait(bridgeFetch('/health', { signal: ctl.signal }), _authEpoch)).json(), _authEpoch); Chat.status = j.paired ? 'ready' : 'unpaired'; Chat.bridgeVersion = j.version || 1; }
+    catch (e) { checkPrivateEpoch(_authEpoch); Chat.status = 'offline'; }
+    clearTimeout(t);
+    if (Chat.status === 'ready') retryUploadRemovals().catch(privateCallback(() => {}));
+    return Chat.status;
+  })().finally(privateCallback(() => { _bridgeChecking = null; })));
 }
 /* Tabs appear on wider screens only: Claude Code runs on the laptop, not a phone */
 function panelTabsHTML() {
@@ -17710,6 +18473,7 @@ function renderChatPanel(force) {
            <div class="chat-box-row"><button class="rp-icon-btn sm" onclick="startFigureSelect()" title="Ask about a figure: drag a box on the page" aria-label="Ask about a figure">${ICON_FIGURE}</button><button class="rp-icon-btn sm" onmousedown="event.preventDefault()" onclick="chatAddPaper()" title="Bring in another paper (or type @ and its name in your message)" aria-label="Bring in another paper">${ICON_PAPER}</button><span class="grow"></span>${chatSelectsHTML()}<button class="chat-send" id="chatSend" onclick="chatSendOrStop()" aria-label="Send">${ICON_SEND}</button></div></div></div>`
     : `<div class="chat-setup">${setup[Chat.status] || setup.setup}</div>`;
   panel.innerHTML = head + `<div class="chat-root" id="chatRoot" data-paper="${dataAttr(pid)}" data-status="${Chat.status}">${body}</div>`;
+  if (Chat.status === 'unknown') chatOpen();   // shown before anything asked the laptop (the reader opened on Chat): ask now
   if (ready) {
     renderChatMessages('bottom'); renderChatAttach(); updateChatSend();
     const i = document.getElementById('chatInput'); i.value = Chat.draftText; chatGrow(i);
@@ -18084,11 +18848,12 @@ async function pdfText(doc, key, cap) { const _authEpoch = capturePrivateEpoch()
 function notesContext(n) {
   if (!n) return '';
   const quote = t => String(t || '').replace(CITE_RE, (m, id, rest) => { const a = (n.annos || []).find(x => x.id === id); return a ? `“${a.quote}” (p. ${a.page})` : ''; });
-  const hl = (n.annos || []).filter(a => a.kind === 'hl'), com = (n.annos || []).filter(a => a.kind === 'note' && (a.note || '').trim());
+  const hl = (n.annos || []).filter(a => a.kind === 'hl'), com = (n.annos || []).filter(a => a.kind === 'note' && annoHasComment(a));
+  const said = a => [(a.note || '').trim(), hasHand(a) ? '(a handwritten comment: ink, no text)' : ''].filter(Boolean).join(' ');
   const out = [];
-  if (hl.length) out.push('Highlights:\n' + hl.sort((a, b) => a.page - b.page).map(a => `- p.${a.page} [${hlLabel(a.color)}] “${a.quote}”${(a.note || '').trim() ? ' — my comment: ' + a.note.trim() : ''}`).join('\n'));
-  if (com.length) out.push('Comments:\n' + com.sort((a, b) => a.page - b.page).map(a => `- p.${a.page} “${a.quote}”: ${a.note.trim()}`).join('\n'));
-  if ((n.entries || []).length) out.push('Notes:\n' + n.entries.map(e => '- ' + quote(e.text).replace(/\n/g, '\n  ')).join('\n'));
+  if (hl.length) out.push('Highlights:\n' + hl.sort((a, b) => a.page - b.page).map(a => `- p.${a.page} [${hlLabel(a.color)}] “${a.quote}”${annoHasComment(a) ? ' — my comment: ' + said(a) : ''}`).join('\n'));
+  if (com.length) out.push('Comments:\n' + com.sort((a, b) => a.page - b.page).map(a => `- p.${a.page} “${a.quote}”: ${said(a)}`).join('\n'));
+  if ((n.entries || []).length) out.push('Notes:\n' + n.entries.map(e => '- ' + [quote(e.text).replace(/\n/g, '\n  '), e.hand ? '(a handwritten note: ink, no text)' : ''].filter(Boolean).join(' ')).join('\n'));
   return out.join('\n\n');
 }
 function chatProfile() {
@@ -18678,7 +19443,7 @@ function relIndex() {
 function relatedTo(p, limit) {
   const { docs, idf } = relIndex();
   const me = docs.get(p) || { words: relTokens(p), authors: relAuthors(p), interests: new Set(matchesOf(p)) };
-  const k = paperKey(p);
+  const k = paperKey(p), title = normTitle(p.title);   // once, not once a paper (it was a quarter of a call's time)
   const scored = [];
   allPapers.forEach(q => {
     if (paperKey(q) === k) return;
@@ -18687,7 +19452,7 @@ function relatedTo(p, limit) {
     d.authors.forEach(a => { if (me.authors.has(a)) sc += 3; });
     d.words.forEach(w => { if (me.words.has(w)) sc += idf['w:' + w] || 0; });
     d.interests.forEach(m => { if (me.interests.has(m)) sc += 0.5 * (idf['i:' + m] || 0); });
-    if (d.title === normTitle(p.title)) return;   // the same paper twice
+    if (d.title === title) return;   // the same paper twice
     if (sc > 0) scored.push([q, sc - (readSet.has(paperKey(q)) ? 1 : 0)]);
   });
   return scored.sort((a, b) => b[1] - a[1]).slice(0, limit).map(x => x[0]);
@@ -18858,8 +19623,8 @@ function paperPageHTML(p, opts) {
   let main = '';
   if (hasText(p.summary)) main += `<section class="pd-section"><h2>Summary</h2><p class="pd-prose">${esc(p.summary)}</p></section>`;
   else if (!hasText(p.abstract) && !(hasNotes || (ix && ix.h + ix.c))) main = `<p class="pd-empty">No summary or abstract yet. Open the paper to read it at the source.</p>`;
-  if (hasText(p.abstract)) main += `<section class="pd-section"><h2>Abstract</h2><p class="pd-prose">${esc(p.abstract)}</p><p class="pd-attribution">Some abstracts are provided by Semantic Scholar and OpenAlex.</p></section>`;
-  if (hasNotes || (ix && ix.h + ix.c)) main += `<section class="pd-section pd-notes"><h2>Your notes <button class="pd-edit" onclick="openReader('${ka}', 'new')">+ Add note</button></h2>${hasNotes ? vn.entries.map(e => `<div class="pd-note"><div class="pd-note-top"><span>${esc(noteDate(e))}</span><button class="rp-icon-btn sm" onclick="openReader('${ka}', '${escAttr(e.id)}')" title="Edit note" aria-label="Edit note">${ICON_EDIT}</button></div><div class="pd-prose md" data-pdnote="${dataAttr(e.id)}"></div></div>`).join('') : ''}${ix && ix.h + ix.c ? `<div class="pd-notes-meta">${[ix.h && `${ix.h} highlight${ix.h === 1 ? '' : 's'}`, ix.c && `${ix.c} comment${ix.c === 1 ? '' : 's'}`].filter(Boolean).join(', ')} · <button onclick="openReader('${ka}', 'panel')">Open in the reader</button></div>` : ''}</section>`;
+  if (hasText(p.abstract)) main += `<section class="pd-section"><h2>Abstract</h2><p class="pd-prose" data-abs-tex>${esc(p.abstract)}</p><p class="pd-attribution">Some abstracts are provided by Semantic Scholar and OpenAlex.</p></section>`;
+  if (hasNotes || (ix && ix.h + ix.c)) main += `<section class="pd-section pd-notes"><h2>Your notes ${pencilDevice() ? `<button class="pd-edit" onclick="openReader('${ka}', 'new')">+ Type</button><button class="pd-edit" onclick="openReader('${ka}', 'write')" title="Write or draw a note with the Pencil">+ Write</button>` : `<button class="pd-edit" onclick="openReader('${ka}', 'new')">+ Add note</button>`}</h2>${hasNotes ? vn.entries.map(e => `<div class="pd-note"><div class="pd-note-top"><span>${esc(noteDate(e))}</span>${e.hand && !e.text.trim() && !(pencilDevice() || !matchMedia('(pointer: coarse)').matches) ? '' : `<button class="rp-icon-btn sm" onclick="openReader('${ka}', '${escAttr(e.id)}')" title="Edit note" aria-label="Edit note">${ICON_EDIT}</button>`}</div>${e.hand ? hwViewHTML(e) : ''}${e.text.trim() || !e.hand ? `<div class="pd-prose md" data-pdnote="${dataAttr(e.id)}"></div>` : ''}</div>`).join('') : ''}${ix && ix.h + ix.c ? `<div class="pd-notes-meta">${[ix.h && `${ix.h} highlight${ix.h === 1 ? '' : 's'}`, ix.c && `${ix.c} comment${ix.c === 1 ? '' : 's'}`].filter(Boolean).join(', ')} · <button onclick="openReader('${ka}', 'panel')">Open in the reader</button></div>` : ''}</section>`;
 
   // Side panel: facts + editable topics
   const sm = p.source_mode || '';
@@ -18919,6 +19684,7 @@ function renderPaperDetail(p) {
     ${page.article}
   </div>`;
   paperPostRender(box, p);
+  box.querySelectorAll('[data-abs-tex]').forEach(el => renderAbstractText(el, p.abstract));   // its TeX, once KaTeX is here
   if (!renderPaperDetail._scrollHooked) {
     document.getElementById('mainScroll').addEventListener('scroll', () => updatePaperBar(), { passive: true });
     renderPaperDetail._scrollHooked = true;
@@ -19758,6 +20524,7 @@ let _relPopupTimer = null;
 function showRelevancePopup(anchor, key, pinned) {
   // touch screens fire a fake hover on tap; there the tap (toggleRelevancePopup) is the only way in
   if (!pinned && !window.matchMedia('(hover: hover)').matches) return;
+  if (!pinned && document.querySelector('.relevance-popup[data-pinned]')) return;   // one kept open by a click stays as it is (a hover replacing it made the next click open it again, not close it)
   clearTimeout(_relPopupTimer);
   closeRelevancePopup();
   const p = allPapers.find(pp => paperKey(pp) === key);
@@ -19778,19 +20545,30 @@ function showRelevancePopup(anchor, key, pinned) {
   popup.addEventListener('mouseleave', () => { if (!popup.dataset.pinned) _relPopupTimer = setTimeout(privateCallback(() => popup.remove()), 150); });
   popup.addEventListener('click', e => e.stopPropagation());
   document.body.appendChild(popup);
-  // Below if it fits, else above if it fits, else the roomier side, shortened to fit (it scrolls inside).
-  // Never over the (i) button itself, or the next click would land on the pop-up instead.
-  const h = popup.getBoundingClientRect().height;
-  const below = window.innerHeight - rect.bottom - 16, above = rect.top - 16;
-  if (h > below) {
-    if (h <= above || above > below) {
-      const fit = Math.min(h, above);
-      popup.style.maxHeight = fit + 'px';
-      popup.style.top = (rect.top - 8 - fit) + 'px';
-    } else {
-      popup.style.maxHeight = below + 'px';
-    }
+  // All of it, wherever that fits: below the (i), else above it, else beside it (on a wide screen there's room at its
+  // side even when neither above nor below is tall enough): to its right, so the rating it explains stays in view,
+  // else to its left. Only when none has room is it shortened, on the roomier of below and above, its content
+  // scrolling inside the frame. Never over the (i) itself, or the next click would land on the pop-up instead.
+  const M = 8, G = 8;   // kept from the window's edges; the gap to the button
+  const vw = window.innerWidth, vh = window.innerHeight;
+  popup.style.maxHeight = (vh - 2 * M) + 'px';   // never taller than the window as it is now (100vh can be more, with Safari's bars showing)
+  const h = popup.offsetHeight;
+  const below = vh - rect.bottom - G - M, above = rect.top - G - M;
+  const sideLeft = rect.left - G - w >= M, sideRight = rect.right + G + w <= vw - M;
+  if (h <= below) { /* as placed */ }
+  else if (h <= above) popup.style.top = (rect.top - G - h) + 'px';
+  else if (sideLeft || sideRight) {
+    popup.style.left = (sideRight ? rect.right + G : rect.left - G - w) + 'px';
+    popup.style.top = Math.max(M, Math.min(rect.top - 12, vh - M - h)) + 'px';   // level with the (i) where it fits, else moved up into the window
+  } else {
+    const up = above > below, fit = Math.max(0, Math.min(vh - 2 * M, up ? above : below));
+    popup.style.maxHeight = fit + 'px';
+    popup.style.top = (up ? rect.top - G - fit : rect.bottom + G) + 'px';
   }
+  popup.style.top = Math.max(M, Math.min(parseFloat(popup.style.top), vh - M - popup.offsetHeight)) + 'px';
+  const body = popup.firstElementChild;   // more above or below what shows: a fade at that edge
+  const fade = () => { body.classList.toggle('more-up', body.scrollTop > 2); body.classList.toggle('more-down', body.scrollTop + body.clientHeight < body.scrollHeight - 2); };
+  body.addEventListener('scroll', fade, { passive: true }); fade();
   const btn = anchor.querySelector('button');
   if (btn) btn.setAttribute('aria-expanded', 'true');
 }
@@ -20165,7 +20943,9 @@ Config.startup = bootstrapApp();
     'openReader', 'renderContinueReading', 'refreshContinueReading', 'crPhoneHTML', 'readLabelHTML', 'paperListHTML', 'updateReaderPageNo', 'toggleReaderMenu', 'updateSyncStatus', 'updateNotesSync',
     'renderAnnoLayer', 'renderInkLayer', 'renderInkBar', 'renderReaderPanel', 'setRnSort', 'renderRnList', 'toggleRnColor', 'pinchStart', 'pinchTo', 'setPanelLayout', 'savePanelLayout',
     'renderChatPanel', 'toggleChatHistory', 'renderChatAttach', 'showRelevancePopup', 'toggleRelevancePopup',
-    'toggleDetail', 'toggleAbsPopup', 'showVenueTooltip', 'jumpToAnno', 'startFigureSelect'];
+    'toggleDetail', 'toggleAbsPopup', 'showVenueTooltip', 'jumpToAnno', 'startFigureSelect',
+    // the Pencil's marker, Adjust's selection and a written note's card, drawn from animation frames and pointer moves
+    'drawAdjust', 'drawLiveMark', 'hwRedraw'];
   for (const name of views) {
     const fn = window[name];
     if (typeof fn !== 'function') { console.error('private view guard: no function ' + name); continue; }
@@ -20211,6 +20991,9 @@ Config.startup = bootstrapApp();
     'vaultReady', 'openVaultModal', 'submitVault', 'unlockFromPanel', 'loadReaderNotes', 'lockNotes', 'nfSave', 'savePaperNotes', 'scheduleNotesPush', 'pushNotes',
     'reconcileNotesIndex', 'renameHlColor', 'createAnno', 'deleteAnno', 'editAnnoComment', 'setAnnoColor', 'citeAnno', 'citeSelection',
     'startNewNote', 'editNote', 'saveNoteEdit', 'deleteGeneralNote', 'setInkTool', 'setPencilHl', 'undoInk', 'toggleReaderPanel', 'setPanelTab', 'showSelBar',
+    // the Pencil: written notes and comments, and Adjust
+    'startHandwritten', 'editHandwritten', 'saveHandwritten', 'cancelHandwritten', 'hwTool', 'hwUndo', 'adjustAnno', 'endAdjust',
+    'acWrite', 'acSaveHand', 'writeAnnoComment',
     // Claude: Chat, + Add paper, topic tagging and (Phase 24) asking for the ten questions
     'chatOpen', 'chatSend', 'chatRetryEarlier', 'chatSendOrStop', 'chatNew', 'chatSwitch', 'chatConnect', 'chatForgetRemote', 'askAboutSelection',
     'startFigureSelect', 'chatApplyBlock', 'chatSaveAsNote', 'chatAddPaper', 'chatRefresh', 'toggleLibPanel', 'startAddPaper', 'stopAddPaper', 'startTopicTag',
