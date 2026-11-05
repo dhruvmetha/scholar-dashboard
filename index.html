@@ -1079,7 +1079,7 @@ html:not(.no-hover) .act.add:hover .act-pill { background: var(--accent-hover); 
    that acts (the app bar's media query below sets the height kept for it there) */
 .save-bar.visible[data-state="saving"], .save-bar.visible[data-state="offline"] { pointer-events: none; }
 /* "Saving…" and "Offline" step aside while Save to, Other or a prompt is open (rough edge #13) */
-body:has(#saveSheet.open, #hideSheet.open, #genericOverlay.open) .save-bar[data-state="saving"], body:has(#saveSheet.open, #hideSheet.open, #genericOverlay.open) .save-bar[data-state="offline"] { visibility: hidden; }
+body:has(#saveSheet.open, #dailyInterestSheet.open, #hideSheet.open, #genericOverlay.open) .save-bar[data-state="saving"], body:has(#saveSheet.open, #dailyInterestSheet.open, #hideSheet.open, #genericOverlay.open) .save-bar[data-state="offline"] { visibility: hidden; }
 body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.visible[data-state="error"]) .main-scroll { margin-bottom: 76px; }
 /* the toast as a small pill: "Saved to X", or a refresh's counts with See them in New. Its 18 px corners round one
    line as a pill and keep a message that wraps to several lines inside them. Its action is a 44 px target that
@@ -2774,7 +2774,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
 /* A dialog or a sheet open on a phone, and a dialog on any short screen: the toast waits at the top, clear of their
    fields and buttons (Phase 31: with no app bar, the toast sits low enough to cover them) */
 @media (max-width: 700px), (pointer: coarse) and (hover: none) and (max-height: 500px) {
-  body:has(.auth-overlay.open, #hideSheet.open, #saveSheet.open) .toast { top: calc(8px + env(safe-area-inset-top, 0px)); bottom: auto; }
+  body:has(.auth-overlay.open, #hideSheet.open, #saveSheet.open, #dailyInterestSheet.open) .toast { top: calc(8px + env(safe-area-inset-top, 0px)); bottom: auto; }
 }
 @media (max-height: 500px) { body:has(.auth-overlay.open) .toast { top: calc(8px + env(safe-area-inset-top, 0px)); bottom: auto; } }
 /* ===== PHASE 31: the menu at the top left (navigation A), Following, and the Lists and People pages =====
@@ -2862,38 +2862,60 @@ body:has(#sec-library.active) .save-bar[data-state="saving"] { visibility: hidde
 :root[data-theme=light]:has(body.daily-mode){color-scheme:light}:root[data-theme=dark]:has(body.daily-mode){color-scheme:dark}
 .daily-mode .feed-tabs .tab{color:var(--text-muted)}.daily-mode .feed-tabs .tab.on{color:var(--text)}
 
-/* Daily: mockup B, scoped to its own feed. */
+/* Daily: a scrolling reading area between its picker and bottom actions. */
+body.daily-mode{--daily-footer-height:calc(108px + env(safe-area-inset-bottom, 0px))}
+body.daily-mode #mainScroll{min-height:0;overflow:hidden;padding-bottom:0;margin-bottom:0!important}
+body.daily-mode #sec-papers,body.daily-mode #papersContent,body.daily-mode #topStories{height:100%}
+.daily-feed{height:100%;display:flex;flex-direction:column;min-height:0}
+.daily-feed .feed-head{flex:none}
+.daily-feed .feed-list{flex:1;min-height:0}
+#dailyBody{position:relative;display:flex;flex-direction:column;height:100%;min-height:0}
+body.daily-mode .save-bar{bottom:calc(var(--daily-footer-height) + 12px)}
+body.daily-mode #toast{bottom:calc(var(--daily-footer-height) + 12px)}
+body.daily-mode:has(.save-bar.visible) #toast{bottom:calc(var(--daily-footer-height) + 96px)}
+body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.auth-overlay.open) #toast{top:calc(8px + env(safe-area-inset-top, 0px));bottom:auto}
 .daily-feed #feedAdd,.daily-feed #feedCtl,.daily-feed #feedMore,.daily-feed #feedEnd,.daily-feed #listBar{display:none!important}
 .daily-feed .feed-head{position:static}.daily-feed #tabsMsg:empty{display:none}
-.daily-interests{display:flex;gap:8px;padding:15px 20px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border)}
-.daily-interests::-webkit-scrollbar{display:none}
-.daily-interest{display:flex;align-items:center;gap:7px;flex-shrink:0;min-height:38px;padding:0 13px;border-radius:999px;border:1px solid var(--line);color:var(--text-secondary);background:var(--bg);font-size:13px;font-weight:500;cursor:pointer}
-.daily-interest[aria-selected=true]{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
-.daily-interest i{width:5px;height:5px;background:currentColor;border-radius:50%;opacity:.65}
-.daily-area{padding:23px 20px 26px;overflow:hidden}
-.daily-interest-name{display:flex;align-items:center;gap:9px;margin:0 0 15px;font-size:14px;font-weight:600}
-.daily-interest-name span{border:1px solid var(--line);padding:2px 7px;border-radius:4px;color:var(--text-muted);font-size:11px;font-weight:400}
-.daily-card{touch-action:pan-y;position:relative;padding:26px 25px 23px;border:1px solid var(--line);border-radius:18px;background:var(--bg);min-height:355px;box-shadow:0 6px 24px rgba(0,0,0,.055);transform-origin:50% 88%;cursor:grab;overflow-wrap:anywhere}
+.daily-picker{flex:none;display:flex;align-items:center;gap:10px;width:100%;height:46px;padding:0 20px;border:0;border-bottom:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.daily-picker-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.daily-picker-count{flex:none;color:var(--text-muted);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.daily-picker svg{flex:none;width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.daily-area{flex:1;min-height:0;padding:16px 20px calc(var(--daily-footer-height) + 16px);overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scroll-padding-bottom:var(--daily-footer-height)}
+.daily-interest-group{padding:10px 10px 4px;color:var(--text-muted);font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase}
+.daily-interest-row{min-height:48px;font-size:14.5px}
+.daily-interest-row[aria-current=true]{background:var(--accent-dim)}
+.daily-interest-row[aria-current=true] .sh-n{color:var(--accent);font-weight:600}
+.daily-interest-left{flex:none;white-space:nowrap;color:var(--text-muted);font-size:13px;font-variant-numeric:tabular-nums}
+.daily-interest-row.done .sh-n{color:var(--text-muted)}
+#dailyInterestSheet .sh-panel{max-height:90dvh;background:var(--bg-surface);animation:daily-sheet-in .18s ease-out}
+@keyframes daily-sheet-in{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){#dailyInterestSheet .sh-panel{animation:none}}
+.daily-card{touch-action:pan-y;position:relative;padding:26px 25px 23px;border:1px solid var(--line);border-radius:18px;background:var(--bg);min-height:100%;box-shadow:0 6px 24px rgba(0,0,0,.055);transform-origin:50% 88%;cursor:grab;overflow-wrap:anywhere}
 .daily-card.dragging{cursor:grabbing;user-select:none}
-.daily-card:focus-visible,.daily-action:focus-visible,.daily-interest:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.daily-card:focus-visible,.daily-action:focus-visible,.daily-picker:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .daily-card h2{font-size:29px;font-weight:650;line-height:1.18;margin:0;letter-spacing:-.025em}
 .daily-card h2 a{color:var(--text);text-decoration:none}.daily-card h2 a:hover{text-decoration:underline;text-underline-offset:3px}
 .daily-authors{margin-top:15px;font-size:13px;color:var(--text-muted)}.daily-venue{margin-top:4px;font-size:12px;color:var(--text-secondary)}
 .daily-headline{font-size:16px;font-weight:500;line-height:1.45;letter-spacing:-.01em;padding:20px 0;margin:20px 0 0;border-top:1px solid var(--line)}
-.daily-summary{font-size:14px;line-height:1.75;color:var(--text-secondary)}
+.daily-summary,.daily-abstract{font-size:14px;line-height:1.75;color:var(--text-secondary)}
+.daily-abstract-label,.daily-matches-label{font-size:12px;font-weight:600;color:var(--text-muted);margin:24px 0 9px}
+.daily-abstract{white-space:pre-wrap;overflow-wrap:anywhere}
+.daily-abstract .katex-display{max-width:100%;overflow-x:auto;overflow-y:hidden}
+.daily-matches{margin-top:24px;border-top:1px solid var(--line)}
+.daily-matches-label{margin-top:18px}
+.daily-match{display:flex;align-items:baseline;gap:16px;justify-content:space-between;padding:7px 0;font-size:13px;color:var(--text-secondary)}
+.daily-match-name{min-width:0}.daily-match-strength{flex:none;color:var(--text-muted)}
 .daily-stamp{position:absolute;z-index:2;top:24px;max-width:80%;padding:6px 13px;border:2px solid currentColor;border-radius:7px;font-weight:650;font-size:21px;opacity:0;pointer-events:none;background:var(--bg)}
 .daily-stamp-save{left:18px;color:var(--accent);transform:rotate(-9deg)}.daily-stamp-pass{right:18px;color:var(--text-secondary);transform:rotate(9deg)}
 .daily-card.dragging .daily-stamp{opacity:var(--stamp-opacity,0)}.daily-card.dragging[data-direction=right] .daily-stamp-pass,.daily-card.dragging[data-direction=left] .daily-stamp-save{display:none}
-.daily-dots{display:flex;justify-content:center;gap:7px;padding:23px 0 19px;min-height:48px}.daily-dots i{width:5px;height:5px;border-radius:50%;background:var(--line)}.daily-dots i:first-child{background:var(--accent)}
-.daily-actions{display:flex;align-items:flex-start;justify-content:center;gap:53px}
+.daily-actions{position:absolute;z-index:3;bottom:0;left:0;right:0;display:flex;align-items:flex-start;justify-content:center;gap:53px;min-height:108px;padding:16px 16px calc(16px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--line);background:var(--bg)}
 .daily-action{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:64px;max-width:35%;padding:0;border:0;background:none;color:var(--text-muted);font-size:12px;cursor:pointer}
 .daily-action span{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border:1px solid var(--line);border-radius:50%;color:var(--text-secondary)}
 .daily-action.save span{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line));background:var(--accent-dim)}.daily-action:hover span{color:var(--accent);border-color:var(--accent)}
 .daily-action b{font-weight:400;overflow-wrap:anywhere}.daily-action svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.daily-hints{display:flex;justify-content:space-between;gap:15px;margin-top:27px;padding:0 10px;color:var(--text-muted);font-size:12px}
 .daily-empty{display:flex;flex-direction:column;gap:15px;min-height:355px;align-items:center;justify-content:center;padding:40px;border:1px solid var(--line);border-radius:18px;text-align:center;font-size:14px;line-height:1.8;color:var(--text-muted)}
 .daily-empty button{border:0;background:none;color:var(--accent);cursor:pointer;min-height:44px}
-@media(max-width:600px){.daily-interests{padding:14px 16px;gap:7px}.daily-interest{font-size:12px;padding:0 11px}.daily-area{padding:20px 16px 24px}.daily-card{padding:23px 20px 19px;min-height:366px}.daily-card h2{font-size:27px}.daily-headline{margin-top:18px;padding:17px 0;font-size:15px}.daily-summary{font-size:13px;line-height:1.7}.daily-authors{margin-top:13px;font-size:12px}.daily-venue{font-size:11px}.daily-dots{padding:21px 0 16px;min-height:42px}.daily-actions{gap:clamp(15px,10vw,43px)}.daily-action span{width:50px;height:50px}.daily-hints{margin-top:23px;padding:0 2px}}
+@media(max-width:600px){.daily-picker{padding:0 16px}.daily-area{padding:16px 16px calc(var(--daily-footer-height) + 16px)}.daily-card{padding:23px 20px 19px}.daily-card h2{font-size:27px}.daily-headline{margin-top:18px;padding:17px 0;font-size:15px}.daily-summary,.daily-abstract{font-size:13px;line-height:1.7}.daily-authors{margin-top:13px;font-size:12px}.daily-venue{font-size:11px}.daily-actions{gap:clamp(15px,10vw,43px)}.daily-action span{width:50px;height:50px}}
 @media(prefers-reduced-motion:reduce){.daily-card,.daily-action{transition:none!important;animation:none!important}}
 
 </style>
@@ -5932,7 +5954,7 @@ function refreshReceive(r) {
   const metaNew = (texts.interests !== null && texts.interests !== _interestsText) || (texts.groups !== null && texts.groups !== _groupsText)
     || (texts.people !== undefined && texts.people !== People.text) || (texts.lists !== undefined && texts.lists !== ListDefs.text);   // Phase 21: another device followed someone
   const pulled = r.how !== 'startup', readerOpen = document.getElementById('reader').classList.contains('open'), ms = document.getElementById('mainScroll');
-  const ok = !(typeof Daily !== 'undefined' && (Daily.press || Daily.sheet)) && !readerOpen && (r.how === 'show' ? !(_paperViewActive || _searchActive || _listViewActive)
+  const ok = !(typeof Daily !== 'undefined' && (Daily.press || Daily.sheet || Daily.picker)) && !readerOpen && (r.how === 'show' ? !(_paperViewActive || _searchActive || _listViewActive)
     : pulled ? feedActive() && (r.view === undefined || feedViewKey() === r.view) && ms.scrollTop <= 40 && (!quiet || feedIdle()) : quietSwapOK());
   if (!ok) {
     if (papersNew || metaNew) { Refresh.staged = { ...r, parsed }; if (quiet) returnOffer(Refresh.staged); else refreshOffer(Refresh.staged, papersNew); }
@@ -7473,7 +7495,9 @@ function feedActive() { return Feed.mode !== 'daily' && currentTab === 'all' && 
    sheet, the new project's field and an Other sheet for a post close, and every press under way ends (Feed.gen).
    The records stay: back from a paper page or the reader each post shows its decision with its Undo again. */
 function feedLeave() {
+  if (typeof dailyCloseInterestSheet === 'function') dailyCloseInterestSheet(false);
   document.body.classList.remove('daily-mode');
+  if (Daily.footerObs) { Daily.footerObs.disconnect(); Daily.footerObs = null; }
   if (typeof dailyCancelPress === 'function') { dailyCancelPress(); clearTimeout(Daily.timer); Daily.timer = 0; }
   Feed.pressDeferred = false;
   Feed.gen++;
@@ -8324,7 +8348,7 @@ document.addEventListener('keydown', e => {
 const Presses = new Map();
 function pressControl(t) {
   if (!t || !t.closest) return null;
-  return t.closest('.daily-action, .daily-interest') || t.closest('#feedList .post .ic, #feedList .post .chip, #feedList .post .act, #feedList .post.gone button, #feedTabs .tab, #feedTabs .tab-add, #feedCtl button, #feedSortMenu button, #feedInterestMenu button, #listBar button, .list-menu button, #saveSheet [data-guard], #hideSheet [data-guard], #hideSheet .hide-own input')
+  return t.closest('.daily-action, .daily-picker, .daily-interest-row, .daily-interest-done, #dailyInterestSheet') || t.closest('#feedList .post .ic, #feedList .post .chip, #feedList .post .act, #feedList .post.gone button, #feedTabs .tab, #feedTabs .tab-add, #feedCtl button, #feedSortMenu button, #feedInterestMenu button, #listBar button, .list-menu button, #saveSheet [data-guard], #hideSheet [data-guard], #hideSheet .hide-own input')
     || t.closest('.sh-panel') || t.closest('#saveSheet') || t.closest('.hide-box') || t.closest('#hideSheet') || t.closest('#feedList .post')
     || t.closest('.save-dd .save-dd-item, .copy-dd .copy-dd-item, #paperDetail .pd-bar .pd-act[data-act], #libraryContent .top-row .p-actions [data-act]')   // Phase 13e: the picker, the Copy menu, the paper page's bar and Library's row icons
     || t.closest('#paperDetail .pd-related .feed-item [data-act], #libraryContent [data-lib] .library-actions button[data-act]')   // and a page's related papers, and a Library group's header actions
@@ -8349,7 +8373,7 @@ function markOf(k, act) {   // a control's value as it shows now: the paper's st
 }
 function pressWhat(el) {
   if (!el || !el.closest) return null;
-  if (el.closest('.daily-feed') && el.matches('.daily-action, .daily-interest')) return { kind: 'daily', dailyGen: Number(el.dataset.dailyGen), ident: 'daily:' + el.dataset.dailyGen + ':' + (el.dataset.dailyPaper || '') + ':' + (el.dataset.dailyAction || el.dataset.interest || '') };
+  if ((el.closest('.daily-feed') || el.closest('#dailyInterestSheet')) && el.matches('.daily-action, .daily-picker, .daily-interest-row, .daily-interest-done, #dailyInterestSheet')) return { kind: 'daily', dailyGen: Number(el.dataset.dailyGen), ident: 'daily:' + el.dataset.dailyGen + ':' + (el.dataset.dailyPaper || '') + ':' + (el.dataset.dailyAction || el.dataset.interest || el.className || '') };
   const post = el.closest('#feedList .post');
   if (post) { const act = el === post ? 'page' : el.dataset.act || ''; return { kind: 'post', act, key: post.dataset.key || '', n: act === 'chip' ? el.dataset.n || '' : undefined, ident: `post:${post.dataset.key || ''}:${act}:${el.dataset.reason || ''}:${act === 'chip' ? el.dataset.n || '' : ''}` }; }
   // Phase 25: a list's bar (its ⋯, + Add a paper, its interest), and a row of a list's menu, to that opening of it
@@ -9131,7 +9155,7 @@ const DAILY_CURRENT = 'daily/current.json';
 const DAILY_HANDLED = 'daily_handled.json';
 const DAILY_CURRENT_CAP = 1024 * 1024;
 const DAILY_HANDLED_CAP = 4 * 1024 * 1024;
-const Daily = { timer: 0, generation: 0, seq: 0, pending: null, active: null, interest: null, press: null, undo: null, handled: { schema: 1, operations: {}, undone: [] }, edits: new Map(), status: 'waiting', destinations: new Map(), sheet: null };
+const Daily = { timer: 0, generation: 0, seq: 0, pending: null, active: null, interest: null, press: null, undo: null, handled: { schema: 1, operations: {}, undone: [] }, edits: new Map(), status: 'waiting', destinations: new Map(), sheet: null, picker: null, footerObs: null };
 function dailyShown() { return SHOW_DAILY_TAB && isPrivate() && Private.authorized && isOwner(); }
 function dailyView() { return dailyShown() && Feed.mode === 'daily' && currentTab === 'all' && !_paperViewActive && !_listViewActive && !_searchActive; }
 function dailyCanonical(v) {
@@ -9203,12 +9227,11 @@ async function dailyReceive(texts) {
     // Snapshot digests bind the worker's input, not the latest owner commit. Keep every newer decision.
     Daily.handled = dailyMergeHandled(dailyUnion(handled, Daily.handled), Daily.edits);
     Daily.pending = { current, epoch }; dailyAdopt();
-  } catch (e) { try { checkPrivateEpoch(epoch); } catch (_) { return; } if (seq === Daily.seq) { dailyCancelPress(); Daily.generation++; Daily.active = Daily.pending = null; Daily.status = 'retry'; if (typeof dailyRender === 'function' && dailyView()) dailyRender(); } }
+  } catch (e) { try { checkPrivateEpoch(epoch); } catch (_) { return; } if (seq === Daily.seq) { dailyCancelPress(); dailyCloseInterestSheet(false); Daily.generation++; Daily.active = Daily.pending = null; Daily.status = 'retry'; if (typeof dailyRender === 'function' && dailyView()) dailyRender(); } }
 }
 function dailySections() {
   if (!Daily.active) return [];
-  const rank = { definitely: 0, probably: 1, mildly: 2, maybe: 2 };
-  return Daily.active.sections.filter(s => allInterests.some(i => i.status === 'confirmed' && i.interest_name === s.interest && i.relevance_mapping === s.level)).slice().sort((a, b) => rank[a.level] - rank[b.level] || a.interest.localeCompare(b.interest));
+  return Daily.active.sections.filter(s => allInterests.some(i => i.status === 'confirmed' && i.interest_name === s.interest && i.relevance_mapping === s.level)).slice().sort((a, b) => Number(b.level === 'definitely') - Number(a.level === 'definitely'));
 }
 function dailyRowMatches(p, interest) {
   const strengths = strengthView(p).strengths, confirmed = allInterests.filter(i => i.status === 'confirmed').map(i => i.interest_name);
@@ -9217,7 +9240,7 @@ function dailyRowMatches(p, interest) {
 }
 function dailyControlHeld() { return typeof Presses !== 'undefined' && [...Presses.values()].some(p => p.kind === 'daily' && !p.up && !p.dead); }
 function dailyAdopt() {
-  if (!Daily.pending || Daily.press || Daily.sheet || dailyControlHeld()) return false;
+  if (!Daily.pending || Daily.press || Daily.sheet || Daily.picker || dailyControlHeld()) return false;
   const { current, epoch } = Daily.pending; checkPrivateEpoch(epoch);
   const valid = !current || current.sections.every(s => s.cards.every(c => { const p = feedRow(c.paper); return p && !p._goneRemote; }));
   if (!valid) { Daily.status = 'waiting'; Daily.active = null; Daily.pending = null; return false; }
@@ -9225,7 +9248,7 @@ function dailyAdopt() {
   const changed = !Daily.active || !current || Daily.active.generation !== current.generation;
   Daily.active = current; Daily.status = current ? 'ready' : 'waiting';
   if (changed) { Daily.generation++; Daily.destinations = new Map(); }
-  const sections = dailySections(); if (!sections.some(s => s.interest === Daily.interest)) Daily.interest = sections[0]?.interest || null;
+  const sections = dailySections(); if (!sections.some(s => s.interest === Daily.interest)) { const available = dailyCards(); Daily.interest = sections.find(s => available.some(c => c.interest === s.interest))?.interest || sections[0]?.interest || null; }
   if (typeof dailyRender === 'function' && dailyView()) dailyRender(); return true;
 }
 function dailyCards() {
@@ -9237,7 +9260,60 @@ function dailyCards() {
 }
 function dailySetInterest(name) {
   if (!dailyShown() || !dailySections().some(s => s.interest === name)) return false;
-  dailyCancelPress(); if (Feed.sheet) closeSaveSheet(); Daily.interest = name; Daily.generation++; if (typeof dailyRender === 'function') dailyRender(); return true;
+  dailyCancelPress(); if (Feed.sheet) closeSaveSheet(); dailyCloseInterestSheet(false);
+  Daily.interest = name; Daily.generation++; dailyResume();
+  if (typeof dailyRender === 'function') dailyRender(false, true); return true;
+}
+function dailyResume() {
+  // A library refresh holds its manifest with the library, before dailyReceive can stage it.
+  if (dailyView() && Refresh.staged?.texts.dailyCurrent !== undefined) refreshShow();
+  dailyAdopt();
+}
+function dailyOpenInterestSheet(event, button) {
+  requireOwner();
+  if (!dailyView() || Daily.sheet || !dailySections().length) return;
+  if (event && event.stopPropagation) event.stopPropagation();
+  if (Daily.picker) { dailyCloseInterestSheet(); return; }
+  dailyCancelPress(); hideToast();
+  const epoch = capturePrivateEpoch(), generation = Daily.generation;
+  const from = (!event || event.detail === 0) ? document.activeElement : null;
+  const opening = Daily.picker = { epoch, generation, from, button };
+  const live = () => Daily.picker === opening && Daily.generation === generation && dailyView();
+  const s = document.createElement('div'); s.id = 'dailyInterestSheet'; s.className = 'save-sheet';
+  const sections = dailySections(), cards = dailyCards();
+  s.innerHTML = `<div class="sh-panel" role="dialog" aria-modal="true" aria-labelledby="dailyInterestTitle">
+    <div class="sh-head"><span class="sh-grip" aria-hidden="true"></span><div class="sh-what"><b id="dailyInterestTitle">Today's interests</b></div><button type="button" class="sh-done daily-interest-done">Done</button></div>
+    <div class="sh-list">${['Core', 'Related'].map(group => {
+      const rows = sections.filter(section => (section.level === 'definitely') === (group === 'Core'));
+      return rows.length ? `<h3 class="daily-interest-group">${group}</h3>${rows.map(section => {
+        const left = cards.filter(c => c.interest === section.interest).length;
+        return `<button type="button" class="sh-row daily-interest-row${left ? '' : ' done'}" data-interest="${dataAttr(section.interest)}" aria-current="${section.interest === Daily.interest}"><span class="sh-n">${esc(section.interest)}</span><span class="daily-interest-left">${left ? left + ' left' : 'Done'}</span></button>`;
+      }).join('')}` : '';
+    }).join('')}</div></div>`;
+  const close = privateCallback(() => { checkPrivateEpoch(epoch); if (live()) dailyCloseInterestSheet(); });
+  s.onclick = e => { if (e.target === s) close(); };
+  s.querySelector('.sh-done').onclick = close;
+  s.querySelectorAll('.daily-interest-row').forEach(b => {
+    b.onclick = privateCallback(() => { checkPrivateEpoch(epoch); if (live()) dailySetInterest(b.dataset.interest); });
+  });
+  [s, ...s.querySelectorAll('button')].forEach(b => { b.dataset.dailyGen = String(generation); });
+  document.body.appendChild(s); popIn(s);
+  if (button) button.setAttribute('aria-expanded', 'true');
+  const first = s.querySelector('[aria-current=true]') || s.querySelector('.daily-interest-row');
+  if (first) first.focus({ preventScroll: true });
+}
+function dailyCloseInterestSheet(adopt = true) {
+  const opening = Daily.picker; if (!opening) return;
+  Daily.picker = null;
+  const s = document.getElementById('dailyInterestSheet'), inside = s && s.contains(document.activeElement);
+  if (inside) document.activeElement.blur();
+  if (s) s.remove();
+  if (opening.button) opening.button.setAttribute('aria-expanded', 'false');
+  if (adopt && dailyView()) { dailyResume(); dailyRender(); }
+  if (adopt && inside && opening.from) {
+    const to = opening.from.isConnected ? opening.from : document.querySelector('.daily-picker');
+    if (to) to.focus({ preventScroll: true });
+  }
 }
 async function dailyRefresh() {
   if (!isPrivate() || !Private.authorized || !isOwner()) return;
@@ -9250,6 +9326,8 @@ function dailyCancelPress() {
   if (p && p.el) { p.el.style.transform = ''; p.el.classList.remove('dragging'); p.el.style.setProperty('--stamp-opacity', '0'); }
 }
 function dailyTeardown() {
+  dailyCloseInterestSheet(false);
+  if (Daily.footerObs) { Daily.footerObs.disconnect(); Daily.footerObs = null; }
   document.body.classList.remove('daily-mode'); clearTimeout(Daily.timer); Daily.timer = 0;
   dailyCancelPress(); Daily.seq++; Daily.generation++; Daily.active = Daily.pending = Daily.interest = Daily.undo = Daily.sheet = null; Daily.status = 'waiting'; Daily.edits.clear(); Daily.destinations.clear(); Daily.handled = { schema: 1, operations: {}, undone: [] };
   const body = document.getElementById('dailyBody'); if (body) body.innerHTML = '';
@@ -9320,6 +9398,7 @@ function dailyUndo(id) {
   Daily.edits = edits; Daily.handled = handled; if (Daily.undo === id) Daily.undo = null;
   _stateDirty = true; _editGen++; scheduleBackup(); showSaveBar(); tasteSupersede();
   if (Daily.sheet) closeSaveSheet(); dailyCancelPress();
+  if (dailyCards().some(c => c.day === o.card.day && c.interest === o.card.interest && c.paper === o.paper && c.pool === o.pool && c.slot === o.card.slot) && Daily.interest !== o.card.interest) { Daily.interest = o.card.interest; Daily.generation++; }
   if (typeof dailyRender === 'function' && dailyView()) dailyRender(true);
   return true;
 }
@@ -9488,7 +9567,7 @@ function dailyListDelta(name, paper, before, after) {
 }
 function dailyAct(kind, card, generation) {
   requireOwner(); const epoch = capturePrivateEpoch();
-  if (!['pass', 'save', 'read'].includes(kind) || Daily.sheet || !dailyValidCard(card, generation)) return false;
+  if (!['pass', 'save', 'read'].includes(kind) || Daily.sheet || Daily.picker || !dailyValidCard(card, generation)) return false;
   const p = feedRow(card.paper), destination = kind === 'save' ? dailyDestination(card.paper) : null;
   if (destination && !listDestOK(destination)) { dailyCancelPress(); toast('That list is no longer available. Choose a list with Save.'); return false; }
   flushStateToCSV();
@@ -9543,36 +9622,70 @@ function dailyFocusUndo() {
   if (dailyCards().some(c => c.interest === Daily.interest)) return;
   const undo = document.querySelector('#toast .toast-undo'); if (undo) undo.focus({ preventScroll: true });
 }
+function dailyReleaseText(row) {
+  const known = [pubParts(row.publishing_date), paperArxiv(row)].filter(Boolean), day = releaseDay(row);
+  if (!known.length || day === null) return '';
+  const date = new Date(day * 86400000), y = date.getUTCFullYear(), m = date.getUTCMonth() + 1;
+  if (known.some(d => d.y === y && d.m === m)) return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  return known.some(d => d.y === y && !d.m) ? String(y) : '';   // never invent a month from a year or discovery date
+}
+/* The footer can grow with a destination's name or a phone's safe area. Reserve its measured height. */
+function dailyWatchFooter(root) {
+  if (Daily.footerObs) { Daily.footerObs.disconnect(); Daily.footerObs = null; }
+  const footer = root.querySelector('.daily-actions');
+  if (!footer) return;
+  const measure = () => { if (footer.isConnected && footer.offsetHeight) document.body.style.setProperty('--daily-footer-height', footer.offsetHeight + 'px'); };
+  measure();
+  if (typeof ResizeObserver === 'function') { Daily.footerObs = new ResizeObserver(measure); Daily.footerObs.observe(footer); }
+}
 function dailyCardHTML(card, row) {
   const headline = hasText(row.headline) ? row.headline : '', summary = hasText(row.summary) ? row.summary : '';
+  const venue = [hasText(row.venue) ? row.venue : '', dailyReleaseText(row)].filter(Boolean).join(' · '), matches = relevanceMatches(scoreParts(row));
   return `<article class="daily-card" tabindex="0" aria-label="${dataAttr(row.title || headline)}">
     <span class="daily-stamp daily-stamp-save" aria-hidden="true">${esc(dailyDestination(card.paper))}</span><span class="daily-stamp daily-stamp-pass" aria-hidden="true">Pass</span>
     <h2><a href="#paper/${encodeURIComponent(card.paper)}">${esc(row.title || headline)}</a></h2>
-    ${hasText(row.authors) ? `<p class="daily-authors">${esc(row.authors)}</p>` : ''}${hasText(row.venue) ? `<p class="daily-venue">${esc(row.venue)}</p>` : ''}
+    ${hasText(row.authors) ? `<p class="daily-authors">${esc(row.authors)}</p>` : ''}${venue ? `<p class="daily-venue">${esc(venue)}</p>` : ''}
     ${headline ? `<p class="daily-headline">${esc(headline)}</p>` : ''}${summary ? `<p class="daily-summary">${esc(summary)}</p>` : ''}
+    ${hasText(row.abstract) ? `<h3 class="daily-abstract-label">Abstract</h3><p class="daily-abstract" data-abs-tex>${esc(row.abstract)}</p>` : ''}
+    ${matches.length ? `<section class="daily-matches"><h3 class="daily-matches-label">Matching interests</h3>${matches.map(m => `<p class="daily-match"><span class="daily-match-name">${esc(m.name)}</span><span class="daily-match-strength">${esc(STRENGTH_NAME[m.strength])}</span></p>`).join('')}</section>` : ''}
   </article>`;
 }
-function dailyRender(focus) {
-  if (!dailyView() || Daily.press || Daily.sheet) return;
+function dailyRender(focus, keepInterest) {
+  if (!dailyView() || Daily.press || Daily.sheet || Daily.picker) return;
   dailyTick();
   const box = document.getElementById('topStories'); if (!box) return;
+  const previousArea = box.querySelector('.daily-area'), previousPaper = box.querySelector('.daily-action')?.dataset.dailyPaper, previousScroll = previousArea?.scrollTop || 0;
+  const previousInterest = box.querySelector('.daily-picker-name')?.textContent;
   const old = box.querySelector('.daily-card'), hadFocus = !!focus || old && old.contains(document.activeElement);
   if (!box.querySelector('#dailyBody')) {
     box.innerHTML = `<div class="feed daily-feed" id="feed"><div class="feed-head" id="feedHead"><div class="feed-tabs home" id="feedTabs" role="tablist" aria-label="Feeds"><div class="ft-tabs" id="feedTabsIn"></div><div class="ft-add" id="feedAdd"></div></div><div id="feedCtl" hidden></div><p id="tabsMsg" role="status"></p></div><div id="listBar" hidden></div><div class="feed-list" id="feedList"><div id="dailyBody" role="tabpanel" aria-label="Daily"></div></div><div id="feedMore"></div><div id="feedEnd"></div></div>`;
   }
   document.body.classList.add('feed-mode', 'daily-mode'); document.body.classList.toggle('feed-phone', feedLayout() === 'phone'); document.body.classList.toggle('feed-land', feedLayout() === 'land'); document.body.classList.toggle('feed-laptop', feedLayout() === 'laptop');
   Feed.mounted = true; Feed.fresh = Feed.switched = false; Feed.tabNames = feedTabNames(); feedTabsRender();
-  const sections = dailySections(), section = sections.find(s => s.interest === Daily.interest), cards = dailyCards().filter(c => c.interest === Daily.interest), card = cards[0], row = card && feedRow(card.paper), root = box.querySelector('#dailyBody');
-  const empty = Daily.status === 'retry' ? `Couldn't load your picks. <button type="button" data-daily-retry>Try again</button>` : !Daily.active || !section || Daily.status === 'waiting' || section.cards.length === 0 ? 'Your next picks are on the way.' : "That's all for today. More tomorrow.";
+  const sections = dailySections(), available = dailyCards();
+  if (!keepInterest && previousPaper && previousInterest === Daily.interest && !available.some(c => c.interest === Daily.interest)) {
+    const start = sections.findIndex(s => s.interest === Daily.interest);
+    const next = Array.from({ length: sections.length }, (_, i) => sections[(start + i + 1) % sections.length]).find(s => available.some(c => c.interest === s.interest));
+    if (next && next.interest !== Daily.interest) { Daily.interest = next.interest; Daily.generation++; }
+  }
+  const section = sections.find(s => s.interest === Daily.interest), card = available.find(c => c.interest === Daily.interest), row = card && feedRow(card.paper), root = box.querySelector('#dailyBody');
+  const pools = new Set((section?.cards || []).map(c => c.pool)), undone = new Set(Daily.handled.undone);
+  const handled = new Set(Object.entries(Daily.handled.operations).filter(([id, o]) => !undone.has(id) && o.card.day === Daily.active?.day && o.card.interest === section?.interest).map(([, o]) => o.pool));
+  const removed = [...handled].filter(pool => !pools.has(pool)).length, total = pools.size + removed;
+  const position = card ? removed + card.position + 1 : total;
+  const empty = Daily.status === 'retry' ? `Couldn't load your picks. <button type="button" data-daily-retry>Try again</button>` : !Daily.active || !section || Daily.status === 'waiting' || !sections.some(s => s.cards.length) ? 'Your next picks are on the way.' : "That's all for today. More tomorrow.";
   const icon = kind => kind === 'save' ? '<path d="M6 3h12v18l-6-4-6 4z"/>' : kind === 'pass' ? '<path d="m6 6 12 12M18 6 6 18"/>' : '<path d="m5 12 4 4L19 6"/>';
-  root.innerHTML = `<div class="daily-interests" role="tablist" aria-label="Interests">${sections.map(s => `<button type="button" role="tab" class="daily-interest" aria-selected="${s.interest === Daily.interest}" data-interest="${dataAttr(s.interest)}">${s.level === 'definitely' ? '<i aria-hidden="true"></i>' : ''}${esc(s.interest)}</button>`).join('')}</div>
-    <section class="daily-area"><h2 class="daily-interest-name">${esc(Daily.interest || '')}${section?.level === 'definitely' ? '<span>Core</span>' : ''}</h2>
-    ${card && row ? dailyCardHTML(card, row) + `<div class="daily-dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="daily-actions">${['pass', 'save', 'read'].map(kind => `<button type="button" class="daily-action ${kind}" data-daily-action="${kind}"${kind === 'save' ? ' aria-label="Choose a list" aria-haspopup="dialog" aria-expanded="false"' : ''}><span><svg viewBox="0 0 24 24" aria-hidden="true">${icon(kind)}</svg></span><b>${kind === 'pass' ? 'Pass' : kind === 'read' ? 'Mark read' : esc(dailyDestination(card.paper))}</b></button>`).join('')}</div><p class="daily-hints"><span>&larr; Swipe to pass</span><span>Swipe to save &rarr;</span></p>` : `<div class="daily-empty" role="status">${empty}</div>`}</section>`;
-  root.querySelectorAll('.daily-action, .daily-interest').forEach(b => { b.dataset.dailyGen = String(Daily.generation); b.dataset.dailyPaper = card ? card.paper : ''; });
-  root.querySelectorAll('.daily-interest').forEach(b => { b.onclick = () => dailySetInterest(b.dataset.interest); });
+  root.innerHTML = `${section ? `<button type="button" class="daily-picker" aria-haspopup="dialog" aria-expanded="false" aria-controls="dailyInterestSheet"><span class="daily-picker-name">${esc(section.interest)}</span><span class="daily-picker-count">${position} of ${total}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>` : ''}
+    <section class="daily-area">${card && row ? dailyCardHTML(card, row) + `</section><footer class="daily-actions" aria-label="Paper actions">${['pass', 'save', 'read'].map(kind => `<button type="button" class="daily-action ${kind}" data-daily-action="${kind}"${kind === 'save' ? ' aria-label="Choose a list" aria-haspopup="dialog" aria-expanded="false"' : ''}><span><svg viewBox="0 0 24 24" aria-hidden="true">${icon(kind)}</svg></span><b>${kind === 'pass' ? 'Pass' : kind === 'read' ? 'Mark read' : esc(dailyDestination(card.paper))}</b></button>`).join('')}</footer>` : `<div class="daily-empty" role="status">${empty}</div></section>`}`;
+  dailyWatchFooter(root);
+  root.querySelector('.daily-area').scrollTop = card && card.paper === previousPaper ? previousScroll : 0;
+  root.querySelectorAll('.daily-action, .daily-picker').forEach(b => { b.dataset.dailyGen = String(Daily.generation); b.dataset.dailyPaper = card ? card.paper : ''; });
+  const picker = root.querySelector('.daily-picker'), pickerGeneration = Daily.generation;
+  if (picker) picker.onclick = privateCallback(e => { if (pickerGeneration === Daily.generation) dailyOpenInterestSheet(e, picker); });
   const retry = root.querySelector('[data-daily-retry]'); if (retry) retry.onclick = privateCallback(dailyRefresh);
   if (card) {
     const generation = Daily.generation, el = root.querySelector('.daily-card'); dailyBindGestures(el, card, generation);
+    const abstract = el.querySelector('[data-abs-tex]'); if (abstract) renderAbstractText(abstract, row.abstract);
     root.querySelectorAll('[data-daily-action]').forEach(b => { b.onclick = privateCallback(e => { if (b.dataset.dailyAction === 'save') dailyOpenSaveSheet(e, b, card); else dailyAct(b.dataset.dailyAction, card, generation); }); });
     if (hadFocus) el.focus({ preventScroll: true });
   } else if (hadFocus) { const undo = document.querySelector('#toast button'); if (undo) undo.focus({ preventScroll: true }); }
@@ -9580,7 +9693,7 @@ function dailyRender(focus) {
 function dailyBindGestures(el, card, generation) {
   if (!el) return;
   el.onpointerdown = e => {
-    if (e.button !== 0 || e.isPrimary === false || Daily.press || Daily.sheet || !dailyValidCard(card, generation) || e.target?.closest?.('button,a,input,textarea,select,[contenteditable="true"]') || !window.getSelection()?.isCollapsed) return;
+    if (e.button !== 0 || e.isPrimary === false || Daily.press || Daily.sheet || Daily.picker || !dailyValidCard(card, generation) || e.target?.closest?.('button,a,input,textarea,select,[contenteditable="true"]') || !window.getSelection()?.isCollapsed) return;
     Daily.press = { id: e.pointerId, x: e.clientX, y: e.clientY, dx: 0, intent: null, el, card, generation, epoch: capturePrivateEpoch() };
   };
   el.onpointermove = e => {
@@ -9603,7 +9716,9 @@ function dailyBindGestures(el, card, generation) {
     if (commit) dailyAct(dx > 0 ? 'save' : 'pass', card, generation);
     dailyAdopt();
   };
-  el.onpointercancel = el.onlostpointercapture = e => { const p = Daily.press; if (p && p.el === el && p.id === e.pointerId) { dailyCancelPress(); dailyAdopt(); } };
+  const cancel = e => { const p = Daily.press; if (p && p.el === el && p.id === e.pointerId) { dailyCancelPress(); dailyAdopt(); } };
+  el.onpointercancel = cancel;
+  el.onlostpointercapture = e => { if (e.target === el) cancel(e); };   // a touch transfers implicit capture from its text child to the card
   el.onkeydown = e => {
     if (!KEYBOARD_SHORTCUTS || e.target !== el || document.activeElement !== el || e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.isComposing || Daily.sheet || document.querySelector('.save-sheet.open, .reader.open') || !window.getSelection()?.isCollapsed) return;
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); dailyAct(e.key === 'ArrowRight' ? 'save' : 'pass', card, generation); }
@@ -10363,9 +10478,10 @@ pullBind();
    button underneath (as on iOS). Scrolling outside still closes it and scrolls. Short-lived hints don't count: the venue
    tooltip, and the score breakdown while it's only hovered (counted, a mouse click on its (i) closed it instead of
    keeping it open). */
-const POPOVERS = '#saveSheet.open, #feedSortMenu, #feedInterestMenu, .list-menu, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup[data-pinned], #chatHist, #keptPaperMenu';
+const POPOVERS = '#dailyInterestSheet.open, #saveSheet.open, #feedSortMenu, #feedInterestMenu, .list-menu, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup[data-pinned], #chatHist, #keptPaperMenu';
 let _dismissTap = null;
 function closePopovers() {
+  dailyCloseInterestSheet();
   closeSaveSheet(); closeFeedMenu(); closeListMenu(); toggleReaderMenu(false); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeAbsPopup(); closeRelevancePopup();
   const h = document.getElementById('chatHist'); if (h) { if (h._close) h._close(); else h.remove(); }
 }
@@ -21149,8 +21265,13 @@ function pageIn(el) { if (el && !reduceMotion()) replay(el, 'page-in'); }
 function paperAgain(k) { const p = everyPaper().find(x => paperKey(x) === k); if (p) renderPaperDetail(p); }
 /* Names stay in the page's option array, never inside inline JavaScript. */
 let _rvOpts = [];
+/* Current confirmed matches, in the Relevance card's level and strength order. */
+function relevanceMatches(parts) {
+  const levels = ['definitely', 'probably', 'mildly'];
+  return parts.matches.slice().sort((a, b) => levels.indexOf(a.level) - levels.indexOf(b.level) || b.value - a.value);
+}
 function relevanceCardHTML(p, ka) {
-  const parts = scoreParts(p), rel = dynamicRelevance(p), own = isOwner();
+  const parts = scoreParts(p), rel = dynamicRelevance(p), own = isOwner(), ordered = relevanceMatches(parts);
   _rvOpts = effMatches(p);
   const byName = new Map(parts.matches.map(m => [m.name, m]));
   const core = parts.core ? parts.core.value : 0, context = parts.context ? parts.context.value : 0;
@@ -21170,7 +21291,7 @@ function relevanceCardHTML(p, ka) {
     return `<div class="rv-row">${link}${strength}</div>`;
   };
   const groups = ['definitely', 'probably', 'mildly'].map(level => {
-    const matches = parts.matches.filter(m => m.level === level).sort((a, b) => b.value - a.value);
+    const matches = ordered.filter(m => m.level === level);
     if (!matches.length) return '';
     return `<div class="rv-group"><div class="rv-gl"><i style="background:var(${level === 'definitely' ? '--accent' : '--text-secondary'})"></i>${LEVEL_NAME[level]} interests</div>${matches.map(m => row(m.name)).join('')}</div>`;
   }).join('');
@@ -22465,7 +22586,7 @@ function applyHash() {
       if (isOwner() && list) refreshNotice(`"${esc(list)}" is no longer one of your lists.`);
       history.replaceState(null, '', APP_ROOT + location.search + '#lists'); applyHash(); return;
     }
-    if (hash === 'daily' && dailyShown()) { setHomeView('daily', null); switchTab('all', true); if (wasInList) backFromList(); return; }
+    if (hash === 'daily' && dailyShown()) { setHomeView('daily', null); switchTab('all', true); dailyResume(); if (wasInList) backFromList(); return; }
     setHomeView(hash === 'following' ? 'following' : 'foryou', list);
     switchTab('all', true);
     if (wasInList) backFromList();
