@@ -24,7 +24,7 @@ function failConfig(error) {
 Config.promise = Promise.resolve().then(() => {
   if (Config.state === 'failed' || !globalThis.ScholarConfig) throw Config.error || new Error('Could not load scholar_config.js');
   if (ScholarConfig.resolveRoot(location.pathname) !== APP_ROOT) throw new Error('Invalid application root');
-  return ScholarConfig.load({ fetch: window.fetch.bind(window), origin: location.origin, root: APP_ROOT });
+  return ScholarConfig.load({ fetch: (url, options) => window.fetch(url, { ...options, cache: 'no-cache' }), origin: location.origin, root: APP_ROOT }); // public bootstrap: network first, available offline
 });
 Config.promise.catch(failConfig); // Attach immediately, even if the body has not been parsed yet.
 </script>
@@ -44,7 +44,7 @@ Config.promise.catch(failConfig); // Attach immediately, even if the body has no
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="sha384-D/t0ZMqQW31H3az8ktEiNb39wyKnS82iFY52QPACM+IjKW3jDUhyIgh2PApRqJZs" crossorigin="anonymous" defer></script>
 <style>
 :root {
   /* topic-group identity: categorical slots in display_order, validated on black and on the surfaces */
@@ -1601,6 +1601,10 @@ body.rp-splitting, body.rp-splitting * { user-select: none !important; -webkit-u
 .chat-setup p { margin: 0 0 12px; }
 .chat-setup code { font-size: 12px; background: rgba(255,255,255,0.07); padding: 1px 5px; border-radius: 4px; }
 .chat-dim { color: var(--text-muted); font-size: 12.5px; }
+.chat-key { margin: 0 0 14px; }
+.chat-key .chat-key-input { display: block; width: 100%; box-sizing: border-box; height: 44px; font-size: 16px; margin: 0 0 10px; }   /* 16 px: iOS does not zoom in on it */
+.chat-key .chat-dim { margin: 8px 0 0; }
+.chat-key .chat-key-err { margin: 8px 0 0; }
 .chat-code { font-size: 28px; font-weight: 600; letter-spacing: 0.18em; color: var(--text); margin: 6px 0 4px !important; font-variant-numeric: tabular-nums; }
 .chat-scroll { flex: 1; overflow: auto; padding: 14px 14px 8px; display: flex; flex-direction: column; gap: 14px; }
 .chat-empty { color: var(--text-muted); font-size: 13px; line-height: 1.55; }
@@ -2303,11 +2307,12 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 /* Phase 13e: a fixed menu placed by placeFixedMenu, inside what shows of the screen; its rows scroll inside, and a long
    name wraps (an unbroken one too) rather than widening the menu past the viewport */
 #safeProbe { position: fixed; top: 0; left: 0; width: 0; height: 0; visibility: hidden; pointer-events: none; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
-.copy-dd { position: fixed; z-index: 9999; background: var(--bg-surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); overflow: hidden; min-width: 180px; display: flex; flex-direction: column; animation: dropdown-in 0.15s ease forwards; }
+.copy-dd, .kept-paper-menu { position: fixed; z-index: 9999; background: var(--bg-surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); overflow: hidden; min-width: 180px; display: flex; flex-direction: column; animation: dropdown-in 0.15s ease forwards; }
 .copy-dd-head { padding: 8px 14px 6px; font-size: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .copy-dd-list { overflow-y: auto; min-height: 0; flex: 1 1 auto; }
-.copy-dd-item { display: block; width: 100%; text-align: left; background: none; border: none; font: inherit; padding: 8px 14px; font-size: 13px; cursor: pointer; color: var(--text-secondary); transition: background 0.1s; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
-.copy-dd-item:hover { background: var(--bg-hover); color: var(--text); }
+.copy-dd-item, .kept-paper-menu button { display: block; width: 100%; text-align: left; background: none; border: none; font: inherit; padding: 8px 14px; font-size: 13px; cursor: pointer; color: var(--text-secondary); transition: background 0.1s; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+.kept-paper-menu button { min-height: 44px; }
+.copy-dd-item:hover, .kept-paper-menu button:hover { background: var(--bg-hover); color: var(--text); }
 .copy-dd-item.copy-dd-new { border-top: 1px solid var(--border); color: var(--accent); }
 .copy-dd-item:disabled { opacity: 0.45; cursor: default; }
 
@@ -2972,6 +2977,7 @@ body:has(#sec-library.active) .save-bar[data-state="saving"] { visibility: hidde
         <button class="reader-btn rt-more" id="readerMore" onclick="toggleReaderMenu()" title="More" aria-label="More" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
         <span class="reader-menu" id="readerMenu" role="menu">
           <button class="reader-change" role="menuitem" onclick="toggleReaderMenu(false); openPdfChange()">Use a different PDF…</button>
+          <button class="reader-keep" id="readerKeep" role="menuitem" hidden onclick="toggleReaderMenu(false); keptToggle()"></button>
           <a id="readerExternal" role="menuitem" target="_blank" rel="noopener" onclick="toggleReaderMenu(false)">Open the PDF in a new tab <span aria-hidden="true">&#8599;</span></a>
         </span>
       </span>
@@ -3401,7 +3407,7 @@ async function acceptTarget(instance) {
     binding = localStorage.getItem(TARGET_KEY);
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key !== TARGET_KEY && key !== LIBCACHE_ERASURE_KEY && (key === 'gh_pat' || key === 'gh_pat_ok' || key.startsWith('scholar_') || key.startsWith('claude_bridge_'))) historical = true;   // B1 second fix: the erasure value is never cleared, so it is not history
+      if (key !== TARGET_KEY && key !== LIBCACHE_ERASURE_KEY && (key === 'gh_pat' || key === 'gh_pat_ok' || key === 'claude_api_key' || key.startsWith('scholar_') || key.startsWith('claude_bridge_'))) historical = true;   // B1 second fix: the erasure value is never cleared, so it is not history
     }
   } catch (e) { throw new Error('Browser storage is unavailable'); }
   if (binding !== null) {
@@ -3415,7 +3421,7 @@ async function acceptTarget(instance) {
       try {
         const databases = await Promise.race([indexedDB.databases(), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Database enumeration timed out')), 3000); })]);
         cleanDatabases = Array.isArray(databases);
-        if (cleanDatabases && databases.some(db => db.name === 'scholar_notes' || db.name === 'scholar_pdfs' || db.name === LIBCACHE_DB)) historical = true;
+        if (cleanDatabases && databases.some(db => db.name === 'scholar_notes' || db.name === 'scholar_pdfs' || db.name === 'scholar_chats' || db.name === KEPT_DB || db.name === LIBCACHE_DB)) historical = true;
       } finally { clearTimeout(timer); }
     }
   } catch (e) { cleanDatabases = false; }
@@ -3426,7 +3432,7 @@ async function acceptTarget(instance) {
   if (current === target) { _acceptedTarget = target; return; }
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key !== TARGET_KEY && key !== LIBCACHE_ERASURE_KEY && (key === 'gh_pat' || key === 'gh_pat_ok' || key.startsWith('scholar_') || key.startsWith('claude_bridge_'))) historical = true;
+    if (key !== TARGET_KEY && key !== LIBCACHE_ERASURE_KEY && (key === 'gh_pat' || key === 'gh_pat_ok' || key === 'claude_api_key' || key.startsWith('scholar_') || key.startsWith('claude_bridge_'))) historical = true;
   }
   if ((historical || !cleanDatabases) && !legacy) mismatch('the previous deployment');
   localStorage.setItem(TARGET_KEY, target);
@@ -3472,6 +3478,7 @@ function privateBinding() {
   }
   const token = localStorage.getItem('gh_pat');
   if ((Private.authorized && token !== Private.token) || (Private.verificationBinding && token !== Private.verificationBinding.storedToken)) lockPrivate(token ? 'rejected' : 'required', { reason: 'token_changed' });
+  if (Private.state === 'offline') offlineExpire();
   return token;
 }
 function capturePrivateEpoch() {
@@ -3785,6 +3792,7 @@ function privateRecheckLater(retryAt) {
 }
 function privateRecheck(epoch) {
   clearTimeout(Private.recheckTimer); Private.recheckTimer = null;
+  if (epoch === Private.epoch && Private.state === 'offline' && offlineExpire()) return;
   if (epoch !== Private.epoch || !Private.authorized || document.visibilityState === 'hidden') return;   // hidden: the return to the app checks
   reverifyPrivate().catch(e => { if (!e || !(e.transient || e.privateAuth || e.target)) lockPrivate('unavailable'); });   // as a return to the app does
 }
@@ -3815,7 +3823,9 @@ async function verifyPrivate(pat, candidate = false, reread = false) {
     if (json.private !== true) throw privateDefinite('not_private', 'The repository is not private');
     if (!json.permissions || json.permissions.push !== true) throw privateDefinite('read_only', 'The token cannot write to the repository');
     if (!candidate) {
+      const resumed = Private.state === 'offline';   // OFFLINE START: the re-check after an offline start came back
       Private.authorized = true; Private.token = pat; Private.state = 'verified'; _ownerToken = pat; _ownerAtLoad = true;
+      if (resumed) offlineResumed();
     }
     return true;
   } catch (e) {
@@ -3827,6 +3837,8 @@ async function verifyPrivate(pat, candidate = false, reread = false) {
       privateRecheckLater(why.retryAt);
       throw Object.assign(new Error(e.wait ? 'GitHub asked Scout to wait' : 'GitHub could not be reached'), { transient: true, wait: !!e.wait, reason: why.reason, retryAt: why.retryAt, status: why.status });
     }
+    if (await offlineStart(e, binding)) return true;   // OFFLINE START (OFFLINE_COLD_START): the library from this browser's copy
+    if (binding.epoch !== Private.epoch) return false;
     lockPrivate('unavailable', why); return false;
   } finally { if (Private.verificationBinding === binding) Private.verificationBinding = null; }
 }
@@ -3908,7 +3920,7 @@ async function privateBlobText(path, info, binding, held) {
     const sha = await gitBlobSha(bytes); checkPrivateEpoch(epoch);   // the digest is asynchronous: a lock may have come meanwhile
     if (sha !== info.sha) throw new Error('Private blob does not match its SHA');
   }
-  const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes); checkPrivateEpoch(epoch);
+  const text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes); checkPrivateEpoch(epoch);
   if (!cached && LIBCACHE_FILES.includes(path)) libCachePut(path, info.sha, bytes);   // not awaited: storing can only fail quietly
   syncedKeep(path, info.sha, text, binding.token);
   return { sha: info.sha, text };
@@ -3920,6 +3932,13 @@ async function privateBlobText(path, info, binding, held) {
    changes nothing: the files are read one by one, as before (privateReadFile). superseded: as for privateReadFile. */
 const LIBRARY_LISTING_CAP = 1024 * 1024;
 async function privateReadLibrary(superseded = null) {
+  if (Private.state === 'offline') return offlineReadLibrary();   // OFFLINE START: this browser's copy
+  const saveGen = Refresh.saveGen, seq = Refresh.seq;
+  const before = OFFLINE_COLD_START ? await libCacheRevisionGet() : null; // bounded shared revision before any network read
+  const valid = () => !!before && saveGen === Refresh.saveGen && seq === Refresh.seq && (!superseded || !superseded());
+  return offlineManifestKeep(await privateReadLibraryGitHub(superseded), valid, before && before.revision);
+}
+async function privateReadLibraryGitHub(superseded = null) {
   if (typeof dailyShown === 'function' && dailyShown()) return privateReadBundleByFile(superseded); // Daily and its library share one commit.
   tasteSupersede();   // late taste responses from an earlier library refresh are discarded
   const epoch = capturePrivateEpoch();
@@ -4027,8 +4046,8 @@ function syncedHeld(file) {
      and Git blob SHA are what GitHub names now. Any failure means the file is read from GitHub.
    - The key is a non-extractable CryptoKey in the same database. It stops a stray read of the browser's files. It does
      not stop someone who copies the whole browser profile, and the sign-in prompt says so.
-   - It is read only after the sign-in is checked and GitHub has named each file's SHA (privateReadLibrary). There is
-     no offline start.
+   - Online reads require checked sign-in and GitHub's current SHA. The approved OFFLINE START block below also
+     permits a complete encrypted snapshot for up to 14 days when a stored token cannot be checked for network reasons.
    - Every lock drops the key and the connection from memory, aborts this tab's cache transactions, and turns every
      callback from before it into a no-op (the epoch). Every lock but 'unavailable' and 'load_error' also deletes the
      database: a missing, replaced or rejected token, sign-out, a target or configuration change.
@@ -4199,12 +4218,12 @@ async function libCacheTx(db, epoch, mode, fn) {
   });
 }
 /* The file's exact bytes from this browser's copy, or null: no copy, another SHA, a failed decryption or check, a lock */
-async function libCacheGet(path, info) {
+async function libCacheGet(path, info, recordKey = 'file:' + path) {
   const epoch = Private.epoch; let timer;
   const work = (async () => {
     if (!LIBCACHE_FILES.includes(path) || !libCacheLive(epoch)) return null;
     const db = await libCacheOpen(epoch); if (!db || !libCacheLive(epoch)) return null;
-    const [keyRec, rec] = await libCacheTx(db, epoch, 'readonly', st => [st.get('key'), st.get('file:' + path)]);
+    const [keyRec, rec] = await libCacheTx(db, epoch, 'readonly', st => [st.get('key'), st.get(recordKey)]);
     if (!libCacheLive(epoch) || !libCacheKeyOK(keyRec) || !rec || rec.format !== LIBCACHE_FORMAT || rec.target !== _acceptedTarget || rec.branch !== GH_BRANCH ||
         rec.path !== path || rec.sha !== info.sha || rec.size !== info.size || !ArrayBuffer.isView(rec.iv) || rec.iv.byteLength !== 12) return null;
     LibCache.key = keyRec.key;
@@ -4284,6 +4303,256 @@ async function libCacheErased(ms = 5000) {
   try { return await Promise.race([LibCache.erasing || libCacheErase(), new Promise(resolve => { timer = setTimeout(() => resolve(false), ms); })]); }
   finally { clearTimeout(timer); }
 }
+/* ===== OFFLINE START (4 November 2026, plan docs/superpowers/plans/2026-11-04-scout-offline.md, sections 1 and 2) =====
+   The service worker (sw.js) keeps the public page and its libraries, so Scout opens without a connection. The
+   private library never goes in the worker's caches: offline it comes from this browser's encrypted copy, or not at
+   all.
+   OFFLINE_COLD_START is Dhruv's decision 1; he said yes on 4 November 2026, in his words "Yes, I agree to this offline
+   setup." Set to false, nothing below reads or writes the copy: a start that finds no connection locks as
+   'unavailable', as before, and offline reading works only in a Scout that was already open. While it is true:
+   - after every library read from GitHub (Private.state 'verified'), a manifest goes into the copy beside the files,
+     encrypted under the copy's key with the same additional data (path OFFLINE_MANIFEST_PATH, no SHA): which of the
+     library's files that read found (SHA and byte size, null for an absent file, 'unread' for an unavailable people
+     file) and the time. Separate snapshot records publish with it atomically, guarded by a shared revision;
+   - a start whose sign-in check fails only for want of a network (offlineNetworkFailure: the browser says it is
+     offline, or fetch itself failed; never a status, a wait, a timeout or a definite answer), with the token stored
+     and no library on screen, reads that manifest instead of locking. When it is under OFFLINE_DAYS old, the library
+     opens as the owner from the copy, in Private.state 'offline'. Each file is read only against the manifest's SHA and size,
+     decrypted and checked by libCacheGet; an acknowledged save moves its entry without extending the lifetime;
+   - the quiet re-check runs every PRIVATE_RECHECK_MS and when the browser comes back online. Its success is the
+     ordinary 'verified' state and loads the library once (loadPrivateLibrary, through refreshReceive, so the edits in
+     the backup are applied again); a definite refusal locks and erases the copy as any lock does.
+   Every write path stays as it is: dirty flags, the backup, the notes' dirty records. */
+const OFFLINE_COLD_START = true;
+const OFFLINE_DAYS = 14, OFFLINE_MANIFEST = 'manifest', OFFLINE_MANIFEST_PATH = '#manifest';
+const Offline = { manifest: null, writing: Promise.resolve(), deadline: null, expiring: false };
+function offlineFiles() { return LIBRARY_CSVS.concat([STATE_FILE, PEOPLE_FILE, LISTS_FILE]); }   // privateReadLibrary's first six, in its order
+/* A failure that means only "no network": no status, no refusal or wait, no timeout */
+function offlineNetworkFailure(e) {
+  if (!e || e.status || e.definite || e.wait || e.privateAuth || e.target || transientReason(e) !== 'offline' || e.name === 'AbortError' || e.name === 'TimeoutError' || /timed out|timeout/i.test(e.message || '')) return false;
+  return navigator.onLine === false || (e instanceof TypeError && /failed to fetch|load failed|networkerror|network connection was lost|appears to be offline/i.test(e.message || ''));
+}
+function offlineFresh(manifest) {
+  const age = Date.now() - manifest.at;
+  return age > -5 * 60000 && age < OFFLINE_DAYS * 86400000;
+}
+/* The original snapshot deadline also bounds an already-open cold start. Save the pending paper edits before
+   the ordinary unavailable lock clears memory; encrypted dirty notes and the snapshot stay in their stores. */
+function offlineExpire() {
+  if (Private.state !== 'offline' || !Offline.manifest || Offline.expiring || offlineFresh(Offline.manifest)) return false;
+  Offline.expiring = true;
+  try { writeBackup(); } catch (e) {}   // keep an existing backup even if storage cannot take another write
+  try { lockPrivate('unavailable', { reason: 'offline' }); } finally { Offline.expiring = false; }
+  return true;
+}
+function offlineDeadline(epoch) {
+  if (epoch !== Private.epoch) return;
+  clearTimeout(Offline.deadline);
+  if (Private.state !== 'offline' || !Offline.manifest || offlineExpire()) return;
+  Offline.deadline = setTimeout(() => offlineDeadline(epoch), Math.max(1, Math.min(2147483647, Offline.manifest.at + OFFLINE_DAYS * 86400000 - Date.now())));
+}
+function offlineManifestOK(m) {
+  if (!m || typeof m !== 'object' || m.v !== 1 || !Number.isSafeInteger(m.at) || !m.files || typeof m.files !== 'object') return false;
+  return offlineFiles().every(path => {
+    const f = m.files[path], file = !!f && typeof f === 'object' && typeof f.sha === 'string' && /^[0-9a-f]{40}$/.test(f.sha) && Number.isSafeInteger(f.size) && f.size >= 0 && f.size <= privatePathCap(path);
+    if (LIBRARY_CSVS.includes(path)) return file;   // the three are never missing from a library
+    return file || f === null || (path === PEOPLE_FILE && f === 'unread');
+  });
+}
+/* Serialize manifest changes: a save cannot lose another file's new SHA. Every record binds SHA and byte size;
+   an offline read never chooses its own authority from the file record it is checking. */
+function offlineManifestWork(fn) {
+  const epoch = Private.epoch;
+  const work = Offline.writing.catch(() => {}).then(async () => {
+    let active = true, timer;
+    const live = () => active && libCacheLive(epoch);
+    const task = Promise.resolve().then(() => live() ? fn(epoch, live) : false).catch(() => false);
+    try { return await Promise.race([task, new Promise(resolve => { timer = setTimeout(() => { active = false; resolve(false); }, LIBCACHE_WAIT_MS); })]); }
+    finally { active = false; clearTimeout(timer); }
+  });
+  Offline.writing = work;
+  return localWork(work);
+}
+/* A complete network read publishes a separate encrypted snapshot atomically. Ordinary cache writes during an
+   incomplete refresh cannot overwrite it. Optional publication has a bounded wait before the read completes. */
+async function offlineManifestKeep(files, valid = () => true, revision) {
+  if (!OFFLINE_COLD_START || !isPrivate() || !Private.authorized || Private.state !== 'verified' || !Array.isArray(files)) return files;
+  await offlineManifestWork(async (epoch, live) => {
+    if (!valid()) return false;
+    const before = revision === undefined ? await libCacheRevisionGet() : { revision };
+    if (!before || !live() || !valid()) return false;
+    const entries = {}, snapshot = {};
+    offlineFiles().forEach((path, i) => {
+      const f = files[i];
+      if (f === PEOPLE_UNREAD) { entries[path] = 'unread'; return; }
+      if (!f || typeof f.sha !== 'string' || typeof f.text !== 'string') { entries[path] = null; return; }
+      const bytes = new TextEncoder().encode(f.text);
+      entries[path] = { sha: f.sha, size: bytes.length };
+      snapshot[path] = { sha: f.sha, bytes };
+    });
+    return libCacheManifestPut({ v: 1, at: Date.now(), files: entries }, snapshot, true, () => live() && valid(), before.revision);
+  });
+  return files;
+}
+/* An acknowledged save moves its snapshot file and manifest together, without extending the original expiry. */
+function offlineManifestSaved(path, sha, bytes, fence) {
+  if (!OFFLINE_COLD_START || !isPrivate() || !offlineFiles().includes(path)) return;
+  return offlineManifestWork(async (epoch, live) => {
+    let previous = fence ? fence.before : undefined;
+    for (let attempt = 0; attempt < 4 && live(); attempt++) {
+      const manifest = await libCacheManifestGet();
+      if (!manifest || !live()) return false;
+      const current = manifest.files[path] && manifest.files[path].sha || null;
+      if (current === sha) return true;
+      if (previous === undefined) previous = current;
+      if (current !== previous && (!fence || current !== fence.base)) return false; // another tab advanced this file
+      manifest.files[path] = { sha, size: bytes.length };
+      if (await libCacheManifestPut(manifest, { [path]: { sha, bytes } }, false, live, manifest._revision)) return true;
+    }
+    return false;
+  });
+}
+/* A shared compare-and-swap revision. Null is a confirmed absent manifest; no result means unavailable storage.
+   Capturing it before a full read prevents another tab's acknowledged save from being overwritten by that read. */
+function offlineRevision(record) { return record ? record.revision || b64e(record.iv) : null; }
+async function libCacheRevisionGet() {
+  const epoch = Private.epoch; let timer;
+  const work = (async () => {
+    if (!libCacheLive(epoch)) return null;
+    const db = await libCacheOpen(epoch); if (!db || !libCacheLive(epoch)) return null;
+    const [record] = await libCacheTx(db, epoch, 'readonly', st => [st.get(OFFLINE_MANIFEST)]);
+    return libCacheLive(epoch) ? { revision: offlineRevision(record) } : null;
+  })().catch(() => null);
+  try { return await Promise.race([work, new Promise(resolve => { timer = setTimeout(() => resolve(null), LIBCACHE_WAIT_MS); })]); }
+  finally { clearTimeout(timer); }
+}
+/* The manifest into the copy, encrypted as libCachePut encrypts a file. The key is the copy's, or a new one made in the
+   same single transaction libCachePut makes it in, so two writers agree on one key. */
+async function libCacheManifestPut(value, files = null, replace = false, valid = () => true, expected = value._revision) {
+  const epoch = Private.epoch, target = _acceptedTarget, branch = GH_BRANCH;
+  try {
+    if (!libCacheLive(epoch) || !valid()) return false;
+    const db = await libCacheOpen(epoch); if (!db || !libCacheLive(epoch) || !valid()) return false;
+    let key = LibCache.key;
+    if (!key) {
+      const fresh = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+      if (!libCacheLive(epoch) || !valid()) return false;
+      const [rec] = await libCacheTx(db, epoch, 'readwrite', st => {
+        const out = { result: null }; if (!valid()) return [out];
+        const got = st.get('key');
+        got.onsuccess = () => {
+          if (!valid()) return;
+          if (libCacheKeyOK(got.result)) { out.result = got.result; return; }
+          st.clear(); out.result = { key: fresh }; st.put(out.result, 'key');
+        };
+        return [out];
+      });
+      if (!libCacheLive(epoch) || !libCacheKeyOK(rec)) return false;
+      key = LibCache.key = rec.key;
+    }
+    const bytes = new TextEncoder().encode(JSON.stringify(value)), iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: libCacheAad(target, branch, OFFLINE_MANIFEST_PATH, '', bytes.length) }, key, bytes);
+    const records = [];
+    for (const [path, file] of Object.entries(files || {})) {
+      if (!offlineFiles().includes(path) || !file || !(file.bytes instanceof Uint8Array) || !/^[0-9a-f]{40}$/.test(file.sha)) return false;
+      const iv = crypto.getRandomValues(new Uint8Array(12)), size = file.bytes.length;
+      const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: libCacheAad(target, branch, path, file.sha, size) }, key, file.bytes);
+      records.push([path, { format: LIBCACHE_FORMAT, target, branch, path, sha: file.sha, size, iv, ct }]);
+    }
+    if (!libCacheLive(epoch) || !valid() || target !== _acceptedTarget || branch !== GH_BRANCH) return false;
+    capturePrivateEpoch();
+    const revision = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
+    const [wrote] = await libCacheTx(db, epoch, 'readwrite', st => {
+      const out = { result: false }, current = st.get(OFFLINE_MANIFEST);
+      current.onsuccess = () => {
+        // The first request runs only when this transaction has the store. Recheck timeout and revision here.
+        if (!valid() || !libCacheLive(epoch) || offlineRevision(current.result) !== expected) return;
+        if (replace) offlineFiles().forEach(path => st.delete('snapshot:' + path));
+        records.forEach(([path, record]) => st.put(record, 'snapshot:' + path));
+        st.put({ format: LIBCACHE_FORMAT, target, branch, path: OFFLINE_MANIFEST_PATH, revision, size: bytes.length, iv, ct }, OFFLINE_MANIFEST);
+        out.result = true;
+      };
+      return [out];
+    });
+    return wrote && libCacheLive(epoch);
+  } catch (e) { return false; }
+}
+/* The manifest from the copy, decrypted and checked, or null (none, another target or branch, a failed decryption) */
+async function libCacheManifestGet() {
+  const epoch = Private.epoch; let timer;
+  const work = (async () => {
+    if (!libCacheLive(epoch)) return null;
+    const db = await libCacheOpen(epoch); if (!db || !libCacheLive(epoch)) return null;
+    const [keyRec, rec] = await libCacheTx(db, epoch, 'readonly', st => [st.get('key'), st.get(OFFLINE_MANIFEST)]);
+    if (!libCacheLive(epoch) || !libCacheKeyOK(keyRec) || !rec || rec.format !== LIBCACHE_FORMAT || rec.target !== _acceptedTarget || rec.branch !== GH_BRANCH ||
+        rec.path !== OFFLINE_MANIFEST_PATH || !Number.isSafeInteger(rec.size) || !ArrayBuffer.isView(rec.iv) || rec.iv.byteLength !== 12) return null;
+    const plain = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: rec.iv, additionalData: libCacheAad(_acceptedTarget, GH_BRANCH, OFFLINE_MANIFEST_PATH, '', rec.size) }, keyRec.key, rec.ct));
+    if (!libCacheLive(epoch) || plain.length !== rec.size) return null;
+    LibCache.key = keyRec.key;
+    const manifest = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(plain));
+    if (!offlineManifestOK(manifest)) return null;
+    Object.defineProperty(manifest, '_revision', { value: offlineRevision(rec), enumerable: false });
+    return manifest;
+  })().catch(() => null);
+  try { return await Promise.race([work, new Promise(resolve => { timer = setTimeout(() => resolve(null), LIBCACHE_WAIT_MS); })]); }
+  finally { clearTimeout(timer); }
+}
+/* verifyPrivate's start that failed only for want of a network: true once the library may open from the copy
+   (Private.state 'offline'). False leaves the caller to lock as 'unavailable', as before. */
+async function offlineStart(e, binding) {
+  if (!OFFLINE_COLD_START || binding.candidate || Private.authorized || _dataLoaded || _papersText || binding.epoch !== Private.epoch ||
+      !binding.token || binding.token !== binding.storedToken || !offlineNetworkFailure(e)) return false;
+  Private.authorized = true; Private.token = binding.token; Private.state = 'offline'; _ownerToken = binding.token; _ownerAtLoad = true;
+  const manifest = await libCacheManifestGet();
+  if (binding.epoch !== Private.epoch || !Private.authorized || Private.state !== 'offline' || !manifest || !offlineFresh(manifest)) return false;
+  Offline.manifest = manifest; privateTeardown(() => { clearTimeout(Offline.deadline); Offline.deadline = null; Offline.manifest = null; });   // a lock forgets it
+  offlineDeadline(binding.epoch);
+  privateRecheckLater();   // the real check: every PRIVATE_RECHECK_MS, and at once when the browser comes online
+  return true;
+}
+/* The library from the copy, as privateReadLibrary gives it (the six files; no Daily: it stays online only) */
+async function offlineReadLibrary() {
+  const epoch = capturePrivateEpoch(), manifest = Offline.manifest;
+  if (!manifest || !offlineFresh(manifest)) throw new Error('The library is not on this device');
+  const out = [];
+  for (const path of offlineFiles()) {
+    const want = manifest.files[path];
+    if (!want) { out.push(null); continue; }
+    if (want === 'unread') { out.push(PEOPLE_UNREAD); continue; }
+    const info = want;
+    const bytes = await libCacheGet(path, info, 'snapshot:' + path); checkPrivateEpoch(epoch);
+    if (!bytes) { if (path === PEOPLE_FILE) { out.push(PEOPLE_UNREAD); continue; } throw new Error('The library is not on this device'); }
+    const text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes); checkPrivateEpoch(epoch);
+    syncedKeep(path, info.sha, text, Private.token);   // exact bytes under their SHA, as a read from GitHub keeps them
+    out.push({ sha: info.sha, text });
+  }
+  return out;
+}
+/* The re-check succeeded after an offline start: the library is read once, from GitHub */
+function offlineResumed() {
+  clearTimeout(Offline.deadline); Offline.deadline = null;
+  Offline.manifest = null;
+  setTimeout(privateCallback(() => { if (Private.state === 'verified') loadPrivateLibrary(); }), 0);
+}
+/* The service worker: registered once the page has loaded, in a secure context only, then given the library files the
+   page loads later (sw-warm), so they are kept before their first use */
+const SW_WARM_DELAY = 4000;
+function swWarmList() {
+  const pdf = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VER}/build/`;
+  return [pdf + 'pdf.min.mjs', pdf + 'pdf.worker.min.mjs', 'https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js', 'https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js',
+    'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js', 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css'];
+}
+function swStart() {
+  if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+  navigator.serviceWorker.register(APP_ROOT + 'sw.js', { scope: APP_ROOT, updateViaCache: 'none' })
+    .then(() => navigator.serviceWorker.ready)
+    .then(reg => setTimeout(() => {
+      const seen = performance.getEntriesByType('resource').map(r => r.name).filter(u => /^https:\/\/(?:cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|fonts\.googleapis\.com)\//.test(u));
+      if (reg.active) reg.active.postMessage({ type: 'sw-warm', urls: [...new Set(seen.concat(swWarmList()))] });
+    }, SW_WARM_DELAY))
+    .catch(() => {});
+}
+if (document.readyState === 'complete') swStart(); else window.addEventListener('load', swStart, { once: true });
 function restorePreferences() {
   try { _listOrder = localStorage.getItem('scholar_list_order') || 'best'; _rnSort = localStorage.getItem('scholar_rn_sort') || 'page'; _panelTab = localStorage.getItem(PANEL_TAB_KEY) === 'chat' ? 'chat' : 'notes'; Object.assign(PanelLayout, JSON.parse(localStorage.getItem(PANEL_LAYOUT_KEY)) || {}); } catch (e) {}
   try { Feed.sort = feedSortName(localStorage.getItem(FEED_SORT_KEY)); } catch (e) { Feed.sort = 'best'; }   // Phase 17: For you's sort, anything else Best
@@ -4294,7 +4563,7 @@ function restoreOwnerState() {
   _uploadRemovals = JSON.parse(localStorage.getItem(UPLOAD_REMOVALS_KEY) || '{}') || {};
   setTimeout(privateCallback(() => retryUploadRemovals()), 0);
   Chat.token = localStorage.getItem('claude_bridge_token') || '';
-  Chat.status = chatElsewhere() ? 'elsewhere' : Chat.token ? 'unknown' : 'setup';
+  Chat.status = chatBaseStatus();
   _lastSeen = localStorage.getItem(LAST_SEEN_KEY); migrateReading(); restorePencil();
   document.documentElement.classList.remove('ro');
 }
@@ -5327,10 +5596,10 @@ function paperInAnyList(k) { return _listedPass ? _listedPass.has(k) : Object.ke
 function listCount() { return Object.values(libraryLists).reduce((n, arr) => n + arr.length, 0); }
 
 /* ===== LOAD ===== */
-// Normalize line endings before parsing — PapaParse auto-detects newline
+// Normalize the CSV byte-order mark and line endings before parsing. PapaParse auto-detects newline
 // style from the first row and will mis-parse files with MIXED CRLF/LF
 // endings, absorbing rows into adjacent field values.
-function normalizeNewlines(text) { return (text || '').replace(/\r\n?/g, '\n'); }
+function normalizeNewlines(text) { return (text || '').replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n'); }
 // The raw CDN sometimes stalls on the cache-busted 2 MB papers file instead of failing,
 // which would leave the page on the skeleton forever; give up after this long.
 const CSV_FETCH_TIMEOUT_MS = 8000;
@@ -5659,6 +5928,7 @@ function returnAway() {
    moves; the five minutes count from the last library check that answered, of any kind (correction 2). */
 function returnBack(e) {
   if (e && e.type === 'pageshow' && !e.persisted) return;   // the first load: the start reads everything
+  if (document.visibilityState !== 'hidden' && isPrivate() && Private.state === 'offline' && offlineExpire()) return;
   if (document.visibilityState === 'hidden' || !Return.away) return;
   const now = Date.now(), hidden = Return.hiddenAt === null ? 0 : Math.max(0, now - Return.hiddenAt);
   Return.away = false; Return.hiddenAt = null;
@@ -8799,6 +9069,8 @@ async function saveDailyBundle(headers, canon) {
     dailyReconcileOut(paperOut, remote, handledOut, sent, layout === 5 ? state.text : papers.text); listDefsFields(paperOut);
     const files = [{ path: paperOut.file, text: paperOut.csv }, { path: DAILY_HANDLED, text: handledText }];
     files.forEach(f => { if (![DAILY_HANDLED, STATE_FILE, 'papers_database.csv'].includes(f.path) || new TextEncoder().encode(f.text).length > privatePathCap(f.path)) throw Object.assign(new Error('Your changes could not be saved. Try again.'), { fatal: true }); });
+    const snapshotBefore = typeof offlineManifestSaved === 'function' && OFFLINE_COLD_START ? await privateAwait(libCacheManifestGet(), epoch) : null;
+    const snapshotFence = snapshotBefore ? { before: snapshotBefore.files[paperOut.file] && snapshotBefore.files[paperOut.file].sha || null, base: (layout === 5 ? state : papers).sha } : null;
     const tree = [];
     for (const f of files) {
       const blob = await privateAwait(dailyAPI('blobs', 'POST', { content: f.text, encoding: 'utf-8' }, headers), epoch);
@@ -8818,6 +9090,11 @@ async function saveDailyBundle(headers, canon) {
         const got = await privateAwait(Promise.all(files.map(f => privateReadFile(f.path, false, null, null, now))), epoch);
         if (got.some((f, i) => !f || f.text !== files[i].text)) throw e;
       } else { if (attempt === 2) throw e; continue; }
+    }
+    requireOwner();
+    if (snapshotFence) {
+      const saved = files[0];
+      await privateAwait(offlineManifestSaved(saved.path, saved.sha, new TextEncoder().encode(saved.text), snapshotFence), epoch);
     }
     requireOwner(); return { paperOut, handledOut, sent, commit: commit.sha, files, epoch, target: _acceptedTarget };
   }
@@ -9741,7 +10018,7 @@ pullBind();
    button underneath (as on iOS). Scrolling outside still closes it and scrolls. Short-lived hints don't count: the venue
    tooltip, and the score breakdown while it's only hovered (counted, a mouse click on its (i) closed it instead of
    keeping it open). */
-const POPOVERS = '#saveSheet.open, #feedSortMenu, #feedInterestMenu, .list-menu, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup[data-pinned], #chatHist';
+const POPOVERS = '#saveSheet.open, #feedSortMenu, #feedInterestMenu, .list-menu, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup[data-pinned], #chatHist, #keptPaperMenu';
 let _dismissTap = null;
 function closePopovers() {
   closeSaveSheet(); closeFeedMenu(); closeListMenu(); toggleReaderMenu(false); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeAbsPopup(); closeRelevancePopup();
@@ -13869,6 +14146,8 @@ async function _ghPutFile(headers, filename, content, sha, message) { const _aut
   if (filename === LISTS_FILE) listDefsParse(content);
   if (filename === 'daily_handled.json') throw new Error('Daily decisions require a paired save');
   const b64 = btoa(unescape(encodeURIComponent(content)));
+  const snapshotBefore = OFFLINE_COLD_START && isPrivate() && offlineFiles().includes(filename) ? await privateAwait(libCacheManifestGet(), _authEpoch) : null;
+  const snapshotFence = snapshotBefore ? { before: snapshotBefore.files[filename] && snapshotBefore.files[filename].sha || null, base: sha } : null;
   // sha null: a file GitHub does not have yet (the people file's first save), created; if it was made meanwhile,
   // GitHub refuses with a 422, which _ghMergePush takes as a conflict and merges again onto the file as it is now
   const res = await privateAwait(ownerFetch(_ghFileUrl(filename), {
@@ -13882,8 +14161,9 @@ async function _ghPutFile(headers, filename, content, sha, message) { const _aut
   try {
     const ack = await privateAwait(res.json(), _authEpoch), bytes = new TextEncoder().encode(content), put = ack && ack.content;
     if (put && put.path === filename && typeof put.sha === 'string' && put.sha === await privateAwait(gitBlobSha(bytes), _authEpoch)) {
-      syncedKeep(filename, put.sha, new TextDecoder('utf-8', { fatal: true }).decode(bytes), Private.token);   // the text a read of those bytes gives
-      libCachePut(filename, put.sha, bytes);   // Phase 15 (B1): so the next start downloads nothing for this save
+      syncedKeep(filename, put.sha, new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes), Private.token);   // the text a read of those bytes gives
+      libCachePut(filename, put.sha, bytes);
+      if (snapshotFence) await privateAwait(offlineManifestSaved(filename, put.sha, bytes, snapshotFence), _authEpoch); // complete the bounded snapshot write with the save; a late acknowledgement cannot undo newer data
     }
   } catch (e) { checkPrivateEpoch(_authEpoch); }
 }
@@ -14240,16 +14520,24 @@ function adoptInterests(rows) {
    in on this device (IndexedDB), then effPdf: the paper's pdf_url, the open PDF the worker found
    (machine_pdf_url, unless you chose none), or its arXiv PDF. */
 const PDFJS_VER = '4.10.38';
+const PDFJS_SRI = { lib: 'sha384-+0ti2moQlmLN7WZHE2RHIf5lV8hHxhxEalN0il3YZceG26fUPyOkR0hp9daxk1i7', worker: 'sha384-ToeVvShCxKc6CEvhHeMt0Q8A06pSPDbAlngO9nokrDmh914gk/pYd0N7D0a4Lz2o' };
 const READER_POS_KEY = 'scholar_reader_pos_v1', READER_DARK_KEY = 'scholar_reader_dark';
 let _pdfjs = null;
 async function loadPdfJs() { const _authEpoch = capturePrivateEpoch();
   requireTarget();
   if (_pdfjs) return _pdfjs;
   const base = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VER}/build/`;
-  const lib = await privateAwait(import(base + 'pdf.min.mjs'), _authEpoch);
-  // a worker can't be started from another origin, so start it from a same-origin blob of the script
-  const src = await privateAwait((await privateAwait(targetFetch(base + 'pdf.worker.min.mjs'), _authEpoch)).text(), _authEpoch); requireTarget();
-  lib.GlobalWorkerOptions.workerPort = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })), { type: 'module' });
+  // 4 November 2026: an import() can't carry integrity, so both files are fetched, checked against their SHA-384 and
+  // started from same-origin blobs (the worker was already: a worker can't be started from another origin)
+  const verified = async (name, hash) => {
+    const bytes = await privateAwait((await privateAwait(targetFetch(base + name), _authEpoch)).arrayBuffer(), _authEpoch); requireTarget();
+    const digest = new Uint8Array(await privateAwait(crypto.subtle.digest('SHA-384', bytes), _authEpoch));
+    if ('sha384-' + btoa(String.fromCharCode(...digest)) !== hash) throw new Error('PDF.js did not match its hash');
+    return URL.createObjectURL(new Blob([bytes], { type: 'text/javascript' }));
+  };
+  const [libUrl, workerUrl] = await privateAwait(Promise.all([verified('pdf.min.mjs', PDFJS_SRI.lib), verified('pdf.worker.min.mjs', PDFJS_SRI.worker)]), _authEpoch);
+  const lib = await privateAwait(import(libUrl), _authEpoch);
+  lib.GlobalWorkerOptions.workerPort = new Worker(workerUrl, { type: 'module' });
   _pdfjs = lib;
   return lib;
 }
@@ -14294,6 +14582,368 @@ const localPdfGet = id => { requireTarget(); return isOwner() ? pdfStore('readon
 const localPdfPut = (id, blob) => pdfStore('readwrite', st => st.put(blob, id));
 const localPdfDel = id => pdfStore('readwrite', st => st.delete(id));
 
+/* ===== KEPT ON THIS DEVICE (offline reading, 4 November 2026, plan docs/superpowers/plans/2026-11-04-scout-offline.md,
+   sections 3 and 5, mockup A) =====
+   The PDFs of the papers he is reading or means to read are kept in this browser, so they open without a connection.
+   One rule for every device (Dhruv's decision): a paper is wanted (keptWanted) when he owns the library, it is not an
+   upload, not hidden and not passed, and it is liked (likedKey: To read, one of his own lists, or starred before) or
+   In progress (continueReadingList), or he kept it by hand ("Keep on this device" in the reader's ⋯ menu).
+   - IndexedDB 'scholar_kept' (KEPT_DB): 'pdfs' (the file, by paper id), 'meta' ({id, src, size, at, how}: how is 'set'
+     or 'hand'; a hand keep not downloaded yet has at '') and 'fails' ({id, src, n, next}). Opened as pdfStore is:
+     owner only, each transaction under the authorization epoch and in Private.transactions, writes through localWork.
+   - keptReconcile runs KEPT_SOON_MS after a change (showSaveBar: a save, a list, a read mark, a pass, a hide; a
+     reading place; the library drawn), when the browser comes online and every KEPT_TICK_MS. It queues each wanted
+     paper with an open PDF whose copy is missing or came from another link, and deletes the copies of papers no longer
+     wanted: never while offline, never a hand copy, never while the notes are locked (reading places from other
+     devices come with them).
+   - keptPump downloads one at a time: KEPT_ARXIV_GAP_MS after an arXiv download, KEPT_GAP_MS after any other, and not
+     while the reader loads a PDF. Only a whole answer that starts with %PDF is kept, so a rate-limit page never is. A
+     failure is tried again after KEPT_RETRY_MS, then daily. A full device (QuotaExceededError) stops the queue with one
+     message.
+   - The reader opens a file he dropped in first, then a kept copy (keptCopy: online only while it came from the paper's
+     current link, offline any), then the network.
+   - A wanted paper's notes file is fetched once into the notes store (keptWarmNotes), so its highlights are there
+     offline.
+   Uploads are never touched (they live in scholar_pdfs), and nothing here writes to GitHub. */
+const KEPT_DB = 'scholar_kept', KEPT_SOON_MS = 1500, KEPT_GAP_MS = 1000, KEPT_ARXIV_GAP_MS = 3000, KEPT_RETRY_MS = 30 * 60000, KEPT_DAY_MS = 86400000, KEPT_TICK_MS = 15 * 60000;
+const KEPT_FULL_TEXT = 'This device has no room to keep more papers.';
+const Kept = { epoch: null, meta: new Map(), fails: new Map(), loading: null, queue: [], busy: null, soon: 0, gap: 0, full: false, asked: false, warmed: new Set(), drawn: '', drawT: 0 };
+function keptOn() { try { return !!window.indexedDB && configReady() && _dataLoaded === true && isOwner(); } catch (e) { return false; } }
+function keptDB(stores, mode, fn) { requireOwner(); const epoch = capturePrivateEpoch();
+  const names = [].concat(stores);
+  const work = new Promise((resolve, reject) => {
+    const req = indexedDB.open(KEPT_DB, 1);
+    req.onupgradeneeded = () => { try { checkPrivateEpoch(epoch); requireOwner(); for (const name of ['pdfs', 'meta', 'fails']) req.result.createObjectStore(name); } catch (e) { req.transaction.abort(); req.result.close(); reject(e); } };
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      const db = req.result; let tx, r, failure, settled = false;
+      const finish = error => {
+        if (settled) return;
+        settled = true; if (tx) Private.transactions.delete(tx); db.close();
+        if (error) reject(error); else resolve(r && r.result);
+      };
+      const abort = error => { failure = error; try { tx.abort(); } catch (e) {} finish(error); };
+      try {
+        requireOwner(); checkPrivateEpoch(epoch); tx = db.transaction(names, mode); if (isPrivate()) Private.transactions.add(tx);
+        tx.oncomplete = () => { try { checkPrivateEpoch(epoch); requireOwner(); finish(); } catch (e) { finish(e); } };
+        tx.onerror = () => finish(failure || tx.error || new Error('Private database transaction failed'));
+        tx.onabort = () => finish(failure || tx.error || new Error('Private database transaction aborted'));
+        r = fn(...names.map(name => tx.objectStore(name)));
+      } catch (e) { if (tx) abort(e); else finish(e); }
+    };
+  });
+  return mode === 'readonly' ? work : localWork(work);   // Phase 22: a write a reload must not cut off
+}
+/* What this browser keeps, read once per authorization; a lock forgets it and stops the queue (keptReset) */
+function keptLoad() {
+  const epoch = isPrivate() ? Private.epoch : 0;
+  if (Kept.epoch !== epoch || !Kept.loading) {
+    keptReset(); Kept.epoch = epoch;
+    if (isPrivate()) privateTeardown(keptReset);
+    Kept.loading = Promise.all([keptDB('meta', 'readonly', st => st.getAll()), keptDB('fails', 'readonly', st => st.getAll())]).then(([meta, fails]) => {
+      if (Kept.epoch !== epoch) return;
+      Kept.asked = Kept.asked || (meta || []).some(m => m && m.persistAsked === true);
+      (meta || []).forEach(m => { if (m && typeof m.id === 'string') Kept.meta.set(m.id, m); });
+      (fails || []).forEach(f => { if (f && typeof f.id === 'string') Kept.fails.set(f.id, f); });
+    }).catch(() => {});
+  }
+  return Kept.loading;
+}
+function keptReset() {
+  keptPaperClose();
+  clearTimeout(Kept.soon); clearTimeout(Kept.gap); clearTimeout(Kept.drawT);
+  if (Kept.busy && Kept.busy.ctl) Kept.busy.ctl.abort();
+  Object.assign(Kept, { epoch: null, meta: new Map(), fails: new Map(), loading: null, queue: [], busy: null, soon: 0, gap: 0, full: false, warmed: new Set(), drawn: '', drawT: 0 });
+}
+function keptProgress() { return new Set(continueReadingList(true, true).map(x => x.p.id)); }
+/* In the set every device keeps: liked or In progress, and neither hidden nor passed */
+function keptInSet(p, progress) { return !!p && !p.uploaded && !isHiddenRow(p) && !isPassed(p) && (likedKey(paperKey(p)) || (progress || keptProgress()).has(p.id)); }
+function keptHand(id) { const m = Kept.meta.get(id); return !!m && m.how === 'hand'; }
+function keptWanted(p, progress) { return !!p && !p.uploaded && !isHiddenRow(p) && !isPassed(p) && (keptInSet(p, progress) || keptHand(p.id)); }
+/* No copy of this link yet, and no failure for it still waiting out its time */
+function keptNeeds(p, src) {
+  const m = Kept.meta.get(p.id), f = Kept.fails.get(p.id);
+  if (m && m.at && m.src === src) return false;
+  return !(f && f.src === src && Date.now() < f.next);
+}
+function keptArxiv(src) { try { return /(^|\.)arxiv\.org$/i.test(new URL(src).hostname); } catch (e) { return false; } }
+function keptSoon(delay = KEPT_SOON_MS) {
+  if (!keptOn()) return;
+  clearTimeout(Kept.soon);
+  Kept.soon = setTimeout(privateCallback(() => { Kept.soon = 0; keptReconcile().catch(() => {}); }), delay);
+}
+async function keptReconcile() { const _authEpoch = capturePrivateEpoch();
+  if (!keptOn()) return;
+  await privateAwait(keptLoad(), _authEpoch);
+  if (!keptOn()) return;
+  const progress = keptProgress(), known = !vaultSupported() || !!Vault.key || Vault.meta === null;   // locked notes may hold reading places from other devices (null: no notes at all)
+  if (navigator.onLine && known) {
+    for (const [id, m] of [...Kept.meta]) {
+      if (m.how === 'hand' || keptWanted(findPaper(id), progress)) continue;
+      await privateAwait(keptDrop(id), _authEpoch);
+    }
+  }
+  const hand = [], reading = [], rest = [];
+  for (const p of everyPaper()) {
+    if (!keptWanted(p, progress)) continue;
+    const src = pdfSourceOf(p);
+    if (!src || !keptNeeds(p, src) || (Kept.busy && Kept.busy.id === p.id)) continue;
+    (keptHand(p.id) ? hand : progress.has(p.id) ? reading : rest).push(p.id);
+  }
+  Kept.queue = hand.concat(reading, rest);
+  keptDrawn(); keptMenuSync();
+  keptPump();
+  keptWarmNotes(progress).catch(() => {});
+}
+async function keptDrop(id) {
+  if (Kept.busy && Kept.busy.id === id && Kept.busy.ctl) Kept.busy.ctl.abort();
+  Kept.queue = Kept.queue.filter(x => x !== id);
+  await keptDB(['pdfs', 'meta'], 'readwrite', (pdfs, meta) => { pdfs.delete(id); meta.delete(id); });
+  Kept.meta.delete(id);
+}
+/* One download at a time, spaced (arXiv asks for gentle use), never while the reader loads a PDF */
+function keptReaderLoading() { const r = document.getElementById('reader'); return !!r && r.classList.contains('open') && !!document.querySelector('#readerBody .reader-skel, #readerBody .reader-status:not([data-kept-line])'); }
+function keptNext(delay) { clearTimeout(Kept.gap); Kept.gap = setTimeout(privateCallback(() => { Kept.gap = 0; keptPump(); }), delay); }
+async function keptPump() {
+  if (!keptOn() || Kept.busy || Kept.gap || Kept.full || !navigator.onLine || !navigator.locks) return;
+  if (keptReaderLoading()) { keptNext(KEPT_GAP_MS); return; }
+  const _authEpoch = capturePrivateEpoch(), progress = keptProgress();
+  let id = null, p = null, src = '';
+  while (Kept.queue.length) {
+    id = Kept.queue.shift(); p = findPaper(id); src = p ? pdfSourceOf(p) : '';
+    if (src && keptWanted(p, progress) && keptNeeds(p, src)) break;
+    id = null;
+  }
+  if (!id) return;
+  const busy = Kept.busy = { id, ctl: new AbortController() };
+  let err = null;
+  try { await privateAwait(keptCoordinatedFetch(p, src, busy), _authEpoch); } catch (e) { err = e; }
+  if (Kept.busy !== busy) return;   // a lock came meanwhile
+  Kept.busy = null;
+  if (err && (err.privateAuth || err.target)) return;
+  if (err && err.name === 'AbortError') err = null;   // no longer wanted
+  else if (err && !navigator.onLine) { Kept.queue.unshift(id); return; }   // the connection went: again when it is back
+  else if (err && (err.quota || err.name === 'QuotaExceededError')) { Kept.full = true; Kept.queue = []; toastError(KEPT_FULL_TEXT); return; }
+  if (!err && Kept.meta.has(id)) {
+    keptDrawn(); keptMenuSync();
+    keptAskPersist();
+  }
+  keptNext(keptArxiv(src) ? KEPT_ARXIV_GAP_MS : KEPT_GAP_MS);
+}
+/* The store belongs to the browser profile, so its download turn and next request time do too. A waiting tab
+   reloads the paper's metadata under the lock; its old in-memory queue cannot fetch a copy another tab kept. */
+function keptCoordinatedFetch(p, src, busy) {
+  const epoch = capturePrivateEpoch(), gap = keptArxiv(src) ? KEPT_ARXIV_GAP_MS : KEPT_GAP_MS;
+  return navigator.locks.request(KEPT_DB + ':download', { signal: busy.ctl.signal }, async () => {
+    checkPrivateEpoch(epoch); requireOwner();
+    const [meta, fail, turn] = await privateAwait(Promise.all([
+      keptDB('meta', 'readonly', st => st.get(p.id)), keptDB('fails', 'readonly', st => st.get(p.id)),
+      keptDB('fails', 'readonly', st => st.get('#download'))
+    ]), epoch);
+    if (meta) Kept.meta.set(p.id, meta); else Kept.meta.delete(p.id);
+    if (fail) Kept.fails.set(p.id, fail); else Kept.fails.delete(p.id);
+    if (!keptNeeds(p, src)) return;
+    while (turn && Date.now() < turn.next) {
+      let timer;
+      try { await privateAwait(new Promise(resolve => { timer = setTimeout(resolve, Math.min(2147483647, turn.next - Date.now())); }), epoch); }
+      finally { clearTimeout(timer); }
+    }
+    checkPrivateEpoch(epoch); requireOwner();
+    const now = findPaper(p.id);
+    if (busy.ctl.signal.aborted || !navigator.onLine || keptReaderLoading() || !now || pdfSourceOf(now) !== src || !keptWanted(now)) return;
+    // Keep a deadline even if this tab closes during the fetch. Completion moves it again before releasing the lock.
+    await privateAwait(keptDB('fails', 'readwrite', st => st.put({ next: Date.now() + gap }, '#download')), epoch);
+    try { await privateAwait(keptFetch(now, src, busy), epoch); }
+    catch (e) {
+      if (!(e && (e.privateAuth || e.target || e.quota || e.name === 'AbortError')) && navigator.onLine) await keptFailed(p.id, src).catch(() => {});
+      throw e;
+    } finally {
+      await privateAwait(keptDB('fails', 'readwrite', st => st.put({ next: Date.now() + gap }, '#download')), epoch);
+    }
+  });
+}
+/* The browser's decision applies to this store, including a denial. Do not ask again on every app start. */
+function keptAskPersist() {
+  if (Kept.asked) return;
+  Kept.asked = true;
+  const epoch = capturePrivateEpoch();
+  keptDB('meta', 'readwrite', st => st.put({ persistAsked: true }, '#storage')).then(() => {
+    checkPrivateEpoch(epoch);
+    if (navigator.storage && navigator.storage.persist) return navigator.storage.persist();
+  }).catch(() => {});
+}
+async function keptFetch(p, src, busy) { const _authEpoch = capturePrivateEpoch();
+  const res = await privateAwait(targetFetch(src, { credentials: 'omit', redirect: 'follow', signal: busy.ctl.signal }), _authEpoch);
+  if (!res.ok) { try { if (res.body) res.body.cancel(); } catch (e) {} throw Object.assign(new Error('The PDF could not be fetched'), { status: res.status }); }
+  const blob = await privateAwait(res.blob(), _authEpoch);
+  const head = new Uint8Array(await privateAwait(blob.slice(0, 1024).arrayBuffer(), _authEpoch));
+  if (!String.fromCharCode.apply(null, head.slice(0, 5)).startsWith('%PDF-')) throw new Error('Not a PDF');
+  const now = findPaper(p.id);
+  if (!now || pdfSourceOf(now) !== src || !keptWanted(now)) { const e = new Error('No longer wanted'); e.name = 'AbortError'; throw e; }
+  const m = { id: p.id, src, size: blob.size, at: new Date().toISOString(), how: keptHand(p.id) ? 'hand' : 'set' };
+  try { await privateAwait(keptDB(['pdfs', 'meta', 'fails'], 'readwrite', (pdfs, meta, fails) => { pdfs.put(blob, p.id); meta.put(m, p.id); fails.delete(p.id); }), _authEpoch); }
+  catch (e) { if (e && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''))) e.quota = true; throw e; }
+  Kept.meta.set(p.id, m); Kept.fails.delete(p.id);
+}
+async function keptFailed(id, src) {
+  const was = Kept.fails.get(id), n = was && was.src === src ? was.n + 1 : 1;
+  const f = { id, src, n, next: Date.now() + (n === 1 ? KEPT_RETRY_MS : KEPT_DAY_MS) };
+  Kept.fails.set(id, f);
+  await keptDB('fails', 'readwrite', st => st.put(f, id));
+}
+/* The copy the reader opens, or null */
+async function keptCopy(p) {
+  if (!keptOn() || !p || p.uploaded) return null;
+  try {
+    await keptLoad();
+    const m = Kept.meta.get(p.id);
+    if (!m || !m.at || (navigator.onLine && m.src !== pdfSourceOf(p))) return null;
+    const blob = await keptDB('pdfs', 'readonly', st => st.get(p.id));
+    return blob instanceof Blob ? blob : null;
+  } catch (e) { return null; }
+}
+/* Confirm a wanted paper's notes once online. A confirmed absence is an encrypted empty record, so a paper
+   with no old notes can take its first highlight offline without mistaking a network failure for "no notes". */
+async function keptWarmNotes(progress) { const _authEpoch = capturePrivateEpoch();
+  if (!Vault.key || !Vault.index || !navigator.onLine) return;
+  const generation = vaultGeneration();
+  if (Kept.warmGeneration !== generation) { Kept.warmed.clear(); Kept.warmGeneration = generation; }
+  for (const p of everyPaper()) {
+    const ix = Vault.index && Vault.index.papers[p.id];
+    if (Kept.warmed.has(p.id) || !keptWanted(p, progress) || !pdfSourceOf(p)) continue;
+    try {
+      const name = p.id + '.json', local = await privateAwait(nfGet(name), _authEpoch);
+      checkVaultGeneration(generation);
+      if (!(local && (local.dirty || !ix || (local.env.updated || '') >= (ix.updated || '')))) {
+        const fresh = await privateAwait(nfLoad(name), _authEpoch);
+        checkVaultGeneration(generation);
+        if (!fresh) {
+          const env = await privateAwait(vaultEncrypt(emptyPaperNotes(p.id)), _authEpoch);
+          checkVaultGeneration(generation);
+          await privateAwait(nfUpdate(name, current => { checkVaultGeneration(generation); return current || { env, sha: null, base: null, dirty: false }; }), _authEpoch);
+        }
+      }
+      Kept.warmed.add(p.id);
+    } catch (e) { checkPrivateEpoch(_authEpoch); checkVaultGeneration(generation); }
+    if (!Vault.key) return;
+  }
+}
+/* Lists → On this device: the kept papers, newest first */
+function keptListed() {
+  if (!keptOn()) return [];
+  return [...Kept.meta.values()].filter(m => m.at).sort((a, b) => b.at.localeCompare(a.at)).map(m => findPaper(m.id)).filter(p => p && !p.uploaded && !!pdfSourceOf(p));
+}
+/* Extend Lists without coupling its existing reading groups to the device store. */
+const keptBaseGroups = window.libraryGroups;
+window.libraryGroups = function () {
+  const groups = keptBaseGroups.apply(this, arguments), papers = keptListed();
+  if (papers.length) {
+    const before = groups.findIndex(g => ['noted', 'hidden', 'passed', 'all'].includes(g.key));
+    groups.splice(before < 0 ? groups.length : before, 0, { key: 'device', icon: '&#8615;', label: 'On this device', papers, section: 'auto' });
+  }
+  return groups;
+};
+const keptBaseClosePopovers = window.closePopovers;
+window.closePopovers = function () { keptPaperClose(); return keptBaseClosePopovers.apply(this, arguments); };
+/* Lists drawn again when what it lists as kept changed (at most every KEPT_DRAW_MS while copies land) */
+const KEPT_DRAW_MS = 800;
+function keptDrawn() {
+  const sig = keptListed().map(p => p.id).join('|');
+  if (sig === Kept.drawn || Kept.drawT) return;
+  Kept.drawT = setTimeout(privateCallback(() => {
+    Kept.drawT = 0;
+    const now = keptListed().map(p => p.id).join('|');
+    if (now === Kept.drawn) return;
+    Kept.drawn = now;
+    if (currentTab === 'library' && !_paperViewActive && !_listViewActive && !_searchActive) renderLibrary();
+  }), KEPT_DRAW_MS);
+}
+/* The reader's ⋯ menu: "Keep on this device" for a paper outside the set, "Remove from this device" for one kept by
+   hand (a paper in the set is kept anyway: neither shows) */
+function keptActionLabel(p) {
+  if (!p || !keptOn() || p.uploaded || p._goneRemote || keptInSet(p)) return '';
+  return keptHand(p.id) ? 'Remove from this device' : pdfSourceOf(p) && !isHiddenRow(p) && !isPassed(p) ? 'Keep on this device' : '';
+}
+function keptPaperControl(p) {
+  return keptActionLabel(p) ? `<button type="button" class="pd-act" id="paperKeepMore" aria-label="More" aria-haspopup="menu" aria-expanded="false" onclick="event.stopPropagation();keptPaperMenu(this,'${escAttr(p.id)}')"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>` : '';
+}
+function keptPaperClose() {
+  const menu = document.getElementById('keptPaperMenu'); if (menu) menu.remove();
+  const button = document.getElementById('paperKeepMore'); if (button) button.setAttribute('aria-expanded', 'false');
+}
+function keptPaperMenu(button, id) {
+  const open = document.getElementById('keptPaperMenu');
+  closePopovers();
+  const p = findPaper(id), label = keptActionLabel(p);
+  if (open || !label || !_paperViewActive) return;
+  const menu = document.createElement('div');
+  menu.id = 'keptPaperMenu'; menu.className = 'kept-paper-menu'; menu.setAttribute('role', 'menu'); menu.dataset.id = id;
+  menu.innerHTML = `<button type="button" role="menuitem" onclick="event.stopPropagation();keptPaperAction(this.parentElement.dataset.id)">${esc(label)}</button>`;
+  document.body.appendChild(menu); button.setAttribute('aria-expanded', 'true'); placeFixedMenu(menu, button.getBoundingClientRect());
+}
+async function keptPaperAction(id) {
+  keptPaperClose();
+  if (!keptActionLabel(findPaper(id))) return false;
+  return keptHand(id) ? keptRemove(id) : keptKeep(id);
+}
+function keptMenuSync() {
+  const b = document.getElementById('readerKeep');
+  if (b) { const label = keptActionLabel(_reader.paper); b.textContent = label; b.hidden = !label; }
+  const page = document.querySelector('#paperDetail [data-pid]'), control = document.getElementById('paperKeepControl');
+  if (page && control) { control.innerHTML = keptPaperControl(findPaper(page.dataset.pid)); control.hidden = !control.innerHTML; }
+  keptPaperClose();
+}
+async function keptToggle() {
+  const p = _reader.paper;
+  if (!p) return false;
+  return keptHand(p.id) ? keptRemove(p.id) : keptKeep(p.id);
+}
+async function keptKeep(id) { const _authEpoch = capturePrivateEpoch(); requireOwner();
+  const p = findPaper(id);
+  if (!p || p.uploaded || !pdfSourceOf(p) || isHiddenRow(p) || isPassed(p)) return false;
+  await privateAwait(keptLoad(), _authEpoch);
+  const was = Kept.meta.get(id), m = was ? { ...was, how: 'hand' } : { id, src: '', size: 0, at: '', how: 'hand' };
+  await privateAwait(keptDB(['meta', 'fails'], 'readwrite', (meta, fails) => { meta.put(m, id); fails.delete(id); }), _authEpoch);
+  Kept.meta.set(id, m); Kept.fails.delete(id);
+  keptMenuSync(); keptSoon(0);
+  return true;
+}
+async function keptRemove(id) { const _authEpoch = capturePrivateEpoch(); requireOwner();
+  await privateAwait(keptLoad(), _authEpoch);
+  if (!keptHand(id) || keptInSet(findPaper(id))) return false;
+  await privateAwait(keptDrop(id), _authEpoch);
+  keptMenuSync(); keptDrawn();
+  return true;
+}
+/* The reader's one line for a paper with no copy here, offline */
+function keptOfflineLine(p) {
+  document.getElementById('reader').classList.add('no-doc');
+  document.getElementById('readerBody').innerHTML = `<div class="reader-status" data-kept-line>${pdfSourceOf(p) ? 'This paper isn’t on this device yet. It’ll be here when you’re back online.' : 'This paper has no open copy, so it can’t be kept on this device.'}</div>`;
+}
+/* What changes the set runs as before, then keptSoon: a save, a list, a read mark, a pass or a hide (showSaveBar), a
+   reading place, the library shown or drawn again, Continue reading drawn again (the notes' reading places arrived) */
+['showSaveBar', 'noteReading', 'dismissReading', 'revealContent', 'applyPapers', 'refreshContinueReading', 'paperPostRender'].forEach(name => {
+  const fn = window[name];
+  if (typeof fn !== 'function') { console.error('kept: no function ' + name); return; }
+  window[name] = function () { const out = fn.apply(this, arguments); if (name === 'paperPostRender') keptMenuSync(); keptSoon(); return out; };
+});
+window.addEventListener('online', privateCallback(() => {
+  keptSoon(800);
+  const p = _reader.paper, r = document.getElementById('reader');
+  if (p && r && r.classList.contains('open') && document.querySelector('#readerBody [data-kept-line]')) showReader(p.id);   // the line said it would be here
+}));
+setInterval(privateCallback(() => keptSoon(0)), KEPT_TICK_MS);
+/* Chat needs a connection (section 5): offline, the chat pane shows one line and no composer, and no request leaves
+   (chatOpen asks nothing). A reply under way is left alone. Back online it connects as it would. */
+function chatOfflineShown(panel) {
+  if (navigator.onLine) return false;
+  const input = document.getElementById('chatInput'); if (input) Chat.draftText = input.value;
+  panel.innerHTML = `<div class="rp-head">${paneHeadStart('chat')}<span class="grow"></span>${paneClose('chat')}</div><div class="chat-root" id="chatRoot" data-offline="1"><div class="chat-setup"><p>Chat needs a connection.</p></div></div>`;
+  return true;
+}
+window.addEventListener('offline', privateCallback(() => renderChatPanel(true)));
+window.addEventListener('online', privateCallback(() => { if (document.querySelector('#chatRoot[data-offline]')) chatOpen(); }));
+
 /* ===== UPLOADED PAPERS (usually papers to review) =====
    They never enter the public database. Each record (a random id, title) lives in this browser and, once notes
    are unlocked, inside the encrypted notes index, so another device lists the paper with your notes on it; the
@@ -14337,7 +14987,8 @@ async function retryUploadRemovals(tell = false) { const epoch = capturePrivateE
           if (res.ok && (await privateAwait(res.json(), epoch)).ok === true) { job.bridge = true; storeUploadRemovals(); }
         } catch (e) { checkPrivateEpoch(epoch); }
       }
-      if (job.pdf && job.notes && job.bridge) { delete jobs[id]; storeUploadRemovals(); completed = true; }
+      if (!job.chats) { try { await privateAwait(apiChatsForget(id), epoch); job.chats = true; storeUploadRemovals(); } catch (e) { checkPrivateEpoch(epoch); } }   // this device's API chats (4 November 2026)
+      if (job.pdf && job.notes && job.bridge && job.chats) { delete jobs[id]; storeUploadRemovals(); completed = true; }
     }
     if (completed && !Object.keys(jobs).length) toast('Removed');
     else if (tell && Object.keys(jobs).length) toast('Removal is waiting. Unlock notes and connect Chat on your computer to finish.', null, { duration: 8000 });
@@ -14384,7 +15035,7 @@ function syncUploadsWithIndex() {
   if (!Vault.index) return;
   const merged = mergeUploads(_uploads, Vault.index.uploads);
   let removalsAdded = false;
-  for (const [id, u] of Object.entries(merged)) if (u.deleted && (!_uploads[id] || !_uploads[id].deleted) && !_uploadRemovals[id]) { _uploadRemovals[id] = { pdf: false, notes: false, bridge: false }; removalsAdded = true; }
+  for (const [id, u] of Object.entries(merged)) if (u.deleted && (!_uploads[id] || !_uploads[id].deleted) && !_uploadRemovals[id]) { _uploadRemovals[id] = { pdf: false, notes: false, bridge: false, chats: false }; removalsAdded = true; }
   if (removalsAdded) { storeUploadRemovals(); setTimeout(privateCallback(() => retryUploadRemovals()), 0); }
   if (!sameUploads(merged, _uploads)) {
     _uploads = merged; storeUploads();
@@ -14496,7 +15147,8 @@ async function removeUpload(id) { const _authEpoch = capturePrivateEpoch();
   requireOwner(); if (!ok) return;
   if (_reader.paper && _reader.paper.id === id) await privateAwait(finishNotesEdit(), _authEpoch);
   _chatDrafts.delete(id); _chatPending.delete(id);
-  _uploadRemovals[id] = { pdf: false, notes: false, bridge: false }; storeUploadRemovals();
+  const apiTurn = _apiTurns.get(id); if (apiTurn) apiTurn.stop();
+  _uploadRemovals[id] = { pdf: false, notes: false, bridge: false, chats: false }; storeUploadRemovals();
   _uploads[id] = { deleted: true, updated: new Date().toISOString() };
   saveUploads();
   if (_reader.paper && _reader.paper.id === id) hideReader();
@@ -14605,11 +15257,15 @@ async function showReader(id) { const _authEpoch = capturePrivateEpoch();
   document.getElementById('readerTitle').textContent = p.title || '';
   if (!_rn || _rn.id !== p.id) { _rn = null; _rnLoadP = null; setRnState(vaultSupported() ? 'loading' : 'ready'); }   // loader now; loading starts after the PDF
   else _rnLoadP = Promise.resolve();   // same paper: notes already here
+  keptMenuSync();   // KEPT ON THIS DEVICE: the ⋯ menu's Keep or Remove
   const local = await privateAwait(localPdfGet(p.id), _authEpoch); requireTarget();
   if (!live()) return;
   const src = pdfSourceOf(p);
-  if (!local && !src) { showPdfPicker(p, 'none'); ensureReaderNotes().then(privateCallback(() => { if (live()) runPendingNotes(); })); return; }
-  const source = local ? { data: await privateAwait(local.arrayBuffer(), _authEpoch) } : { url: src };
+  const kept = local ? null : await privateAwait(keptCopy(p), _authEpoch); requireTarget();   // KEPT ON THIS DEVICE: a file dropped in, then a kept copy, then the network
+  if (!live()) return;
+  if (!local && !kept && !navigator.onLine && isOwner() && !p.uploaded) { keptOfflineLine(p); ensureReaderNotes().then(privateCallback(() => { if (live()) runPendingNotes(); })); return; }
+  if (!local && !kept && !src) { showPdfPicker(p, 'none'); ensureReaderNotes().then(privateCallback(() => { if (live()) runPendingNotes(); })); return; }
+  const source = local ? { data: await privateAwait(local.arrayBuffer(), _authEpoch) } : kept ? { data: new Uint8Array(await privateAwait(kept.arrayBuffer(), _authEpoch)), url: src } : { url: src };
   if (!live()) return;
   await privateAwait(loadIntoReader(p, source, !!local, visit), _authEpoch);
 }
@@ -17511,7 +18167,7 @@ function panelMode() {
   return m === 'side' && !sideFits() ? 'stack' : m;
 }
 function panelFirst() { return PanelLayout.first === 'chat' ? 'chat' : 'notes'; }
-function chatShown() { return (!chatElsewhere() || Chat.status === 'ready') && (panelMode() !== 'tabs' || _panelTab === 'chat'); }
+function chatShown() { return !chatHidden() && (panelMode() !== 'tabs' || _panelTab === 'chat'); }
 function savePanelLayout() { try { checkedStorageSet(PANEL_LAYOUT_KEY, JSON.stringify(PanelLayout)); } catch (e) {} }
 function applyPanelLayout() {
   const panel = document.getElementById('readerPanel'), mode = panelMode();
@@ -18308,7 +18964,9 @@ function cancelHandwritten() {
 function bridgeRemote() { if (!isOwner()) return ''; requireOwner(); try { return localStorage.getItem('claude_bridge_url') || ''; } catch (e) { return ''; } }
 function bridgeBase() { return bridgeRemote() || 'http://127.0.0.1:7823'; }
 /* Chat runs through Claude Code on the laptop, so an iPad or phone can't reach it (iPadOS reports itself as a Mac, but with touch points) */
-function chatElsewhere() { return navigator.maxTouchPoints > 1 && !bridgeRemote(); }
+function chatElsewhere() { return navigator.maxTouchPoints > 1 && !bridgeRemote() && !apiKey(); }
+/* 4 November 2026: the owner sees Chat everywhere, since a key pasted there makes it work; others as before */
+function chatHidden() { return chatElsewhere() && Chat.status !== 'ready' && !isOwner(); }
 function chatForgetRemote() { privateRemove('claude_bridge_url'); Chat.status = chatElsewhere() ? 'elsewhere' : 'setup'; renderChatPanel(true); }
 const _chatPending = new Map(), _chatDrafts = new Map();
 const Chat = {
@@ -18339,7 +18997,9 @@ const ICON_NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3
 
 function saveBridgeToken(t) { requireOwner(); t ? privateSet('claude_bridge_token', t) : privateRemove('claude_bridge_token'); Chat.token = t || ''; }
 function bridgeFetch(path, opts = {}) {
-  requireOwner(); return ownerFetch(bridgeBase() + path, { ...opts, headers: { 'content-type': 'application/json', ...(Chat.token ? { authorization: 'Bearer ' + Chat.token } : {}), ...(opts.headers || {}) } });
+  requireOwner();
+  if (!navigator.onLine) return Promise.reject(Object.assign(new TypeError('Chat needs a connection.'), { offline: true, unsent: true }));
+  return ownerFetch(bridgeBase() + path, { ...opts, headers: { 'content-type': 'application/json', ...(Chat.token ? { authorization: 'Bearer ' + Chat.token } : {}), ...(opts.headers || {}) } });
 }
 let _bridgeChecking = null;   // one check at a time: the panel and a click may both ask
 Private.interactionResets.add(() => { _bridgeChecking = null; });   // (a check a lock cut short never settles its own)
@@ -18356,7 +19016,7 @@ function bridgeCheck() {
 }
 /* Tabs appear on wider screens only: Claude Code runs on the laptop, not a phone */
 function panelTabsHTML() {
-  if (chatElsewhere() && Chat.status !== 'ready') return '<strong>Notes</strong>';
+  if (chatHidden()) return '<strong>Notes</strong>';
   const tip = readerPhone() ? 'Notes and Chat' : 'Drag to put Notes and Chat side by side or one above the other';
   return `<div class="rp-tabs" role="tablist"><button role="tab" data-dock="notes" title="${tip}" aria-selected="${_panelTab === 'notes'}" class="${_panelTab === 'notes' ? 'on' : ''}" onclick="setPanelTab('notes')">Notes</button><button role="tab" data-dock="chat" title="${tip}" aria-selected="${_panelTab === 'chat'}" class="${_panelTab === 'chat' ? 'on' : ''}" onclick="setPanelTab('chat')">Chat</button></div>`;
 }
@@ -18373,7 +19033,7 @@ function paneClose(pane) {
   return `<button class="rp-icon-btn" onclick="toggleReaderPanel(false)" title="Close" aria-label="Close the panel">${ICON_CLOSE}</button>`;
 }
 function setPanelTab(t, focus) {
-  if (t === 'chat' && chatElsewhere() && Chat.status !== 'ready') t = 'notes';
+  if (t === 'chat' && chatHidden()) t = 'notes';
   const changed = _panelTab !== t;
   _panelTab = t; rememberPanelTab();
   if (!document.getElementById('reader').classList.contains('panel-open')) toggleReaderPanel(true);
@@ -18394,6 +19054,8 @@ async function chatRefresh() { const _authEpoch = capturePrivateEpoch();
   }
 }
 async function chatOpen(focus) { const _authEpoch = capturePrivateEpoch();
+  if (!navigator.onLine) return renderChatPanel(true);   // offline: one line, and nothing asked of the bridge
+  if (chatRoute() === 'api') return apiChatOpen(focus);   // a key on this device: the chat lives here, not on the laptop
   if (Chat.status === 'elsewhere') return renderChatPanel(true);
   if (Chat.status === 'unknown' || Chat.status === 'offline') { await privateAwait(bridgeCheck(), _authEpoch); }
   if (Chat.status === 'ready' && _reader.paper && Chat.loadedFor !== _reader.paper.id) await privateAwait(chatLoad(), _authEpoch);
@@ -18402,6 +19064,7 @@ async function chatOpen(focus) { const _authEpoch = capturePrivateEpoch();
   if (focus) setTimeout(privateCallback(() => { const i = document.getElementById('chatInput'); if (i) i.focus(); }), 0);
 }
 async function chatLoad() { const _authEpoch = capturePrivateEpoch();
+  if (chatRoute() === 'api') return apiChatLoad();
   const pid = _reader.paper.id;
   try {
     const [r, hr] = await privateAwait(Promise.all([bridgeFetch('/chat?paper=' + encodeURIComponent(pid)), bridgeFetch('/chats?paper=' + encodeURIComponent(pid)).catch(privateCallback(() => null))]), _authEpoch);
@@ -18449,6 +19112,8 @@ function renderChatPanel(force) {
   const panel = document.getElementById('chatPane');
   if (!panel || !document.getElementById('reader').classList.contains('panel-open') || !chatShown()) return;
   applyPanelLayout();
+  if (chatOfflineShown(panel)) return;   // Chat needs a connection (offline plan, section 5)
+  if (chatRoute() === 'api' && !API_STATES.has(Chat.status)) Chat.status = 'ready';   // a key on this device: nothing to connect to
   const pid = (_reader.paper && _reader.paper.id) || '';
   const root = document.getElementById('chatRoot');
   if (!force && root && root.dataset.paper === pid && root.dataset.status === Chat.status) return;
@@ -18456,15 +19121,20 @@ function renderChatPanel(force) {
   const ready = Chat.status === 'ready';
   if (ready && pid && Chat.loadedFor !== pid) { chatOpen(); return; }   // another paper: load its chat first
   const head = `<div class="rp-head">${paneHeadStart('chat')}<span class="grow"></span><button class="rp-icon-btn ${Chat.refreshing ? 'spinning' : ''}" id="chatRefreshBtn" onclick="chatRefresh()" title="Reload this chat" aria-label="Reload chat"${Chat.refreshing ? ' disabled' : ''}>${ICON_REFRESH}</button>${ready && (Chat.history || []).some(c => c.id !== 'current') ? `<button class="rp-icon-btn" id="chatHistBtn" onclick="toggleChatHistory(event)" title="Earlier chats about this paper" aria-label="Earlier chats" aria-haspopup="true">${ICON_HISTORY}</button>` : ''}${ready ? `<button class="rp-text-btn" onclick="chatNew()" title="Start a fresh conversation about this paper (this one is kept)">${ICON_PLUS}New chat</button>` : ''}${paneClose('chat')}</div>`;
+  const keyField = `<input type="password" id="chatKey" class="pp-input chat-key-input" placeholder="Paste your Claude API key" autocomplete="off" spellcheck="false" autocapitalize="off"><button class="ui-btn ui-btn-primary" onclick="chatUseKey()">Use this key</button><p class="chat-dim">It stays on this device.</p><p class="chat-error chat-key-err" id="chatKeyErr" role="alert" hidden></p>`;
+  const keyBlock = isOwner() && !apiKey() ? `<div class="chat-key">${keyField}</div>` : '';   // under each state's first line (4 November 2026)
   const setup = {
-    setup: `<p>Chat about this paper.</p><button class="ui-btn ui-btn-primary" onclick="chatConnect()">Connect</button>`,
+    setup: `<p>Chat about this paper.</p>${keyBlock}<button class="ui-btn ui-btn-primary" onclick="chatConnect()">Connect</button>`,
     unknown: `<p class="chat-dim">Connecting…</p>`,
     checking: `<p class="chat-dim">Connecting…</p>`,
-    unpaired: `<p>Connect to start chatting.</p><button class="ui-btn ui-btn-primary" onclick="chatConnect()">Connect</button>`,
+    unpaired: `<p>Connect to start chatting.</p>${keyBlock}<button class="ui-btn ui-btn-primary" onclick="chatConnect()">Connect</button>`,
     pairing: `<p>Approve this code on your computer:</p><p class="chat-code">${esc(Chat.pairCode)}</p><p class="chat-dim">It should show the same code.</p>`,
     declined: `<p>Couldn’t connect. Try again.</p><button class="ui-btn ui-btn-secondary" onclick="chatConnect()">Try again</button>`,
-    elsewhere: `<p>Open Scout on your computer to chat.</p>`,
-    offline: bridgeRemote() ? `<p>Couldn’t open chat. Try again.</p><button class="ui-btn ui-btn-secondary" onclick="chatConnect()">Try again</button> <button class="ui-btn ui-btn-secondary" onclick="chatForgetRemote()">Forget the address</button>` : `<p>Couldn’t open chat. Try again.</p><button class="ui-btn ui-btn-secondary" onclick="chatConnect()">Try again</button>`,
+    elsewhere: `<p>Chat about this paper.</p>${keyBlock}`,
+    offline: bridgeRemote() ? `<p>Couldn’t open chat. Try again.</p>${keyBlock}<button class="ui-btn ui-btn-secondary" onclick="chatConnect()">Try again</button> <button class="ui-btn ui-btn-secondary" onclick="chatForgetRemote()">Forget the address</button>` : `<p>Couldn’t open chat. Try again.</p>${keyBlock}<button class="ui-btn ui-btn-secondary" onclick="chatConnect()">Try again</button>`,
+    apikey_refused: `<p>This key doesn’t work. Paste a new one.</p><div class="chat-key">${keyField}</div><button class="ui-btn ui-btn-secondary" onclick="chatForgetKey()">Forget the key</button>`,
+    api_blocked: `<p>Chat from this device isn’t allowed for this key.</p><button class="ui-btn ui-btn-secondary" onclick="chatForgetKey()">Forget the key</button>`,
+    api_credits: `<p>Your Claude credits are used up for this month.</p><button class="ui-btn ui-btn-secondary" onclick="chatApiRetry()">Try again</button>`,
   };
   const body = ready
     ? `<div class="chat-scroll" id="chatScroll"></div>
@@ -18492,7 +19162,7 @@ function chatEffort(e) { Chat.effort = e; try { e ? checkedStorageSet('chat_effo
 async function chatNew() { const _authEpoch = capturePrivateEpoch();
   if (Chat.running || _chatPending.has(Chat.pid) || (_chatDrafts.get(Chat.pid) || {}).turn) return;
   if (Chat.messages.length) {
-    try { await privateAwait(bridgeFetch('/chat/new', { method: 'POST', body: JSON.stringify({ paper: _reader.paper.id }) }), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch);}
+    try { await privateAwait(chatRoute() === 'api' ? apiChatArchive(_reader.paper.id) : bridgeFetch('/chat/new', { method: 'POST', body: JSON.stringify({ paper: _reader.paper.id }) }), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch);}
     Chat.loadedFor = null; await privateAwait(chatOpen(true), _authEpoch);   // reloads the list too: the chat you left is now in History
     return;
   }
@@ -18525,8 +19195,11 @@ async function chatSwitch(id) { const _authEpoch = capturePrivateEpoch();
   if (Chat.running || _chatPending.has(Chat.pid) || (_chatDrafts.get(Chat.pid) || {}).turn) return;
   const h = document.getElementById('chatHist'); if (h) { if (h._close) h._close(); else h.remove(); }
   try {
+    if (chatRoute() === 'api') await privateAwait(apiChatSwitch(_reader.paper.id, id), _authEpoch);
+    else {
     const r = await privateAwait(bridgeFetch('/chat/switch', { method: 'POST', body: JSON.stringify({ paper: _reader.paper.id, id }) }), _authEpoch);
     if (!r.ok) throw new Error();
+    }
   } catch (e) { checkPrivateEpoch(_authEpoch); toastError('Couldn\u2019t open that chat'); return; }
   Chat.loadedFor = null; chatOpen(true);
 }
@@ -18571,7 +19244,8 @@ function chatMsgHTML(m, i) {
   }
   return `<div class="chat-msg claude"><div class="md chat-md" data-md-chat="${i}"></div><div class="chat-acts"><button class="rp-icon-btn sm" onclick="chatCopy(${i})" title="Copy" aria-label="Copy">${ICON_COPY}</button><button class="rp-icon-btn sm" onclick="chatSaveAsNote(${i})" title="Save as a note" aria-label="Save as a note">${ICON_NOTE}</button></div></div>`;
 }
-function chatToolLabel(t) { return { WebSearch: 'Searching the web…', WebFetch: 'Reading a web page…', Read: 'Looking at the PDF…', Grep: 'Looking through your library…', Glob: 'Looking through your library…' }[t] || (t ? 'Working…' : ''); }
+function chatToolLabel(t) { return { WebSearch: 'Searching the web…', WebFetch: 'Reading a web page…', Read: 'Looking at the PDF…', Grep: 'Looking through your library…', Glob: 'Looking through your library…',
+  web_search: 'Searching the web…', web_fetch: 'Reading a web page…', view_pages: 'Looking at the PDF…', search_library: 'Looking through your library…' }[t] || (t ? 'Working…' : ''); }
 
 /* Markdown with clickable citations [[p.N "exact words"]], and cards for notes/highlights Claude was asked to add */
 const QUOTE_RE = /\[\[p\.(\d+)\s+"([^"\]\n]*)"\]\]/g;
@@ -18637,8 +19311,8 @@ async function renderChatMarkdown(el, text, msgIdx) { const _authEpoch = capture
     }
     return slot(`<div class="chat-card"><div class="chat-card-head">Note${msgIdx != null ? `<button class="chat-card-btn" onclick="chatApplyBlock(${msgIdx},${i})">${chatBlockDone(msgIdx, i) ? 'In your notes' : 'Save to notes'}</button>` : ''}</div><div class="md" data-card-note="${i}"></div></div>`);
   }).replace(QUOTE_RE, quoteReplacer(slot))
-    .replace(/\$\$([\s\S]+?)\$\$/g, (m, tex) => slot(katex.renderToString(tex, { displayMode: true, throwOnError: false })))
-    .replace(/(^|[^\\$])\$([^\s$](?:[^$\n]*?[^\s$])?)\$/g, (m, pre, tex) => pre + slot(katex.renderToString(tex, { throwOnError: false })));
+    .replace(/\$\$([\s\S]+?)\$\$/g, (m, tex) => slot(katex.renderToString(tex, { displayMode: true, throwOnError: false, trust: false, strict: 'ignore', maxExpand: 500 })))
+    .replace(/(^|[^\\$])\$([^\s$](?:[^$\n]*?[^\s$])?)\$/g, (m, pre, tex) => pre + slot(katex.renderToString(tex, { throwOnError: false, trust: false, strict: 'ignore', maxExpand: 500 })));
   let html = DOMPurify.sanitize(marked.parse(src, { breaks: true, gfm: true }), { USE_PROFILES: { html: true }, FORBID_ATTR: ['style'], FORBID_TAGS: ['style'] });
   html = markdownSlots(html, slots);
   const tmp = document.createElement('div'); tmp.innerHTML = html; mdTables(tmp);
@@ -18695,7 +19369,7 @@ function updateChatSend() {
   b.classList.toggle('stop', Chat.running);
 }
 function chatSendOrStop() { if (Chat.running) chatStop(); else chatSend(); }
-async function chatStop() { const _authEpoch = capturePrivateEpoch(); try { await privateAwait(bridgeFetch('/chat/stop', { method: 'POST', body: JSON.stringify({ paper: Chat.pid }) }), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch);} }
+async function chatStop() { const _authEpoch = capturePrivateEpoch(); const pending = _chatPending.get(Chat.pid); if (pending && pending.route === 'api') pending.stopped = true; const live = _apiTurns.get(Chat.pid); if (live) { live.stop(); return; } if (pending && pending.route === 'api') return; try { await privateAwait(bridgeFetch('/chat/stop', { method: 'POST', body: JSON.stringify({ paper: Chat.pid }) }), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch);} }
 
 /* Ask about a passage: from the paper's selection bar, or a selection inside a reply */
 function askAboutSelection() {
@@ -18932,6 +19606,7 @@ async function chatRetryEarlier() {
 }
 async function chatSend(text, auto) { return localWork(chatSendNow(text, auto)); }   // Phase 22: a reload waits for this page's own reply
 async function chatSendNow(text, auto) { const _authEpoch = capturePrivateEpoch();
+  if (!navigator.onLine) { renderChatPanel(true); return; }
   if (Chat.running || Chat.status !== 'ready' || !_reader.paper || _chatPending.has(_reader.paper.id)) return;
   const input = document.getElementById('chatInput');
   text = String(text != null ? text : (input ? input.value : '')).trim();
@@ -18939,6 +19614,7 @@ async function chatSendNow(text, auto) { const _authEpoch = capturePrivateEpoch(
   if (!text && !d.quotes.length && !d.images.length && !d.mentions.length) return;
   const p = _reader.paper, pid = p.id, doc = _reader.doc, local = _reader.local, visit = _reader.visit;
   const fresh = Chat.fresh, model = Chat.model, effort = Chat.effort, messages = Chat.messages, profile = chatProfile();
+  const route = chatRoute();   // 'api': this device's key (4 November 2026)
   const owned = () => Chat.pid === pid && Chat.messages === messages;
   const bound = () => _reader.paper === p && _reader.visit === visit && _reader.doc === doc && owned();
   const user = { role: 'user', text: auto ? '' : text, quotes: d.quotes.slice(), images: d.images.length, mentions: d.mentions.map(m => ({ id: m.id, title: m.title })), auto: !!auto, ts: Date.now() / 1000 };
@@ -18949,7 +19625,7 @@ async function chatSendNow(text, auto) { const _authEpoch = capturePrivateEpoch(
     Chat.error = 'Your earlier message is waiting. Retry it before sending another.'; renderChatMessages(); return;
   }
   const turnId = (_chatDrafts.get(pid) || {}).turnId || [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('');
-  const turn = { pid, turnId, user, messages, text, auto, signature, body: original && original.body, after: recovery && recovery.after, draft: { quotes: d.quotes.slice(), images: d.images.slice(), mentions: d.mentions.slice() }, stage: 'preparing' };
+  const turn = { pid, turnId, user, messages, text, auto, signature, route, stopped: false, body: original && original.body, after: recovery && recovery.after, draft: { quotes: d.quotes.slice(), images: d.images.slice(), mentions: d.mentions.slice() }, stage: 'preparing' };
   _chatPending.set(pid, turn);
   if (!auto) { Chat.draft = { quotes: [], images: [], mentions: [] }; Chat.draftText = ''; }
   if (!auto && input && text === input.value.trim()) { input.value = ''; chatGrow(input); }
@@ -18966,15 +19642,21 @@ async function chatSendNow(text, auto) { const _authEpoch = capturePrivateEpoch(
   let context = [p.uploaded && 'This paper is an unpublished submission I am reviewing. It is confidential: never search the web for it, its title, its authors or passages from it (searching for related published work is fine). Help me review it rigorously.',
     notesContext(_rn) ? 'My highlights, comments and notes on this paper:\n' + notesContext(_rn) : (Vault.key ? 'I have no notes on this paper yet.' : '')].filter(Boolean).join('\n\n');
   if (mentions.length) context += (context ? '\n\n' : '') + (await privateAwait(Promise.all(mentions.map(mentionContext)), _authEpoch)).join('\n\n');
+  if (turn.stopped) throw plainError('Stopped.');
   let body = { paper: pid, turnId, message, display: user.text, auto: user.auto, model, effort: effort || undefined, context, profile, quotes: user.quotes, mentions: user.mentions, images };
   if (fresh) {
     try { if (doc) body.paperText = await privateAwait(pdfText(doc, 'r:' + pid + ':' + (doc.fingerprints || [''])[0]), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch);}
     if (!body.paperText) body.paperText = [p.title, p.authors, p.abstract].filter(Boolean).join('\n');
-    if (local) { try { const blob = await privateAwait(localPdfGet(pid), _authEpoch); if (blob) body.pdfBase64 = await privateAwait(blobToBase64(blob), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch);} }
+    if (route === 'api') {}   // the API looks at pages through view_pages, from the open PDF
+    else if (local) { try { const blob = await privateAwait(localPdfGet(pid), _authEpoch); if (blob) body.pdfBase64 = await privateAwait(blobToBase64(blob), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch);} }
     else body.pdfUrl = pdfSourceOf(p);
   }
   body = turn.body || JSON.parse(JSON.stringify(body)); turn.body = body;
+  if (turn.stopped) throw plainError('Stopped.');
   if (!bound()) { restoreChatTurn(turn); return; }
+    if (!navigator.onLine) throw Object.assign(new TypeError('Chat needs a connection.'), { offline: true, unsent: true });
+    if (route === 'api') { reply = await privateAwait(apiChatTurn(turn, { p, pid, doc, model, effort, profile, body, owned }), _authEpoch); if (owned()) Chat.fresh = false; }
+    else {
     turn.stage = 'sending';
     const res = await privateAwait(bridgeFetch('/chat/send', { method: 'POST', body: JSON.stringify(body) }), _authEpoch);
     if (!res.ok) turn.stage = 'rejected';
@@ -19006,11 +19688,14 @@ async function chatSendNow(text, auto) { const _authEpoch = capturePrivateEpoch(
       }
     }
     if (owned()) Chat.fresh = false;
+    }
   } catch (e) { checkPrivateEpoch(_authEpoch);
+    if (e && e.unsent && turn.stage === 'sending') turn.stage = 'preparing';
     if (turn.stage === 'preparing' || turn.stage === 'rejected') restoreChatTurn(turn);
     else if (turn.stage === 'sending') turn.stage = 'uncertain';
     if (Chat.messages === messages) Chat.error = turn.stage === 'uncertain' ? 'Your message may have arrived. Reload chat to check before sending again.' : plainFailure(e, 'Chat disconnected. Reload chat to check your message.');
   }
+  if (turn.apiFallback) return apiChatFallback(turn, owned());   // the API refused this key or device: the bridge, if it answers
   if (!owned()) return;   // you moved to another paper meanwhile: its chat reloads from the bridge
   Chat.running = false; Chat.tool = '';
   if (reply) Chat.messages.push({ role: 'assistant', text: reply, ts: Date.now() / 1000 });
@@ -19099,6 +19784,567 @@ async function chatSaveAsNote(mi) { const _authEpoch = capturePrivateEpoch();
   toast('Saved to your notes', () => chatUndoAdds([{ notes, type: 'entry', obj: e }]));
 }
 function chatCopy(mi) { const m = Chat.messages[mi]; if (m) navigator.clipboard.writeText(m.text).then(privateCallback(() => toast('Copied')), privateCallback(() => toastError('Couldn’t copy. Try again.'))); }
+
+/* ===== CHAT ON THIS DEVICE'S CLAUDE API KEY (4 November 2026, docs/superpowers/plans/2026-11-04-scout-api-chat.md) =====
+   A device with a key saved on it chats from the page straight to the Claude API, on the owner's API credits. A
+   device without one keeps the bridge, and the bridge takes over when the API refuses this key or this device. The
+   key lives only in this browser (privateSet, beside gh_pat and the bridge token), goes only to API_URL and only in
+   its header. Conversations stay in this browser too (IndexedDB scholar_chats). Raw fetch rather than the SDK: one
+   more script on the origin would be one more that can read the key. */
+const API_URL = 'https://api.anthropic.com/v1/messages', API_VERSION = '2026-10-21', API_KEY_NAME = 'claude_api_key';
+const API_MODELS = { opus: 'claude-opus-5-5', sonnet: 'claude-sonnet-5-5', haiku: 'claude-haiku-5-5' };
+const API_EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
+const API_FALLBACK_BETA = 'server-side-fallback-2026-07-01', API_BINDING_BETA = 'thinking-binding-controls-2026-08-01';
+const API_CACHE = { type: 'ephemeral', ttl: '1h' };
+// Bounds for one turn (one question and everything Claude does to answer it)
+const API_LIMIT = { requests: 8, output: 30000, searches: 4, fetches: 4, pages: 8, pagesPerCall: 4, idleMs: 120000, turnMs: 900000, maxTokens: 12000, pageEdge: 1300, jpeg: 0.85, libraryLines: 15 };
+const API_STATES = new Set(['apikey_refused', 'api_blocked', 'api_credits']);
+const API_STOPPED_LINE = '\n\n*The answer stopped here. Send a message to try again.*';
+/* The bridge's SYSTEM (bridge/scholar_bridge.py) for the API: view_pages instead of Read, search_library instead of
+   Grep, and links to the web pages it relied on. Kept with each conversation from its first turn, unchanged. */
+const API_SYSTEM = "You are a research assistant inside the user's paper-reading app. The user is reading one paper; its full text is given in <paper> in the conversation (page-marked). To look at a figure, table or equation layout, call view_pages with the pages you need (at most 4 at a time). Images the user attaches come with their message.\n\nEach message may start with <context>: the user's current highlights, comments and notes on this paper (they change as they read), their research interests, and sometimes other papers they @-mentioned. Use them; don't repeat them back.\n\nCiting the paper: whenever you point to something in the paper, cite it with its exact words in this form: [[p.N \"exact words from the paper\"]] (N = page). The quote must be contiguous and verbatim (no ellipses, no paraphrase), a phrase to a sentence long, with symbols as they appear in the text. The app shows each citation only as a small clickable pill (page number and a few words), so the reader cannot read its words: it is a footnote marker, never part of your prose. Every sentence, list item and table cell must say everything on its own, as if the citation were deleted; put the citation right after the claim it supports. Wrong: \"Predicates live on [[p.2 \"the low-dimensional state space\"]]\" (reads as \"Predicates live on p.2 the low-dime…\"). Right: \"Predicates are defined over a low-dimensional state space [[p.2 \"the low-dimensional state space\"]].\" A citation never replaces words, and a table cell never consists of only a citation. Tables are where this slips most: wrong \"| $\\phi$ | The sensor. It [[p.4 \"is the observation function\"]]. |\", right \"| $\\phi$ | The sensor: maps the true state to what the sensors observe [[p.4 \"is the observation function\"]]. |\". Before sending, reread each sentence with its citations removed; if any is incomplete, rewrite it. Use [[p.N \"...\"]] only for the paper being read (its pills jump within it); cite other papers, including ones the user @-mentions, in plain text by title or author, with a page if useful.\n\nOther papers: search_library searches the user's library index (tab-separated, one paper per line: id, title, authors, date, venue, topics, one-line summary, and flags such as starred, read, notes) and returns the matching lines. When they refer to another paper by description (\"the Ames backup-CBF paper\", \"the conformal STL one I read last month\"), call it with a few keywords (try a few) to identify it. If more than one could fit, ask them with a short numbered list of titles. Once you know which paper(s) they mean, reply with only one line per paper, ```paper <id>```, and nothing else: the app then sends you that paper's text and the user's own notes on it, and you continue answering their question. Papers they @-mention arrive the same way, in <other-paper>.\n\nNotes and highlights: never add to the user's notes unless they explicitly ask you to. When they do, put each note in a fenced block ```note ... ``` (Markdown; you may cite with [[p.N \"...\"]] inside), and each highlight as ```highlight p.N color \"exact words\"``` (color is one of orange, green, blue, red, purple). The app saves them for the user.\n\nThe web: you can search the web and read web pages. Link the web pages you relied on.\n\nBe direct and concise; use Markdown and $math$ / $$math$$. The chat is a narrow side panel (often under 400px): keep tables to about three columns of short cells, and put citations in the text after the table rather than inside its cells. Say when something is your inference rather than in the paper.";
+const API_CLIENT_TOOLS = [
+  { name: 'search_library', description: 'Search the user\'s library index: titles, authors, dates, venues, topics, one-line summaries and flags (never their notes). Returns the header line and up to 15 best-matching lines, tab-separated.',
+    input_schema: { type: 'object', properties: { query: { type: 'string', description: 'A few keywords: words from the title, an author, a topic or a venue.' } }, required: ['query'], additionalProperties: false }, strict: true },
+  { name: 'view_pages', description: 'Look at pages of the paper the user is reading, as images, to see figures, tables, equations or layout. At most 4 pages a call.',
+    input_schema: { type: 'object', properties: { pages: { type: 'string', description: 'Page numbers, such as "3", "2-4" or "1, 5".' } }, required: ['pages'], additionalProperties: false }, strict: true },
+];
+const _apiTurns = new Map();   // paper id -> the API turn running on this page ({ stop })
+
+function apiKey() { if (!isOwner()) return ''; try { requireOwner(); return localStorage.getItem(API_KEY_NAME) || ''; } catch (e) { return ''; } }
+function saveApiKey(k) { requireOwner(); k ? privateSet(API_KEY_NAME, k) : privateRemove(API_KEY_NAME); Chat.route = ''; }
+/* 'api' while this device has a key, unless the API refused it and the bridge took over (until the key changes) */
+function chatRoute() { return apiKey() && Chat.route !== 'bridge' ? 'api' : 'bridge'; }
+function chatBaseStatus() { return chatRoute() === 'api' ? 'ready' : chatElsewhere() ? 'elsewhere' : Chat.token ? 'unknown' : 'setup'; }
+function chatUseKey() {
+  const input = document.getElementById('chatKey'), err = document.getElementById('chatKeyErr');
+  if (!input) return;
+  const key = input.value.trim();
+  if (!/^sk-ant-[\x21-\x7e]+$/.test(key)) { if (err) { err.textContent = 'That doesn’t look like a Claude API key.'; err.hidden = false; } return; }
+  saveApiKey(key); input.value = '';
+  Chat.status = 'ready'; Chat.loadedFor = null;
+  return chatOpen(true);
+}
+function chatForgetKey() {
+  saveApiKey('');
+  Chat.status = chatBaseStatus(); Chat.loadedFor = null;
+  return chatOpen();
+}
+/* Try again, after the credits ran out: the message that was refused goes again */
+async function chatApiRetry() { const _authEpoch = capturePrivateEpoch();
+  Chat.status = 'ready'; Chat.loadedFor = null;
+  await privateAwait(chatOpen(true), _authEpoch);
+  const kept = _chatDrafts.get(Chat.pid);
+  if (kept && kept.turn && !Chat.running && Chat.status === 'ready') await privateAwait(chatRetryEarlier(), _authEpoch);
+}
+async function apiChatOpen(focus) { const _authEpoch = capturePrivateEpoch();
+  if (!API_STATES.has(Chat.status)) Chat.status = 'ready';
+  if (Chat.status === 'ready' && _reader.paper && Chat.loadedFor !== _reader.paper.id) await privateAwait(apiChatLoad(), _authEpoch);
+  renderChatPanel(true);
+  if (focus) setTimeout(privateCallback(() => { const i = document.getElementById('chatInput'); if (i) i.focus(); }), 0);
+}
+/* This paper's conversation on this device, and its earlier ones (the bridge's {id, title, count, updated}) */
+async function apiChatLoad() { const _authEpoch = capturePrivateEpoch();
+  const pid = _reader.paper.id;
+  let row = null, history = [];
+  try { [row, history] = await privateAwait(Promise.all([apiChatGet(pid), apiChatHistory(pid)]), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch); }
+  if (!_reader.paper || _reader.paper.id !== pid) return;
+  if (Chat.pid !== pid) {
+    if (Chat.pid && (Chat.draftText || Object.values(Chat.draft).some(a => a.length))) _chatDrafts.set(Chat.pid, { ..._chatDrafts.get(Chat.pid), draft: Chat.draft, text: Chat.draftText });
+    const kept = _chatDrafts.get(pid); Chat.draft = kept ? kept.draft : { quotes: [], images: [], mentions: [] }; Chat.draftText = kept ? kept.text : '';
+  }
+  const pending = _chatPending.get(pid);
+  if (pending && row && (row.turnIds || []).includes(pending.turnId)) chatTurnAccepted(pending);
+  const shown = row && Array.isArray(row.shown) ? row.shown : [];
+  Chat.history = (shown.length ? [{ id: 'current', ...apiChatSummary(row) }] : []).concat(history);
+  Object.assign(Chat, { pid, messages: shown.slice(), fresh: !(row && row.api && row.api.length), model: (row && row.model) || 'opus', running: _apiTurns.has(pid), streaming: '', tool: '', error: '', loadedFor: pid });
+}
+function apiChatSummary(row) {
+  const shown = row.shown || [], first = (shown.find(m => m.role === 'user' && m.text) || {}).text || 'Figure or passage';
+  return { title: first.slice(0, 140), count: shown.length, updated: (shown[shown.length - 1] || {}).ts || row.ts || 0 };
+}
+
+/* ---- the conversations, in this browser: 'chats' (paper id -> the current one) and 'history' (<paper id>.<ts>) ---- */
+function chatsDB(stores, mode, fn) { requireOwner(); const epoch = capturePrivateEpoch();
+  const work = new Promise((resolve, reject) => {
+    const req = indexedDB.open('scholar_chats', 1);
+    req.onupgradeneeded = () => { try { checkPrivateEpoch(epoch); requireOwner(); req.result.createObjectStore('chats'); req.result.createObjectStore('history'); } catch (e) { req.transaction.abort(); req.result.close(); reject(e); } };
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      const db = req.result; let tx, out, failure, settled = false;
+      const finish = error => {
+        if (settled) return;
+        settled = true; if (tx) Private.transactions.delete(tx); db.close();
+        if (error) reject(error); else resolve(out && out.result);
+      };
+      const abort = error => { failure = error; try { tx.abort(); } catch (e) {} finish(error); };
+      try {
+        requireOwner(); checkPrivateEpoch(epoch); tx = db.transaction(stores, mode); if (isPrivate()) Private.transactions.add(tx);
+        tx.oncomplete = () => { try { checkPrivateEpoch(epoch); requireOwner(); finish(); } catch (e) { finish(e); } };
+        tx.onerror = () => finish(failure || tx.error || new Error('Private database transaction failed'));
+        tx.onabort = () => finish(failure || tx.error || new Error('Private database transaction aborted'));
+        out = fn(tx, abort);
+      } catch (e) { if (tx) abort(e); else finish(e); }
+    };
+  });
+  return mode === 'readonly' ? work : localWork(work);
+}
+const apiNewRow = pid => ({ paper: pid, id: crypto.randomUUID(), revision: 0, system: '', tools: '', mixed: false, model: 'opus', api: [], shown: [], usage: [], turnIds: [], ts: Date.now() / 1000 });
+const apiChatGet = pid => chatsDB('chats', 'readonly', tx => tx.objectStore('chats').get(pid));
+/* A conversation that names an uploaded paper since removed is never written again (removeUpload deleted it) */
+function apiForgotten(row) { const s = JSON.stringify(row); return Object.entries(_uploads).some(([id, u]) => u && u.deleted && s.includes(id)); }
+/* Read, change and write this paper's conversation in one transaction; fn(row) returns the row to keep, or null */
+function apiChatUpdate(pid, fn) {
+  return chatsDB('chats', 'readwrite', (tx, abort) => {
+    const epoch = capturePrivateEpoch(), st = tx.objectStore('chats'), out = { result: null }, g = st.get(pid);
+    g.onsuccess = () => {
+      try {
+        checkPrivateEpoch(epoch); requireOwner();
+        const next = fn(g.result || apiNewRow(pid));
+        if (next && !apiForgotten(next)) { st.put(next, pid); out.result = next; }
+      } catch (e) { abort(e); }
+    };
+    return out;
+  });
+}
+function apiChatHistory(pid) {
+  return chatsDB('history', 'readonly', (tx, abort) => {
+    const epoch = capturePrivateEpoch(), out = { result: [] }, cur = tx.objectStore('history').openCursor();
+    cur.onsuccess = e => {
+      try {
+        checkPrivateEpoch(epoch); requireOwner(); const c = e.target.result;
+        if (!c) { out.result.sort((a, b) => b.updated - a.updated); return; }
+        const row = c.value;
+        if (row && row.paper === pid && String(c.key).startsWith(pid + '.') && (row.shown || []).length) out.result.push({ id: String(c.key).slice(pid.length + 1), ...apiChatSummary(row) });
+        c.continue();
+      } catch (error) { abort(error); }
+    };
+    cur.onerror = () => abort(cur.error || new Error('Could not read private database cursor'));
+    return out;
+  });
+}
+/* Keep a conversation in history under a key no other has */
+function apiPutHistory(hist, pid, row, abort, stamp = Math.floor(Date.now() / 1000)) {
+  const key = pid + '.' + stamp, probe = hist.getKey(key);
+  probe.onsuccess = () => { try { if (probe.result !== undefined) apiPutHistory(hist, pid, row, abort, stamp + 1); else hist.put(row, key); } catch (e) { abort(e); } };
+}
+/* New chat: the current conversation goes to history */
+function apiChatArchive(pid) {
+  return apiChatLock(pid, () => apiChatArchiveLocked(pid));
+}
+function apiChatArchiveLocked(pid) {
+  return chatsDB(['chats', 'history'], 'readwrite', (tx, abort) => {
+    const epoch = capturePrivateEpoch(), chats = tx.objectStore('chats'), g = chats.get(pid);
+    g.onsuccess = () => {
+      try { checkPrivateEpoch(epoch); requireOwner(); const row = g.result; if (!row || !(row.shown || []).length) return; apiPutHistory(tx.objectStore('history'), pid, row, abort); chats.delete(pid); }
+      catch (e) { abort(e); }
+    };
+    return { result: true };
+  });
+}
+/* An earlier conversation becomes the current one; the current one goes to history */
+function apiChatSwitch(pid, id) {
+  return apiChatLock(pid, () => apiChatSwitchLocked(pid, id));
+}
+function apiChatSwitchLocked(pid, id) {
+  return chatsDB(['chats', 'history'], 'readwrite', (tx, abort) => {
+    const epoch = capturePrivateEpoch(), chats = tx.objectStore('chats'), hist = tx.objectStore('history'), key = pid + '.' + id;
+    const g = hist.get(key), c = chats.get(pid);
+    c.onsuccess = () => {
+      try {
+        checkPrivateEpoch(epoch); requireOwner();
+        if (!g.result || g.result.paper !== pid) return abort(new Error('No such chat'));
+        if (c.result && (c.result.shown || []).length) apiPutHistory(hist, pid, c.result, abort);
+        chats.put(g.result, pid); hist.delete(key);
+      } catch (e) { abort(e); }
+    };
+    return { result: true };
+  });
+}
+/* removeUpload: every conversation about an uploaded paper, or that names it anywhere (an @-mention, its text, a
+   library search that listed it), current or earlier */
+function apiChatsForget(uid) {
+  return chatsDB(['chats', 'history'], 'readwrite', (tx, abort) => {
+    const epoch = capturePrivateEpoch();
+    for (const name of ['chats', 'history']) {
+      const cur = tx.objectStore(name).openCursor();
+      cur.onsuccess = e => {
+        try { checkPrivateEpoch(epoch); requireOwner(); const c = e.target.result; if (!c) return; if (c.value && (c.value.paper === uid || JSON.stringify(c.value).includes(uid))) c.delete(); c.continue(); }
+        catch (error) { abort(error); }
+      };
+      cur.onerror = () => abort(cur.error || new Error('Could not read private database cursor'));
+    }
+    return { result: true };
+  });
+}
+
+/* ---- one turn on the API ---- */
+function apiTools(model, seen = { searches: 0, fetches: 0 }) {
+  const web = model === 'haiku'
+    ? [{ type: 'web_search_20250305', name: 'web_search', max_uses: API_LIMIT.searches }, { type: 'web_fetch_20250910', name: 'web_fetch', max_uses: API_LIMIT.fetches, max_content_tokens: 20000 }]
+    : [{ type: 'web_search_20260209', name: 'web_search', max_uses: API_LIMIT.searches }, { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: API_LIMIT.fetches, max_content_tokens: 20000 }];
+  return API_CLIENT_TOOLS.concat(web.map(t => ({ ...t, max_uses: Math.max(0, t.max_uses - (t.name === 'web_search' ? seen.searches : seen.fetches)) })).filter(t => t.max_uses > 0));
+}
+/* mixed: this conversation's earlier turns were made with other tools (a change between Quick and the other answer
+   styles), so their thinking no longer fits; the API drops it rather than refusing the request */
+function apiPayload(model, effort, system, tools, messages, mixed) {
+  return { model: API_MODELS[model] || API_MODELS.opus, max_tokens: API_LIMIT.maxTokens, stream: true, cache_control: API_CACHE, system, tools, messages,
+    ...(API_EFFORTS.includes(effort) ? { output_config: { effort } } : {}),
+    ...(model !== 'haiku' ? { fallbacks: 'default' } : {}),
+    ...(mixed ? { thinking: { type: 'adaptive', block_binding: { prefix_mismatch_behavior: 'drop_block' } } } : {}) };
+}
+/* The first message holds the paper (cached for an hour), then <context>, figure crops, and the question */
+function apiUserContent(body, first, p) {
+  const content = [];
+  if (first) content.push({ type: 'text', text: '<paper>\n' + (body.paperText || [p.title, p.authors, p.abstract].filter(Boolean).join('\n')) + '\n</paper>', cache_control: API_CACHE });
+  if (body.context) content.push({ type: 'text', text: '<context>\n' + body.context + '\n</context>' });
+  for (const url of body.images || []) { const m = /^data:(image\/(?:png|jpeg));base64,(.+)$/.exec(url || ''); if (m) content.push({ type: 'image', source: { type: 'base64', media_type: m[1], data: m[2] } }); }
+  content.push({ type: 'text', text: body.message || 'Explain this.' });
+  return content;
+}
+/* The one way a request reaches the API: the fixed address, the key in its header, the body, nothing else */
+async function apiFetch(payload, model, mixed, key, live) {
+  requireOwner(); const epoch = capturePrivateEpoch();
+  if (!navigator.onLine) throw Object.assign(new TypeError('Chat needs a connection.'), { offline: true, unsent: true });
+  if (live.stopped || live.ctl.signal.aborted) throw new DOMException('Stopped', 'AbortError');
+  const ctl = new AbortController(); Private.controllers.add(ctl); live.requests.add(ctl);
+  if (live.ctl.signal.aborted) ctl.abort(); else live.ctl.signal.addEventListener('abort', () => ctl.abort(), { once: true });
+  const betas = [model !== 'haiku' && API_FALLBACK_BETA, mixed && API_BINDING_BETA].filter(Boolean);
+  const headers = { authorization: 'Bearer ' + key, 'anthropic-version': API_VERSION, 'content-type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true', ...(betas.length ? { 'anthropic-beta': betas.join(',') } : {}) };
+  const idle = setTimeout(() => ctl.abort(), API_LIMIT.idleMs);   // no answer at all within the idle time
+  try {
+    const res = await fetch(API_URL, { method: 'POST', headers, body: JSON.stringify(payload), signal: ctl.signal, credentials: 'omit', redirect: 'error', cache: 'no-store', referrerPolicy: 'no-referrer' });
+    checkPrivateEpoch(epoch);
+    if (res.url && new URL(res.url).origin !== 'https://api.anthropic.com') throw new Error('Unexpected API host');
+    return { res, ctl };
+  } finally { clearTimeout(idle); }
+}
+/* A refused request's error: {type, message, code}, from at most 64 KB of its body */
+async function apiErrorBody(res) {
+  try { const j = JSON.parse((await res.text()).slice(0, 65536)), e = (j && j.error) || {}; return { type: String(e.type || ''), message: String(e.message || ''), code: String((e.details && e.details.error_code) || '') }; }
+  catch (e) { return { type: '', message: '', code: '' }; }
+}
+/* What a refusal means. The tier spend cap is told apart from a rate limit by its error code (the live rate-limits
+   page, 4 November 2026), not by a missing retry-after, which a browser may not be allowed to read. */
+function apiRefusalKind(status, err) {
+  if (status === 401 && /^CORS requests are not allowed/.test(err.message)) return 'blocked';
+  if (status === 401 || status === 403) return 'refused';
+  if (status === 402 || (status === 400 && /^You have reached your specified|credit balance is too low/i.test(err.message)) || (status === 429 && err.code === 'enforced_spend_limit_reached')) return 'credits';
+  return 'failed';
+}
+/* One streamed answer: signed thinking, server tool blocks, citations, tool inputs from their JSON, stop reason and
+   usage. Fallback content is filtered for replay after assembly. A stream that ends before message_stop, or carries
+   an error event, fails. */
+async function apiReadStream(res, ctl, on) { const _authEpoch = capturePrivateEpoch();
+  const reader = res.body.getReader(), dec = new TextDecoder(), content = [], json = new Map();
+  let buf = '', message = {}, stop = null, usage = {}, ended = false, broken = false;
+  let idle = setTimeout(() => ctl.abort(), API_LIMIT.idleMs);
+  const handle = e => {
+    if (!e || typeof e !== 'object') return;
+    if (e.type === 'message_start') { message = e.message || {}; usage = { ...(message.usage || {}) }; }
+    else if (e.type === 'content_block_start') {
+      const b = JSON.parse(JSON.stringify(e.content_block || {}));
+      content[e.index] = b; if (b.type === 'tool_use' || b.type === 'server_tool_use') json.set(e.index, '');
+      on.start(b);
+    } else if (e.type === 'content_block_delta') {
+      const b = content[e.index], d = e.delta || {};
+      if (!b) return;
+      if (d.type === 'text_delta') { b.text = (b.text || '') + d.text; on.text(d.text); }
+      else if (d.type === 'thinking_delta') b.thinking = (b.thinking || '') + d.thinking;
+      else if (d.type === 'signature_delta') b.signature = (b.signature || '') + d.signature;
+      else if (d.type === 'input_json_delta') json.set(e.index, (json.get(e.index) || '') + d.partial_json);
+      else if (d.type === 'citations_delta') (b.citations = Array.isArray(b.citations) ? b.citations : []).push(d.citation);
+    } else if (e.type === 'content_block_stop') {
+      const raw = json.get(e.index), b = content[e.index];
+      if (b && raw) { try { b.input = JSON.parse(raw); } catch (x) { broken = true; } }
+      json.delete(e.index);
+    } else if (e.type === 'message_delta') { if (e.delta && 'stop_reason' in e.delta) stop = e.delta.stop_reason; usage = { ...usage, ...(e.usage || {}) }; }
+    else if (e.type === 'message_stop') ended = true;
+    else if (e.type === 'error') throw new Error('The answer stream failed');
+  };
+  const line = l => { if (l.startsWith('data:')) handle(JSON.parse(l.slice(5))); };
+  try {
+    for (;;) {
+      const { value, done } = await privateAwait(reader.read(), _authEpoch);
+      if (done) break;
+      clearTimeout(idle); idle = setTimeout(() => ctl.abort(), API_LIMIT.idleMs);
+      buf += dec.decode(value, { stream: true });
+      let nl;
+      while ((nl = buf.indexOf('\n')) >= 0) { const l = buf.slice(0, nl).replace(/\r$/, ''); buf = buf.slice(nl + 1); line(l); }
+    }
+    buf += dec.decode(); if (buf) line(buf.replace(/\r$/, ''));
+  } finally { clearTimeout(idle); try { reader.releaseLock(); } catch (e) {} }
+  if (!ended) throw new Error('The answer stream ended early');
+  const raw = content.filter(Boolean), boundary = raw.findLast(b => b.type === 'fallback');
+  const attempt = (usage.iterations || []).findLast(u => u.type === 'fallback_message');
+  return { content: apiReplayContent(raw), stop_reason: stop, usage, model: (attempt && attempt.model) || (boundary && boundary.to && boundary.to.model) || message.model || '', broken };
+}
+/* Claude's fallback replay contract: keep boundaries and completed server work, but not the declining model's
+   thinking or client calls before the final boundary. Blocks after it stay byte-for-byte equivalent. */
+function apiReplayContent(content) {
+  const end = content.findLastIndex(b => b.type === 'fallback');
+  if (end < 0) return content;
+  const answered = new Set(content.slice(0, end).filter(b => b.tool_use_id).map(b => b.tool_use_id));
+  return content.filter((b, i) => i >= end || (!['thinking', 'redacted_thinking', 'connector_text', 'tool_use'].includes(b.type) && (b.type !== 'server_tool_use' || answered.has(b.id))));
+}
+/* A client tool call left without its result, or a server tool call without its result: such an answer can't be
+   kept in the conversation as it is */
+function apiDangling(content) {
+  if (content.some(b => b.type === 'tool_use')) return true;
+  const answered = new Set(content.filter(b => b && b.tool_use_id).map(b => b.tool_use_id));
+  return content.some(b => b.type === 'server_tool_use' && !answered.has(b.id));
+}
+function apiUsage(msg, model) {
+  const u = msg.usage || {}, attempts = Array.isArray(u.iterations) && u.iterations.length ? u.iterations : [u];
+  const sum = field => attempts.reduce((n, a) => n + (a[field] || 0), 0);
+  const tools = field => attempts.reduce((n, a) => n + ((a.server_tool_use || {})[field] || 0), 0);
+  return { model: msg.model || API_MODELS[model] || '', input: sum('input_tokens'), cacheWrite: sum('cache_creation_input_tokens'), cacheRead: sum('cache_read_input_tokens'),
+    output: sum('output_tokens'), searches: tools('web_search_requests'), fetches: tools('web_fetch_requests'), ...(Array.isArray(u.iterations) ? { iterations: u.iterations } : {}), ts: Date.now() / 1000 };
+}
+/* search_library: the header and the lines with the most of the query's words, from the library index the bridge
+   gets (libraryTSV: no notes column) */
+function apiSearchLibrary(query) {
+  const split = s => s.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const words = [...new Set(split(String(query || '')).filter(w => w.length > 1 || /\d/.test(w)))];
+  if (!words.length) throw plainError('Give a few keywords.');
+  const [head, ...rows] = libraryTSV().split('\n');
+  // a whole word counts twice, a part of one once ("7" is paper 7's, not a date's)
+  const best = rows.map(line => { const low = line.toLowerCase(), own = new Set(split(line)); return { line, hits: words.reduce((n, w) => n + (own.has(w) ? 2 : low.includes(w) ? 1 : 0), 0) }; })
+    .filter(r => r.hits).sort((a, b) => b.hits - a.hits).slice(0, API_LIMIT.libraryLines);
+  return best.length ? [head, ...best.map(r => r.line)].join('\n') : 'No papers in the library match those words.';
+}
+/* view_pages: pages of the open PDF as JPEGs, 1300 px on the long edge, at most 4 a call and 8 a turn */
+async function apiViewPages(spec, t) { const _authEpoch = capturePrivateEpoch();
+  const doc = t.doc;
+  if (!doc || _reader.doc !== doc) throw plainError('The paper is not open any more.');
+  const want = [];
+  for (const m of String(spec || '').matchAll(/(\d+)\s*(?:-|–|to)\s*(\d+)|(\d+)/g)) {
+    const a = +(m[1] || m[3]), b = +(m[2] || m[3]);
+    if (b < a) throw plainError('Give page numbers, such as "3" or "2-4".');
+    if (b - a >= API_LIMIT.pagesPerCall) throw plainError('Ask for at most 4 pages at a time.');
+    for (let n = a; n <= b; n++) if (!want.includes(n)) want.push(n);
+  }
+  if (!want.length) throw plainError('Give page numbers, such as "3" or "2-4".');
+  if (want.length > API_LIMIT.pagesPerCall) throw plainError('Ask for at most 4 pages at a time.');
+  if (want.some(n => n < 1 || n > doc.numPages)) throw plainError('This paper has ' + doc.numPages + ' pages.');
+  if (t.seen.pages + want.length > API_LIMIT.pages) throw plainError('You have looked at ' + t.seen.pages + ' pages for this answer, and 8 is the most. Answer from what you have.');
+  t.seen.pages += want.length;
+  const out = [];
+  for (const n of want) out.push({ type: 'text', text: 'Page ' + n }, { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: await privateAwait(apiRenderPage(doc, n), _authEpoch) } });
+  return out;
+}
+async function apiRenderPage(doc, n) { const _authEpoch = capturePrivateEpoch();
+  const page = await privateAwait(doc.getPage(n), _authEpoch);
+  const one = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: API_LIMIT.pageEdge / Math.max(one.width, one.height) });
+  const canvas = document.createElement('canvas'); canvas.width = Math.round(vp.width); canvas.height = Math.round(vp.height);
+  const ctx = canvas.getContext('2d', { alpha: false }); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const task = page.render({ canvasContext: ctx, viewport: vp }); if (isPrivate()) Private.renderTasks.add(task);
+  try { await privateAwait(task.promise, _authEpoch); } finally { Private.renderTasks.delete(task); }
+  const url = canvas.toDataURL('image/jpeg', API_LIMIT.jpeg); canvas.width = canvas.height = 0;
+  return url.slice(url.indexOf(',') + 1);
+}
+async function apiRunTools(content, t) { const _authEpoch = capturePrivateEpoch();
+  const results = [];
+  for (const b of content) {
+    if (b.type !== 'tool_use') continue;
+    try {
+      let out;
+      if (b.name === 'search_library') out = apiSearchLibrary(b.input && b.input.query);
+      else if (b.name === 'view_pages') out = await privateAwait(apiViewPages(b.input && b.input.pages, t), _authEpoch);
+      else throw plainError('There is no tool named ' + b.name + '.');
+      results.push({ type: 'tool_result', tool_use_id: b.id, content: out });
+    } catch (e) { checkPrivateEpoch(_authEpoch); results.push({ type: 'tool_result', tool_use_id: b.id, content: plainFailure(e, 'That tool failed.'), is_error: true }); }
+  }
+  return results;
+}
+/* One question on the API (chatSendNow's body, built as for the bridge). Requests go out until Claude ends its turn,
+   within API_LIMIT. The question is kept with the conversation once the API takes the first request (the turn is
+   accepted then); the answer when the turn ends. A turn that ends early keeps only the words shown, so the
+   conversation stays a valid history. Returns the answer's text; a failure throws the words to show. */
+/* Web Locks serialize this paper's sends and conversation changes across tabs. Owner and epoch are checked again
+   after waiting, before touching any private state. */
+function apiChatLock(pid, fn) {
+  requireOwner(); const epoch = capturePrivateEpoch();
+  return navigator.locks.request('scout-api-chat:' + pid, () => { checkPrivateEpoch(epoch); requireOwner(); return fn(); });
+}
+async function apiChatTurn(turn, c) {
+  return apiChatLock(c.pid, () => apiChatTurnLocked(turn, c));
+}
+async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpoch();
+  const { p, pid, doc, model, effort, profile, body, owned } = c;
+  const key = apiKey();
+  const live = { ctl: new AbortController(), requests: new Set(), stopped: false };
+  live.stop = () => { live.stopped = true; live.ctl.abort(); };
+  _apiTurns.set(pid, live);
+  const turnTimer = setTimeout(() => live.ctl.abort(), API_LIMIT.turnMs);
+  const usage = [], turnApi = [], seen = { output: 0, searches: 0, fetches: 0, pages: 0 };
+  let reply = '', prev = '', accepted = null, outcome = 'failed', kind = '';
+  const on = {
+    start: b => {
+      if (b.type === 'text' && reply && prev !== 'text' && !/\n\s*$/.test(reply)) reply += '\n\n';
+      if ((b.type === 'tool_use' || b.type === 'server_tool_use') && owned()) { Chat.tool = b.name; scheduleLive(); }
+      prev = b.type;
+    },
+    text: d => { reply += d; if (owned()) { Chat.streaming = reply; Chat.tool = ''; scheduleLive(); } },
+  };
+  try {
+    if (turn.stopped) { live.stop(); throw plainError('Stopped.'); }
+    if (!key) throw new Error('No key');
+    let stored = await privateAwait(apiChatGet(pid), _authEpoch);
+    // Holding this paper's Web Lock proves any saved pending marker belongs to a tab that already ended.
+    if (stored && stored.pending) stored = await privateAwait(apiChatFinish(pid, stored.pending, [], null, []), _authEpoch);
+    if (owned() && stored) turn.messages.splice(0, turn.messages.length, ...stored.shown, turn.user);
+    const history = stored && Array.isArray(stored.api) ? stored.api : [];
+    const system = (stored && stored.system) || API_SYSTEM + (profile ? '\n\nAbout the user: ' + profile : '');
+    const sig = JSON.stringify(apiTools(model));
+    const wasMixed = !!(stored && (stored.mixed || (stored.tools && stored.tools !== sig)));
+    const user = { role: 'user', content: apiUserContent(body, !history.length, p) };
+    for (let n = 0; ; n++) {
+      if (n >= API_LIMIT.requests || seen.output >= API_LIMIT.output) { outcome = 'cap'; break; }
+      const tools = apiTools(model, seen), mixed = wasMixed || JSON.stringify(tools) !== sig;
+      if (accepted && mixed) accepted.mixed = true;
+      const payload = apiPayload(model, effort, system, tools, history.concat(user, turnApi), mixed);
+      payload.max_tokens = Math.min(API_LIMIT.maxTokens, API_LIMIT.output - seen.output);
+      let res, ctl;
+      try { ({ res, ctl } = await privateAwait(apiFetch(payload, model, mixed, key, live), _authEpoch)); }
+      catch (e) { checkPrivateEpoch(_authEpoch); if (e && e.unsent && !accepted) throw e; outcome = live.stopped ? 'stopped' : 'failed'; break; }
+      if (!res.ok) { kind = apiRefusalKind(res.status, await privateAwait(apiErrorBody(res), _authEpoch)); outcome = 'refused'; break; }
+      if (!accepted) {
+        accepted = await privateAwait(apiChatAccept(pid, turn, user, system, sig, mixed, model), _authEpoch);
+        turn.stage = 'accepted'; chatTurnAccepted(turn);
+      }
+      let msg;
+      try { msg = await privateAwait(apiReadStream(res, ctl, on), _authEpoch); }
+      catch (e) { checkPrivateEpoch(_authEpoch); outcome = live.stopped ? 'stopped' : 'failed'; break; }
+      const charged = apiUsage(msg, model); usage.push(charged);
+      const count = name => msg.content.filter(b => b.type === 'server_tool_use' && b.name === name).length;
+      seen.output += charged.output;
+      seen.searches += Math.max(charged.searches, count('web_search'));
+      seen.fetches += Math.max(charged.fetches, count('web_fetch'));
+      if (seen.output > API_LIMIT.output || seen.searches > API_LIMIT.searches || seen.fetches > API_LIMIT.fetches) { outcome = 'cap'; break; }
+      if (msg.stop_reason === 'refusal') { outcome = 'refusal'; break; }
+      turnApi.push({ role: 'assistant', content: msg.content });
+      if (msg.stop_reason === 'end_turn' || msg.stop_reason === 'stop_sequence') { outcome = 'done'; break; }
+      if (msg.stop_reason === 'max_tokens') { outcome = msg.broken || apiDangling(msg.content) ? 'cut' : 'max'; break; }
+      if (live.stopped) { outcome = 'stopped'; break; }
+      if (seen.output >= API_LIMIT.output) { outcome = 'cap'; break; }
+      if (msg.stop_reason === 'pause_turn') continue;   // the server's own loop paused: the same request again
+      if (msg.stop_reason !== 'tool_use') break;
+      const results = await privateAwait(apiRunTools(msg.content, { doc, seen }), _authEpoch);
+      if (live.stopped) { outcome = 'stopped'; break; }
+      if (!results.length) break;
+      turnApi.push({ role: 'user', content: results });
+    }
+  } catch (e) { checkPrivateEpoch(_authEpoch); if (e && e.unsent && !accepted) throw e; if (!accepted) { turn.stage = 'rejected'; throw plainError(live.stopped ? 'Stopped.' : 'Couldn’t answer. Try again.'); } outcome = live.stopped ? 'stopped' : 'failed'; }
+  finally {
+    clearTimeout(turnTimer); live.ctl.abort();
+    for (const ctl of live.requests) Private.controllers.delete(ctl);
+    if (_apiTurns.get(pid) === live) _apiTurns.delete(pid);
+    // you went to another paper and came back meanwhile: that view loads the saved conversation once this ends
+    if (!owned() && Chat.pid === pid && _reader.paper && _reader.paper.id === pid) setTimeout(privateCallback(() => { if (chatRoute() === 'api' && Chat.pid === pid && !_apiTurns.has(pid)) { Chat.loadedFor = null; chatOpen(); } }), 0);
+  }
+  if (outcome === 'refused') {
+    if (!accepted) {
+      turn.stage = 'rejected';
+      if (kind === 'blocked' || kind === 'refused') { turn.apiFallback = kind; throw plainError(''); }
+      if (kind === 'credits') { Chat.status = 'api_credits'; throw plainError(''); }
+      throw plainError('Couldn’t answer. Try again.');
+    }
+    Chat.status = { credits: 'api_credits', blocked: 'api_blocked', refused: 'apikey_refused' }[kind] || Chat.status;
+    outcome = 'failed';
+  }
+  if (!accepted) { turn.stage = 'rejected'; throw plainError(outcome === 'stopped' ? 'Stopped.' : 'Couldn’t answer. Try again.'); }
+  const stamp = Date.now() / 1000;
+  if (outcome === 'refusal') {   // Claude declined: the question comes back to the box, and leaves the conversation
+    await privateAwait(apiChatRollback(pid, accepted, usage), _authEpoch);
+    turn.stage = 'rejected'; throw plainError('Couldn’t answer. Try again.');
+  }
+  if (outcome === 'done' || outcome === 'max') {
+    const text = outcome === 'max' && reply.trim() ? reply + API_STOPPED_LINE : reply;
+    await privateAwait(apiChatFinish(pid, accepted, turnApi, text.trim() ? { role: 'assistant', text, ts: stamp } : null, usage), _authEpoch);
+    if (!text.trim() && outcome === 'max') throw plainError('Couldn’t answer. Try again.');
+    return text;
+  }
+  // stopped, failed, cut off or over a bound: the words shown so far stay, as plain text
+  const words = reply.trim() ? reply : '', text = words && outcome !== 'stopped' ? words + API_STOPPED_LINE : words;
+  await privateAwait(apiChatFinish(pid, accepted, words ? [{ role: 'assistant', content: [{ type: 'text', text: words }] }] : [], text ? { role: 'assistant', text, ts: stamp } : null, usage), _authEpoch);
+  if (!words) throw plainError(outcome === 'stopped' ? 'Stopped.' : 'Couldn’t answer. Try again.');
+  return text;
+}
+function apiChatAccept(pid, turn, user, system, sig, mixed, model) {
+  let at = null;
+  return apiChatUpdate(pid, row => {
+    if (row.pending) throw new Error('A turn is already pending');
+    if (!row.id) row.id = crypto.randomUUID();
+    row.revision = (row.revision || 0) + 1;
+    if (!row.system) row.system = system;
+    if (!row.tools) row.tools = sig; else if (row.tools !== sig) row.mixed = true;
+    if (mixed) row.mixed = true;
+    at = { id: row.id, revision: row.revision, turnId: turn.turnId, api: row.api.length, shown: row.shown.length };
+    row.pending = at;
+    row.api.push(user); row.shown.push(JSON.parse(JSON.stringify(turn.user))); row.turnIds = (row.turnIds || []).concat(turn.turnId);
+    row.model = model; row.ts = Date.now() / 1000;
+    return row;
+  }).then(() => at);
+}
+/* Complete only the exact pending turn, even if another tab has since archived that conversation. Both stores
+   participate in one transaction; missing/deleted conversations and duplicate or stale completions are no-ops. */
+function apiChatChangeTurn(pid, at, fn) {
+  if (!at) return Promise.resolve(null);
+  return chatsDB(['chats', 'history'], 'readwrite', (tx, abort) => {
+    const epoch = capturePrivateEpoch(), chats = tx.objectStore('chats'), hist = tx.objectStore('history'), out = { result: null };
+    const matches = row => row && row.paper === pid && row.id === at.id && row.revision === at.revision && row.pending && row.pending.turnId === at.turnId && row.api.length === at.api + 1 && row.shown.length === at.shown + 1;
+    const change = (row, store, key) => {
+      checkPrivateEpoch(epoch); requireOwner();
+      if (!matches(row) || apiForgotten(row)) return;
+      fn(row); if (apiForgotten(row)) return;
+      delete row.pending; row.revision++; row.ts = Date.now() / 1000;
+      store.put(row, key); out.result = row;
+    };
+    const g = chats.get(pid);
+    g.onsuccess = () => {
+      try {
+        checkPrivateEpoch(epoch); requireOwner();
+        if (matches(g.result)) { change(g.result, chats, pid); return; }
+        const cur = hist.openCursor();
+        cur.onsuccess = e => { try { checkPrivateEpoch(epoch); requireOwner(); const c = e.target.result; if (!c) return; if (String(c.key).startsWith(pid + '.') && matches(c.value)) change(c.value, hist, c.key); else c.continue(); } catch (error) { abort(error); } };
+        cur.onerror = () => abort(cur.error || new Error('Could not read private database cursor'));
+      } catch (e) { abort(e); }
+    };
+    return out;
+  });
+}
+function apiChatFinish(pid, at, api, shown, usage) {
+  return apiChatChangeTurn(pid, at, row => {
+    row.api.push(...api); if (shown) row.shown.push(shown); row.usage.push(...usage); row.ts = Date.now() / 1000; if (at.mixed) row.mixed = true;
+    return row;
+  });
+}
+function apiChatRollback(pid, at, usage) {
+  return apiChatChangeTurn(pid, at, row => {
+    row.api.length = at.api; row.shown.length = at.shown;
+    row.turnIds = (row.turnIds || []).filter(id => id !== at.turnId);
+    row.usage.push(...usage);
+    return row.api.length || row.shown.length || row.usage.length ? row : null;
+  });
+}
+/* The API refused this key or this device: where the bridge answers, the same message goes there once and nothing
+   shows; elsewhere the reason shows, with what to do */
+async function apiChatFallback(turn, wasShown) { const _authEpoch = capturePrivateEpoch();
+  const kind = turn.apiFallback; turn.apiFallback = null;
+  if (wasShown) { Chat.running = false; Chat.tool = ''; Chat.streaming = ''; }
+  let st = '';
+  if (bridgeRemote() || !(navigator.maxTouchPoints > 1)) { try { st = await privateAwait(bridgeCheck(), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch); } }
+  if (st === 'ready') {
+    Chat.route = 'bridge'; Chat.loadedFor = null;
+    await privateAwait(chatOpen(), _authEpoch);
+    const kept = _chatDrafts.get(turn.pid);
+    if (!turn.auto && kept && kept.turn === turn && Chat.pid === turn.pid && Chat.status === 'ready') { turn.body = undefined; await privateAwait(chatRetryEarlier(), _authEpoch); }
+    return;
+  }
+  Chat.status = kind === 'blocked' ? 'api_blocked' : 'apikey_refused';
+  renderChatPanel(true);
+}
 
 /* ---- finding a quoted passage on the page, and jumping to it ---- */
 function waitFor(test, ms) {
@@ -19359,14 +20605,16 @@ function closeCiteDD() { const dd = document.getElementById('citeDD'); if (dd) d
 
 /* --- Markdown + LaTeX, loaded on first use --- */
 let _mdLibs = null;
-function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('could not load ' + src)); document.head.appendChild(s); }); }
+/* Every CDN library carries its SHA-384 (4 November 2026): a script whose bytes differ does not run, and its load
+   fails. Without the Markdown libraries, chat and notes stay as plain text. */
+function loadScript(src, integrity) { return new Promise((res, rej) => { const s = document.createElement('script'); if (integrity) { s.integrity = integrity; s.crossOrigin = 'anonymous'; } s.src = src; s.onload = res; s.onerror = () => rej(new Error('could not load ' + src)); document.head.appendChild(s); }); }
 function loadMdLibs() {
   if (_mdLibs) return _mdLibs;
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.integrity = 'sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+'; css.crossOrigin = 'anonymous'; css.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css'; document.head.appendChild(css);
   _mdLibs = Promise.all([
-    loadScript('https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js'),
-    loadScript('https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js'),
-    loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js'),
+    loadScript('https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js', 'sha384-/TQbtLCAerC3jgaim+N78RZSDYV7ryeoBCVqTuzRrFec2akfBkHS7ACQ3PQhvMVi'),
+    loadScript('https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js', 'sha384-+VfUPEb0PdtChMwmBcBmykRMDd+v6D/oFmB3rZM/puCMDYcIvF968OimRh4KQY9a'),
+    loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js', 'sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg'),
   ]);
   return _mdLibs;
 }
@@ -19384,8 +20632,8 @@ async function renderNotesMarkdown(el, text, notesObj) { const _authEpoch = capt
   let src = text
     .replace(CITE_RE, (m, id, rest) => slot(citePillHTML(m, id, rest, notesObj)))
     .replace(QUOTE_RE, quoteReplacer(slot))
-    .replace(/\$\$([\s\S]+?)\$\$/g, (m, tex) => slot(katex.renderToString(tex, { displayMode: true, throwOnError: false })))
-    .replace(/(^|[^\\$])\$([^\s$](?:[^$\n]*?[^\s$])?)\$/g, (m, pre, tex) => pre + slot(katex.renderToString(tex, { throwOnError: false })));
+    .replace(/\$\$([\s\S]+?)\$\$/g, (m, tex) => slot(katex.renderToString(tex, { displayMode: true, throwOnError: false, trust: false, strict: 'ignore', maxExpand: 500 })))
+    .replace(/(^|[^\\$])\$([^\s$](?:[^$\n]*?[^\s$])?)\$/g, (m, pre, tex) => pre + slot(katex.renderToString(tex, { throwOnError: false, trust: false, strict: 'ignore', maxExpand: 500 })));
   let html = DOMPurify.sanitize(marked.parse(src, { breaks: true, gfm: true }), { USE_PROFILES: { html: true }, FORBID_ATTR: ['style'], FORBID_TAGS: ['style'] });
   html = markdownSlots(html, slots);
   el.innerHTML = html;
@@ -19594,6 +20842,7 @@ function paperPageHTML(p, opts) {
       <button class="pd-act ${ir?'on-read':''}" data-act="read" aria-pressed="${ir}" onclick="toggleRead('${ka}',this)" title="${ir?'Mark unread':'Mark as read'}" aria-label="${ir?'Mark unread':'Mark as read'}"${gone ? ' disabled' : ''}>&#10003;<span class="pd-act-label"><span>${ir?'Read':'Mark read'}</span></span></button>
       <span class="save-anchor"><button class="pd-act ${inAny?'on-list':''}" data-act="list" aria-haspopup="true" aria-expanded="false" onclick="event.stopPropagation();openSaveTo(event,this,'${ka}')" title="Save to a list or To read" aria-label="${inAny ? 'Saved. Change where' : 'Save to a list or To read'}"${gone ? ' disabled' : ''}>${FEED_ICON.save}<span class="pd-act-label"><span>${inAny?'Saved':'Save'}</span></span></button></span>
       <button class="pd-act" data-act="${isHiddenRow(p) ? 'restore' : 'hide'}" onclick="${isHiddenRow(p) ? 'unhidePaper' : 'hidePaper'}('${ka}')" title="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper (restore it from Lists)'}" aria-label="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper'}"${gone ? ' disabled' : ''}><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${isHiddenRow(p) ? '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg><span class="pd-act-label"><span>${isHiddenRow(p) ? 'Restore' : 'Hide'}</span></span></button>
+      ${isOwner() && !gone ? `<span id="paperKeepControl" hidden></span>` : ''}
       ${isOwner() && isPassed(p) ? `<button class="pd-act pd-passed" data-act="unpass" onclick="unpassPaper('${ka}')" title="You passed on it in For you. Put it back there" aria-label="Passed. Put it back in For you"${gone ? ' disabled' : ''}>&#10005;<span class="pd-act-label"><span>Passed &middot; Put back</span></span></button>` : ''}
       ${isOwner() || pdfSourceOf(p) ? `<button class="pd-read" onclick="openReader('${ka}')" title="${pdfSourceOf(p) ? 'Read the PDF here' : conferenceCopyUrl(p) ? 'Read the free copy on the conference site' : 'Add a PDF to read it here'}"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>${readLabelHTML(p)}</button>` : ''}
       ${paperOpenUrl(p) ? `<a class="pd-open" href="${dataAttr(paperOpenUrl(p))}" target="_blank" rel="noopener" title="${dataAttr(paperOpenTitle(p))}" aria-label="Open paper"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}
@@ -20998,6 +22247,8 @@ Config.startup = bootstrapApp();
     'chatOpen', 'chatSend', 'chatRetryEarlier', 'chatSendOrStop', 'chatNew', 'chatSwitch', 'chatConnect', 'chatForgetRemote', 'askAboutSelection',
     'startFigureSelect', 'chatApplyBlock', 'chatSaveAsNote', 'chatAddPaper', 'chatRefresh', 'toggleLibPanel', 'startAddPaper', 'stopAddPaper', 'startTopicTag',
     'briefAsk',
+    // Chat on this device's Claude API key (4 November 2026)
+    'chatUseKey', 'chatForgetKey', 'chatApiRetry',
     // private papers and PDFs
     'pickUploadPdf', 'uploadPdf', 'usePdfFile', 'openPdfChange', 'removeLocalPdf', 'removeUpload', 'renameUpload', 'startReview', 'saveUploads',
     // reading places and list times
@@ -21017,10 +22268,13 @@ Config.startup = bootstrapApp();
       return isAsync ? Promise.resolve(false) : undefined;
     };
   };
+  ALWAYS.push('keptToggle', 'keptKeep', 'keptRemove', 'keptReconcile', 'keptPaperMenu', 'keptPaperAction');   // PDFs kept on this device (offline reading)
   ALWAYS.forEach(n => wrap(n));
   Object.entries(WHEN).forEach(([n, ok]) => wrap(n, ok));
   const bf = window.bridgeFetch;   // every request to the laptop goes through here
   window.bridgeFetch = function () { return isOwner() ? bf.apply(this, arguments) : Promise.reject(new Error('read-only')); };
+  const af = window.apiFetch;   // and every request to the Claude API (4 November 2026)
+  window.apiFetch = function () { return isOwner() ? af.apply(this, arguments) : Promise.reject(new Error('read-only')); };
 })();
 </script>
 </body>
