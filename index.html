@@ -3993,6 +3993,7 @@ async function reverifyPrivate() {
   try { return await work; } finally { if (Private.verifying === work) Private.verifying = null; }
 }
 function privatePathCap(path) {
+  if (/^annotations\/chats\/[0-9a-f]{32}\/[A-Za-z0-9][A-Za-z0-9._-]{0,199}\/(?:catalog\.json|catalog\/[0-9a-f]{2}\.json|turns\/[0-9a-f]{32}\.json)$/.test(path) && !path.includes('..')) return path.includes('/turns/') ? 1048576 : 262144;
   if (path === 'daily/current.json') return 1024 * 1024;
   if (path === 'daily_handled.json') return 4 * 1024 * 1024;
   if (path === 'papers_database.csv') return 16 * 1024 * 1024;
@@ -6207,6 +6208,7 @@ function returnSiteStart() {
    never holds a reload back (Sol's implementation review, finding 2). A reply the laptop reported when the chat
    opened is the laptop's own work: a reload does not cut it off, and the chat checks back for it after one. */
 function returnReloadSafe() {
+  if(typeof ChatSync!=='undefined'&&(ChatSync.retry.size||ChatSync.accepting.size))return false;
   if (_chatPending.size || [..._chatDrafts.values()].some(d => d.text || Object.values(d.draft).some(a => a.length))) return false;
   if (anyDirty() || _pushing || _autoPushTimer || Pull.busy || People.sending.size || Vault.pushing || Vault.pushTimer || Ink.saveTimer || _readerSaveTimer || LocalWork.n) return false;
   if (_rnEditing || (AddPaper.text || '').trim() || People.adding || (People.draft || '').trim() || (Chat.draftText || '').trim() || Chat.draft.quotes.length || Chat.draft.images.length || Chat.draft.mentions.length) return false;
@@ -15399,7 +15401,8 @@ setInterval(privateCallback(() => keptSoon(0)), KEPT_TICK_MS);
 function chatOfflineShown(panel) {
   if (navigator.onLine) return false;
   const input = document.getElementById('chatInput'); if (input) Chat.draftText = input.value;
-  panel.innerHTML = `<div class="rp-head">${paneHeadStart('chat')}<span class="grow"></span>${paneClose('chat')}</div><div class="chat-root" id="chatRoot" data-offline="1"><div class="chat-setup"><p>Chat needs a connection.</p></div></div>`;
+  panel.innerHTML = `<div class="rp-head">${paneHeadStart('chat')}<span class="grow"></span>${chatHistoryControlsHTML()}${paneClose('chat')}</div><div class="chat-root" id="chatRoot" data-offline="1"><div class="chat-setup"><p>Chat needs a connection.</p></div><div class="chat-scroll" id="chatScroll"></div></div>`;
+  if (chatAvailable() && Chat.pid===_reader.paper?.id) renderChatMessages();
   return true;
 }
 window.addEventListener('offline', privateCallback(() => renderChatPanel(true)));
@@ -16863,7 +16866,7 @@ function scheduleNotesPush(delay) {
 /* Every changed notes file goes to GitHub in ONE commit (git data API: tree -> commit -> move the
    branch). Files changed on GitHub since we last synced are merged first; if the branch moved while we
    worked, the whole round is redone. */
-async function ghCommitFiles(files, message) { const _authEpoch = capturePrivateEpoch(); requireOwner();
+async function ghCommitFiles(files, message, expectedHead = null) { const _authEpoch = capturePrivateEpoch(); requireOwner();
   files.forEach(file => pageMayWrite(file.path));   // Phase 16: never the weekly note
   if (isPrivate()) files.forEach(file => privatePathCap(file.path));
   const generation = files.every(file => file.path.startsWith(VAULT_DIR)) ? vaultGeneration() : null;
@@ -16871,9 +16874,10 @@ async function ghCommitFiles(files, message) { const _authEpoch = capturePrivate
   const ok = async (res, what) => { const _authEpoch = capturePrivateEpoch(); requireOwner(); checkVaultGeneration(generation); if (!res.ok) { const e = _ghFail(res, what); if (res.status === 422 || res.status === 409) e.conflict = true; throw e; } const json = await privateAwait(res.json(), _authEpoch); requireOwner(); checkVaultGeneration(generation); return json; };
   const ref = await privateAwait(ok(await privateAwait(ownerFetch(`${api}/ref/heads/${GH_BRANCH}`, { headers: H, cache: 'no-store' }), _authEpoch), 'read of the branch'), _authEpoch);
   checkVaultGeneration(generation);
+  if (expectedHead && ref.object.sha !== expectedHead) throw Object.assign(new Error('The branch moved'), { conflict: true });
   const head = await privateAwait(ok(await privateAwait(ownerFetch(`${api}/commits/${ref.object.sha}`, { headers: H, cache: 'no-store' }), _authEpoch), 'read of the last commit'), _authEpoch);
   checkVaultGeneration(generation);
-  const tree = await privateAwait(ok(await privateAwait(ownerFetch(`${api}/trees`, { method: 'POST', headers: HJ, body: JSON.stringify({ base_tree: head.tree.sha, tree: files.map(f => ({ path: f.path, mode: '100644', type: 'blob', content: f.content })) }) }), _authEpoch), 'save of the notes'), _authEpoch);
+  const tree = await privateAwait(ok(await privateAwait(ownerFetch(`${api}/trees`, { method: 'POST', headers: HJ, body: JSON.stringify({ base_tree: head.tree.sha, tree: files.map(f => ({ path: f.path, mode: '100644', type: 'blob', ...(f.content === null ? { sha: null } : { content: f.content }) })) }) }), _authEpoch), 'save of the notes'), _authEpoch);
   checkVaultGeneration(generation);
   const commit = await privateAwait(ok(await privateAwait(ownerFetch(`${api}/commits`, { method: 'POST', headers: HJ, body: JSON.stringify({ message, tree: tree.sha, parents: [ref.object.sha] }) }), _authEpoch), 'commit of the notes'), _authEpoch);
   checkVaultGeneration(generation);
@@ -16883,6 +16887,7 @@ async function ghCommitFiles(files, message) { const _authEpoch = capturePrivate
 async function pushNotes() { const _authEpoch = capturePrivateEpoch();
   Vault.pushTimer = null;   // Phase 22: spent before any return, so notes still locked leave no handle behind
   if (isPrivate() && !Vault.ready) return;
+  await chatPushOutbox();
   const generation = vaultGeneration(), key = isPrivate() ? Vault.key : undefined;
   if (!hasPAT() || !Vault.key) { updateNotesSync(); return; }
   if (Vault.pushing) { Vault.pushAgain = true; return; }
@@ -17120,6 +17125,7 @@ async function checkVaultStillThere(localMeta) { const _authEpoch = capturePriva
   return false;
 }
 async function resetLocalVault(newMeta) { const _authEpoch = capturePrivateEpoch(); requireOwner();
+  chatTeardown();
   if (isPrivate() && newMeta) validateVaultMetadata(newMeta); invalidateVaultWork(); const generation = vaultGeneration();
   if (Vault.pushTimer) { clearTimeout(Vault.pushTimer); Vault.pushTimer = null; }
   if (_acId) { _acId = null; document.getElementById('annoCard').classList.remove('open'); }
@@ -17165,6 +17171,8 @@ async function afterUnlock(candidateKey) { const _authEpoch = capturePrivateEpoc
   try { const index = rec ? await privateAwait(vaultDecrypt(rec.env), _authEpoch) : { v: 1, papers: {}, colors: {}, colorsUpdated: '' }; requireOwner(); Vault.index = index; }
   catch (e) { checkPrivateEpoch(_authEpoch); requireOwner(); if (isPrivate()) throw e; Vault.index = { v: 1, papers: {}, colors: {}, colorsUpdated: '' }; }
   }
+  Vault.ready = true; ChatSync.hidden = false;
+  if (_reader.paper) setTimeout(privateCallback(chatResumeSaved), 0);
   syncUploadsWithIndex();
   retryUploadRemovals().catch(privateCallback(() => {}));
   _ixCheckedAt = Date.now();
@@ -17176,6 +17184,8 @@ async function afterUnlock(candidateKey) { const _authEpoch = capturePrivateEpoc
   setTimeout(privateCallback(() => reconcileNotesIndex().catch(privateCallback(() => {}))), 3000);   // after the page has what it needs
 }
 async function lockNotes() { const _authEpoch = capturePrivateEpoch(); requireOwner();
+  try { await privateAwait(chatLockNow(), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch); toastError('Couldn’t finish locking. Try again.'); return; }
+  ChatSync.channel?.postMessage({ lock: true });
   const generation = vaultGeneration();
   await privateAwait(endAdjust(true), _authEpoch); requireOwner();   // a highlight being adjusted keeps its new extent, as on leaving the paper
   await privateAwait(closeAnnoCard(), _authEpoch); requireOwner();   // the open comment is settled (kept, restored or discarded) while the key is still here
@@ -19514,44 +19524,23 @@ async function chatRefresh() { const _authEpoch = capturePrivateEpoch();
     const n = document.getElementById('chatRefreshBtn'); if (n) { n.classList.remove('spinning'); n.disabled = false; }
   }
 }
-async function chatOpen(focus) { const _authEpoch = capturePrivateEpoch();
-  if (!navigator.onLine) return renderChatPanel(true);   // offline: one line, and nothing asked of the bridge
-  if (chatRoute() === 'api') return apiChatOpen(focus);   // a key on this device: the chat lives here, not on the laptop
-  if (Chat.status === 'elsewhere') return renderChatPanel(true);
-  if (Chat.status === 'unknown' || Chat.status === 'offline') { await privateAwait(bridgeCheck(), _authEpoch); }
-  if (Chat.status === 'ready' && _reader.paper && Chat.loadedFor !== _reader.paper.id) await privateAwait(chatLoad(), _authEpoch);
-  if (Chat.status === 'ready') syncLibrary();
+async function chatOpen(focus) { const _authEpoch=capturePrivateEpoch();
+  if(!chatAvailable()||!_reader.paper)return renderChatPanel(true);
+  const pid=_reader.paper.id;
+  let request=ChatSync.opening;
+  if(!request||request.pid!==pid){request={pid,promise:null};ChatSync.opening=request;
+    request.promise=(async()=>{
+      if(chatRoute()==='api'){if(!API_STATES.has(Chat.status))Chat.status='ready';}
+      else if(navigator.onLine&&(Chat.status==='unknown'||Chat.status==='offline'))await privateAwait(bridgeCheck(),_authEpoch);
+      if(Chat.loadedFor!==pid)await privateAwait(chatLoadSaved(),_authEpoch);
+      if(chatAvailable()&&chatRoute()==='bridge'&&Chat.status==='ready')syncLibrary();
+    })().finally(()=>{if(ChatSync.opening===request)ChatSync.opening=null;});
+  }
+  try{await privateAwait(request.promise,_authEpoch)}catch(error){checkPrivateEpoch(_authEpoch);if(chatAvailable())throw error;}
   renderChatPanel(true);
-  if (focus) setTimeout(privateCallback(() => { const i = document.getElementById('chatInput'); if (i) i.focus(); }), 0);
+  if(focus&&chatAvailable())setTimeout(privateCallback(()=>{const input=document.getElementById('chatInput');if(input)input.focus()}),0);
 }
-async function chatLoad() { const _authEpoch = capturePrivateEpoch();
-  if (chatRoute() === 'api') return apiChatLoad();
-  const pid = _reader.paper.id;
-  try {
-    const [r, hr] = await privateAwait(Promise.all([bridgeFetch('/chat?paper=' + encodeURIComponent(pid)), bridgeFetch('/chats?paper=' + encodeURIComponent(pid)).catch(privateCallback(() => null))]), _authEpoch);
-    if (r.status === 401) { saveBridgeToken(''); Chat.status = 'unpaired'; return; }
-    const j = await privateAwait(r.json(), _authEpoch);
-    Chat.history = hr && hr.ok ? (await privateAwait(hr.json(), _authEpoch)).chats || [] : [];
-    if (!_reader.paper || _reader.paper.id !== pid) return;
-    if (Chat.pid !== pid) {
-      if (Chat.pid && (Chat.draftText || Object.values(Chat.draft).some(a => a.length))) _chatDrafts.set(Chat.pid, { ..._chatDrafts.get(Chat.pid), draft: Chat.draft, text: Chat.draftText });
-      const kept = _chatDrafts.get(pid); Chat.draft = kept ? kept.draft : { quotes: [], images: [], mentions: [] }; Chat.draftText = kept ? kept.text : '';
-    }
-    const pending = _chatPending.get(pid);
-    if (pending) {
-      const accepted = (j.turnIds || []).includes(pending.turnId) || !j.turnProtocol && (j.messages || []).some(m => m.role === 'user' && m.text === pending.user.text && m.ts >= pending.user.ts - 1);
-      if (accepted) chatTurnAccepted(pending);
-      else if (!j.running && j.turnProtocol) {
-        restoreChatTurn(pending);
-        const kept = _chatDrafts.get(pid); if (kept) { Chat.draft = kept.draft; Chat.draftText = kept.text; }
-      }
-    }
-    Object.assign(Chat, { pid, messages: j.messages || [], fresh: j.fresh !== false, model: j.model || 'opus', running: !!j.running, streaming: '', tool: '', error: '', loadedFor: pid });
-    if (_chatPending.has(pid)) Chat.error = 'Your message may have arrived. Reload chat to check before sending again.';
-    // an answer still being written from before a reload: check back until it's saved
-    if (j.running) setTimeout(privateCallback(() => { if (Chat.pid === pid && Chat.running && !Chat.streaming) { Chat.loadedFor = null; chatOpen(); } }), 2000);
-  } catch (e) { checkPrivateEpoch(_authEpoch); Chat.status = 'offline'; }
-}
+async function chatLoad() { return chatLoadSaved(); }
 async function chatConnect() { const _authEpoch = capturePrivateEpoch();
   Chat.status = 'checking'; renderChatPanel(true);
   const st = await privateAwait(bridgeCheck(), _authEpoch);
@@ -19573,15 +19562,16 @@ function renderChatPanel(force) {
   const panel = document.getElementById('chatPane');
   if (!panel || !document.getElementById('reader').classList.contains('panel-open') || !chatShown()) return;
   applyPanelLayout();
-  if (chatOfflineShown(panel)) return;   // Chat needs a connection (offline plan, section 5)
+  if (!chatAvailable()) { panel.innerHTML = `<div class="rp-head">${paneHeadStart('chat')}<span class="grow"></span>${paneClose('chat')}</div><div class="chat-setup">Unlock your notes to open your chats.<br><button class="ui-btn ui-btn-primary" onclick="unlockFromPanel()">Unlock notes</button></div>`; return; }
+  if (chatOfflineShown(panel)) return;
   if (chatRoute() === 'api' && !API_STATES.has(Chat.status)) Chat.status = 'ready';   // a key on this device: nothing to connect to
   const pid = (_reader.paper && _reader.paper.id) || '';
   const root = document.getElementById('chatRoot');
   if (!force && root && root.dataset.paper === pid && root.dataset.status === Chat.status) return;
   const input = document.getElementById('chatInput'); if (input) Chat.draftText = input.value;
   const ready = Chat.status === 'ready';
-  if (ready && pid && Chat.loadedFor !== pid) { chatOpen(); return; }   // another paper: load its chat first
-  const head = `<div class="rp-head">${paneHeadStart('chat')}<span class="grow"></span><button class="rp-icon-btn ${Chat.refreshing ? 'spinning' : ''}" id="chatRefreshBtn" onclick="chatRefresh()" title="Reload this chat" aria-label="Reload chat"${Chat.refreshing ? ' disabled' : ''}>${ICON_REFRESH}</button>${ready && (Chat.history || []).some(c => c.id !== 'current') ? `<button class="rp-icon-btn" id="chatHistBtn" onclick="toggleChatHistory(event)" title="Earlier chats about this paper" aria-label="Earlier chats" aria-haspopup="true">${ICON_HISTORY}</button>` : ''}${ready ? `<button class="rp-text-btn" onclick="chatNew()" title="Start a fresh conversation about this paper (this one is kept)">${ICON_PLUS}New chat</button>` : ''}${paneClose('chat')}</div>`;
+  if (pid && Chat.loadedFor !== pid) { chatOpen(); if(ready)return; }   // another paper: load its chat first
+  const head = `<div class="rp-head">${paneHeadStart('chat')}<span class="grow"></span><button class="rp-icon-btn ${Chat.refreshing ? 'spinning' : ''}" id="chatRefreshBtn" onclick="chatRefresh()" title="Reload this chat" aria-label="Reload chat"${Chat.refreshing ? ' disabled' : ''}>${ICON_REFRESH}</button>${chatHistoryControlsHTML()}${paneClose('chat')}</div>`;
   const keyField = `<input type="password" id="chatKey" class="pp-input chat-key-input" placeholder="Paste your Claude API key" autocomplete="off" spellcheck="false" autocapitalize="off"><button class="ui-btn ui-btn-primary" onclick="chatUseKey()">Use this key</button><p class="chat-dim">It stays on this device.</p><p class="chat-error chat-key-err" id="chatKeyErr" role="alert" hidden></p>`;
   const keyBlock = isOwner() && !apiKey() ? `<div class="chat-key">${keyField}</div>` : '';   // under each state's first line (4 November 2026)
   const setup = {
@@ -19597,16 +19587,16 @@ function renderChatPanel(force) {
     api_blocked: `<p>Chat from this device isn’t allowed for this key.</p><button class="ui-btn ui-btn-secondary" onclick="chatForgetKey()">Forget the key</button>`,
     api_credits: `<p>Your Claude credits are used up for this month.</p><button class="ui-btn ui-btn-secondary" onclick="chatApiRetry()">Try again</button>`,
   };
-  const body = ready
-    ? `<div class="chat-scroll" id="chatScroll"></div>
-       <div class="chat-compose"><div class="chat-attach" id="chatAttach"></div>
+  const body = `<div class="chat-scroll" id="chatScroll"></div>` + (ready
+    ? `<div class="chat-compose"><div class="chat-attach" id="chatAttach"></div>
          <div class="chat-box"><textarea id="chatInput" rows="1" placeholder="Ask about this paper…" oninput="chatInputChanged(this)" onkeydown="chatKey(event)"></textarea>
            <div class="chat-box-row"><button class="rp-icon-btn sm" onclick="startFigureSelect()" title="Ask about a figure: drag a box on the page" aria-label="Ask about a figure">${ICON_FIGURE}</button><button class="rp-icon-btn sm" onmousedown="event.preventDefault()" onclick="chatAddPaper()" title="Bring in another paper (or type @ and its name in your message)" aria-label="Bring in another paper">${ICON_PAPER}</button><span class="grow"></span>${chatSelectsHTML()}<button class="chat-send" id="chatSend" onclick="chatSendOrStop()" aria-label="Send">${ICON_SEND}</button></div></div></div>`
-    : `<div class="chat-setup">${setup[Chat.status] || setup.setup}</div>`;
+    : `<div class="chat-setup">${setup[Chat.status] || setup.setup}</div>`);
   panel.innerHTML = head + `<div class="chat-root" id="chatRoot" data-paper="${dataAttr(pid)}" data-status="${Chat.status}">${body}</div>`;
   if (Chat.status === 'unknown') chatOpen();   // shown before anything asked the laptop (the reader opened on Chat): ask now
+  if (Chat.pid===pid && (ready || Chat.messages.length)) renderChatMessages('bottom');
   if (ready) {
-    renderChatMessages('bottom'); renderChatAttach(); updateChatSend();
+     renderChatAttach(); updateChatSend();
     const i = document.getElementById('chatInput'); i.value = Chat.draftText; chatGrow(i);
   }
 }
@@ -19621,16 +19611,14 @@ function chatSelectsHTML() {
 function chatModel(m) { Chat.model = m; }   // used from the next message; kept with this paper's chat
 function chatEffort(e) { Chat.effort = e; try { e ? checkedStorageSet('chat_effort', e) : checkedStorageRemove('chat_effort'); } catch (x) {} }
 async function chatNew() { const _authEpoch = capturePrivateEpoch();
-  if (Chat.running || _chatPending.has(Chat.pid) || (_chatDrafts.get(Chat.pid) || {}).turn) return;
-  if (Chat.messages.length) {
-    try { await privateAwait(chatRoute() === 'api' ? apiChatArchive(_reader.paper.id) : bridgeFetch('/chat/new', { method: 'POST', body: JSON.stringify({ paper: _reader.paper.id }) }), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch);}
-    Chat.loadedFor = null; await privateAwait(chatOpen(true), _authEpoch);   // reloads the list too: the chat you left is now in History
-    return;
-  }
-  const i = document.getElementById('chatInput'); if (i) i.focus();
+  if (!chatAvailable() || Chat.running || _chatPending.has(Chat.pid)) return;
+  await privateAwait(apiChatArchive(_reader.paper.id), _authEpoch);
+  Chat.selected = null; Chat.draftText = ''; Chat.draft = { quotes: [], images: [], mentions: [] };
+  Chat.loadedFor = null; await privateAwait(chatOpen(true), _authEpoch);
 }
 /* Earlier chats about this paper: pick one to continue it (Claude remembers it); the current one is kept */
 function toggleChatHistory(e) {
+  if (!chatAvailable()) return;
   e && e.stopPropagation();
   const old = document.getElementById('chatHist');
   if (old) { if (old._close) old._close(); else old.remove(); return; }
@@ -19644,7 +19632,7 @@ function toggleChatHistory(e) {
     if (!current) { item.setAttribute('role', 'menuitem'); item.addEventListener('click', () => chatSwitch(c.id)); }
     const title = document.createElement('span'), meta = document.createElement('span');
     title.className = 't'; title.textContent = c.title;
-    meta.className = 'm'; meta.textContent = (current ? 'Current' : day(c.updated)) + ' · ' + c.count + ' messages';
+    meta.className = 'm'; meta.textContent = (current ? 'Current' : day(c.updated)) + (c.count ? ' · ' + c.count + ' messages' : '');
     item.append(title, meta); el.append(item);
   });
   document.getElementById('chatPane').appendChild(el);
@@ -19656,11 +19644,10 @@ async function chatSwitch(id) { const _authEpoch = capturePrivateEpoch();
   if (Chat.running || _chatPending.has(Chat.pid) || (_chatDrafts.get(Chat.pid) || {}).turn) return;
   const h = document.getElementById('chatHist'); if (h) { if (h._close) h._close(); else h.remove(); }
   try {
-    if (chatRoute() === 'api') await privateAwait(apiChatSwitch(_reader.paper.id, id), _authEpoch);
-    else {
-    const r = await privateAwait(bridgeFetch('/chat/switch', { method: 'POST', body: JSON.stringify({ paper: _reader.paper.id, id }) }), _authEpoch);
-    if (!r.ok) throw new Error();
-    }
+    if (!chatAvailable()) return;
+    const [chatId, anchor] = id.split(':');
+    await privateAwait(apiChatLock(_reader.paper.id, () => chatSelect(_reader.paper.id, chatId, anchor || null)), _authEpoch);
+    Chat.selected = null;
   } catch (e) { checkPrivateEpoch(_authEpoch); toastError('Couldn\u2019t open that chat'); return; }
   Chat.loadedFor = null; chatOpen(true);
 }
@@ -19695,15 +19682,16 @@ async function renderChatMessages(mode) { const _authEpoch = capturePrivateEpoch
   place();                          // right away (plain text)...
   await privateAwait(Promise.all(jobs), _authEpoch); place(); // ...and once formatted, since the heights change
 }
+function chatStoppedHTML(m) { return m.interrupted&&!String(m.text||'').includes('The answer stopped here.')?'<p class="chat-dim">The answer stopped here.</p>':''; }
 function chatMsgHTML(m, i) {
   if (m.role === 'user') {
     const pills = (m.quotes || []).map(q => q.page ? citeQuotePill(q.page, q.text) : `<span class="chat-quote">“${esc(shortQuote(q.text, 80))}”</span>`).join('')
       + (m.mentions || []).map(x => `<span class="chat-mention">@${esc(shortQuote(x.title || x.id, 40))}</span>`).join('')
       + (m.images ? `<span class="chat-mention">${esc(String(m.images))} figure${m.images > 1 ? 's' : ''}</span>` : '');
     if (m.auto) return '';   // the papers Claude asked for: already shown as "Reading … and your notes on it"
-    return `<div class="chat-msg you">${pills ? `<div class="chat-pills">${pills}</div>` : ''}${m.text ? `<div class="chat-you-text">${esc(m.text)}</div>` : ''}</div>`;
+    return `<div class="chat-msg you">${pills ? `<div class="chat-pills">${pills}</div>` : ''}${m.text ? `<div class="chat-you-text">${esc(m.text)}</div>` : ''}${m.missingImages ? '<p class="chat-dim">Images are on the device where you added them.</p>' : ''}${chatStoppedHTML(m)}</div>`;
   }
-  return `<div class="chat-msg claude"><div class="md chat-md" data-md-chat="${i}"></div><div class="chat-acts"><button class="rp-icon-btn sm" onclick="chatCopy(${i})" title="Copy" aria-label="Copy">${ICON_COPY}</button><button class="rp-icon-btn sm" onclick="chatSaveAsNote(${i})" title="Save as a note" aria-label="Save as a note">${ICON_NOTE}</button></div></div>`;
+  return `<div class="chat-msg claude"><div class="md chat-md" data-md-chat="${i}"></div>${chatStoppedHTML(m)}<div class="chat-acts"><button class="rp-icon-btn sm" onclick="chatCopy(${i})" title="Copy" aria-label="Copy">${ICON_COPY}</button><button class="rp-icon-btn sm" onclick="chatSaveAsNote(${i})" title="Save as a note" aria-label="Save as a note">${ICON_NOTE}</button></div></div>`;
 }
 function chatToolLabel(t) { return { WebSearch: 'Searching the web…', WebFetch: 'Reading a web page…', Read: 'Looking at the PDF…', Grep: 'Looking through your library…', Glob: 'Looking through your library…',
   web_search: 'Searching the web…', web_fetch: 'Reading a web page…', view_pages: 'Looking at the PDF…', search_library: 'Looking through your library…' }[t] || (t ? 'Working…' : ''); }
@@ -20066,9 +20054,12 @@ async function chatRetryEarlier() {
   await chatSend(original.text);
 }
 async function chatSend(text, auto) { return localWork(chatSendNow(text, auto)); }   // Phase 22: a reload waits for this page's own reply
-async function chatSendNow(text, auto) { const _authEpoch = capturePrivateEpoch();
+function chatSendNow(text, auto) { return chatTrack(chatSendNowWork(text, auto)); }
+async function chatSendNowWork(text, auto) { const _authEpoch = capturePrivateEpoch();
+  if (!chatAvailable()) { renderChatPanel(true); return; }
   if (!navigator.onLine) { renderChatPanel(true); return; }
   if (Chat.running || Chat.status !== 'ready' || !_reader.paper || _chatPending.has(_reader.paper.id)) return;
+  const _chatVault=chatCapture();
   const input = document.getElementById('chatInput');
   text = String(text != null ? text : (input ? input.value : '')).trim();
   const d = auto ? { quotes: [], images: [], mentions: auto.papers } : Chat.draft;
@@ -20086,7 +20077,7 @@ async function chatSendNow(text, auto) { const _authEpoch = capturePrivateEpoch(
     Chat.error = 'Your earlier message is waiting. Retry it before sending another.'; renderChatMessages(); return;
   }
   const turnId = (_chatDrafts.get(pid) || {}).turnId || [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('');
-  const turn = { pid, turnId, user, messages, text, auto, signature, route, stopped: false, body: original && original.body, after: recovery && recovery.after, draft: { quotes: d.quotes.slice(), images: d.images.slice(), mentions: d.mentions.slice() }, stage: 'preparing' };
+  const turn = { vault:_chatVault, keepSelection:!!auto||!!Chat.draftText||Object.values(d).some(a=>a.length), anchor:Chat.anchor||null, pid, turnId, chatId: Chat.selected, parentTurnId: Chat.tip || null, user, messages, text, auto, signature, route, stopped: false, body: original && original.body, after: recovery && recovery.after, draft: { quotes: d.quotes.slice(), images: d.images.slice(), mentions: d.mentions.slice() }, stage: 'preparing' };
   _chatPending.set(pid, turn);
   if (!auto) { Chat.draft = { quotes: [], images: [], mentions: [] }; Chat.draftText = ''; }
   if (!auto && input && text === input.value.trim()) { input.value = ''; chatGrow(input); }
@@ -20100,24 +20091,29 @@ async function chatSendNow(text, auto) { const _authEpoch = capturePrivateEpoch(
   message += text || (images.length ? 'What does this show?' : 'Explain this.');
   let reply = '';
   try {
+  if (!(await privateAwait(chatBeforeSend(pid,turn), _authEpoch))) throw plainError('Couldn’t answer. Try again.');
+  if (!turn.chatId) { turn.chatId=Chat.selected; turn.parentTurnId=Chat.tip||null; }
   let context = [p.uploaded && 'This paper is an unpublished submission I am reviewing. It is confidential: never search the web for it, its title, its authors or passages from it (searching for related published work is fine). Help me review it rigorously.',
     notesContext(_rn) ? 'My highlights, comments and notes on this paper:\n' + notesContext(_rn) : (Vault.key ? 'I have no notes on this paper yet.' : '')].filter(Boolean).join('\n\n');
   if (mentions.length) context += (context ? '\n\n' : '') + (await privateAwait(Promise.all(mentions.map(mentionContext)), _authEpoch)).join('\n\n');
   if (turn.stopped) throw plainError('Stopped.');
   let body = { paper: pid, turnId, message, display: user.text, auto: user.auto, model, effort: effort || undefined, context, profile, quotes: user.quotes, mentions: user.mentions, images };
-  if (fresh) {
+  if (fresh || turn.fresh || route === 'bridge') {
     try { if (doc) body.paperText = await privateAwait(pdfText(doc, 'r:' + pid + ':' + (doc.fingerprints || [''])[0]), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch);}
     if (!body.paperText) body.paperText = [p.title, p.authors, p.abstract].filter(Boolean).join('\n');
     if (route === 'api') {}   // the API looks at pages through view_pages, from the open PDF
     else if (local) { try { const blob = await privateAwait(localPdfGet(pid), _authEpoch); if (blob) body.pdfBase64 = await privateAwait(blobToBase64(blob), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch);} }
     else body.pdfUrl = pdfSourceOf(p);
   }
+  if (route === 'bridge') { if (Chat.bridgeOld) throw plainError('Update Scout on your computer to continue this chat.'); Object.assign(body, await chatBridgeSeed(await chatLoadCatalog(pid), turn.chatId, turn.parentTurnId)); body.origin.images = chatImages(user.images, turn.draft); }
   body = turn.body || JSON.parse(JSON.stringify(body)); turn.body = body;
   if (turn.stopped) throw plainError('Stopped.');
   if (!bound()) { restoreChatTurn(turn); return; }
     if (!navigator.onLine) throw Object.assign(new TypeError('Chat needs a connection.'), { offline: true, unsent: true });
     if (route === 'api') { reply = await privateAwait(apiChatTurn(turn, { p, pid, doc, model, effort, profile, body, owned }), _authEpoch); if (owned()) Chat.fresh = false; }
     else {
+    ChatSync.bridgeRunning.set(pid,turn);
+    try {
     turn.stage = 'sending';
     const res = await privateAwait(bridgeFetch('/chat/send', { method: 'POST', body: JSON.stringify(body) }), _authEpoch);
     if (!res.ok) turn.stage = 'rejected';
@@ -20136,6 +20132,7 @@ async function chatSendNow(text, auto) { const _authEpoch = capturePrivateEpoch(
     const reader = res.body.getReader(), dec = new TextDecoder(); let buf = '';
     for (;;) {
       const { value, done } = await privateAwait(reader.read(), _authEpoch);
+      _chatVault.check();
       if (done) break;
       buf += dec.decode(value, { stream: true });
       let nl;
@@ -20148,9 +20145,14 @@ async function chatSendNow(text, auto) { const _authEpoch = capturePrivateEpoch(
         else if (e.t === 'done' && e.error && !reply) throw plainError(/stopped|terminated|SIGTERM/i.test(e.error) ? 'Stopped.' : 'Couldn’t answer. Try again.');
       }
     }
+    _chatVault.check();
+    await privateAwait(chatImportBridge(pid), _authEpoch);
     if (owned()) Chat.fresh = false;
+    } finally { ChatSync.bridgeRunning.delete(pid); }
     }
   } catch (e) { checkPrivateEpoch(_authEpoch);
+    try{_chatVault.check()}catch(stale){if(_chatPending.get(pid)===turn)_chatPending.delete(pid);return;}
+    if(e?.chatReply)reply=e.chatReply;
     if (e && e.unsent && turn.stage === 'sending') turn.stage = 'preparing';
     if (turn.stage === 'preparing' || turn.stage === 'rejected') restoreChatTurn(turn);
     else if (turn.stage === 'sending') turn.stage = 'uncertain';
@@ -20167,6 +20169,7 @@ async function chatSendNow(text, auto) { const _authEpoch = capturePrivateEpoch(
   // Claude identified papers you described: send their text and your notes on them, and let it continue
   const wanted = [...new Set([...(reply || '').matchAll(/```paper\s+([\w.-]+)\s*```/g)].map(x => x[1]))].map(findPaper).filter(Boolean);
   if (wanted.length && !auto) chatSend('Here is what you asked for (in <other-paper>). Please continue with my question.', { papers: wanted.map(q => ({ id: q.id, title: q.title })) });
+  else if(!Chat.draftText&&!Object.values(Chat.draft).some(a=>a.length))setTimeout(privateCallback(chatResumeSaved),0);
 }
 
 /* ---- notes and highlights Claude was asked to add ---- */
@@ -20298,28 +20301,9 @@ async function chatApiRetry() { const _authEpoch = capturePrivateEpoch();
   const kept = _chatDrafts.get(Chat.pid);
   if (kept && kept.turn && !Chat.running && Chat.status === 'ready') await privateAwait(chatRetryEarlier(), _authEpoch);
 }
-async function apiChatOpen(focus) { const _authEpoch = capturePrivateEpoch();
-  if (!API_STATES.has(Chat.status)) Chat.status = 'ready';
-  if (Chat.status === 'ready' && _reader.paper && Chat.loadedFor !== _reader.paper.id) await privateAwait(apiChatLoad(), _authEpoch);
-  renderChatPanel(true);
-  if (focus) setTimeout(privateCallback(() => { const i = document.getElementById('chatInput'); if (i) i.focus(); }), 0);
-}
+async function apiChatOpen(focus) { return chatOpen(focus); }
 /* This paper's conversation on this device, and its earlier ones (the bridge's {id, title, count, updated}) */
-async function apiChatLoad() { const _authEpoch = capturePrivateEpoch();
-  const pid = _reader.paper.id;
-  let row = null, history = [];
-  try { [row, history] = await privateAwait(Promise.all([apiChatGet(pid), apiChatHistory(pid)]), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch); }
-  if (!_reader.paper || _reader.paper.id !== pid) return;
-  if (Chat.pid !== pid) {
-    if (Chat.pid && (Chat.draftText || Object.values(Chat.draft).some(a => a.length))) _chatDrafts.set(Chat.pid, { ..._chatDrafts.get(Chat.pid), draft: Chat.draft, text: Chat.draftText });
-    const kept = _chatDrafts.get(pid); Chat.draft = kept ? kept.draft : { quotes: [], images: [], mentions: [] }; Chat.draftText = kept ? kept.text : '';
-  }
-  const pending = _chatPending.get(pid);
-  if (pending && row && (row.turnIds || []).includes(pending.turnId)) chatTurnAccepted(pending);
-  const shown = row && Array.isArray(row.shown) ? row.shown : [];
-  Chat.history = (shown.length ? [{ id: 'current', ...apiChatSummary(row) }] : []).concat(history);
-  Object.assign(Chat, { pid, messages: shown.slice(), fresh: !(row && row.api && row.api.length), model: (row && row.model) || 'opus', running: _apiTurns.has(pid), streaming: '', tool: '', error: '', loadedFor: pid });
-}
+async function apiChatLoad() { return chatLoadSaved(); }
 function apiChatSummary(row) {
   const shown = row.shown || [], first = (shown.find(m => m.role === 'user' && m.text) || {}).text || 'Figure or passage';
   return { title: first.slice(0, 140), count: shown.length, updated: (shown[shown.length - 1] || {}).ts || row.ts || 0 };
@@ -20328,8 +20312,8 @@ function apiChatSummary(row) {
 /* ---- the conversations, in this browser: 'chats' (paper id -> the current one) and 'history' (<paper id>.<ts>) ---- */
 function chatsDB(stores, mode, fn) { requireOwner(); const epoch = capturePrivateEpoch();
   const work = new Promise((resolve, reject) => {
-    const req = indexedDB.open('scholar_chats', 1);
-    req.onupgradeneeded = () => { try { checkPrivateEpoch(epoch); requireOwner(); req.result.createObjectStore('chats'); req.result.createObjectStore('history'); } catch (e) { req.transaction.abort(); req.result.close(); reject(e); } };
+    const req = indexedDB.open('scholar_chats', 2);
+    req.onupgradeneeded = () => { try { checkPrivateEpoch(epoch); requireOwner(); for (const name of ['chats','history','catalogs','turns','runtime','images','outbox','meta']) if (!req.result.objectStoreNames.contains(name)) req.result.createObjectStore(name); const turns=req.transaction.objectStore('turns'); if(!turns.indexNames.contains('byChat'))turns.createIndex('byChat','chatKey'); if(!turns.indexNames.contains('byPending'))turns.createIndex('byPending','pendingKey'); } catch (e) { req.transaction.abort(); req.result.close(); reject(e); } };
     req.onerror = () => reject(req.error);
     req.onsuccess = () => {
       const db = req.result; let tx, out, failure, settled = false;
@@ -20351,80 +20335,75 @@ function chatsDB(stores, mode, fn) { requireOwner(); const epoch = capturePrivat
   return mode === 'readonly' ? work : localWork(work);
 }
 const apiNewRow = pid => ({ paper: pid, id: crypto.randomUUID(), revision: 0, system: '', tools: '', mixed: false, model: 'opus', api: [], shown: [], usage: [], turnIds: [], ts: Date.now() / 1000 });
-const apiChatGet = pid => chatsDB('chats', 'readonly', tx => tx.objectStore('chats').get(pid));
-/* A conversation that names an uploaded paper since removed is never written again (removeUpload deleted it) */
 function apiForgotten(row) { const s = JSON.stringify(row); return Object.entries(_uploads).some(([id, u]) => u && u.deleted && s.includes(id)); }
-/* Read, change and write this paper's conversation in one transaction; fn(row) returns the row to keep, or null */
-function apiChatUpdate(pid, fn) {
-  return chatsDB('chats', 'readwrite', (tx, abort) => {
-    const epoch = capturePrivateEpoch(), st = tx.objectStore('chats'), out = { result: null }, g = st.get(pid);
-    g.onsuccess = () => {
-      try {
-        checkPrivateEpoch(epoch); requireOwner();
-        const next = fn(g.result || apiNewRow(pid));
-        if (next && !apiForgotten(next)) { st.put(next, pid); out.result = next; }
-      } catch (e) { abort(e); }
-    };
-    return out;
+async function apiChatGet(pid) { if(!chatAvailable()&&!Vault.key)return null;return (await chatReadSelected(pid)).row; }
+async function apiChatUpdate(pid,fn) { await chatEnsure(pid); return chatWithLock(pid,async()=>{const {row}=await chatReadSelected(pid,true),next=fn(row);if(!next||apiForgotten(next))return null;return chatRuntimePut(pid,next)}); }
+async function apiChatHistory(pid) { const cat=await chatEnsure(pid),out=[];for(const [id,e]of Object.entries(cat.chats))if(id!==cat.active?.chatId){const turns=chatBranch(await chatLocal(cat,id),id);out.push({id,title:e.title,count:turns.length*2,updated:turns.at(-1)?.created||e.created})}return out.sort((a,b)=>b.updated-a.updated||a.id.localeCompare(b.id)); }
+function apiChatArchive(pid) { return apiChatLock(pid,()=>chatNewSelected(pid)); }
+function apiChatArchiveLocked(pid) { return chatNewSelected(pid); }
+function apiChatSwitch(pid,id) { return apiChatLock(pid,()=>chatSelect(pid,id)); }
+function apiChatSwitchLocked(pid,id) { return chatSelect(pid,id); }
+async function apiChatAccept(pid,turn,user,system,sig,mixed,model) {
+  const captured=turn.vault||chatCapture();captured.check();
+  await chatEnsure(pid);captured.check();
+  return chatWithLock(pid,async()=>{const i=await chatIdentity(pid),initial=await chatLoadCatalog(pid),id=turn.chatId||initial.active.chatId,cat=await chatLocal(i,id),turns=Object.hasOwn(turn,'parentTurnId')?chatPrefix(cat,id,turn.parentTurnId):chatBranch(cat,id,cat.active.anchor),parent=turns.at(-1)?.turnId||null;
+    let row=await chatRuntimeGet(i,id,parent,turns);if(!row)row={...apiNewRow(pid),id,shown:chatShownTurns(turns),turnIds:turns.map(t=>t.turnId)};
+    if(row.pending)throw new Error('A turn is already pending');row.revision=(row.revision||0)+1;if(!row.system)row.system=system;if(!row.tools)row.tools=sig;else if(row.tools!==sig)row.mixed=true;if(mixed)row.mixed=true;
+    // A reconstructed prefix is fixed before acceptance; all later local tool loops keep their raw blocks.
+    if(turn.replay)row.api=turn.replay;
+    const at={id:row.id,revision:row.revision,turnId:turn.turnId,canonicalId:CHAT_ID.test(turn.turnId)?turn.turnId:(await chatHash(['api-turn',row.id,turn.turnId])).slice(0,32),api:row.api.length,shown:row.shown.length,parent,clock:await chatTick(cat),device:await chatDevice(),created:turn.user.ts||0,images:chatImages(turn.user.images,turn.draft),model,status:'interrupted'};
+    row.pending=at;row.api.push(user);row.shown.push(JSON.parse(JSON.stringify(turn.user)));row.turnIds=(row.turnIds||[]).concat(turn.turnId);row.model=model;row.ts=Date.now()/1000;try{captured.check();await chatRuntimePut(pid,row);captured.check()}catch(error){captured.check();ChatSync.accepting.set(at.turnId,{pid,row});ChatSync.retry.set(pid+':accept:'+at.turnId,()=>chatFlushAcceptance(pid,at.turnId));}return at;
   });
 }
-function apiChatHistory(pid) {
-  return chatsDB('history', 'readonly', (tx, abort) => {
-    const epoch = capturePrivateEpoch(), out = { result: [] }, cur = tx.objectStore('history').openCursor();
-    cur.onsuccess = e => {
-      try {
-        checkPrivateEpoch(epoch); requireOwner(); const c = e.target.result;
-        if (!c) { out.result.sort((a, b) => b.updated - a.updated); return; }
-        const row = c.value;
-        if (row && row.paper === pid && String(c.key).startsWith(pid + '.') && (row.shown || []).length) out.result.push({ id: String(c.key).slice(pid.length + 1), ...apiChatSummary(row) });
-        c.continue();
-      } catch (error) { abort(error); }
-    };
-    cur.onerror = () => abort(cur.error || new Error('Could not read private database cursor'));
-    return out;
+async function apiChatChangeTurn(pid,at,fn) {
+  if(!at)return null;return chatWithLock(pid,async()=>{const c=chatCapture(),i=await chatIdentity(pid),cat=await chatLocal(i,at.id),turns=chatBranch(cat,at.id,at.parent),env=await chatGet('runtime',chatBase(i)+at.id+'/'+(at.parent||'empty'));if(!env)return null;
+    const raw=await chatOpenEnvelope(env,i,'chat-runtime'),row=raw.row;
+    if(row.id!==at.id||row.revision!==at.revision||row.pending?.turnId!==at.turnId||row.api.length!==at.api+1||row.shown.length!==at.shown+1||apiForgotten(row)||cat.removed[at.id])return null;
+    fn(row);if(apiForgotten(row))return null;delete row.pending;delete row.checkpoint;row.revision++;row.ts=Date.now()/1000;c.check();
+    if(row._finished){delete row._finished;const u=row.shown[at.shown],answer=row.shown.slice(at.shown+1).filter(m=>m.role==='assistant').map(m=>m.text).join('\n\n');
+      const t={v:1,kind:'chat-turn',...i,chatId:at.id,turnId:at.canonicalId,parent:at.parent,clock:at.clock,device:at.device,created:at.created,source:'api',model:at.model||null,user:chatUser(u),assistant:{text:answer},images:at.images,status:at.status||'interrupted'};
+      chatValidate(t,i,'chat-turn');if(cat.turns[t.turnId]){if(chatCanonical(cat.turns[t.turnId])!==chatCanonical(t))throw new Error('Conflicting chat turn');return null;}
+      cat.turns[t.turnId]=t;const before=await chatLocal(i,at.id),e=cat.chats[t.chatId];if(!e)return null;e.title=e.title==='New chat'?(t.user.text||'Figure or passage').slice(0,80):e.title;e.tips=chatTips([...e.tips,t.turnId],cat.turns);e.uploads=[...new Set([...e.uploads,...(JSON.stringify([t,row]).match(/up-[0-9a-f]{12}/g)||[])])].sort();
+      const f=await chatRuntimeFile(i,row,t.turnId,chatBranch(cat,t.chatId,t.turnId));await chatPersist(cat,before,[f],[['runtime',chatBase(i)+at.id+'/'+(at.parent||'empty')]]);return row;
+    }
+    // Refusal rollback keeps the original canonical prefix and never publishes the declined question.
+    await chatRuntimePut(pid,row,at.parent);return row;
   });
 }
-/* Keep a conversation in history under a key no other has */
-function apiPutHistory(hist, pid, row, abort, stamp = Math.floor(Date.now() / 1000)) {
-  const key = pid + '.' + stamp, probe = hist.getKey(key);
-  probe.onsuccess = () => { try { if (probe.result !== undefined) apiPutHistory(hist, pid, row, abort, stamp + 1); else hist.put(row, key); } catch (e) { abort(e); } };
+function apiChatFinish(pid,at,api,shown,usage) { return chatRecoverable(pid+':'+at?.turnId,async()=>{await chatFlushAcceptance(pid,at.turnId);return apiChatChangeTurn(pid,at,row=>{row.api.push(...api);if(shown)row.shown.push({...shown,interrupted:at.status!=='complete'});else if(at.status!=='complete'&&row.shown[at.shown])row.shown[at.shown].interrupted=true;row.usage.push(...usage);if(at.mixed)row.mixed=true;row._finished=true})}); }
+function apiChatRollback(pid,at,usage) { ChatSync.accepting.delete(at.turnId);ChatSync.retry.delete(pid+':accept:'+at.turnId);return apiChatChangeTurn(pid,at,row=>{row.api.length=at.api;row.shown.length=at.shown;row.turnIds=(row.turnIds||[]).filter(id=>id!==at.turnId);row.usage.push(...usage)}); }
+async function apiChatCheckpoint(pid,at,reply) { if(!at)return;const undurable=ChatSync.accepting.get(at.turnId);if(undurable){undurable.row.checkpoint=reply;return chatFlushAcceptance(pid,at.turnId)}return chatWithLock(pid,async()=>{const c=chatCapture(),i=await chatIdentity(pid),key=chatBase(i)+at.id+'/'+(at.parent||'empty'),env=await chatGet('runtime',key);if(!env)return;const v=await chatOpenEnvelope(env,i,'chat-runtime');if(v.row.pending?.turnId!==at.turnId||v.row.revision!==at.revision)return;v.row.checkpoint=reply;const sealed=await chatSeal(v);c.check();await chatDB('runtime','readwrite',tx=>{c.check();return tx.objectStore('runtime').put(sealed,key)})}); }
+async function chatBeforeSend(pid,turn=null) {
+  if(!chatAvailable())return false;
+  for(const [name,save]of ChatSync.retry)if(name.startsWith(pid+':')){await save();ChatSync.retry.delete(name);}
+  try{await chatSync(pid,null,false)}catch(error){if(!chatAvailable())throw error;}
+  const cat=await chatEnsure(pid);
+  if(!Chat.selected||!cat.chats[Chat.selected]||turn&&!turn.keepSelection){
+    Chat.selected=cat.active.chatId;Chat.anchor=cat.active.anchor;
+    const selected=await chatReadSelected(pid,true);
+    if(turn){turn.chatId=Chat.selected;turn.anchor=Chat.anchor;turn.fresh=!selected.row.api.length;turn.messages.splice(0,turn.messages.length,...selected.row.shown,turn.user);}
+  }
+  Chat.tip=chatBranch(cat,Chat.selected,Chat.anchor).at(-1)?.turnId||null;
+  if(turn)turn.parentTurnId=Chat.tip;
+  return true;
 }
-/* New chat: the current conversation goes to history */
-function apiChatArchive(pid) {
-  return apiChatLock(pid, () => apiChatArchiveLocked(pid));
+function chatPrefix(cat,id,tip) {
+  if(tip===null)return [];
+  const path=[],seen=new Set();
+  while(tip){const turn=cat.turns[tip];if(!turn||turn.chatId!==id||seen.has(tip))throw new Error('Chat is incomplete');seen.add(tip);path.unshift(turn);tip=turn.parent;}
+  return path;
 }
-function apiChatArchiveLocked(pid) {
-  return chatsDB(['chats', 'history'], 'readwrite', (tx, abort) => {
-    const epoch = capturePrivateEpoch(), chats = tx.objectStore('chats'), g = chats.get(pid);
-    g.onsuccess = () => {
-      try { checkPrivateEpoch(epoch); requireOwner(); const row = g.result; if (!row || !(row.shown || []).length) return; apiPutHistory(tx.objectStore('history'), pid, row, abort); chats.delete(pid); }
-      catch (e) { abort(e); }
-    };
-    return { result: true };
-  });
+async function chatRuntimeForTurn(pid,turn,advance=false) {
+  const identity=await chatIdentity(pid),initial=await chatEnsure(pid),id=turn.chatId||initial.active.chatId,cat=await chatLocal(identity,id);
+  const turns=advance?chatBranch(cat,id,turn.anchor||null):chatPrefix(cat,id,turn.parentTurnId??null),tip=turns.at(-1)?.turnId||null;
+  if(advance)turn.parentTurnId=tip;
+  const row=await chatRuntimeGet(identity,id,tip,turns);
+  return row?{...row,_turns:turns}:{...apiNewRow(pid),id,shown:chatShownTurns(turns),turnIds:turns.map(t=>t.turnId),_turns:turns,_rebuild:!!turns.length};
 }
-/* An earlier conversation becomes the current one; the current one goes to history */
-function apiChatSwitch(pid, id) {
-  return apiChatLock(pid, () => apiChatSwitchLocked(pid, id));
-}
-function apiChatSwitchLocked(pid, id) {
-  return chatsDB(['chats', 'history'], 'readwrite', (tx, abort) => {
-    const epoch = capturePrivateEpoch(), chats = tx.objectStore('chats'), hist = tx.objectStore('history'), key = pid + '.' + id;
-    const g = hist.get(key), c = chats.get(pid);
-    c.onsuccess = () => {
-      try {
-        checkPrivateEpoch(epoch); requireOwner();
-        if (!g.result || g.result.paper !== pid) return abort(new Error('No such chat'));
-        if (c.result && (c.result.shown || []).length) apiPutHistory(hist, pid, c.result, abort);
-        chats.put(g.result, pid); hist.delete(key);
-      } catch (e) { abort(e); }
-    };
-    return { result: true };
-  });
-}
+
 /* removeUpload: every conversation about an uploaded paper, or that names it anywhere (an @-mention, its text, a
    library search that listed it), current or earlier */
-function apiChatsForget(uid) {
+function apiLegacyChatsForget(uid) {
   return chatsDB(['chats', 'history'], 'readwrite', (tx, abort) => {
     const epoch = capturePrivateEpoch();
     for (const name of ['chats', 'history']) {
@@ -20439,6 +20418,468 @@ function apiChatsForget(uid) {
   });
 }
 
+/* ---- encrypted Scout conversations: page-owned, separate from notes and their index ---- */
+const ChatSync = { accepting: new Map(), bridgeRunning: new Map(), hidden: false, papers: new Map(), saving: new Set(), retry: new Map(), opening: null, importing: new Map(), channel: null };
+const CHAT_ID = /^[0-9a-f]{32}$/;
+const CHAT_PAPER = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/;
+const CHAT_CAP = { turn: 1048576, catalog: 262144 };
+function chatCanonical(x) { if (Array.isArray(x)) return '[' + x.map(chatCanonical).join(',') + ']'; if (x && typeof x === 'object') return '{' + Object.keys(x).sort().map(k => JSON.stringify(k) + ':' + chatCanonical(x[k])).join(',') + '}'; return JSON.stringify(x); }
+async function chatHash(x) { return [...new Uint8Array(await crypto.subtle.digest('SHA-256', x instanceof Uint8Array ? x : new TextEncoder().encode(typeof x === 'string' ? x : chatCanonical(x))))].map(b => b.toString(16).padStart(2, '0')).join(''); }
+function chatId() { return [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join(''); }
+function chatAvailable() { return isOwner() && Vault.ready && !!Vault.key && !!Vault.meta && !ChatSync.hidden; }
+function chatCapture() {
+  requireOwner(); if (!Vault.key || !Vault.meta || !Vault.ready) throw new Error('Chat is locked');
+  const epoch = capturePrivateEpoch(), generation = Vault.generation, key = Vault.key, salt = Vault.meta.salt, target = _acceptedTarget;
+  return { key, salt, target, check() { checkPrivateEpoch(epoch); requireOwner(); if (Vault.generation !== generation || Vault.key !== key || Vault.meta?.salt !== salt || _acceptedTarget !== target) throw new Error('Chat is locked'); } };
+}
+async function chatIdentity(paper) { const c = chatCapture(); if (!CHAT_PAPER.test(paper) || paper.includes('..') || Object.hasOwn(Object.prototype, paper)) throw new Error('Invalid chat paper'); const vaultId = (await chatHash(b64d(c.salt))).slice(0, 32); c.check(); return { target: c.target, vaultId, paper }; }
+function chatBase(i) { return 'annotations/chats/' + i.vaultId + '/' + i.paper + '/'; }
+function chatPathCap(path) {
+  if (/^annotations\/chats\/[0-9a-f]{32}\/[A-Za-z0-9][A-Za-z0-9._-]{0,199}\/(?:catalog\.json|catalog\/[0-9a-f]{2}\.json|turns\/[0-9a-f]{32}\.json)$/.test(path) && !path.includes('..')) return path.includes('/turns/') ? CHAT_CAP.turn : CHAT_CAP.catalog;
+  return 0;
+}
+async function chatSeal(value) { const c = chatCapture(), cap = value.kind === 'chat-turn' ? CHAT_CAP.turn : value.kind === 'chat-runtime' ? Infinity : CHAT_CAP.catalog;
+  const env = await vaultEncrypt(value, c.key); c.check(); if (new TextEncoder().encode(JSON.stringify(env)).length > cap) throw new Error('Chat is too large'); return env;
+}
+async function chatOpenEnvelope(env, identity, kind) { const c = chatCapture(); validateVaultEnvelope(env); const value = await vaultDecrypt(env, c.key); c.check(); chatValidate(value, identity, kind); return value; }
+function chatValidate(v, i, kind) {
+  const check = ok => { if (!ok) throw new Error('Invalid encrypted chat'); };
+  check(vaultObject(v) && v.v === 1 && ['chat-turn', 'chat-catalog', 'chat-bucket', 'chat-runtime'].includes(v.kind) && (!kind || v.kind === kind));
+  check(v.target === i.target && v.vaultId === i.vaultId && v.paper === i.paper && CHAT_ID.test(v.vaultId));
+  if (v.kind === 'chat-turn') {
+    check(CHAT_ID.test(v.chatId) && CHAT_ID.test(v.turnId) && (v.parent === null || CHAT_ID.test(v.parent)) && Number.isSafeInteger(v.clock) && v.clock > 0 && typeof v.device === 'string' && Number.isFinite(v.created));
+    check((v.sourceId===undefined||v.sourceId===null||typeof v.sourceId==='string'&&/^[0-9a-f]{64}$/.test(v.sourceId)) && ['api','bridge'].includes(v.source) && (v.model === null || typeof v.model === 'string') && vaultObject(v.user) && typeof v.user.text === 'string' && Array.isArray(v.user.quotes) && Array.isArray(v.user.mentions) && typeof v.user.auto === 'boolean');
+    check(v.user.quotes.every(q => vaultObject(q) && typeof q.text === 'string' && (q.page === null || Number.isSafeInteger(q.page))) && v.user.mentions.every(m => vaultObject(m) && typeof m.id === 'string' && typeof m.title === 'string'));
+    check(vaultObject(v.assistant) && typeof v.assistant.text === 'string' && vaultObject(v.images) && Number.isSafeInteger(v.images.count) && v.images.count >= 0 && Array.isArray(v.images.pages) && Array.isArray(v.images.crops) && ['complete','stopped','interrupted'].includes(v.status));
+    check(Object.keys(v).every(k => ['v','kind','target','vaultId','paper','chatId','turnId','parent','clock','device','created','source','sourceId','model','user','assistant','images','status'].includes(k)));
+  } else if (v.kind === 'chat-catalog') {
+    check(Array.isArray(v.buckets) && v.buckets.every(h => /^[0-9a-f]{2}$/.test(h)) && vaultObject(v.removed));
+    check(v.active === null || (vaultObject(v.active) && CHAT_ID.test(v.active.chatId) && (v.active.anchor === null || CHAT_ID.test(v.active.anchor)) && Number.isSafeInteger(v.active.clock) && v.active.clock > 0 && typeof v.active.device === 'string'));
+    check(Object.keys(v.removed).every(k => CHAT_ID.test(k) || /^up-[0-9a-f]{12}$/.test(k)));
+  } else if (v.kind === 'chat-bucket') {
+    check(/^[0-9a-f]{2}$/.test(v.bucket) && vaultObject(v.chats));
+    for (const [id,e] of Object.entries(v.chats)) check(CHAT_ID.test(id) && id.startsWith(v.bucket) && vaultObject(e) && Number.isFinite(e.created) && typeof e.title === 'string' && e.title.length <= 80 && Array.isArray(e.uploads) && e.uploads.every(x => /^up-[0-9a-f]{12}$/.test(x)) && Array.isArray(e.tips) && e.tips.every(x => CHAT_ID.test(x)));
+  } else check(CHAT_ID.test(v.chatId) && (v.tip === null || CHAT_ID.test(v.tip)) && typeof v.fingerprint === 'string' && vaultObject(v.row));
+  return v;
+}
+function chatEmpty(i) { return { v: 1, kind: 'chat-catalog', ...i, buckets: [], active: null, removed: {}, chats: {}, turns: {} }; }
+function chatSelection(a,b) { if(!a)return b;if(!b)return a;if(a.clock!==b.clock)return a.clock>b.clock?a:b;if(a.device!==b.device)return a.device>b.device?a:b;return chatCanonical(a)>=chatCanonical(b)?a:b; }
+function chatAncestors(id, turns) { const out = new Set(); while (id) { if (out.has(id)) throw new Error('Invalid chat ancestry'); out.add(id); if (!turns[id]) break; id = turns[id].parent; } return out; }
+function chatTips(tips, turns) { const ids = [...new Set(tips)].sort(); return ids.filter(id => !ids.some(other => other !== id && chatAncestors(other,turns).has(id))); }
+function chatMergeCatalog(a,b) {
+  if (a.target !== b.target || a.vaultId !== b.vaultId || a.paper !== b.paper) throw new Error('Chat identity differs');
+  const out = chatEmpty(a), turns = { ...a.turns };
+  for (const [id,t] of Object.entries(b.turns || {})) { if (turns[id] && chatCanonical(turns[id]) !== chatCanonical(t)) throw new Error('Conflicting chat turn'); turns[id] = t; }
+  out.turns = turns; out.buckets = [...new Set([...a.buckets,...b.buckets])].sort(); out.active = chatSelection(a.active,b.active);
+  for (const id of [...new Set([...Object.keys(a.removed),...Object.keys(b.removed)])].sort()) out.removed[id] = true;
+  for (const id of [...new Set([...Object.keys(a.chats),...Object.keys(b.chats)])].sort()) {
+    const x = a.chats[id], y = b.chats[id], best = !x ? y : !y ? x : chatCanonical(x) < chatCanonical(y) ? x : y;
+    if (out.removed[id]) continue;
+    const uploads = [...new Set([...(x?.uploads||[]),...(y?.uploads||[])])].sort();
+    if (uploads.some(u => out.removed[u])) { out.removed[id] = true; continue; }
+    out.chats[id] = { ...best, created: Math.min(x?.created??Infinity,y?.created??Infinity), uploads, tips: chatTips([...(x?.tips||[]),...(y?.tips||[])],turns) };
+  }
+  for (const [id,t] of Object.entries(turns)) if (out.removed[t.chatId] || out.removed[t.paper] || t.user.mentions.some(m => out.removed[m.id])) delete turns[id];
+  return out;
+}
+function chatBranch(cat, chatId, anchor = null) {
+  const e = cat.chats[chatId]; if (!e) return [];
+  const paths = e.tips.map(tip => { const path = [], seen = new Set(); for (let t = tip; t;) { if (seen.has(t) || !cat.turns[t] || cat.turns[t].chatId !== chatId) throw new Error('Chat is incomplete'); seen.add(t); path.unshift(cat.turns[t]); t = cat.turns[t].parent; } return path; });
+  const candidates = anchor ? paths.filter(p => p.some(t => t.turnId === anchor)) : paths;
+  const sorted = (candidates.length ? candidates : paths).sort((x,y) => x.map(t=>t.turnId).join('/').localeCompare(y.map(t=>t.turnId).join('/')));
+  return sorted[0] || [];
+}
+function chatDB(stores,mode,fn) { return chatsDB(stores,mode,fn); }
+function chatGet(store,key) { return chatDB(store,'readonly',tx=>tx.objectStore(store).get(key)); }
+function chatAll(store) { return chatDB(store,'readonly',(tx,abort)=>{const out={result:[]},q=tx.objectStore(store).openCursor();q.onsuccess=()=>{try{const c=q.result;if(c){out.result.push([c.key,c.value]);c.continue()}}catch(e){abort(e)}};return out}); }
+async function chatDevice() { let d = await chatGet('meta','device'); if (!d) { d=chatId(); await chatDB('meta','readwrite',(tx)=>{const st=tx.objectStore('meta'),out={result:d},q=st.get('device');q.onsuccess=()=>{if(q.result)out.result=q.result;else st.put(d,'device')};return out}).then(v=>d=v); } return d; }
+function chatIndexed(index,key) { return chatDB('turns','readonly',tx=>tx.objectStore('turns').index(index).getAll(key)); }
+function chatRecord(f,dirty) { return {env:f.env,dirty,path:f.path,...(f.store==='turns'?{chatKey:f.chatKey,...(dirty?{pendingKey:f.path.slice(0,f.path.indexOf('/turns/')+1)}:{})}:{})}; }
+async function chatLocal(i,focus=null,all=false) {
+  const c=chatCapture(),base=chatBase(i),cat=chatEmpty(i),root=await chatGet('catalogs',base+'catalog.json');c.check();
+  if(root)Object.assign(cat,await chatOpenEnvelope(root.env,i,'chat-catalog'));
+  for(const hh of cat.buckets){const rec=await chatGet('catalogs',base+'catalog/'+hh+'.json');c.check();if(!rec)throw new Error('Chat is incomplete');const b=await chatOpenEnvelope(rec.env,i,'chat-bucket');if(b.bucket!==hh)throw new Error('Invalid chat bucket');Object.assign(cat.chats,b.chats)}
+  const ids=new Set([focus||cat.active?.chatId,...Object.entries(cat.chats).filter(([,e])=>all||e.tips.length>1).map(([id])=>id)].filter(Boolean)),records=new Map();
+  for(const id of ids)for(const rec of await chatIndexed('byChat',base+id))records.set(rec.path,rec);
+  for(const rec of await chatIndexed('byPending',base))records.set(rec.path,rec);
+  c.check();for(const [path,rec]of records){const t=await chatOpenEnvelope(rec.env,i,'chat-turn');if(path!==base+'turns/'+t.turnId+'.json'||rec.chatKey!==base+t.chatId)throw new Error('Invalid chat path');cat.turns[t.turnId]=t;}
+  return chatMergeCatalog(cat,chatEmpty(i));
+}
+async function chatLoadCatalog(pid) { const c=chatCapture(),i=await chatIdentity(pid);c.check();return chatLocal(i); }
+function chatRoot(cat) { return { v:1,kind:'chat-catalog',target:cat.target,vaultId:cat.vaultId,paper:cat.paper,buckets:[...cat.buckets].sort(),active:cat.active,removed:cat.removed }; }
+function chatBucket(cat,hh) { return { v:1,kind:'chat-bucket',target:cat.target,vaultId:cat.vaultId,paper:cat.paper,bucket:hh,chats:Object.fromEntries(Object.entries(cat.chats).filter(([id])=>id.startsWith(hh)).sort()) }; }
+async function chatPrepared(cat, before, extras = []) {
+  const c=chatCapture(),base=chatBase(cat),files=[];
+  const add=async(store,path,value)=>{const old=await chatGet(store,path);c.check();if(old){const prior=await chatOpenEnvelope(old.env,cat,value.kind);if(chatCanonical(prior)===chatCanonical(value))return;}
+    files.push({store,path,env:await chatSeal(value),dirty:true,chatKey:store==='turns'?base+value.chatId:undefined});c.check();};
+  if(!before || chatCanonical(chatRoot(cat))!==chatCanonical(chatRoot(before)))await add('catalogs',base+'catalog.json',chatRoot(cat));
+  for(const hh of cat.buckets)if(!before || !before.buckets.includes(hh) || chatCanonical(chatBucket(cat,hh))!==chatCanonical(chatBucket(before,hh)))await add('catalogs',base+'catalog/'+hh+'.json',chatBucket(cat,hh));
+  for(const [id,t]of Object.entries(cat.turns))if(!before?.turns[id])await add('turns',base+'turns/'+id+'.json',t);
+  return files.concat(extras);
+}
+async function chatPersist(cat,before,extras=[],remove=[]) {
+  const c=chatCapture(),files=await chatPrepared(cat,before,extras);c.check();const base=chatBase(cat);
+  await chatDB(['catalogs','turns','outbox','runtime','images','chats','history'],'readwrite',(tx,abort)=>{
+    c.check();for(const f of files){tx.objectStore(f.store).put(f.store==='runtime'?f.env:chatRecord(f,true),f.path);for(const image of f.images||[])tx.objectStore('images').put(image.env,image.path)}
+    for(const [store,path,expected]of remove){if(expected!==undefined){const st=tx.objectStore(store),q=st.get(path);q.onsuccess=()=>{try{c.check();if(chatCanonical(q.result)!==expected)throw new Error('Legacy chat changed during migration');st.delete(path)}catch(e){abort(e)}}}else tx.objectStore(store).delete(path);}
+    if(files.some(f=>f.store!=='runtime')||remove.some(([s])=>s==='turns')){const st=tx.objectStore('outbox'),q=st.get(base);q.onsuccess=()=>{try{c.check();st.put({...q.result,revision:(q.result?.revision||0)+1,notBefore:Date.now()+6000},base)}catch(e){abort(e)}}}
+    return {result:true};
+  });c.check();if(files.some(f=>f.store!=='runtime'))scheduleNotesPush();
+  return cat;
+}
+function chatWithLock(pid,fn) { const c=chatCapture();return navigator.locks.request('scout-chat-store:'+_acceptedTarget+':'+pid,()=>{c.check();return fn()}); }
+async function chatSaveTurn(turn, runtime = null) { return chatWithLock(turn.paper,async()=>{
+  const c=chatCapture(),i=await chatIdentity(turn.paper);chatValidate(turn,i,'chat-turn');const before=await chatLocal(i,turn.chatId),cat=chatMergeCatalog(before,chatEmpty(i));c.check();
+  if(cat.removed[turn.chatId]||cat.removed[turn.paper]||turn.user.mentions.some(m=>cat.removed[m.id])||apiForgotten(turn))return;
+  if(cat.turns[turn.turnId]){if(chatCanonical(cat.turns[turn.turnId])!==chatCanonical(turn))throw new Error('Conflicting chat turn');return;}
+  if(turn.parent && (!cat.turns[turn.parent]||cat.turns[turn.parent].chatId!==turn.chatId))throw new Error('Chat is incomplete');
+  cat.turns[turn.turnId]=turn;const entry=cat.chats[turn.chatId]||{created:turn.created,title:(turn.user.text||'Figure or passage').slice(0,80),uploads:[],tips:[]};
+  entry.uploads=[...new Set([...entry.uploads,...[turn.paper,...turn.user.mentions.map(m=>m.id),...(turn.assistant.text.match(/up-[0-9a-f]{12}/g)||[])].filter(x=>/^up-[0-9a-f]{12}$/.test(x))])].sort();
+  entry.tips=chatTips([...entry.tips,turn.turnId],cat.turns);cat.chats[turn.chatId]=entry;cat.buckets=[...new Set([...cat.buckets,turn.chatId.slice(0,2)])].sort();
+  if(!cat.active && !Object.keys(before.chats).length)cat.active={chatId:turn.chatId,anchor:null,clock:1,device:turn.device};
+  const extra=runtime?[await chatRuntimeFile(i,runtime,turn.turnId,chatBranch(cat,turn.chatId,turn.turnId))]:[];
+  await chatPersist(cat,before,extra);c.check();return cat;
+ }); }
+async function chatNewSelected(pid,onlyIfNone=false) { return chatWithLock(pid,async()=>{const i=await chatIdentity(pid),before=await chatLocal(i),cat=chatMergeCatalog(before,chatEmpty(i));if(onlyIfNone&&cat.active&&cat.chats[cat.active.chatId])return cat.active.chatId;const id=chatId(),device=await chatDevice();cat.chats[id]={created:Date.now()/1000,title:'New chat',uploads:/^up-[0-9a-f]{12}$/.test(pid)?[pid]:[],tips:[]};cat.buckets=[...new Set([...cat.buckets,id.slice(0,2)])].sort();cat.active={chatId:id,anchor:null,clock:await chatTick(cat),device};await chatPersist(cat,before);return id}); }
+function chatClock(cat) { let clock=cat.active?.clock||0;for(const turn of Object.values(cat.turns||{}))clock=Math.max(clock,turn.clock);return clock+1; }
+async function chatSelect(pid,chatId,anchor=null) { if(!chatAvailable())throw new Error('Chat is locked'); return chatWithLock(pid,async()=>{const i=await chatIdentity(pid),before=await chatLocal(i),cat=chatMergeCatalog(before,chatEmpty(i));if(!cat.chats[chatId]||anchor&&!chatBranch(cat,chatId,anchor).some(t=>t.turnId===anchor))throw new Error('No such chat');cat.active={chatId,anchor,clock:await chatTick(cat),device:await chatDevice()};await chatPersist(cat,before);}); }
+async function chatEnsure(pid) { await chatMigrate(pid);let cat=await chatLoadCatalog(pid);if(!cat.active||!cat.chats[cat.active.chatId]){if(Object.keys(cat.chats).length){const id=Object.keys(cat.chats).sort((a,b)=>cat.chats[b].created-cat.chats[a].created||a.localeCompare(b))[0];await chatSelect(pid,id)}else await chatNewSelected(pid,true);cat=await chatLoadCatalog(pid)}return cat; }
+function chatTextUser(u,images) { return [(u.quotes||[]).map(q=>q.page?`About this passage: [[p.${q.page} "${q.text}"]]`:`About this part of your answer: "${q.text}"`).join('\n'),(u.mentions||[]).map(m=>'@'+m.title+' ('+m.id+')').join('\n'),u.text,images?.count?'Images are absent on this device. Earlier answers describe text only; use view_pages for this device’s open PDF, or ask for crops again.':''].filter(Boolean).join('\n'); }
+function chatReplayText(turns,paperContext='') { const messages=[],append=(role,text,cache=false)=>{if(!text.trim())return;const b={type:'text',text,...(cache?{cache_control:API_CACHE}:{})};if(messages.at(-1)?.role===role)messages.at(-1).content.push(b);else messages.push({role,content:[b]});};
+  append('user','<paper>\n'+(paperContext||'The paper is unavailable on this device. Use the available title and abstract only. Never search for confidential uploaded paper text.')+'\n</paper>',true);
+  for(const t of turns){append('user',chatTextUser(t.user,t.images));append('assistant',t.assistant.text)}return messages;
+}
+function chatShownTurns(turns) { return turns.flatMap(t=>[{role:'user',...t.user,images:t.images.count,missingImages:!!t.images.count,interrupted:t.status!=='complete'&&!t.assistant.text,ts:t.created},...(t.assistant.text?[{role:'assistant',text:t.assistant.text,ts:t.created,interrupted:t.status!=='complete'}]:[])]); }
+async function chatFingerprint(turns) { return chatHash(turns); }
+async function chatRuntimeFile(i,row,tip,turns) { const packed=await chatPackImages(row,i);const value={v:1,kind:'chat-runtime',...i,chatId:row.id,tip,fingerprint:await chatFingerprint(turns),row:packed.row};return {store:'runtime',path:chatBase(i)+row.id+'/'+(tip||'empty'),env:await chatSeal(value),images:packed.images}; }
+async function chatRuntimeGet(i,id,tip,turns) { const env=await chatGet('runtime',chatBase(i)+id+'/'+(tip||'empty'));if(!env)return null;const v=await chatOpenEnvelope(env,i,'chat-runtime');if(v.chatId!==id||v.tip!==tip||v.fingerprint!==await chatFingerprint(turns))return null;return chatUnpackImages(v.row,i); }
+async function chatRuntimePut(pid,row,exactTip=undefined) { const c=chatCapture(),i=await chatIdentity(pid),cat=await chatLocal(i,row.id),turns=row.pending?chatPrefix(cat,row.id,row.pending.parent):exactTip!==undefined?chatPrefix(cat,row.id,exactTip):chatBranch(cat,row.id,row._anchor||cat.active?.anchor),tip=turns.at(-1)?.turnId||null;
+  const clean={...row};delete clean._turns;delete clean._rebuild;delete clean._anchor;
+  const f=await chatRuntimeFile(i,clean,tip,turns);c.check();if(apiForgotten(clean)||cat.removed[row.id])return null;await chatDB(['runtime','images'],'readwrite',tx=>{c.check();for(const image of f.images||[])tx.objectStore('images').put(image.env,image.path);return tx.objectStore('runtime').put(f.env,f.path)});c.check();return row;
+}
+async function chatMigrate(pid) { return chatWithLock(pid,async()=>{
+  const c=chatCapture(),i=await chatIdentity(pid),before=await chatLocal(i),cat=chatMergeCatalog(before,chatEmpty(i)),legacy=[];
+  for(const store of ['chats','history'])for(const [key,row]of await chatAll(store))if(row?.paper===pid && (store==='chats'?key===pid:String(key).startsWith(pid+'.')))legacy.push({store,key,row});
+  if(!legacy.length)return;const extra=[],remove=[];let selected=null;
+  for(const {store,key,row}of legacy){const original=chatCanonical(row);const id=(await chatHash(['api-chat-v1',i.target,i.vaultId,pid,row.id||String(key)])).slice(0,32);const groups=[];
+    for(const m of row.shown||[]){if(m.role==='user')groups.push({user:m,answer:[]});else if(m.role==='assistant'&&groups.length)groups.at(-1).answer.push(m.text||'')}
+    let parent=null,ordinal=0;for(const g of groups){const known=(row.turnIds||[]).length===groups.length?row.turnIds[ordinal]:null,tid=CHAT_ID.test(known)?known:(await chatHash(['api-turn-v1',id,ordinal])).slice(0,32);const t={v:1,kind:'chat-turn',...i,chatId:id,turnId:tid,parent,clock:++ordinal,device:'legacy-api',created:g.user.ts||0,source:'api',model:null,user:chatUser(g.user),assistant:{text:g.answer.join('\n\n')},images:{count:Number.isSafeInteger(g.user.images)?g.user.images:0,pages:[],crops:[],fingerprint:null},status:g.answer.length?'complete':'interrupted'};cat.turns[tid]=t;parent=tid;}
+    cat.chats[id]={created:groups[0]?.user.ts||row.ts||0,title:(groups[0]?.user.text||'Figure or passage').slice(0,80),uploads:[...new Set([pid,...(JSON.stringify(row).match(/up-[0-9a-f]{12}/g)||[])].filter(x=>/^up-[0-9a-f]{12}$/.test(x)))],tips:parent?[parent]:[]};
+    cat.buckets=[...new Set([...cat.buckets,id.slice(0,2)])].sort();const turns=chatBranch(cat,id,parent);row.id=id;row.revision=row.revision||0;row.api=row.api||[];if(!chatLegacyRuntimeSafe(row.api)){row.api=[];row.system='';row.tools='';row.mixed=false;row._rebuild=true;}row.shown=row.shown||[];row.usage=row.usage||[];row.turnIds=row.turnIds||[];
+    delete row.pending;extra.push(await chatRuntimeFile(i,row,parent,turns));remove.push([store,key,original]);if(store==='chats'&&(!selected||(row.ts||0)>selected.ts||row.ts===selected.ts&&id<selected.chatId))selected={chatId:id,anchor:parent,clock:await chatTick(cat),device:'legacy-api',ts:row.ts||0};
+  }
+  if(!cat.active&&selected){delete selected.ts;cat.active=selected}c.check();await chatPersist(cat,before,extra,remove);
+ }); }
+function chatUser(u) { return {text:typeof u.text==='string'?u.text:'',quotes:(u.quotes||[]).map(q=>({text:String(q.text||''),page:Number.isSafeInteger(q.page)?q.page:null})),mentions:(u.mentions||[]).map(m=>({id:String(m.id||''),title:String(m.title||'')})),auto:!!u.auto}; }
+function chatImages(count=0,draft=null) { return {count:Number.isSafeInteger(count)?count:0,pages:(draft?.images||[]).map(x=>x.page).filter(Number.isSafeInteger),crops:(draft?.images||[]).map(x=>x.rect).filter(x=>Array.isArray(x)&&x.length===4&&x.every(Number.isFinite)),fingerprint:_reader.doc?.fingerprints?.[0]||null}; }
+async function chatHead() { const c=chatCapture(),res=await ownerFetch(ghApiBase()+'/git/ref/heads/'+GH_BRANCH,{headers:ghHeaders(),cache:'no-store'});c.check();if(!res.ok)throw new Error('Could not open saved chats');const j=await res.json();c.check();if(!/^[0-9a-f]{40}$/.test(j.object?.sha))throw new Error('Invalid chat head');return j.object.sha; }
+async function chatRemoteRead(path,i,head,optional=false) { const c=chatCapture(),rec=await privateReadFile(path,optional,null,null,head);c.check();if(!rec)return null;if(new TextEncoder().encode(rec.text).length>chatPathCap(path))throw new Error('Chat is too large');const env=JSON.parse(rec.text),value=await chatOpenEnvelope(env,i);c.check();return {env,value,sha:rec.sha}; }
+async function chatRemote(i,head,local,all=false,focus=null) {
+  const c=chatCapture(),base=chatBase(i),vault=await privateReadFile('annotations/_vault.json',false,null,null,head);c.check();const meta=validateVaultMetadata(JSON.parse(vault.text));if(meta.salt!==c.salt)throw new Error('Chat vault changed');await vaultDecrypt(meta.check,c.key);c.check();
+  const removed={},index=await privateReadFile('annotations/_index.json',true,null,null,head);c.check();if(index){const value=await vaultDecrypt(JSON.parse(index.text),c.key);c.check();validateVaultPlain('_index.json',value);for(const [id,u] of Object.entries(value.uploads||{}))if(u.deleted)removed[id]=true;}
+  const cat=chatEmpty(i),files=new Map(),root=await chatRemoteRead(base+'catalog.json',i,head,true);if(!root){cat.removed=removed;return {cat,files};}chatValidate(root.value,i,'chat-catalog');Object.assign(cat,root.value);cat.removed={...cat.removed,...removed};files.set(base+'catalog.json',root);
+  for(const hh of cat.buckets){const path=base+'catalog/'+hh+'.json',rec=await chatRemoteRead(path,i,head);chatValidate(rec.value,i,'chat-bucket');if(rec.value.bucket!==hh)throw new Error('Invalid chat bucket');files.set(path,rec);Object.assign(cat.chats,rec.value.chats)}
+  const visit=async id=>{if(cat.turns[id])return;const path=base+'turns/'+id+'.json',cached=await chatGet('turns',path);c.check();let rec;
+    if(cached&&!cached.dirty)rec={env:cached.env,value:await chatOpenEnvelope(cached.env,i,'chat-turn')};else rec=await chatRemoteRead(path,i,head);chatValidate(rec.value,i,'chat-turn');if(rec.value.turnId!==id)throw new Error('Invalid chat path');
+    if(local.turns[id]&&chatCanonical(local.turns[id])!==chatCanonical(rec.value))throw new Error('Conflicting chat turn');files.set(path,rec);cat.turns[id]=rec.value;if(rec.value.parent)await visit(rec.value.parent);
+  };
+  for(const [id,e]of Object.entries(cat.chats)){const needed=all||id===focus||id===cat.active?.chatId||id===local.active?.chatId||new Set([...e.tips,...(local.chats[id]?.tips||[])]).size>1;if(!needed)continue;Object.assign(local.turns,(await chatLocal(i,id)).turns);for(const tip of e.tips)await visit(tip);}
+  c.check();return {cat:chatMergeCatalog(cat,chatEmpty(i)),files};
+}
+async function chatSync(pid,focus=null,write=true) {
+  if(!chatAvailable()||!hasPAT()||!navigator.onLine)return;
+  return chatWithLock(pid,async()=>{const c=chatCapture(),i=await chatIdentity(pid),base=chatBase(i);
+    for(let attempt=0;attempt<4;attempt++){
+      c.check();const local=await chatLocal(i,focus),queued=await chatGet('outbox',base),revision=queued?.revision||0,head=await chatHead();let remote;
+      try{remote=await chatRemote(i,head,local,false,focus)}catch(e){c.check();Chat.error='Your chat hasn’t been saved yet. Trying again.';scheduleNotesPush(30000);throw e}
+      let merged=chatMergeCatalog(local,remote.cat);const all=[],deletes=[],publication=(queued?.deletions||[]).map(path=>({path,content:null}));
+      const prepare=async(store,path,value)=>{const localRec=await chatGet(store,path);c.check();let rr=remote.files.get(path);
+        if(store==='turns'&&!rr&&localRec?.dirty){rr=await chatRemoteRead(path,i,head,true);if(rr&&chatCanonical(rr.value)!==chatCanonical(value))throw new Error('Conflicting chat turn')}
+        const sameRemote=!!rr&&chatCanonical(rr.value)===chatCanonical(value),sameLocal=!!localRec&&chatCanonical(await chatOpenEnvelope(localRec.env,i,value.kind))===chatCanonical(value);
+        const env=sameRemote?rr.env:sameLocal?localRec.env:await chatSeal(value);c.check();all.push({store,path,env,dirty:!sameRemote,chatKey:store==='turns'?base+value.chatId:undefined});if(!sameRemote)publication.push({path,content:JSON.stringify(env)});
+      };
+      await prepare('catalogs',base+'catalog.json',chatRoot(merged));for(const hh of merged.buckets)await prepare('catalogs',base+'catalog/'+hh+'.json',chatBucket(merged,hh));
+      for(const [id,t]of Object.entries(merged.turns))await prepare('turns',base+'turns/'+id+'.json',t);
+      if(Object.keys(merged.removed).length)for(const [path,rec]of await chatAll('turns'))if(path.startsWith(base)&&merged.removed[rec.chatKey?.slice(base.length)]){deletes.push(['turns',path]);publication.push({path,content:null})}
+      for(const [path,rec]of remote.files)if(path.includes('/turns/')&&!merged.turns[rec.value.turnId])publication.push({path,content:null});
+      await chatDB(['catalogs','turns','outbox','runtime','images'],'readwrite',tx=>{c.check();for(const f of all)tx.objectStore(f.store).put(chatRecord(f,f.dirty),f.path);for(const [st,path]of deletes)tx.objectStore(st).delete(path);return {result:true}});c.check();
+      if(!publication.length){await chatAck(base,revision,all);return;}
+      if(!write){await chatDB('outbox','readwrite',(tx,abort)=>{const st=tx.objectStore('outbox'),q=st.get(base);q.onsuccess=()=>{try{c.check();if(!q.result)st.put({revision:1,notBefore:Date.now()+6000},base)}catch(e){abort(e)}};return {result:true}});scheduleNotesPush();return;}
+      try{await ghCommitFiles([...new Map(publication.map(f=>[f.path,f])).values()],'Update encrypted chats',head);c.check();await chatAck(base,revision,all);ChatSync.channel?.postMessage({paper:pid});return;}
+      catch(e){c.check();if(e.conflict&&attempt<3)continue;Chat.error='Your chat hasn’t been saved yet. Trying again.';scheduleNotesPush(30000);return;}
+    }
+  });
+}
+async function chatAck(base,revision,files) { const c=chatCapture();return chatDB(['outbox','catalogs','turns'],'readwrite',(tx,abort)=>{const st=tx.objectStore('outbox'),q=st.get(base);q.onsuccess=()=>{try{c.check();if((q.result?.revision||0)!==revision)return;st.delete(base);for(const f of files)tx.objectStore(f.store).put(chatRecord(f,false),f.path)}catch(e){abort(e)}};return {result:true}}); }
+async function chatPushOutbox() {
+  if(!chatAvailable()||!hasPAT()||!navigator.onLine)return;
+  const c=chatCapture(),identity=await chatIdentity('catalog'),prefix='annotations/chats/'+identity.vaultId+'/',rows=await chatAll('outbox');c.check();let next=Infinity;
+  for(const [base,entry] of rows)if(base.startsWith(prefix)){
+    if((entry.notBefore||0)>Date.now()){next=Math.min(next,entry.notBefore);continue;}
+    const pid=base.slice(prefix.length,-1);try{await chatSync(pid)}catch(error){c.check();scheduleNotesPush(30000)}
+  }
+  if(next!==Infinity)scheduleNotesPush(Math.max(1,next-Date.now()));
+}
+async function chatReadSelected(pid, ready=false) { const cat=ready?await chatLoadCatalog(pid):await chatEnsure(pid),active=cat.active,turns=chatBranch(cat,active.chatId,active.anchor),tip=turns.at(-1)?.turnId||null;let row=await chatRuntimeGet(cat,active.chatId,tip,turns);if(!row){row={...apiNewRow(pid),id:active.chatId,shown:chatShownTurns(turns),turnIds:turns.map(t=>t.turnId),api:[],_rebuild:!!turns.length};}
+  row._turns=turns;row._anchor=active.anchor;return {row,cat,turns,tip};
+}
+async function chatLoadSaved() { const c=chatCapture(),pid=_reader.paper.id;
+  try{if(navigator.onLine)await chatSync(pid,null,false)}catch(e){c.check()}
+  const syncedActive=(await chatLoadCatalog(pid)).active;
+  await chatMigrate(pid);
+  if(navigator.onLine && ((chatRoute()==='bridge'&&Chat.status==='ready') || Chat.token))await chatImportBridge(pid,!syncedActive);
+  if (!_apiTurns.has(pid)) await chatRecoverPending(pid);
+  const {cat,row}=await chatReadSelected(pid);c.check();if(!_reader.paper||_reader.paper.id!==pid||!chatAvailable())return;
+  if(Chat.pid!==pid){if(Chat.pid&&(Chat.draftText||Object.values(Chat.draft).some(a=>a.length)))_chatDrafts.set(Chat.pid,{..._chatDrafts.get(Chat.pid),draft:Chat.draft,text:Chat.draftText});const kept=_chatDrafts.get(pid);Chat.draft=kept?kept.draft:{quotes:[],images:[],mentions:[]};Chat.draftText=kept?kept.text:'';}
+  const active=cat.active;
+  Chat.history=[];for(const [id,e]of Object.entries(cat.chats)){const paths=e.tips.length?e.tips:[null];const branches=[];for(const tip of paths){const turns=tip&&!cat.turns[tip]?[]:chatBranch(cat,id,tip),ids=turns.map(t=>t.turnId);let fork=null;for(let n=0;n<ids.length;n++)if(paths.some(other=>other!==tip&&(cat.turns[other]?chatBranch(cat,id,other):[])[n]?.turnId!==ids[n])){fork=ids[n];break}const key=id+(fork?':'+fork:'');if(branches.includes(key))continue;branches.push(key);const current=id===active.chatId&&(tip===chatBranch(cat,id,active.anchor).at(-1)?.turnId||!tip);Chat.history.push({id:current?'current':key,chatId:id,anchor:fork||tip,title:fork&&branches.length>1?'Another conversation':e.title,count:turns.length*2,updated:turns.at(-1)?.created||e.created,current})}}
+  Chat.history.sort((a,b)=>Number(b.current)-Number(a.current)||b.updated-a.updated||a.id.localeCompare(b.id));
+  const pending=_chatPending.get(pid);if(pending&&(row.turnIds||[]).includes(pending.turnId))chatTurnAccepted(pending);
+  const recovered=_chatDrafts.get(pid);if(recovered?.turn&&!_chatPending.has(pid)){Chat.draft=recovered.draft;Chat.draftText=recovered.text;}
+  if((Chat.running&&Chat.pid===pid)||_chatPending.has(pid))return;
+  if(Chat.pid===pid&&Chat.selected&&Chat.selected!==active.chatId&&(Chat.draftText||Object.values(Chat.draft).some(a=>a.length))){Chat.loadedFor=pid;return;}
+  Object.assign(Chat,{pid,selected:active.chatId,anchor:active.anchor,tip:chatBranch(cat,active.chatId,active.anchor).at(-1)?.turnId||null,messages:row.shown.slice(),fresh:!row.api.length,model:row.model||'opus',running:_apiTurns.has(pid),streaming:'',tool:'',loadedFor:pid});
+}
+async function chatLockNow() {
+  const capture=chatCapture(), bridgePapers=[...ChatSync.bridgeRunning.keys()];
+  ChatSync.hidden=true;
+  for(const turn of _chatPending.values())turn.stopped=true;
+  for(const live of _apiTurns.values())live.stop();
+  Chat.messages=[];Chat.history=[];Chat.streaming='';Chat.running=false;Chat.loadedFor=null;Chat.draftText='';Chat.draft={quotes:[],images:[],mentions:[]};_chatDrafts.clear();
+  const history=document.getElementById('chatHist');if(history){if(history._close)history._close();else history.remove();}renderChatPanel(true);
+  for(const pid of bridgePapers){const res=await bridgeFetch('/chat/stop',{method:'POST',body:JSON.stringify({paper:pid})});capture.check();if(!res.ok)throw new Error('Could not stop chat');}
+  await Promise.allSettled([...ChatSync.saving]);capture.check();
+  for(const [name,save] of ChatSync.retry){await save();capture.check();ChatSync.retry.delete(name);}
+  for(const pid of bridgePapers)await chatSettleBridge(pid);
+  if(ChatSync.retry.size)throw new Error('Chat save pending');
+  _chatDrafts.clear();_chatPending.clear();
+}
+function chatTeardown() { const history=document.getElementById('chatHist');if(history){if(history._close)history._close();else history.remove();}ChatSync.opening=null;ChatSync.importing.clear();ChatSync.hidden=true;ChatSync.accepting.clear();ChatSync.bridgeRunning.clear();ChatSync.retry.clear();ChatSync.papers.clear();for(const live of _apiTurns.values())live.stop();Chat.messages=[];Chat.history=[];Chat.streaming='';Chat.draftText='';Chat.loadedFor=null;Chat.selected=null;Chat.draft={quotes:[],images:[],mentions:[]};_chatDrafts.clear();_chatPending.clear(); }
+function chatTrack(work) { ChatSync.saving.add(work);work.finally(()=>ChatSync.saving.delete(work)).catch(()=>{});return work; }
+async function chatRecoverable(name,save) { const c=chatCapture(); try{const result=await save();ChatSync.retry.delete(name);return result}catch(e){c.check();ChatSync.retry.set(name,save);throw plainError('Your chat hasn’t been saved yet. Trying again.')} }
+async function chatResumeSaved() { if(!chatAvailable()||!_reader.paper||Chat.running||_chatPending.size)return;try{await chatLoadSaved();renderChatPanel(true)}catch(e){if(chatAvailable()){Chat.error='Your chat hasn’t been saved yet. Trying again.';renderChatPanel(true)}} }
+window.addEventListener('online',()=>{if(chatAvailable()){scheduleNotesPush(1000);chatResumeSaved()}});
+window.addEventListener('pageshow',()=>{if(chatAvailable())chatResumeSaved()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&chatAvailable())chatResumeSaved()});
+try{ChatSync.channel=new BroadcastChannel('scout-encrypted-chats');ChatSync.channel.onmessage=async e=>{if(e.data?.lock){try{if(Vault.key)await chatLockNow();chatTeardown();Vault.key=null;Vault.index=null;invalidateVaultWork();renderChatPanel(true)}catch(error){if(isOwner())toastError('Couldn’t finish locking. Try again.')}}else if(chatAvailable()&&e.data?.paper===Chat.pid)chatResumeSaved()}}catch(e){}
+Private.interactionResets.add(chatTeardown);
+async function chatImportBridge(pid,initial=false) {
+  if (ChatSync.importing.has(pid)) return;
+  const capture = chatCapture(), identity = await chatIdentity(pid);
+  const pending = _chatPending.get(pid);
+  let complete = false, running = false, accepted = false;
+  const before=await chatLoadCatalog(pid),batch=new Map();let current=null;
+  ChatSync.importing.set(pid,capture);
+  try {
+    const response = await bridgeFetch('/chats?paper=' + encodeURIComponent(pid));
+    capture.check();
+    if (!response.ok) throw new Error('Could not open saved chats');
+    const entries = (await response.json()).chats;
+    if (!Array.isArray(entries)) throw new Error('Invalid bridge chats');
+    if (!entries.some(entry => entry.id === 'current')) entries.push({ id: 'current' });
+    for (const entry of entries) {
+      if (entry.id !== 'current' && !/^[0-9]+$/.test(String(entry.id))) throw new Error('Invalid bridge chat');
+      const res = await bridgeFetch('/chat/export?paper=' + encodeURIComponent(pid) + '&id=' + encodeURIComponent(entry.id));
+      capture.check();
+      if (res.status === 404) { Chat.bridgeOld = true; throw new Error('Old bridge'); }
+      if (!res.ok) throw new Error('Could not open saved chat');
+      const snapshot = await res.json();
+      capture.check();
+      if (!CHAT_ID.test(snapshot.chatId) || !Array.isArray(snapshot.turns) || typeof snapshot.running !== 'boolean') {
+        Chat.bridgeOld = true;
+        throw new Error('Old bridge');
+      }
+      Chat.bridgeOld = false;
+      running ||= snapshot.running;
+      if (pending && ((snapshot.acceptedTurnIds || []).includes(pending.turnId) || snapshot.turns.some(t => t.turnId === pending.turnId))) accepted = true;
+      if (snapshot.running) continue;
+      if(snapshot.turns.some(t=>(t.vaultId!==undefined&&t.vaultId!==identity.vaultId)||(t.target!==undefined&&t.target!==identity.target)))continue;
+      if(entry.id==='current'&&snapshot.turns.length)current={chatId:snapshot.chatId,tip:snapshot.tip,updated:entry.updated||snapshot.turns.at(-1).created||0};
+      for (const original of snapshot.turns) {
+        const turn = { ...original, ...identity };
+        chatValidate(turn, identity, 'chat-turn');
+        if(batch.has(turn.turnId)&&chatCanonical(batch.get(turn.turnId))!==chatCanonical(turn))throw new Error('Conflicting chat turn');
+        batch.set(turn.turnId,turn);
+      }
+    }
+    const known=new Set(),loaded=new Set();
+    for(const turn of batch.values())if(!loaded.has(turn.chatId)){
+      loaded.add(turn.chatId);let local=await chatLocal(identity,turn.chatId);
+      if([...batch.values()].some(t=>t.chatId===turn.chatId&&t.parent&&!batch.has(t.parent)&&!local.turns[t.parent])){
+        await chatSync(pid,turn.chatId,false);local=await chatLocal(identity,turn.chatId);
+      }
+      for(const id of Object.keys(local.turns))known.add(id);
+    }
+    while(batch.size){let progress=false;for(const [id,turn]of batch){if(turn.parent&&!known.has(turn.parent))continue;await chatSaveTurn(turn);capture.check();known.add(id);batch.delete(id);progress=true}if(!progress)throw new Error('Chat is incomplete')}
+    if(current && (!before.active || initial&&before.active.device==='legacy-api')){
+      let choose=!before.active;
+      if(!choose){const turns=chatBranch(before,before.active.chatId,before.active.anchor),row=await chatRuntimeGet(before,before.active.chatId,turns.at(-1)?.turnId||null,turns);const prior=row?.ts||0;choose=current.updated>prior||current.updated===prior&&current.chatId<before.active.chatId;}
+      if(choose)await chatSelect(pid,current.chatId,current.tip);
+    }
+    complete = true;
+  } catch (error) {
+    capture.check();
+    // An API conversation can open when an optional local bridge is unavailable.
+    if (chatRoute() === 'bridge') Chat.error = Chat.bridgeOld
+      ? 'Update Scout on your computer to continue this chat.'
+      : 'Your chat hasn’t been saved yet. Trying again.';
+  } finally {
+    if(ChatSync.importing.get(pid)===capture)ChatSync.importing.delete(pid);
+  }
+  if (complete && pending) {
+    if (accepted) chatTurnAccepted(pending);
+    else if (!running && ['sending', 'uncertain'].includes(pending.stage)) restoreChatTurn(pending);
+  }
+  if (running) setTimeout(privateCallback(() => {
+    try { capture.check(); if (chatAvailable() && !Chat.running && Chat.pid === pid) chatResumeSaved(); } catch (error) {}
+  }), 1000);
+  return {complete,running};
+}
+async function chatRecoverPending(pid) {
+  const capture = chatCapture();
+  await navigator.locks.request('scout-api-chat:' + pid, { ifAvailable: true }, async lock => {
+    capture.check();
+    if (!lock || _apiTurns.has(pid) || ChatSync.retry.size || ChatSync.accepting.size) return;
+    const { row } = await chatReadSelected(pid);
+    if (!row.pending) return;
+    const at = row.pending, text = row.checkpoint || '';
+    at.status = 'interrupted';
+    await apiChatFinish(pid, at,
+      text ? [{ role: 'assistant', content: [{ type: 'text', text }] }] : [],
+      text ? { role: 'assistant', text, ts: at.created, interrupted: true } : null, []);
+    capture.check();
+  });
+}
+async function chatTick(cat) {
+  const capture = chatCapture(), observed = chatClock(cat) - 1;
+  return chatDB('meta', 'readwrite', (tx, abort) => {
+    const store = tx.objectStore('meta'), req = store.get('clock'), out = { result: null };
+    req.onsuccess = () => {
+      try {
+        capture.check();
+        const next = Math.max(req.result || 0, observed) + 1;
+        if (!Number.isSafeInteger(next)) throw new Error('Invalid chat clock');
+        store.put(next, 'clock'); out.result = next;
+      } catch (error) { abort(error); }
+    };
+    return out;
+  });
+}
+async function chatBridgeSeed(cat,chatId=cat.active.chatId,anchor=cat.active.anchor) { const turns=chatBranch(cat,chatId,anchor);return {chatId,parentTurnId:turns.at(-1)?.turnId||null,earlierTurns:turns.map(t=>({user:t.user,assistant:t.assistant,images:t.images})),origin:{target:cat.target,vaultId:cat.vaultId,clock:await chatTick(cat),device:await chatDevice(),images:chatImages(0)}}; }
+async function chatForgetUpload(uid) {
+  if(!/^up-[0-9a-f]{12}$/.test(uid))throw new Error('Invalid uploaded paper');
+  if(!Vault.key||!Vault.ready) { const records=await chatAll('catalogs');if(records.length)throw new Error('Unlock notes to remove saved chats');return; }
+  const c=chatCapture(),identity=await chatIdentity(uid),prefix='annotations/chats/'+identity.vaultId+'/',head=await chatHead();
+  const res=await ownerFetch(ghApiBase()+'/git/trees/'+head+'?recursive=1',{headers:ghHeaders(),cache:'no-store'});c.check();if(!res.ok)throw new Error('Could not remove saved chat');const tree=await res.json();c.check();if(tree.truncated!==false||!Array.isArray(tree.tree))throw new Error('Incomplete saved chats');
+  const roots=new Set();for(const f of tree.tree)if(f.path?.startsWith(prefix)&&f.path.endsWith('/catalog.json')){if(!chatPathCap(f.path)||f.type!=='blob')throw new Error('Invalid saved chats');roots.add(f.path)}
+  for(const [path]of await chatAll('catalogs'))if(path.startsWith(prefix)&&path.endsWith('/catalog.json'))roots.add(path);
+  for(const path of roots){const pid=path.slice(prefix.length,-13);await chatWithLock(pid,async()=>{
+    const i=await chatIdentity(pid),local=await chatLocal(i,null,true),remote=await chatRemote(i,head,local,true),before=chatMergeCatalog(local,remote.cat),cat=chatMergeCatalog(before,chatEmpty(i));c.check();cat.removed[uid]=true;
+    const runtime=await chatAll('runtime'),remove=[];
+    for(const [key,env]of runtime)if(key.startsWith(chatBase(i))){const v=await chatOpenEnvelope(env,i,'chat-runtime');if(JSON.stringify(v.row).includes(uid)||v.paper===uid){cat.removed[v.chatId]=true;remove.push(['runtime',key])}}
+    for(const [id,e]of Object.entries(cat.chats))if(pid===uid||e.uploads.includes(uid)||Object.values(cat.turns).some(t=>t.chatId===id&&JSON.stringify(t).includes(uid)))cat.removed[id]=true;
+    const merged=chatMergeCatalog(cat,chatEmpty(i));
+    for(const [key]of runtime)if(key.startsWith(chatBase(i))&&Object.keys(merged.removed).some(id=>key.startsWith(chatBase(i)+id+'/')))remove.push(['runtime',key]);
+    for(const [key]of await chatAll('images'))if(key.startsWith(chatBase(i))&&Object.keys(merged.removed).some(id=>key.startsWith(chatBase(i)+id+'/')))remove.push(['images',key]);
+    // Keep encrypted removed turns until the publication round can delete their exact remote paths.
+    const files=await chatPrepared(merged,local);for(const [path,rec]of remote.files)if(path.includes('/turns/')&&!merged.turns[rec.value.turnId])remove.push(['remote-delete',path]);
+    await chatDB(['catalogs','turns','runtime','images','outbox'],'readwrite',(tx,abort)=>{c.check();for(const f of files)tx.objectStore(f.store).put(chatRecord(f,true),f.path);for(const [st,key]of remove)if(st!=='remote-delete')tx.objectStore(st).delete(key);
+      const st=tx.objectStore('outbox'),q=st.get(chatBase(i));q.onsuccess=()=>{try{c.check();st.put({revision:(q.result?.revision||0)+1,deletions:[...new Set([...(q.result?.deletions||[]),...remove.filter(([s])=>s==='remote-delete').map(([,p])=>p)])]},chatBase(i))}catch(e){abort(e)}};return {result:true}});
+  });await chatSync(pid);const pending=await chatGet('outbox',path.slice(0,-12));if(pending)throw new Error('Could not remove saved chats');}
+  if(Chat.pid===uid||Chat.messages.some(m=>JSON.stringify(m).includes(uid))){Chat.messages=[];Chat.history=[];Chat.loadedFor=null;renderChatPanel(true)}
+}
+async function apiChatsForget(uid) { await apiLegacyChatsForget(uid); await chatForgetUpload(uid); }
+async function chatPackImages(row,i) {
+  const c=chatCapture(),copy=JSON.parse(JSON.stringify(row)),images=[];
+  const visit=async v=>{if(!v||typeof v!=='object')return;if(v.type==='image'&&v.source?.type==='base64'){
+    const data=v.source,hash=(await chatHash([data.media_type,data.data])).slice(0,32),id=chatBase(i)+row.id+'/'+hash;
+    const old=await chatGet('images',id);c.check();if(!old){const env=await vaultEncrypt({target:i.target,vaultId:i.vaultId,paper:i.paper,chatId:row.id,source:data},c.key);c.check();images.push({path:id,env:new Blob([JSON.stringify(env)],{type:'application/json'})})}
+    v.source={type:'scout-local',id};return;}
+    for(const x of Object.values(v))if(x&&typeof x==='object')await visit(x);
+  };await visit(copy.api);c.check();return {row:copy,images};
+}
+async function chatUnpackImages(row,i) {
+  const c=chatCapture();let missing=false;
+  const visit=async v=>{if(!v||typeof v!=='object')return;if(v.type==='image'&&v.source?.type==='scout-local'){
+    const blob=await chatGet('images',v.source.id);c.check();if(!blob){missing=true;return}const env=JSON.parse(await blob.text()),record=await vaultDecrypt(env,c.key);c.check();
+    if(record.target!==i.target||record.vaultId!==i.vaultId||record.paper!==i.paper||record.chatId!==row.id)throw new Error('Invalid local chat image');v.source=record.source;return;}
+    for(const x of Object.values(v))if(x&&typeof x==='object')await visit(x);
+  };await visit(row.api);c.check();return missing?null:row;
+}
+function chatLegacyRuntimeSafe(messages) {
+  if (!Array.isArray(messages) || !messages.length) return false;
+  let client = new Set();
+  for (const m of messages) {
+    if (!m || !['user', 'assistant'].includes(m.role) || !Array.isArray(m.content) || !m.content.length) return false;
+    if (m.content.some(b => !b || !['text', 'image', 'thinking', 'redacted_thinking', 'tool_use', 'tool_result', 'server_tool_use', 'web_search_tool_result', 'web_fetch_tool_result'].includes(b.type))) return false;
+    const results = m.content.filter(b => b.type === 'tool_result');
+    if (client.size) {
+      if (m.role !== 'user' || results.length !== client.size || m.content.slice(0, results.length).some(b => b.type !== 'tool_result')) return false;
+      for (const b of results) if (!client.delete(b.tool_use_id)) return false;
+      if (client.size) return false;
+    } else if (results.length) return false;
+    const server = new Set();
+    for (const b of m.content) {
+      if (b.type === 'text' && typeof b.text !== 'string') return false;
+      if (b.type === 'image' && (m.role !== 'user' || !vaultObject(b.source))) return false;
+      if (b.type === 'thinking' && (m.role !== 'assistant' || typeof b.thinking !== 'string' || typeof b.signature !== 'string' || !b.signature.trim())) return false;
+      if (b.type === 'redacted_thinking' && (m.role !== 'assistant' || typeof b.data !== 'string' || !b.data)) return false;
+      if (b.type === 'tool_use') {
+        if (m.role !== 'assistant' || typeof b.id !== 'string' || client.has(b.id) || !vaultObject(b.input)) return false;
+        client.add(b.id);
+      }
+      if (b.type === 'server_tool_use') { if (m.role !== 'assistant' || typeof b.id !== 'string') return false; server.add(b.id); }
+      if (b.type === 'web_search_tool_result' || b.type === 'web_fetch_tool_result') { if (!server.delete(b.tool_use_id)) return false; }
+    }
+    if (server.size) return false;
+  }
+  return !client.size;
+}
+async function chatFlushAcceptance(pid, turnId) {
+  const entry = ChatSync.accepting.get(turnId);
+  if (!entry) return;
+  const capture = chatCapture();
+  await chatRuntimePut(pid, entry.row); capture.check();
+  ChatSync.accepting.delete(turnId); ChatSync.retry.delete(pid + ':accept:' + turnId);
+}
+function chatInputEstimate(...values) {
+  const count=value=>{
+    if(typeof value==='string')return Math.ceil(new TextEncoder().encode(value).length/3);
+    if(!value||typeof value!=='object')return 0;
+    if(value.type==='image')return 8192;
+    return Object.values(value).reduce((total,item)=>total+count(item)+4,0);
+  };
+  return values.reduce((total,value)=>total+count(value),0);
+}
+async function chatFinishApi(pid, at, api, shown, usage, reply) {
+  const capture = chatCapture();
+  // A failed checkpoint must never prevent the final atomic turn/runtime save.
+  try { await apiChatCheckpoint(pid, at, reply); } catch (error) { capture.check(); }
+  capture.check();
+  try { return await apiChatFinish(pid, at, api, shown, usage); }
+  catch (error) { error.chatReply = shown?.text || reply; throw error; }
+}
+async function chatSettleBridge(pid) {
+  const capture = chatCapture(), deadline = Date.now() + 10000;
+  while (Date.now() < deadline) {
+    const response = await bridgeFetch('/chat/export?paper=' + encodeURIComponent(pid) + '&id=current');
+    capture.check(); if (!response.ok) throw new Error('Could not settle chat');
+    const snapshot = await response.json(); capture.check();
+    if (!snapshot.running) {
+      const result = await chatImportBridge(pid);
+      if (!result?.complete || result.running) throw new Error('Could not settle chat');
+      return;
+    }
+    await new Promise(resolve => setTimeout(resolve, 100)); capture.check();
+  }
+  throw new Error('Could not settle chat');
+}
+function chatHistoryControlsHTML() {
+  if (!chatAvailable() || Chat.loadedFor!==_reader.paper?.id) return '';
+  return ((Chat.history || []).some(c => c.id !== 'current') ? `<button class="rp-text-btn" id="chatHistBtn" onclick="toggleChatHistory(event)" title="Earlier chats about this paper" aria-label="Earlier chats" aria-haspopup="true">Earlier chats ▾</button>` : '')
+    + `<button class="rp-text-btn" onclick="chatNew()" title="Start a fresh conversation about this paper (this one is kept)">${ICON_PLUS}New chat</button>`;
+}
+/* ---- end encrypted Scout conversations ---- */
 /* ---- one turn on the API ---- */
 function apiTools(model, seen = { searches: 0, fetches: 0 }) {
   const web = model === 'haiku'
@@ -20629,9 +21070,10 @@ function apiChatLock(pid, fn) {
   return navigator.locks.request('scout-api-chat:' + pid, () => { checkPrivateEpoch(epoch); requireOwner(); return fn(); });
 }
 async function apiChatTurn(turn, c) {
-  return apiChatLock(c.pid, () => apiChatTurnLocked(turn, c));
+  return chatTrack(apiChatLock(c.pid, () => apiChatTurnLocked(turn, c)));
 }
 async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpoch();
+  const _chatVault=turn.vault||chatCapture();_chatVault.check();
   const { p, pid, doc, model, effort, profile, body, owned } = c;
   const key = apiKey();
   const live = { ctl: new AbortController(), requests: new Set(), stopped: false };
@@ -20646,20 +21088,23 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
       if ((b.type === 'tool_use' || b.type === 'server_tool_use') && owned()) { Chat.tool = b.name; scheduleLive(); }
       prev = b.type;
     },
-    text: d => { reply += d; if (owned()) { Chat.streaming = reply; Chat.tool = ''; scheduleLive(); } },
+    text: d => { _chatVault.check();reply += d; if (accepted) { live.checkpoint = reply; if (!live.checkpointing) live.checkpointing = chatTrack(apiChatCheckpoint(pid, accepted, live.checkpoint)).catch(() => {}).finally(() => { live.checkpointing = null; }); } if (owned() && chatAvailable()) { Chat.streaming = reply; Chat.tool = ''; scheduleLive(); } },
   };
   try {
     if (turn.stopped) { live.stop(); throw plainError('Stopped.'); }
     if (!key) throw new Error('No key');
-    let stored = await privateAwait(apiChatGet(pid), _authEpoch);
+    let stored = await privateAwait(chatRuntimeForTurn(pid, turn,true), _authEpoch);
     // Holding this paper's Web Lock proves any saved pending marker belongs to a tab that already ended.
-    if (stored && stored.pending) stored = await privateAwait(apiChatFinish(pid, stored.pending, [], null, []), _authEpoch);
+    if (stored && stored.pending) { const pending = stored.pending, words = stored.checkpoint || ''; pending.status = 'interrupted'; stored = await privateAwait(apiChatFinish(pid, pending, words ? [{role:'assistant',content:[{type:'text',text:words}]}] : [], words ? {role:'assistant',text:words,ts:pending.created} : null, []), _authEpoch); stored = await chatRuntimeForTurn(pid, turn,true); }
     if (owned() && stored) turn.messages.splice(0, turn.messages.length, ...stored.shown, turn.user);
-    const history = stored && Array.isArray(stored.api) ? stored.api : [];
+    const history = stored?._rebuild ? chatReplayText(stored._turns, (body.paperText || [p.title,p.abstract].filter(Boolean).join('\n')) + (p.uploaded && !doc ? '\nThe confidential paper is unavailable here. Never search for it.' : '')) : stored && Array.isArray(stored.api) ? stored.api : [];
+    if (stored?._rebuild) turn.replay = history;
     const system = (stored && stored.system) || API_SYSTEM + (profile ? '\n\nAbout the user: ' + profile : '');
     const sig = JSON.stringify(apiTools(model));
     const wasMixed = !!(stored && (stored.mixed || (stored.tools && stored.tools !== sig)));
     const user = { role: 'user', content: apiUserContent(body, !history.length, p) };
+    if(stored?._rebuild&&history.at(-1)?.role==='user'){user.content=history.pop().content.concat(user.content);turn.replay=history;}
+    if(chatInputEstimate(history,user,system,apiTools(model))>148000){turn.stage='rejected';throw plainError('Couldn’t answer. Try again.');}
     for (let n = 0; ; n++) {
       if (n >= API_LIMIT.requests || seen.output >= API_LIMIT.output) { outcome = 'cap'; break; }
       const tools = apiTools(model, seen), mixed = wasMixed || JSON.stringify(tools) !== sig;
@@ -20670,8 +21115,10 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
       try { ({ res, ctl } = await privateAwait(apiFetch(payload, model, mixed, key, live), _authEpoch)); }
       catch (e) { checkPrivateEpoch(_authEpoch); if (e && e.unsent && !accepted) throw e; outcome = live.stopped ? 'stopped' : 'failed'; break; }
       if (!res.ok) { kind = apiRefusalKind(res.status, await privateAwait(apiErrorBody(res), _authEpoch)); outcome = 'refused'; break; }
+      _chatVault.check();
       if (!accepted) {
         accepted = await privateAwait(apiChatAccept(pid, turn, user, system, sig, mixed, model), _authEpoch);
+        live.accepted = accepted;
         turn.stage = 'accepted'; chatTurnAccepted(turn);
       }
       let msg;
@@ -20704,6 +21151,7 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
     // you went to another paper and came back meanwhile: that view loads the saved conversation once this ends
     if (!owned() && Chat.pid === pid && _reader.paper && _reader.paper.id === pid) setTimeout(privateCallback(() => { if (chatRoute() === 'api' && Chat.pid === pid && !_apiTurns.has(pid)) { Chat.loadedFor = null; chatOpen(); } }), 0);
   }
+  _chatVault.check();
   if (outcome === 'refused') {
     if (!accepted) {
       turn.stage = 'rejected';
@@ -20715,6 +21163,8 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
     outcome = 'failed';
   }
   if (!accepted) { turn.stage = 'rejected'; throw plainError(outcome === 'stopped' ? 'Stopped.' : 'Couldn’t answer. Try again.'); }
+  if (live.checkpointing) await live.checkpointing;
+  accepted.status = (outcome === 'done' || outcome === 'max') && reply.trim() ? 'complete' : outcome === 'stopped' ? 'stopped' : 'interrupted';
   const stamp = Date.now() / 1000;
   if (outcome === 'refusal') {   // Claude declined: the question comes back to the box, and leaves the conversation
     await privateAwait(apiChatRollback(pid, accepted, usage), _authEpoch);
@@ -20722,72 +21172,15 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
   }
   if (outcome === 'done' || outcome === 'max') {
     const text = outcome === 'max' && reply.trim() ? reply + API_STOPPED_LINE : reply;
-    await privateAwait(apiChatFinish(pid, accepted, turnApi, text.trim() ? { role: 'assistant', text, ts: stamp } : null, usage), _authEpoch);
+    await privateAwait(chatFinishApi(pid, accepted, turnApi, text.trim() ? { role: 'assistant', text, ts: stamp } : null, usage, reply), _authEpoch);
     if (!text.trim() && outcome === 'max') throw plainError('Couldn’t answer. Try again.');
     return text;
   }
   // stopped, failed, cut off or over a bound: the words shown so far stay, as plain text
   const words = reply.trim() ? reply : '', text = words && outcome !== 'stopped' ? words + API_STOPPED_LINE : words;
-  await privateAwait(apiChatFinish(pid, accepted, words ? [{ role: 'assistant', content: [{ type: 'text', text: words }] }] : [], text ? { role: 'assistant', text, ts: stamp } : null, usage), _authEpoch);
+  await privateAwait(chatFinishApi(pid, accepted, words ? [{ role: 'assistant', content: [{ type: 'text', text: words }] }] : [], text ? { role: 'assistant', text, ts: stamp } : null, usage, reply), _authEpoch);
   if (!words) throw plainError(outcome === 'stopped' ? 'Stopped.' : 'Couldn’t answer. Try again.');
   return text;
-}
-function apiChatAccept(pid, turn, user, system, sig, mixed, model) {
-  let at = null;
-  return apiChatUpdate(pid, row => {
-    if (row.pending) throw new Error('A turn is already pending');
-    if (!row.id) row.id = crypto.randomUUID();
-    row.revision = (row.revision || 0) + 1;
-    if (!row.system) row.system = system;
-    if (!row.tools) row.tools = sig; else if (row.tools !== sig) row.mixed = true;
-    if (mixed) row.mixed = true;
-    at = { id: row.id, revision: row.revision, turnId: turn.turnId, api: row.api.length, shown: row.shown.length };
-    row.pending = at;
-    row.api.push(user); row.shown.push(JSON.parse(JSON.stringify(turn.user))); row.turnIds = (row.turnIds || []).concat(turn.turnId);
-    row.model = model; row.ts = Date.now() / 1000;
-    return row;
-  }).then(() => at);
-}
-/* Complete only the exact pending turn, even if another tab has since archived that conversation. Both stores
-   participate in one transaction; missing/deleted conversations and duplicate or stale completions are no-ops. */
-function apiChatChangeTurn(pid, at, fn) {
-  if (!at) return Promise.resolve(null);
-  return chatsDB(['chats', 'history'], 'readwrite', (tx, abort) => {
-    const epoch = capturePrivateEpoch(), chats = tx.objectStore('chats'), hist = tx.objectStore('history'), out = { result: null };
-    const matches = row => row && row.paper === pid && row.id === at.id && row.revision === at.revision && row.pending && row.pending.turnId === at.turnId && row.api.length === at.api + 1 && row.shown.length === at.shown + 1;
-    const change = (row, store, key) => {
-      checkPrivateEpoch(epoch); requireOwner();
-      if (!matches(row) || apiForgotten(row)) return;
-      fn(row); if (apiForgotten(row)) return;
-      delete row.pending; row.revision++; row.ts = Date.now() / 1000;
-      store.put(row, key); out.result = row;
-    };
-    const g = chats.get(pid);
-    g.onsuccess = () => {
-      try {
-        checkPrivateEpoch(epoch); requireOwner();
-        if (matches(g.result)) { change(g.result, chats, pid); return; }
-        const cur = hist.openCursor();
-        cur.onsuccess = e => { try { checkPrivateEpoch(epoch); requireOwner(); const c = e.target.result; if (!c) return; if (String(c.key).startsWith(pid + '.') && matches(c.value)) change(c.value, hist, c.key); else c.continue(); } catch (error) { abort(error); } };
-        cur.onerror = () => abort(cur.error || new Error('Could not read private database cursor'));
-      } catch (e) { abort(e); }
-    };
-    return out;
-  });
-}
-function apiChatFinish(pid, at, api, shown, usage) {
-  return apiChatChangeTurn(pid, at, row => {
-    row.api.push(...api); if (shown) row.shown.push(shown); row.usage.push(...usage); row.ts = Date.now() / 1000; if (at.mixed) row.mixed = true;
-    return row;
-  });
-}
-function apiChatRollback(pid, at, usage) {
-  return apiChatChangeTurn(pid, at, row => {
-    row.api.length = at.api; row.shown.length = at.shown;
-    row.turnIds = (row.turnIds || []).filter(id => id !== at.turnId);
-    row.usage.push(...usage);
-    return row.api.length || row.shown.length || row.usage.length ? row : null;
-  });
 }
 /* The API refused this key or this device: where the bridge answers, the same message goes there once and nothing
    shows; elsewhere the reason shows, with what to do */
