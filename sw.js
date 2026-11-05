@@ -18,13 +18,14 @@
    The worker never reloads a page, never tells a page about a new version, and has no controllerchange handler: Phase
    22's return check decides when the page reloads. When this file's caching changes, bump VERSION, which names the
    caches; activation deletes the caches of every other version. */
-const VERSION = 3;
+const VERSION = 4;
 const SHELL = 'scout-shell-v' + VERSION, LIBS = 'scout-libs-v' + VERSION;
 const ROOT = new URL('./', self.location).href;   // APP_ROOT: where index.html lives
 const ROOT_PATH = new URL(ROOT).pathname;
 const NET_WAIT = 4000;
-const APP_FILES = ['scholar_config.js', 'instance.json', 'scholar.config.json', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
-const LIB_URL = /^https:\/\/(?:cdnjs\.cloudflare\.com\/ajax\/libs\/PapaParse\/|cdn\.jsdelivr\.net\/npm\/(?:pdfjs-dist|marked|dompurify|katex)@[0-9][^/]*\/|fonts\.googleapis\.com\/css2\?|fonts\.gstatic\.com\/)/;
+const APP_FILES = ['scholar_config.js', 'instance.json', 'scholar.config.json', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'mycopy.js', 'mycopy-pdf.js'];
+const COPY_LIBS = new Set(['https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js', 'https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js', 'https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@v20201206-phase3/hinted/ttf/NotoSans/NotoSans-Regular.ttf']);
+const LIB_URL = url => COPY_LIBS.has(url) || /^https:\/\/(?:cdnjs\.cloudflare\.com\/ajax\/libs\/PapaParse\/|cdn\.jsdelivr\.net\/npm\/(?:pdfjs-dist|marked|dompurify|katex)@[0-9][^/]*\/|fonts\.googleapis\.com\/css2\?|fonts\.gstatic\.com\/)/.test(url);
 
 /* Kept from the start: the page and its bootstrap files, so a page opened once opens offline next time */
 self.addEventListener('install', event => {
@@ -41,7 +42,7 @@ self.addEventListener('install', event => {
       if (!/^scout-libs-v[0-9]+$/.test(name) || name === LIBS) continue;
       const old = await caches.open(name);
       for (const request of await old.keys()) {
-        if (!LIB_URL.test(request.url) || request.headers.has('authorization')) continue;
+        if (!LIB_URL(request.url) || request.headers.has('authorization')) continue;
         const current = await libs.match(request.url), response = await old.match(request);
         if (current && current.type !== 'opaque') continue;
         if (response && ((response.status === 200 && ['cors', 'basic'].includes(response.type)) || (response.type === 'opaque' && !current))) await libs.put(request.url, response);
@@ -63,7 +64,7 @@ self.addEventListener('message', event => {
   if (data.type !== 'sw-warm' || !Array.isArray(data.urls)) return;
   event.waitUntil(caches.open(LIBS).then(async cache => {
     const keep = async url => {
-      if (typeof url !== 'string' || !LIB_URL.test(url)) return [];
+      if (typeof url !== 'string' || !LIB_URL(url)) return [];
       const kept = await cache.match(url);
       let res = kept && kept.type !== 'opaque' ? kept : null;
       if (!res) {
@@ -79,7 +80,7 @@ self.addEventListener('message', event => {
 function fontsIn(css, base) {
   const out = [];
   for (const m of css.matchAll(/url\(\s*['"]?([^'")\s]+)['"]?\s*\)/g)) {
-    try { const u = new URL(m[1], base).href; if (/\.woff2(?:$|\?)/.test(u) && LIB_URL.test(u)) out.push(u); } catch (e) {}
+    try { const u = new URL(m[1], base).href; if (/\.woff2(?:$|\?)/.test(u) && LIB_URL(u)) out.push(u); } catch (e) {}
   }
   return out;
 }
@@ -101,7 +102,7 @@ self.addEventListener('fetch', event => {
     if (APP_FILES.includes(rel)) event.respondWith(networkFirst(event, req, ROOT + rel, false));
     return;
   }
-  if (LIB_URL.test(req.url)) event.respondWith(keptFirst(event, req));
+  if (LIB_URL(req.url)) event.respondWith(keptFirst(event, req));
 });
 
 /* A response worth keeping: the network's own 200, same-origin; for the page, HTML */

@@ -2918,6 +2918,42 @@ body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.au
 @media(max-width:600px){.daily-picker{padding:0 16px}.daily-area{padding:16px 16px calc(var(--daily-footer-height) + 16px)}.daily-card{padding:23px 20px 19px}.daily-card h2{font-size:27px}.daily-headline{margin-top:18px;padding:17px 0;font-size:15px}.daily-summary,.daily-abstract{font-size:13px;line-height:1.7}.daily-authors{margin-top:13px;font-size:12px}.daily-venue{font-size:11px}.daily-actions{gap:clamp(15px,10vw,43px)}.daily-action span{width:50px;height:50px}}
 @media(prefers-reduced-motion:reduce){.daily-card,.daily-action{transition:none!important;animation:none!important}}
 
+
+/* MYCOPY: approved setup, Settings and reader visibility. */
+.copy-settings {max-width:760px;margin:0 auto;padding:20px;display:flex;flex-direction:column;gap:22px}
+.copy-back {display:flex;align-items:center;gap:10px;font-size:20px;font-weight:680;background:none;border:0;color:var(--text);text-align:left;cursor:pointer}
+.copy-group {border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.copy-gh {padding:12px 16px 0;color:var(--text-muted);font-size:11.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase}
+.copy-item {display:flex;align-items:center;gap:12px;min-height:54px;padding:10px 16px}
+.copy-item + .copy-item {border-top:1px solid var(--border)}
+.copy-label {flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;overflow-wrap:anywhere}
+.copy-label small {color:var(--text-muted);font-size:12.5px}
+.copy-switch {position:relative;width:40px;height:24px;border:0;border-radius:12px;background:#3a3f44;flex:none;cursor:pointer}
+.copy-switch::after {content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+.copy-switch[aria-checked=true] {background:var(--accent)}
+.copy-switch[aria-checked=true]::after {left:19px}
+.copy-settings .ui-btn,.copy-setup .ui-btn {border-radius:999px;min-height:34px}
+.copy-setup .vault-box {width:min(420px,92vw);border-radius:18px;padding:22px 20px 18px}
+.copy-setup .vault-sub {margin:2px 0 8px}
+.copy-setup .vault-box h3 {font-family:inherit;font-size:19px;font-weight:680;letter-spacing:-.01em}
+.copy-setup .vault-remember {display:none}
+.copy-setup #vaultPw {margin-bottom:8px}
+.copy-step {margin:18px 0;display:flex;flex-direction:column;gap:9px}
+.copy-step strong,#copySetupNotes {font-size:14.5px;display:flex;align-items:center;gap:9px}
+.copy-stepnum {display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--bg-raise);font-size:12px;flex:none}
+.copy-folder svg {width:18px;height:18px;fill:none;stroke:var(--accent);stroke-width:1.8;flex:none}
+.copy-step p {font-size:13.5px;color:var(--text-secondary);margin:0}
+.copy-folder {display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:10px}
+.copy-folder span {flex:1;overflow-wrap:anywhere}
+.copy-progress {height:4px;background:var(--bg-surface);border-radius:2px;overflow:hidden;margin-top:8px}
+.copy-progress i {display:block;height:100%;background:var(--accent)}
+.copy-setup #vaultErr:empty {display:none}
+.reader.notes-hidden :is(.annoLayer,.inkLayer,.annoMarks,.adjust-layer,.live-mark) {visibility:hidden!important;pointer-events:none!important}
+.reader.notes-hidden #readerBody {--notes-hidden:1}
+.copy-eye svg {fill:none!important;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rt-pencil {display:inline-flex;align-items:center}
+@media(max-width:600px){.copy-setup{align-items:flex-end;padding:0}.copy-setup .vault-box{width:100%;max-width:none;max-height:92dvh;overflow-y:auto;margin:0;border-width:1px 0 0;border-radius:18px 18px 0 0;padding:20px 18px max(22px,env(safe-area-inset-bottom))}.copy-settings{padding:18px 16px}.rt-work{gap:4px}}
+
 </style>
 </head>
 <body>
@@ -2950,6 +2986,7 @@ body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.au
   <a class="am-item" href="#lists" data-go="review" onclick="return appMenuGo(event, this)" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg><span class="am-label">To review</span></a>
   <div class="am-grow"></div>
   <a class="am-item am-note" href="#interests" data-go="note" onclick="return appMenuGo(event, this)" hidden><span class="am-label">Weekly note</span></a>
+  <a class="am-item owner-only" href="#settings" data-go="settings" onclick="return appMenuGo(event, this)"><span class="am-label">Settings</span></a>
 </nav>
 
 <div class="main-scroll" id="mainScroll">
@@ -3091,6 +3128,8 @@ body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.au
   </div>
 </div>
 
+<section class="tab-section" id="sec-settings"><div class="copy-settings" id="copySettings"></div></section>
+
 </div><!-- /.main-scroll -->
 
 
@@ -3113,11 +3152,14 @@ body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.au
         <button class="reader-btn reader-zen-btn" id="readerZenBtn" onclick="enterZen()" title="Full screen: just the paper and one toolbar" aria-label="Full screen"><svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
       </span>
       <span class="rt-group rt-work">
+        <span class="rt-pencil" id="readerPencil"></span>
+        <button class="reader-btn copy-eye owner-only" onclick="toggleReaderNotesVisible()" aria-label="Hide notes" aria-pressed="true"></button>
         <button class="reader-btn rt-panel-btn" id="readerNotesBtn" onclick="toggleReaderPanel()" title="Notes and chat" aria-label="Notes and chat" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M14.5 4v16M17 8.5h1.5M17 11.5h1.5"/></svg></button>
       </span>
       <span class="rt-more-wrap">
         <button class="reader-btn rt-more" id="readerMore" onclick="toggleReaderMenu()" title="More" aria-label="More" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
         <span class="reader-menu" id="readerMenu" role="menu">
+          <button class="reader-change owner-only" role="menuitem" onclick="toggleReaderMenu(false); saveMyCopy()">Save my copy</button>
           <button class="reader-change" role="menuitem" onclick="toggleReaderMenu(false); openPdfChange()">Use a different PDF…</button>
           <button class="reader-keep" id="readerKeep" role="menuitem" hidden onclick="toggleReaderMenu(false); keptToggle()"></button>
           <a id="readerExternal" role="menuitem" target="_blank" rel="noopener" onclick="toggleReaderMenu(false)">Open the PDF in a new tab <span aria-hidden="true">&#8599;</span></a>
@@ -3158,9 +3200,11 @@ body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.au
       <div class="vault-step"><span class="vault-num">2</span>Choose a notes password</div>
     </div>
     <input type="text" name="username" autocomplete="username" value="Scholar notes" hidden>
+    <strong id="copySetupNotes" hidden>1 &nbsp; Unlock your notes</strong>
     <input class="pp-input" id="vaultPw" type="password" autocomplete="current-password" placeholder="Password">
     <input class="pp-input" id="vaultPw2" type="password" autocomplete="new-password" placeholder="Type it again">
     <label class="vault-remember"><input type="checkbox" id="vaultRemember"> Remember on this device</label>
+    <div class="copy-step" id="copySetupStep" hidden></div>
     <div class="pp-msg err" id="vaultErr"></div>
     <div class="vault-btns"><button type="button" class="ui-btn ui-btn-secondary" onclick="closeVaultModal(false)">Cancel</button><button class="ui-btn ui-btn-primary" id="vaultGo" type="submit"></button></div>
   </form>
@@ -3563,7 +3607,7 @@ async function acceptTarget(instance) {
       try {
         const databases = await Promise.race([indexedDB.databases(), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Database enumeration timed out')), 3000); })]);
         cleanDatabases = Array.isArray(databases);
-        if (cleanDatabases && databases.some(db => db.name === 'scholar_notes' || db.name === 'scholar_pdfs' || db.name === 'scholar_chats' || db.name === KEPT_DB || db.name === LIBCACHE_DB)) historical = true;
+        if (cleanDatabases && databases.some(db => db.name === 'scholar_notes' || db.name === 'scholar_pdfs' || db.name === 'scholar_chats' || db.name === 'scholar_mycopy' || db.name === KEPT_DB || db.name === LIBCACHE_DB)) historical = true;
       } finally { clearTimeout(timer); }
     }
   } catch (e) { cleanDatabases = false; }
@@ -3771,6 +3815,7 @@ window.addEventListener('resize', placePrivateAccess, { passive: true });
 if (window.visualViewport) { window.visualViewport.addEventListener('resize', placePrivateAccess); window.visualViewport.addEventListener('scroll', placePrivateAccess); }
 function lockPrivate(state = 'required', detail) {
   if (!isPrivate()) return;
+  copyTeardown();
   searchOff(true);
   Private.epoch++; Private.authorized = false; Private.token = null; Private.state = state; Private.verifying = null; Private.verificationBinding = null;
   Private.detail = detail === undefined ? null : detail; clearTimeout(Private.recheckTimer); Private.recheckTimer = null;   // Phase 19: any lock ends the quiet re-check
@@ -4425,6 +4470,7 @@ function libCacheLock(state) {
    was), then the counter, then the deletion. The result is true only when the deletion succeeded and a fence moved.
    The erasure is pending until the latest wipe is confirmed. */
 function libCacheErase(mark = true) {
+  if (mark) copyEraseDatabase().catch(()=>{});
   const run = LibCache.pending = {};
   const marked = mark && libCacheMarkMove();
   return libCacheFenceTx(true).then(counter => new Promise(resolve => {
@@ -4683,7 +4729,10 @@ const SW_WARM_DELAY = 4000;
 function swWarmList() {
   const pdf = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VER}/build/`;
   return [pdf + 'pdf.min.mjs', pdf + 'pdf.worker.min.mjs', 'https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js', 'https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js',
-    'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js', 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css'];
+    'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js', 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css',
+    'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js',
+    'https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js',
+    'https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@v20201206-phase3/hinted/ttf/NotoSans/NotoSans-Regular.ttf'];
 }
 function swStart() {
   if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
@@ -4753,7 +4802,7 @@ async function loadPrivateLibrary() {
       applyHash();
     });
     updateInterestsBadge(); revealContent();
-    if (vaultSupported()) vaultReady(true).catch(() => {});
+    deviceSetupAfterSignIn().catch(privateCallback(() => {}));
     privateDelay(tokenReminder, 1500);   // Phase 19 (A2): after the library, and after a restore's or a sign-in's own toast
     return true;
   } catch (e) {
@@ -7281,9 +7330,10 @@ function appMenuGo(e, a) {
   if (e && (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1)) { closeAppMenu(); return true; }   // a new tab or window: the browser's
   if (e) e.preventDefault();
   const go = a.dataset.go, pushed = AppMenu.pushed && history.state && history.state.scoutMenu;
+  if (go === 'settings') CopyState.back = location.hash || '#all';
   AppMenu.pushed = false;
   closeAppMenu(false, false);
-  const hash = go === 'lists' || go === 'review' ? '#lists' : go === 'people' ? '#people' : '#interests';
+  const hash = go === 'settings' ? '#settings' : go === 'lists' || go === 'review' ? '#lists' : go === 'people' ? '#people' : '#interests';
   const same = location.hash === hash && !_paperViewActive && !_searchActive && !_listViewActive;   // the page that shows: no new step, its top
   if (same) { if (pushed) history.back(); if (go !== 'review' && go !== 'note') jumpScroll(document.getElementById('mainScroll'), 0); }
   else if (pushed) { history.replaceState(null, '', APP_ROOT + location.search + hash); applyHash(); }
@@ -14532,8 +14582,9 @@ async function disconnectGitHub() { const _authEpoch = capturePrivateEpoch();
   requireOwner();
   const ok = await privateAwait(showConfirm('Sign out?', isPrivate() ? 'Sign in again to open your library.' : 'Sign in again to make changes.', 'Sign out', true), _authEpoch);
   if (!ok) return;
+  try { await copyErase(); } catch (e) { console.warn('Scout: could not clear saved-copy state on sign-out'); }   // sign-out always completes
   requireOwner(); if (isPrivate()) writeBackup(); checkedStorageRemove(PAT_OK_KEY); checkedStorageRemove(PAT_VERIFIED_KEY); checkedStorageRemove('gh_pat'); _ownerAtLoad = false;
-  try { localStorage.removeItem(TOKEN_META_KEY); localStorage.removeItem(TOKEN_LINK_KEY); } catch (e) {}   // Phase 19 (A2): the token's record goes with it, best effort
+  try { localStorage.removeItem(TOKEN_META_KEY); localStorage.removeItem(TOKEN_LINK_KEY); localStorage.removeItem('claude_bridge_local_token'); } catch (e) {}   // Phase 19 (A2): the token's record goes with it, best effort
   if (isPrivate()) {
     lockPrivate('required');   // B1: deletes the library copy; reload only once the browser confirms it
     if (!await libCacheErased()) { privateView('required', 'Couldn’t finish signing out. Reopen Scout to try again.'); return; }
@@ -15042,7 +15093,7 @@ function pdfStore(mode, fn) { requireOwner(); const epoch = capturePrivateEpoch(
   return mode === 'readonly' ? work : localWork(work);   // Phase 22: a write a reload must not cut off
 }
 const localPdfGet = id => { requireTarget(); return isOwner() ? pdfStore('readonly', st => st.get(id)) : Promise.resolve(null); };
-const localPdfPut = (id, blob) => pdfStore('readwrite', st => st.put(blob, id));
+const localPdfPut = (id, blob) => { copySourceChanged(id); return pdfStore('readwrite', st => st.put(blob, id)); };
 const localPdfDel = id => pdfStore('readwrite', st => st.delete(id));
 
 /* ===== KEPT ON THIS DEVICE (offline reading, 4 November 2026, plan docs/superpowers/plans/2026-11-04-scout-offline.md,
@@ -15131,6 +15182,7 @@ function keptNeeds(p, src) {
 }
 function keptArxiv(src) { try { return /(^|\.)arxiv\.org$/i.test(new URL(src).hostname); } catch (e) { return false; } }
 function keptSoon(delay = KEPT_SOON_MS) {
+  copiesSoon();
   if (!keptOn()) return;
   clearTimeout(Kept.soon);
   Kept.soon = setTimeout(privateCallback(() => { Kept.soon = 0; keptReconcile().catch(() => {}); }), delay);
@@ -15246,7 +15298,7 @@ async function keptFetch(p, src, busy) { const _authEpoch = capturePrivateEpoch(
   const m = { id: p.id, src, size: blob.size, at: new Date().toISOString(), how: keptHand(p.id) ? 'hand' : 'set' };
   try { await privateAwait(keptDB(['pdfs', 'meta', 'fails'], 'readwrite', (pdfs, meta, fails) => { pdfs.put(blob, p.id); meta.put(m, p.id); fails.delete(p.id); }), _authEpoch); }
   catch (e) { if (e && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''))) e.quota = true; throw e; }
-  Kept.meta.set(p.id, m); Kept.fails.delete(p.id);
+  Kept.meta.set(p.id, m); Kept.fails.delete(p.id); copySourceChanged(p.id); copiesSoon(0);
 }
 async function keptFailed(id, src) {
   const was = Kept.fails.get(id), n = was && was.src === src ? was.n + 1 : 1;
@@ -15613,6 +15665,7 @@ async function removeUpload(id) { const _authEpoch = capturePrivateEpoch();
   _chatDrafts.delete(id); _chatPending.delete(id);
   const apiTurn = _apiTurns.get(id); if (apiTurn) apiTurn.stop();
   _uploadRemovals[id] = { pdf: false, notes: false, bridge: false, chats: false }; storeUploadRemovals();
+  copySourceChanged(id); CopyState.share?.invalidate(); CopyState.shareFiles=null;
   _uploads[id] = { deleted: true, updated: new Date().toISOString() };
   saveUploads();
   if (_reader.paper && _reader.paper.id === id) hideReader();
@@ -15709,6 +15762,7 @@ async function showReader(id) { const _authEpoch = capturePrivateEpoch();
   }
   destroyPdfDocument(_reader.doc); _reader.doc = null; _reader.local = false;
   _reader.paper = p;
+  ReaderNotesVisible = true; syncReaderNotesVisibility(); syncPencilUI();
   readerStatus('Loading the PDF…');
   clearTimeout(_reader.panelT); el.classList.remove('panel-leaving');
   el.classList.toggle('panel-open', isOwner() && window.innerWidth >= 1024);   // notes beside the paper by default; on a phone or an upright iPad the paper needs the width (Notes opens it)
@@ -16114,7 +16168,7 @@ function refreshNotesIndex() {
   const generation = vaultGeneration(), key = Vault.key, initialIndex = JSON.stringify(Vault.index);
   _ixCheckedAt = Date.now();
   nfGet('_index.json').then(privateCallback(rec => rec && !rec.dirty && nfLoad('_index.json').then(privateCallback(async fresh => { const _authEpoch = capturePrivateEpoch();
-    if (fresh && !fresh.dirty && fresh.env.updated !== rec.env.updated && Vault.key) { const index = await privateAwait(vaultDecrypt(fresh.env), _authEpoch); requireOwner(); checkVaultGeneration(generation); if (isPrivate()) { validateVaultPlain('_index.json', index); if (Vault.key !== key || !Vault.ready || JSON.stringify(Vault.index) !== initialIndex) return; } Vault.index = index; syncUploadsWithIndex(); refreshContinueReading(); }
+    if (fresh && !fresh.dirty && fresh.env.updated !== rec.env.updated && Vault.key) { const index = await privateAwait(vaultDecrypt(fresh.env), _authEpoch); requireOwner(); checkVaultGeneration(generation); if (isPrivate()) { validateVaultPlain('_index.json', index); if (Vault.key !== key || !Vault.ready || JSON.stringify(Vault.index) !== initialIndex) return; } Vault.index = index; copyRemoteIndex().catch(privateCallback(()=>{})); syncUploadsWithIndex(); refreshContinueReading(); }
   })))).catch(privateCallback(() => {}));
 }
 function savedReaderPage(id) {
@@ -16908,10 +16962,10 @@ async function pushNotes() { const _authEpoch = capturePrivateEpoch();
           const merged = name === '_index.json' ? mergeIndexSafe(theirs, mine) : mergePaperNotes(theirs, mine);
           if (isPrivate()) validateVaultPlain(name, merged);
           env = await privateAwait(vaultEncrypt(merged, key), _authEpoch); requireOwner(); checkVaultGeneration(generation);
-          if (name === '_index.json') { Vault.index = mergeIndexSafe(merged, Vault.index || {}); syncUploadsWithIndex(); refreshContinueReading(); }
+          if (name === '_index.json') { Vault.index = mergeIndexSafe(merged, Vault.index || {}); copyRemoteIndex().catch(privateCallback(()=>{})); syncUploadsWithIndex(); refreshContinueReading(); }
           else {
             const pid = name.replace(/\.json$/, '');
-            if (Vault.cache.has(pid)) Vault.cache.set(pid, merged);
+            if (Vault.cache.has(pid)) Vault.cache.set(pid, merged); queueCopy(pid, 'merge');
             if (_rn && _rn.id === pid) { _rn = merged; redrawAnnoLayers(); }
             indexEntryFor(merged);
             await privateAwait(nfSave('_index.json', Vault.index), _authEpoch);   // counts include the other device's items (sent next round)
@@ -16976,6 +17030,7 @@ async function vaultCheckKey(key, meta) { const _authEpoch = capturePrivateEpoch
 }
 /* Unlocked already, or with a key remembered on this device; otherwise ask (unless quiet) */
 async function vaultReady(quiet) {
+  if (!quiet && !(Vault.ready && Vault.key && Vault.index) && !DeviceSetup.open && !DeviceSetup.bypass && !await requireDeviceSetup('notes')) return false;
   if (isPrivate()) {
     if (Vault.initializing) { const generation = vaultGeneration(), result = await privateAwait(Vault.initializing, capturePrivateEpoch()); checkVaultGeneration(generation); return result; }
     if (Vault.submitting) { const generation = vaultGeneration(); await privateAwait(Vault.submitting, capturePrivateEpoch()); checkVaultGeneration(generation); return !!(Vault.ready && Vault.key && Vault.index); }
@@ -17023,6 +17078,7 @@ async function vaultReadyPublic(quiet) { if (isPrivate()) return vaultReady(quie
 let _vaultResolve = null, _vaultMode = null;
 function openVaultModal(mode) {
   _vaultMode = mode;
+  document.getElementById('vaultPw').hidden=false; document.getElementById('vaultPw2').hidden=false; document.getElementById('vaultOverlay').querySelector('.vault-btns button[type=button]').textContent='Cancel';
   const create = mode === 'create';
   document.getElementById('vaultTitle').textContent = create ? 'Set a password for your notes' : 'Unlock your notes';
   document.getElementById('vaultSub').innerHTML = create
@@ -17037,17 +17093,22 @@ function openVaultModal(mode) {
   document.getElementById('vaultErr').textContent = '';
   document.getElementById('vaultPw').value = ''; document.getElementById('vaultPw2').value = '';
   document.getElementById('vaultOverlay').classList.add('open');
-  setTimeout(privateCallback(() => document.getElementById(create && !hasPAT() ? 'vaultPat' : 'vaultPw').focus()), 0);
+  if (DeviceSetup.open) decorateDeviceSetup();
+  if (!DeviceSetup.open || copyDeviceName()==='Mac') setTimeout(privateCallback(() => document.getElementById(create && !hasPAT() ? 'vaultPat' : 'vaultPw').focus()), 0);
   if (isPrivate() && Vault.modalPromise && _vaultResolve) return Vault.modalPromise;
   const promise = new Promise(res => { _vaultResolve = res; });
   if (isPrivate()) Vault.modalPromise = promise; return promise;
 }
 function closeVaultModal(ok) {
+  if (DeviceSetup.open && DeviceSetup.submitting && ok) { document.getElementById('vaultPw').value=''; document.getElementById('vaultPw2').value=''; DeviceSetup.notesDone = true; return; }
+  if (DeviceSetup.open) { if (!ok && !DeviceSetup.submitting && CopyState.prefs && !CopyState.prefs.later) { CopyState.prefs.later = true; copyPrefsSave().catch(() => {}); } DeviceSetup.open = false; document.getElementById('vaultOverlay').classList.remove('copy-setup'); document.getElementById('copySetupStep').hidden = true; document.getElementById('copySetupNotes').hidden = true; if (DeviceSetup.resolve) { DeviceSetup.resolve(!!ok); DeviceSetup.resolve = null; } DeviceSetup.action=null; }
+  document.getElementById('vaultPw').value = ''; document.getElementById('vaultPw2').value = '';
   document.getElementById('vaultOverlay').classList.remove('open');
   if (_vaultResolve) { _vaultResolve(ok); _vaultResolve = null; }
   Vault.modalPromise = null;
 }
 async function submitVault() {
+  if (DeviceSetup.open && !DeviceSetup.submitting) return submitDeviceSetup();
   if (!isPrivate()) return submitVaultOnce();
   if (Vault.submitting) return privateAwait(Vault.submitting, capturePrivateEpoch());
   if (Vault.initializing && !Vault.awaitingPassword) {
@@ -17069,6 +17130,7 @@ async function submitVaultOnce() { const _authEpoch = capturePrivateEpoch();
   const needGh = _vaultMode === 'create' && !hasPAT();
   const pat = document.getElementById('vaultPat').value.trim();
   if (needGh && !pat) { err.textContent = 'Paste your access key first.'; document.getElementById('vaultPat').focus(); return; }
+  CopyState.unlockPending=true;
   go.disabled = true; go.textContent = needGh ? 'Signing in\u2026' : _vaultMode === 'create' ? 'Setting password\u2026' : 'Unlocking\u2026';
   try {
     if (needGh) {
@@ -17100,14 +17162,14 @@ async function submitVaultOnce() { const _authEpoch = capturePrivateEpoch();
     requireOwner();
     await privateAwait(afterUnlock(candidateKey), _authEpoch); checkVaultGeneration(generation);
     if (isPrivate() && remember) await privateAwait(notesDB('keys', 'readwrite', st => { checkVaultGeneration(generation); return st.put({ key: Vault.key, salt: Vault.meta.salt }, 'k'); }), _authEpoch);
-    requireOwner(); closeVaultModal(true);
+    requireOwner(); CopyState.unlockPending=false; closeVaultModal(true); copyRemoteIndex().catch(privateCallback(()=>{})); copiesSoon(0);
     toast(_vaultMode === 'create' ? 'Your notes password is set' : 'Notes unlocked');
   } catch (e) { checkPrivateEpoch(_authEpoch);
     checkVaultGeneration(generation); if (isPrivate()) { Vault.key = null; Vault.ready = false; }
     console.error(e);
     err.textContent = 'Something went wrong. Try again.';
   } finally { checkPrivateEpoch(_authEpoch); checkVaultGeneration(generation);
-    go.disabled = false; go.textContent = _vaultMode === 'create' ? 'Set password' : 'Unlock';
+    CopyState.unlockPending=false; go.disabled = false; go.textContent = _vaultMode === 'create' ? 'Set password' : 'Unlock';
   }
 }
 /* The notes can be reset from another device (deleted, or started again with a new password). This browser's
@@ -17126,6 +17188,7 @@ async function checkVaultStillThere(localMeta) { const _authEpoch = capturePriva
 }
 async function resetLocalVault(newMeta) { const _authEpoch = capturePrivateEpoch(); requireOwner();
   chatTeardown();
+  copyCancelDerived(); CopyState.unlockPending=false; CopyState.prefs.notesDone = false;
   if (isPrivate() && newMeta) validateVaultMetadata(newMeta); invalidateVaultWork(); const generation = vaultGeneration();
   if (Vault.pushTimer) { clearTimeout(Vault.pushTimer); Vault.pushTimer = null; }
   if (_acId) { _acId = null; document.getElementById('annoCard').classList.remove('open'); }
@@ -17161,12 +17224,12 @@ async function afterUnlock(candidateKey) { const _authEpoch = capturePrivateEpoc
       checkVaultGeneration(generation); if (!Vault.ready || Vault.key !== key || JSON.stringify(Vault.index) !== initialIndex) return;
       const stored = await privateAwait(nfGet('_index.json'), _authEpoch); checkVaultGeneration(generation);
       if ((stored && stored.dirty) || JSON.stringify(Vault.index) !== initialIndex) return;
-      Vault.index = next; syncUploadsWithIndex(); refreshContinueReading(); if (currentTab === 'library') renderLibrary();
+      Vault.index = next; copyRemoteIndex().catch(privateCallback(() => {})); syncUploadsWithIndex(); refreshContinueReading(); if (currentTab === 'library') renderLibrary();
     })).catch(privateCallback(() => {}));
   } else {
   requireOwner(); const rec = (await privateAwait(nfGet('_index.json'), _authEpoch)) || await privateAwait(nfLoad('_index.json').catch(privateCallback(e => { requireOwner(); if (isPrivate()) throw e; return null; })), _authEpoch); requireOwner();
   if (rec && !rec.dirty) nfLoad('_index.json').then(privateCallback(async fresh => { const _authEpoch = capturePrivateEpoch();   // newer index from another device, in the background
-    if (fresh && !fresh.dirty && fresh.env.updated !== rec.env.updated && Vault.key) { try { const index = await privateAwait(vaultDecrypt(fresh.env), _authEpoch); requireOwner(); Vault.index = index; syncUploadsWithIndex(); refreshContinueReading(); if (currentTab === 'library') renderLibrary(); } catch (e) { checkPrivateEpoch(_authEpoch);} }
+    if (fresh && !fresh.dirty && fresh.env.updated !== rec.env.updated && Vault.key) { try { const index = await privateAwait(vaultDecrypt(fresh.env), _authEpoch); requireOwner(); Vault.index = index; copyRemoteIndex().catch(privateCallback(()=>{})); syncUploadsWithIndex(); refreshContinueReading(); if (currentTab === 'library') renderLibrary(); } catch (e) { checkPrivateEpoch(_authEpoch);} }
   })).catch(privateCallback(() => {}));
   try { const index = rec ? await privateAwait(vaultDecrypt(rec.env), _authEpoch) : { v: 1, papers: {}, colors: {}, colorsUpdated: '' }; requireOwner(); Vault.index = index; }
   catch (e) { checkPrivateEpoch(_authEpoch); requireOwner(); if (isPrivate()) throw e; Vault.index = { v: 1, papers: {}, colors: {}, colorsUpdated: '' }; }
@@ -17181,9 +17244,12 @@ async function afterUnlock(candidateKey) { const _authEpoch = capturePrivateEpoc
   scheduleNotesPush(500);   // anything left unpushed from an earlier session
   if (currentTab === 'library') renderLibrary();
   repaintShownPapers();
+  copyRemoteIndex().catch(privateCallback(() => {}));
   setTimeout(privateCallback(() => reconcileNotesIndex().catch(privateCallback(() => {}))), 3000);   // after the page has what it needs
 }
 async function lockNotes() { const _authEpoch = capturePrivateEpoch(); requireOwner();
+  if (Ink.cancelGesture) Ink.cancelGesture(); await privateAwait(flushInk(), _authEpoch);
+  if (_hw) await privateAwait(saveHandwritten(), _authEpoch);
   try { await privateAwait(chatLockNow(), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch); toastError('Couldn’t finish locking. Try again.'); return; }
   ChatSync.channel?.postMessage({ lock: true });
   const generation = vaultGeneration();
@@ -17191,6 +17257,7 @@ async function lockNotes() { const _authEpoch = capturePrivateEpoch(); requireOw
   await privateAwait(closeAnnoCard(), _authEpoch); requireOwner();   // the open comment is settled (kept, restored or discarded) while the key is still here
   await privateAwait(finishNotesEdit(), _authEpoch); requireOwner(); checkVaultGeneration(generation);
   endDraft('discard');
+  copyCancelDerived(); CopyState.unlockPending=false;
   invalidateVaultWork(); Vault.key = null; Vault.index = null; Vault.cache.clear(); _rn = null; _acPending = null;
   // Off the screen first, everywhere (the reader, paper pages, deck cards, the hidden ones too): forgetting the
   // remembered key below can take a while or fail, and the notes must be gone either way.
@@ -17205,7 +17272,7 @@ async function lockNotes() { const _authEpoch = capturePrivateEpoch(); requireOw
     return;
   }
   requireOwner();
-  toast('Notes locked');
+  copiesSoon(0); renderCopySettingsIfOpen(); toast('Notes locked');
 }
 function hlLabel(c) { if (c === 'yellow') c = 'orange'; const cs = (Vault.index && Vault.index.colors) || {}; return cs[c] || (c === 'orange' && cs.yellow) || HL_DEFAULT_LABELS[c]; }
 
@@ -17277,7 +17344,7 @@ async function revalidatePaperNotes(id, seen) { const _authEpoch = capturePrivat
   const local = await privateAwait(nfGet(id + '.json'), _authEpoch); requireOwner();
   checkVaultGeneration(generation); if ((local && local.dirty) || notesGen(id) !== g0) return;
   if (_rn && _rn === cur && (_rnEditing || _acId || _acPending || _hw || Adj)) return;   // never swap under someone typing, writing or adjusting; the next save merges instead
-  Vault.cache.set(id, obj); noteSeen(id + '.json', rec.env);
+  Vault.cache.set(id, obj); noteSeen(id + '.json', rec.env); queueCopy(id, 'remote');
   if (_rn && _rn === cur) { _rn = obj; redrawAnnoLayers(); renderReaderPanel(); }
   repaintPaper(allPapers.find(x => x.id === id));
 }
@@ -17395,6 +17462,7 @@ async function savePaperNotes(obj) { const _authEpoch = capturePrivateEpoch(); r
     indexEntryFor(obj);
     await privateAwait(nfSave(obj.id + '.json', obj), _authEpoch);
     await privateAwait(nfSave('_index.json', Vault.index), _authEpoch);
+    queueCopy(obj.id, 'notes');
   } finally { LocalWork.n--; }
 }
 /* Sync trouble (no network, GitHub unreachable): shown in the panel, told once, retried quietly */
@@ -17587,6 +17655,7 @@ function redrawAnnoLayers() { _rnDrawnSig = refSig(); document.querySelectorAll(
 
 /* --- selection toolbar --- */
 function selInfo() {
+  if (!ReaderNotesVisible) return null;
   const sel = window.getSelection();
   if (!sel || !sel.rangeCount || sel.isCollapsed) return null;
   const live = sel.getRangeAt(0), range = snapToWords(live);
@@ -17794,6 +17863,7 @@ async function pinPdfVersion() { const _authEpoch = capturePrivateEpoch();
 
 /* --- clicking a highlight --- */
 function annoAt(pageDiv, clientX, clientY) {
+  if (!ReaderNotesVisible) return null;
   if (!_rn) return null;
   const pr = pageDiv.getBoundingClientRect(), x = (clientX - pr.left) / pr.width, y = (clientY - pr.top) / pr.height, page = +pageDiv.dataset.page;
   const hits = visibleAnnos().filter(a => a.page === page && a.rects.some(r => x >= r[0] - 0.003 && x <= r[0] + r[2] + 0.003 && y >= r[1] - 0.003 && y <= r[1] + r[3] + 0.006));
@@ -17803,6 +17873,7 @@ let _acId = null, _acTimer = null, _acHandTimer = null;
 function openAnnoCard(id, focusNote, write) {   // write: open its writing card (a comment begun with the Pencil)
   const a = annoById(id);
   if (!a) return;
+  if (!ReaderNotesVisible) setReaderNotesVisible(true);
   if (_acId && _acId !== id) closeAnnoCard();
   if (_acId !== id) _acOrigin = { id, kind: a.kind, color: a.color, note: a.note || '', hand: a.hand };
   _acId = id;
@@ -18093,6 +18164,7 @@ function revealPaper() {
 function jumpToAnno(id) {
   const a = annoById(id);
   if (!a) return;
+  if (!ReaderNotesVisible) setReaderNotesVisible(true);
   const wait = revealPaper();
   if (wait) { setTimeout(privateCallback(() => jumpToAnno(id)), wait); return; }
   const body = document.getElementById('readerBody');
@@ -18219,6 +18291,7 @@ const PENCIL_MODES = [
 async function setPencilMode(m) { const _authEpoch = capturePrivateEpoch();
   const owner = captureNotesOwner();
   if (m !== 'read') {
+    await setReaderNotesVisible(true);
     if (!_reader.doc || notesBusy()) return;
     const notes = await privateAwait(readyReaderNotes(owner, _authEpoch), _authEpoch);
     if (!notes || !owner.current()) return;
@@ -18230,7 +18303,7 @@ async function setPencilMode(m) { const _authEpoch = capturePrivateEpoch();
 }
 function toggleInk(on) { return setPencilMode(on === false || (on !== true && Ink.on) ? 'read' : 'write'); }
 function syncPencilUI() {
-  Ink.on = Pencil.mode === 'write';
+  Ink.on = Pencil.mode === 'write' && ReaderNotesVisible;
   document.getElementById('readerBody').classList.toggle('inking', Ink.on);
   renderInkBar();
 }
@@ -18245,9 +18318,10 @@ function endInk() {   // leaving the paper: save what was drawn, nothing left to
 const ICON_ERASER = '<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M8 20h12M5.5 14.5l8-8a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L11 19H8.5l-3-3a1 1 0 0 1 0-1.5z"/><path d="M9 11l5 5"/></svg>';
 const ICON_ERASE_PART = '<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M3 7c3-3 5 3 8 0s5-3 8 0"/><circle cx="12" cy="15" r="4.5" stroke-dasharray="2.2 2.2"/><path d="M5 21h14"/></svg>';
 const ICON_UNDO = '<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>';
-function setPencilHl(v) { Pencil.hl = v; if (v !== 'note') rememberHlColor(v); savePencil(); renderInkBar(); }
+function setPencilHl(v) { if (!ReaderNotesVisible) setReaderNotesVisible(true); Pencil.hl = v; if (v !== 'note') rememberHlColor(v); savePencil(); renderInkBar(); }
 /* The erasers are toggles: tapping the one that's on puts the pen back in your hand, as does tapping a colour or size */
 function setInkTool(tool, color, size) {
+  if (!ReaderNotesVisible) setReaderNotesVisible(true);
   Ink.tool = tool !== 'pen' && Ink.tool === tool ? 'pen' : tool;
   if (color) Ink.color = color; if (size) Ink.size = size;
   savePencil(); renderInkBar();
@@ -18302,6 +18376,7 @@ function morphInto(el, html, own) {
 /* The strip above the paper: the Pencil's tools (Highlight/Write), or in full screen the one toolbar there is:
    the Pencil switch, its tools, and on the right Notes (when the panel is closed) and the way out */
 function renderInkBar() {
+  const topPencil = document.getElementById('readerPencil'); if (topPencil) morphInto(topPencil, pencilSwitchHTML()); syncReaderNotesVisibility();
   const bar = document.getElementById('inkBar'), reader = document.getElementById('reader'), zen = reader.classList.contains('zen');
   const want = reader.classList.contains('open') && _reader.doc && (zen ? !reader.classList.contains('chrome-hidden') : pencilDevice() && isOwner());
   if (!want) {
@@ -18310,9 +18385,9 @@ function renderInkBar() {
   }
   const tools = inkToolsHTML(), toolsEl = bar.querySelector('.ink-tools'), was = toolsEl && toolsEl.dataset.mode;
   // the switch on the left, the chosen mode's tools in the middle, and in full screen Notes and the way out on the right
-  const shellKept = morphInto(bar, `<div class="zb-side">${pencilSwitchHTML()}</div><div class="ink-tools zb-mid" data-mode="${Pencil.mode}"></div><div class="zb-side zb-right"></div>`, '.ink-tools, .zb-right');
+  const shellKept = morphInto(bar, `<div class="zb-side">${zen ? pencilSwitchHTML() : ''}</div><div class="ink-tools zb-mid" data-mode="${Pencil.mode}"></div><div class="zb-side zb-right"></div>`, '.ink-tools, .zb-right');
   const right = bar.querySelector('.zb-right');
-  if (!morphInto(right, zen ? (reader.classList.contains('panel-open') || !isOwner() ? '' : `<button class="sel-icon" onclick="toggleReaderPanel(true)" title="Notes and chat" aria-label="Notes and chat">${ICON_PANEL}</button>`) + `<button class="sel-icon" onclick="exitZen()" title="Leave full screen" aria-label="Leave full screen">${ICON_MIN}</button>` : '') && barShown(bar)) replay(right, 'swap');   // full screen's own buttons fade in
+  if (!morphInto(right, zen ? readerEyeHTML('sel-icon') + (!isOwner() ? '' : `<button class="sel-icon" onclick="toggleReaderPanel()" title="Notes and chat" aria-label="Notes and chat">${ICON_PANEL}</button>`) + `<button class="sel-icon" onclick="exitZen()" title="Leave full screen" aria-label="Leave full screen">${ICON_MIN}</button>` : '') && barShown(bar)) replay(right, 'swap');   // full screen's own buttons fade in
   const mid = bar.querySelector('.ink-tools');
   if (!morphInto(mid, tools) && was && was !== Pencil.mode && bar.classList.contains('open')) {   // Highlight <-> Write: the tools cross-fade
     mid.classList.remove('swap'); void mid.offsetWidth; mid.classList.add('swap');
@@ -18402,7 +18477,7 @@ function toggleZenChrome() {
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && _reader.zenFs) { _reader.zenFs = false; exitZen(); } });
 
 function scheduleInkSave() { clearTimeout(Ink.saveTimer); const obj = _rn; Ink.saveTimer = setTimeout(privateCallback(() => { Ink.saveTimer = null; if (obj) savePaperNotes(obj); }), 700); }
-function flushInk() { if (Ink.saveTimer) { clearTimeout(Ink.saveTimer); Ink.saveTimer = null; if (_rn) savePaperNotes(_rn); } }
+function flushInk() { if (Ink.saveTimer) { clearTimeout(Ink.saveTimer); Ink.saveTimer = null; if (_rn) return savePaperNotes(_rn); } return Promise.resolve(); }
 function removeInk(strokes) {
   const now = new Date().toISOString(), ids = new Set(strokes.map(k => k.id));
   _rn.ink = (_rn.ink || []).filter(k => !ids.has(k.id));
@@ -18463,7 +18538,7 @@ function caretAt(x, y) {
   Ink.cancelGesture = () => { if (st && st.raf) cancelAnimationFrame(st.raf); st = null; stopGlide(); eraseCursor(null); };
   body.addEventListener('pointerdown', e => {
     let epoch; try { epoch = capturePrivateEpoch(); } catch (error) { return; }
-    if (e.pointerType === 'pen' && Pencil.mode === 'read' && onPage(e.target)) {
+    if (e.pointerType === 'pen' && (Pencil.mode === 'read' || !ReaderNotesVisible) && onPage(e.target)) {
       stopGlide(); e.preventDefault();
       st = { epoch, id: e.pointerId, mode: 'scroll', x0: e.clientX, y0: e.clientY, lx: e.clientX, ly: e.clientY, lt: e.timeStamp, vx: 0, vy: 0, moved: false };
       return;
@@ -19466,7 +19541,7 @@ function chatAddPaper() {   // + Paper: starts an @ search at the caret
 const ICON_HISTORY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>';
 const ICON_NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"/><path d="M9 11h6M9 15h6"/></svg>';
 
-function saveBridgeToken(t) { requireOwner(); t ? privateSet('claude_bridge_token', t) : privateRemove('claude_bridge_token'); Chat.token = t || ''; }
+function saveBridgeToken(t) { requireOwner(); t ? privateSet('claude_bridge_token', t) : privateRemove('claude_bridge_token'); if (t) privateSet('claude_bridge_token_origin', bridgeBase()); else privateRemove('claude_bridge_token_origin'); Chat.token = t || ''; }
 function bridgeFetch(path, opts = {}) {
   requireOwner();
   if (!navigator.onLine) return Promise.reject(Object.assign(new TypeError('Chat needs a connection.'), { offline: true, unsent: true }));
@@ -20053,7 +20128,7 @@ async function chatRetryEarlier() {
   const input = document.getElementById('chatInput'); if (input) input.value = original.text;
   await chatSend(original.text);
 }
-async function chatSend(text, auto) { return localWork(chatSendNow(text, auto)); }   // Phase 22: a reload waits for this page's own reply
+async function chatSend(text, auto) { if (!_reader.paper) return localWork(chatSendNow(text, auto)); const owner=captureNotesOwner(),requested=text!=null?text:document.getElementById('chatInput')?.value; if (!await requireDeviceSetup('chat') || !owner.current()) return; return localWork(chatSendNow(requested, auto)); }   // Phase 22: a reload waits for this page's own reply
 function chatSendNow(text, auto) { return chatTrack(chatSendNowWork(text, auto)); }
 async function chatSendNowWork(text, auto) { const _authEpoch = capturePrivateEpoch();
   if (!chatAvailable()) { renderChatPanel(true); return; }
@@ -22831,6 +22906,8 @@ function applyHash() {
   syncAddress();
   _appliedHash = location.hash;
   const hash = location.hash.slice(1); // remove '#'
+  document.getElementById('sec-settings').classList.remove('active');
+  if (hash === 'settings') { closeAppMenu(false, false); searchOff(); leaveListView(); if (document.getElementById('reader').classList.contains('open')) hideReader(); document.querySelectorAll('.tab-section.active').forEach(el => el.classList.remove('active')); currentTab = 'settings'; document.getElementById('sec-settings').classList.add('active'); renderCopySettings(); copyRefreshAvailability().catch(privateCallback(()=>{})); if(!copyMobile())copyHelperRetry().catch(privateCallback(()=>{})); return; }
 
   // PDF reader sits over whatever was on screen
   if (hash.startsWith('read/')) {
@@ -23046,10 +23123,225 @@ async function bootstrapApp() {
 // This is the only application startup. Promise handlers attach before a config rejection can escape.
 Config.startup = bootstrapApp();
 
+/* ===== MY COPY: device setup, delivery adapters and reader eye ===== */
+const DeviceSetup = {open:false,submitting:false,bypass:false,notesDone:false,resolve:null,started:false,loading:false,action:null};
+const CopyState = {prefs:{plain:true,annotated:true,notesDone:false,folderDone:false},loaded:null,helper:null,helperState:'unavailable',session:null,queue:null,worker:null,timer:0,poll:0,serial:0,urls:new Set(),share:null,shareFiles:null,message:'',receipts:new Map(),lastSource:new Map(),sources:new Map(),notes:new Map(),revisions:new Map(),workerReject:null,buildTail:Promise.resolve(),leaseTimer:0,uploads:new Set(),offline:new Set(),remoteWork:null,opening:null,retryAt:0,controllers:new Set(),activeId:null,unlockPending:false};
+let ReaderNotesVisible = true;
+const COPY_HELPER = 'http://127.0.0.1:7823';
+function copyDeviceName() { return /iPhone|iPod/.test(navigator.userAgent+' '+navigator.platform) ? 'iPhone' : /iPad/.test(navigator.userAgent+' '+navigator.platform) || navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform) ? 'iPad' : /Mac/.test(navigator.platform) ? 'Mac' : 'computer'; }   /* only a Mac has the folder helper */
+function copyMobile() { return copyDeviceName() !== 'Mac'; }
+function copyKinds() { return ['plain','annotated'].filter(k=>CopyState.prefs[k]); }
+function copyPapers(){return everyPaper().concat(uploadedPapers().filter(p=>CopyState.uploads.has(p.id)));}
+async function copyLocalSources(){const epoch=capturePrivateEpoch();for(const p of uploadedPapers()){const b=await privateAwait(localPdfGet(p.id),epoch);if(b instanceof Blob)CopyState.uploads.add(p.id);else CopyState.uploads.delete(p.id);}}
+function copyEligible(p) { return !!p && !isHiddenRow(p) && !isPassed(p) && likedKey(paperKey(p)) && !(_uploads[p.id]||{}).deleted; }
+function copyDB(store,mode,fn) { requireOwner(); const epoch=capturePrivateEpoch();
+ const work=new Promise((resolve,reject)=>{const req=indexedDB.open('scholar_mycopy',1);
+ req.onupgradeneeded=()=>{try{checkPrivateEpoch(epoch);for(const n of ['prefs','receipts'])req.result.createObjectStore(n);}catch(e){req.transaction.abort();reject(e);}};
+ req.onerror=()=>reject(req.error);req.onsuccess=()=>{const db=req.result;let tx,r;
+ try{checkPrivateEpoch(epoch);requireOwner();tx=db.transaction(store,mode);if(isPrivate())Private.transactions.add(tx);r=fn(tx.objectStore(store));}
+ catch(e){db.close();reject(e);return;}
+ const done=()=>{Private.transactions.delete(tx);db.close();};
+ tx.oncomplete=()=>{done();try{checkPrivateEpoch(epoch);resolve(r&&r.result);}catch(e){reject(e);}};
+ tx.onerror=tx.onabort=()=>{done();reject(tx.error||new Error('copy_storage'));};};});
+ return mode==='readonly'?work:localWork(work);
+}
+async function copyPrefsLoad() { if(CopyState.loaded)return CopyState.loaded;const epoch=capturePrivateEpoch();
+ CopyState.loaded=privateAwait(Promise.all([copyDB('prefs','readonly',st=>st.get(_acceptedTarget)),copyDB('receipts','readonly',st=>st.getAll())]),epoch).then(privateCallback(([p,receipts])=>{if(p)CopyState.prefs={plain:p.plain!==false,annotated:p.annotated!==false,notesDone:p.notesDone===true,folderDone:p.folderDone===true,later:p.later===true,...(p.pending?{pending:p.pending}:{})};if(copyMobile())for(const r of receipts||[])if(r&&typeof r.id==='string'&&['plain','annotated'].includes(r.kind)&&typeof r.filename==='string')CopyState.receipts.set(r.id+':'+r.kind,r);}));return CopyState.loaded;
+}
+function copyPrefsSave() { const p={plain:CopyState.prefs.plain,annotated:CopyState.prefs.annotated,notesDone:CopyState.prefs.notesDone,folderDone:CopyState.prefs.folderDone,later:CopyState.prefs.later===true};if(CopyState.prefs.pending)p.pending={ids:CopyState.prefs.pending.ids.slice(),kinds:CopyState.prefs.pending.kinds.slice(),cursor:CopyState.prefs.pending.cursor};return copyDB('prefs','readwrite',st=>st.put(p,_acceptedTarget)); }
+async function deviceSetupAfterSignIn() { requireOwner();if(DeviceSetup.started)return;DeviceSetup.started=true;
+ const epoch=capturePrivateEpoch();await privateAwait(copyPrefsLoad(),epoch);
+ const ready=await privateAwait(vaultReady(true),epoch);DeviceSetup.notesDone=ready;
+ if((!ready||!copyMobile()&&!CopyState.prefs.folderDone)&&!CopyState.prefs.later) openDeviceSetup();
+ if(!copyMobile())copyHelperRetry().catch(privateCallback(()=>{}));
+}
+function openDeviceSetup() { requireOwner();if(DeviceSetup.open)return;
+ DeviceSetup.open=true;DeviceSetup.notesDone=!!(Vault.ready&&Vault.key&&Vault.index);openVaultModal(Vault.meta===null?'create':'unlock');
+}
+function decorateDeviceSetup() {
+ const ready=DeviceSetup.notesDone,device=copyDeviceName(),overlay=document.getElementById('vaultOverlay');overlay.classList.add('copy-setup');
+ document.getElementById('vaultTitle').textContent='Set up this '+device;
+ document.getElementById('vaultSub').textContent=_vaultMode==='create'&&!ready?'Choose a notes password you won’t lose. If you lose it, it can’t be recovered.':'Your notes and saved chats open on this '+device+' from now on.';
+ const setupHeading=document.getElementById('copySetupNotes');setupHeading.parentElement.insertBefore(setupHeading,document.getElementById('vaultSub'));
+ document.getElementById('copySetupNotes').hidden=false;document.getElementById('copySetupNotes').innerHTML='<b class="copy-stepnum">1</b><span>'+(ready?'Notes are unlocked':'Unlock your notes')+'</span>';
+ document.getElementById('vaultRemember').checked=true;
+ document.getElementById('vaultPw').placeholder='Notes password';document.getElementById('vaultPw').hidden=ready;
+ document.getElementById('vaultPw2').hidden=ready;document.getElementById('vaultPw2').style.display=!ready&&_vaultMode==='create'?'':'none';
+ const step=document.getElementById('copySetupStep');step.hidden=false;
+ step.innerHTML=copyDeviceName()==='computer'?'<strong><b class="copy-stepnum">2</b>Your papers</strong><p>Liked papers are kept inside Scout and open offline. Saving copies to a folder is available on a Mac.</p>':copyMobile()?'<strong><b class="copy-stepnum">2</b>Your papers</strong><p>Liked papers are kept inside Scout and open offline. To put copies in the Files app, use Save all to Files in Settings.</p>':`<strong><b class="copy-stepnum">2</b>Where your papers are saved</strong><p>Every liked paper, plain and with your notes.</p><div class="copy-folder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h6l2 2h10v10H3z"/></svg><span id="copySetupFolder">${esc(CopyState.helper?.folderLabel||'Documents / Scout')}</span><button type="button" class="ui-btn ui-btn-secondary" onclick="copyChangeFolder()" ${copyMoving()?'disabled':''}>Change</button></div><div id="copySetupHelper">${copyHelperLine()}</div>`;
+ const cancel=overlay.querySelector('.vault-btns button[type=button]');cancel.textContent='Later';document.getElementById('vaultGo').textContent='Done';
+}
+async function requireDeviceSetup(action) { requireOwner();const epoch=capturePrivateEpoch();
+ const needNotes=action!=='save'||CopyState.prefs.annotated,needFolder=action==='save'&&!copyMobile();
+ if((!needNotes||copyNotesUnlocked())&&(!needFolder||CopyState.prefs.folderDone))return true;
+ await privateAwait(copyPrefsLoad(),epoch);
+ if(!DeviceSetup.open){const ready=await privateAwait(vaultReady(true),epoch);if((!needNotes||ready)&&(!needFolder||CopyState.prefs.folderDone))return true;openDeviceSetup();}
+ if(DeviceSetup.resolve)return false;
+ DeviceSetup.action=action;return privateAwait(new Promise(resolve=>{DeviceSetup.resolve=resolve;}),epoch);
+}
+async function submitDeviceSetup() { const epoch=capturePrivateEpoch();if(DeviceSetup.submitting)return;DeviceSetup.submitting=true;
+ try{
+ const needNotes=DeviceSetup.action!=='save'||CopyState.prefs.annotated;
+ if(!DeviceSetup.notesDone&&needNotes){await privateAwait(submitVault(),epoch);if(!DeviceSetup.notesDone)return;CopyState.prefs.notesDone=true;await privateAwait(copyPrefsSave(),epoch);}
+ if(DeviceSetup.notesDone&&['notes','chat'].includes(DeviceSetup.action)){DeviceSetup.submitting=false;closeVaultModal(true);renderCopySettingsIfOpen();return;}
+ if(!copyMobile()&&!CopyState.prefs.folderDone){try{await privateAwait(copyHelperRetry(),epoch);if(CopyState.helperState!=='ready'){decorateDeviceSetup();return;}const j=await copiesJSON('/copies/folder',{action:'default',expectedGeneration:CopyState.helper.generation});await copyHelperRetry();if(!CopyState.helper?.folderLabel){decorateDeviceSetup();return;}CopyState.prefs.folderDone=true;}catch(e){checkPrivateEpoch(epoch);decorateDeviceSetup();return;}}
+ CopyState.prefs.later=false;await privateAwait(copyPrefsSave(),epoch);DeviceSetup.submitting=false;closeVaultModal(true);renderCopySettingsIfOpen();copiesSoon(0);
+ }finally{DeviceSetup.submitting=false;if(DeviceSetup.open)decorateDeviceSetup();}
+}
+function copyHelperLine() { const state=CopyState.helperState;
+ if(state==='ready')return '';
+ const text=state==='old'?"Update Scout's Mac helper.":state==='unpaired'?"Connect Scout's Mac helper.":"Scout's Mac helper isn't available.";
+ return `<div class="copy-label"><small>${text}</small></div><button type="button" class="ui-btn ui-btn-secondary" onclick="${state==='unpaired'?'copyHelperConnect()':'copyHelperSetup()'}">${state==='unpaired'?'Connect':'Set up'}</button>`;
+}
+function copyMoving(){return !!CopyState.helper?.operation && !['done','cancelled'].includes(CopyState.helper.operation.state);}
+async function copyRefreshAvailability(){const epoch=capturePrivateEpoch();await privateAwait(copyLocalSources(),epoch);const found=new Set();for(const p of copyPapers().filter(copyEligible)){if(p.uploaded||await privateAwait(keptCopy(p),epoch))found.add(p.id);}CopyState.offline=found;renderCopySettingsIfOpen();}
+function copyNotesUnlocked(){return !!(Vault.ready&&Vault.key&&Vault.index&&!CopyState.unlockPending);}
+function copySettingsBack(){if(CopyState.back&&history.length>1)history.back();else location.hash='all';}
+function renderCopySettingsIfOpen(){if(currentTab==='settings')renderCopySettings();}
+function renderCopySettings(){requireOwner();const device=copyDeviceName(),mobile=copyMobile(),h=CopyState.helper,op=h?.operation;
+ const row=(label,sub,control='')=>`<div class="copy-item"><div class="copy-label">${label}${sub?`<small>${sub}</small>`:''}</div>${control}</div>`;
+ const button=(label,fn,disabled=false)=>`<button class="ui-btn ui-btn-secondary" onclick="${fn}"${disabled?' disabled':''}>${label}</button>`;
+ const toggle=(k,label)=>`<button class="copy-switch" role="switch" aria-label="${label}" aria-checked="${!!CopyState.prefs[k]}" onclick="copySetSwitch('${k}',${!CopyState.prefs[k]})"></button>`;
+ const papers=copyPapers().filter(copyEligible),offline=papers.filter(p=>CopyState.offline.has(p.id)).length;
+ let saving=mobile?row('Kept inside Scout',offline+' papers, open offline'):row('Folder',esc(h?.folderLabel||'Documents / Scout'),button('Change','copyChangeFolder()',copyMoving()));
+ saving+=row('Plain PDFs',mobile?'':'The paper as published',toggle('plain','Plain PDFs'))+row('Your copies',mobile?'':'The paper with your notes, highlights and writing on it',toggle('annotated','Your copies'));
+ if(mobile&&device==='computer')saving+=row('Saving to a folder','Available on a Mac');
+ else if(mobile){const sh=CopyState.share,ready=sh?.ready;
+ saving+=row('Save all to Files','Opens the share sheet once for every paper',button(ready?(sh.state.cursor?'Save next':'Save'):'Save',ready?'copyShareHandoff()':'copyShareStart()',!copyKinds().length||!!sh?.busy||!!ready&&!(navigator.canShare&&navigator.canShare({files:CopyState.shareFiles}))));
+ if(sh?.state.ids.length)saving+=row('Your papers stay in Scout',Math.min(sh.state.cursor+1,sh.state.ids.length)+' of '+sh.state.ids.length,button('Cancel','copyShareCancel()'));
+ if(CopyState.shareFiles&&!(navigator.canShare&&navigator.canShare({files:CopyState.shareFiles})))saving+=row('Open each PDF to save a copy','',CopyState.shareFiles.map((f,i)=>button('Open PDF','copyOpenPDF('+i+')')).join(''));
+ }else if(copyMoving()){const int=v=>Math.max(0,Math.min(1e9,Math.trunc(Number(v))||0)),done=int(op.done),total=int(op.total);saving+=row(op.state==='paused'?"Couldn't finish moving your papers. Your files are safe.":'Moving your papers to the new folder',`${done} of ${total}<div class="copy-progress"><i style="width:${total?Math.max(0,Math.min(100,done/total*100)):0}%"></i></div>`,op.state==='paused'?button('Try again','copyTryAgain()'):'');}
+  else if(CopyState.helperState!=='ready')saving+=`<div class="copy-item">${copyHelperLine()}</div>`;
+ else {const enabled=copyKinds(),saved=papers.filter(p=>enabled.length&&enabled.every(k=>CopyState.revisions.has(p.id+':'+k)&&CopyState.receipts.get(p.id+':'+k)?.revision===CopyState.revisions.get(p.id+':'+k))).length;
+ saving+=row(CopyState.message||(!enabled.length?'':saved===papers.length?`${saved} papers saved, up to date`:'Saving your papers'),CopyState.message?'':saved===papers.length?'':saved+' of '+papers.length,CopyState.message?button('Try again','copyTryAgain()'):'');}
+ if(h?.refused&&!mobile&&CopyState.helperState==='ready')saving+=row("That folder can't be used. Choose a different one.",'',button('Change','copyChangeFolder()',copyMoving()));
+ const unlocked=copyNotesUnlocked();
+ document.getElementById('copySettings').innerHTML=`<button class="copy-back" onclick="copySettingsBack()" aria-label="Back">&#8249; &nbsp; Settings</button><div class="copy-group"><div class="copy-gh">Saving papers</div>${saving}</div><div class="copy-group"><div class="copy-gh">Notes</div>${row(unlocked?'Unlocked on this '+device:'Notes are locked on this device',unlocked&&!mobile?'Notes and saved chats open without the password':'',button(unlocked?'Lock':'Unlock',unlocked?'copySettingsLock()':'copySettingsUnlock()'))}</div>`;
+}
+async function copySettingsUnlock(){if(await requireDeviceSetup('notes'))renderCopySettingsIfOpen();}
+async function copySettingsLock(){await lockNotes();renderCopySettingsIfOpen();}
+async function copySetSwitch(kind,on){requireOwner();if(!['plain','annotated'].includes(kind))return;const epoch=capturePrivateEpoch();
+ if(!copyMobile()&&CopyState.helperState==='ready'){try{await privateAwait(copiesJSON('/copies/config',{plain:kind==='plain'?!!on:CopyState.prefs.plain,annotated:kind==='annotated'?!!on:CopyState.prefs.annotated,expectedSettingsVersion:CopyState.helper.settingsVersion}),epoch);await copyHelperRetry();}catch(e){checkPrivateEpoch(epoch);await copyHelperRetry();CopyState.message="Couldn't save this paper. Your notes are safe.";renderCopySettingsIfOpen();return;}}
+ else if(!copyMobile()){CopyState.message="Scout's Mac helper isn't available.";renderCopySettingsIfOpen();return;}
+ else CopyState.prefs[kind]=!!on;
+ CopyState.share?.invalidate();CopyState.shareFiles=null;await privateAwait(copyPrefsSave(),epoch);renderCopySettingsIfOpen();if(on)copiesSoon(0);
+}
+async function copyLoadModule(){if(!window.ScoutCopies)await loadScript(APP_ROOT+'mycopy.js');return window.ScoutCopies;}
+function copyLocalToken(){const direct=localStorage.getItem('claude_bridge_local_token');return direct||(!bridgeRemote()&&localStorage.getItem('claude_bridge_token_origin')===COPY_HELPER?Chat.token:'');}
+async function copiesFetch(path,options={}){requireOwner();const epoch=capturePrivateEpoch(),ctl=new AbortController();Private.controllers.add(ctl);CopyState.controllers.add(ctl);let timer=setTimeout(()=>ctl.abort(),path==='/health'||path==='/copies/status'?2500:120000);
+ try{const M=await privateAwait(copyLoadModule(),epoch);const response=await privateAwait(M.copiesFetch(path,{...options,signal:ctl.signal},{fetch:window.fetch.bind(window),token:copyLocalToken(),current:()=>{try{checkPrivateEpoch(epoch);requireOwner();return true;}catch(e){return false;}}}),epoch);return response;}
+ finally{clearTimeout(timer);Private.controllers.delete(ctl);CopyState.controllers.delete(ctl);}
+}
+async function copiesJSON(path,body){const r=await copiesFetch(path,body===undefined?{}:{method:'POST',body:JSON.stringify(body)});if(!r.ok)throw Object.assign(new Error('copy_helper'),{status:r.status});return r.json();}
+async function copyHelperRetry(){requireOwner();if(copyMobile())return;const epoch=capturePrivateEpoch(),wasReady=CopyState.helperState==='ready',wasMoving=copyMoving();
+ try{const health=await privateAwait(copiesJSON('/health'),epoch);if(health.capabilities?.paperCopies!==1){CopyState.helperState='old';return;}
+ if(!health.paired||!copyLocalToken()){CopyState.helperState='unpaired';return;}
+ const h=await privateAwait(copiesJSON('/copies/status'),epoch);if(h.target!==_acceptedTarget)throw Error('copy_target');
+ if(!Number.isSafeInteger(h.generation)||!Number.isSafeInteger(h.settingsVersion)||typeof h.plain!=='boolean'||typeof h.annotated!=='boolean')throw Error('copy_status');
+ const mv=h.move&&typeof h.move==='object'?h.move:null,op=h.operation&&typeof h.operation==='object'?h.operation:null;/* join fix: the helper sends folder {state,label} and move {state,done,total}; the page models folderLabel and operation */h.folderLabel=typeof h.folder?.label==='string'&&h.folder.label?h.folder.label:null;h.refused=!mv&&op?.state==='rejected';h.operation=mv?{state:mv.state==='failed'?'paused':mv.state,done:mv.done,total:mv.total}:op&&['picking','moving'].includes(op.state)?op:null;
+ CopyState.helper=h;CopyState.helperState='ready';CopyState.prefs.plain=h.plain;CopyState.prefs.annotated=h.annotated;
+ CopyState.prefs.folderDone=!!h.folderLabel;CopyState.receipts=new Map((h.receipts||[]).map(r=>[r.id+':'+r.kind,r]));await copyPrefsSave();
+ }catch(e){checkPrivateEpoch(epoch);CopyState.helperState=e.status===401||e.status===403?'unpaired':'unavailable';}
+ finally{renderCopySettingsIfOpen();if(DeviceSetup.open)decorateDeviceSetup();clearTimeout(CopyState.poll);if(copyMoving())CopyState.poll=setTimeout(privateCallback(()=>copyHelperRetry().catch(()=>{})),1000);else if(CopyState.helperState==='ready'&&CopyState.prefs.folderDone&&(!wasReady||wasMoving))copiesSoon(0);}
+}
+async function copyChangeFolder(){if(copyMobile())return;if(CopyState.helperState!=='ready'){copyHelperSetup();return;}const epoch=capturePrivateEpoch();
+ try{await privateAwait(copiesJSON('/copies/folder',{action:'choose',expectedGeneration:CopyState.helper.generation}),epoch);await copyHelperRetry();}
+ catch(e){checkPrivateEpoch(epoch);CopyState.message="Couldn't finish moving your papers. Your files are safe.";renderCopySettingsIfOpen();}
+}
+function copyHelperSetup(){requireOwner();if(copyMobile())return;const existing=document.getElementById('copyInstall');if(existing){existing.scrollIntoView({block:'nearest'});return;}const step=DeviceSetup.open?document.getElementById('copySetupHelper'):document.getElementById('copySettings');
+ if(!step)return;step.insertAdjacentHTML('beforeend',`<div class="copy-step" id="copyInstall"><p>Scout's Mac helper needs a one-time setup on this Mac. Ask Dhruv for the setup step, then tap Try again.</p><div><button type="button" class="ui-btn ui-btn-secondary" onclick="copyHelperRetry()">Try again</button></div></div>`);
+}
+async function copyHelperConnect(){const epoch=capturePrivateEpoch();try{const code=String(Math.floor(1000+Math.random()*9000));toast('Approve this code on your Mac: '+code,null,{duration:60000});const pair=await privateAwait(copiesJSON('/pair',{code}),epoch);if(typeof pair.token!=='string'||!pair.token)throw Error('copy_pair');privateSet('claude_bridge_local_token',pair.token);await copyHelperRetry();}catch(e){checkPrivateEpoch(epoch);CopyState.helperState='unpaired';renderCopySettingsIfOpen();}}
+async function copyTryAgain(){if(copyMoving())try{await copiesJSON('/copies/move/resume',{});}catch(e){}CopyState.message='';await copyHelperRetry();copiesSoon(0);}
+function readerEyeHTML(cls='reader-btn'){return `<button class="${cls} copy-eye owner-only" onclick="toggleReaderNotesVisible()" aria-label="${ReaderNotesVisible?'Hide notes':'Show notes'}" aria-pressed="${ReaderNotesVisible}">${readerEyeSVG()}</button>`;}
+function readerEyeSVG(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'+(ReaderNotesVisible?'':'<path d="M3 3l18 18"/>')+'</svg>';}
+function syncReaderNotesVisibility(){const r=document.getElementById('reader');if(!r)return;r.classList.toggle('notes-hidden',!ReaderNotesVisible);r.querySelectorAll('.copy-eye').forEach(b=>{b.innerHTML=readerEyeSVG();b.setAttribute('aria-label',ReaderNotesVisible?'Hide notes':'Show notes');b.setAttribute('aria-pressed',String(ReaderNotesVisible));});}
+async function setReaderNotesVisible(visible){const epoch=capturePrivateEpoch();visible=!!visible;if(ReaderNotesVisible===visible)return;
+ if(!visible){await privateAwait(endAdjust(true),epoch);await privateAwait(closeAnnoCard(),epoch);if(Ink.cancelGesture)Ink.cancelGesture();await privateAwait(flushInk(),epoch);clearLiveMark();redrawAnnoLayers();hideSelBar();}
+ ReaderNotesVisible=visible;Ink.on=Pencil.mode==='write'&&visible;document.getElementById('readerBody').classList.toggle('inking',Ink.on);syncReaderNotesVisibility();
+}
+function toggleReaderNotesVisible(){return setReaderNotesVisible(!ReaderNotesVisible);}
+function copyExportContent(notes){const out=JSON.parse(JSON.stringify(notes));const gone=out.deleted||{};for(const k of ['ink','annos','entries'])out[k]=(out[k]||[]).filter(x=>!x.deleted&&(!gone[x.id]||gone[x.id]<(x.updated||'')));return out;}
+function copyRevisionContent(notes){const n=notes?copyExportContent(notes):null;if(n){delete n.updated;delete n.deleted;for(const k of ['ink','annos','entries'])for(const x of n[k]||[]){delete x.updated;}}return n;}
+async function copyHash(bytes){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function copySnapshot(id,kind){requireOwner();const epoch=capturePrivateEpoch(),generation=vaultGeneration(),p=findPaper(id),serial=CopyState.serial,sourceGeneration=CopyState.sources.get(id)||0,noteStamp=CopyState.notes.get(id)||0,expectedReceipt=CopyState.receipts.get(id+':'+kind)?.outputHash||null,helperGeneration=CopyState.helper?.generation,settingsVersion=CopyState.helper?.settingsVersion;if(!p||(_uploads[id]||{}).deleted)throw Error('copy_missing');
+ let notes;if(kind==='annotated'){if(!copyNotesUnlocked())throw Error('copy_locked');notes=await privateAwait(paperNotes(id),epoch);checkVaultGeneration(generation);if(!notes||Vault.loadFailed?.has(id))throw Error('copy_notes');notes=copyExportContent(notes);}
+ let source=await privateAwait(localPdfGet(id),epoch);if(!source&&!p.uploaded)source=await privateAwait(keptCopy(p),epoch);let doc,owned=false;
+ try{const lib=await privateAwait(loadPdfJs(),epoch);if(source)doc=await privateAwait(privatePdfDocument(lib,{data:new Uint8Array(await source.arrayBuffer()),isEvalSupported:false,verbosity:0}),epoch);
+ else if(_reader.paper===p&&_reader.doc){doc=_reader.doc;owned=false;}
+ else if(!p.uploaded&&pdfSourceOf(p)){doc=await privateAwait(privatePdfDocument(lib,{url:pdfSourceOf(p),isEvalSupported:false,verbosity:0}),epoch);}else throw Object.assign(Error('copy_source'),{skip:true});if(doc!==_reader.doc)owned=true;
+ const sourceBytes=new Uint8Array(await privateAwait(doc.getData(),epoch)),sourceHash=await privateAwait(copyHash(sourceBytes),epoch),fp=doc.fingerprints[0],pages=[];
+ for(let n=1;n<=doc.numPages;n++){const page=await privateAwait(doc.getPage(n),epoch),vp=page.getViewport({scale:1});pages.push({page:n,width:vp.width,height:vp.height,transform:vp.transform,view:page.view,rotate:page.rotate,userUnit:page.userUnit});}
+ if(kind==='annotated'&&((notes.ink||[]).length||(notes.annos||[]).length)&&notes.pdf?.fp!==fp)throw Object.assign(Error('copy_binding'),{skip:true});
+ if(kind==='annotated'&&!notes.pdf)notes.pdf={fp};
+ const content=copyRevisionContent(notes),revision=await privateAwait(copyHash(new TextEncoder().encode(JSON.stringify({version:1,sourceHash,kind,notes:content}))),epoch);
+ checkVaultGeneration(generation);if(serial!==CopyState.serial||findPaper(id)!==p||sourceGeneration!==(CopyState.sources.get(id)||0)||noteStamp!==(CopyState.notes.get(id)||0))throw Error('copy_stale');CopyState.lastSource.set(id,sourceHash);CopyState.revisions.set(id+':'+kind,revision);
+ return Object.freeze({target:_acceptedTarget,id,kind,sourceBytes,sourceHash,pdfFingerprint:fp,pages,notes,revision,epoch,vaultGeneration:generation,notesGeneration:notesGen(id),sourceURL:pdfSourceOf(p),serial,sourceGeneration,noteStamp,expectedReceipt,helperGeneration,settingsVersion});
+ }finally{if(owned)destroyPdfDocument(doc);}
+}
+function copySnapshotCurrent(s){try{checkPrivateEpoch(s.epoch);checkVaultGeneration(s.vaultGeneration);const p=findPaper(s.id);return s.serial===CopyState.serial&&!!p&&!(_uploads[s.id]||{}).deleted&&s.sourceURL===pdfSourceOf(p)&&s.sourceGeneration===(CopyState.sources.get(s.id)||0)&&s.noteStamp===(CopyState.notes.get(s.id)||0)&&(s.kind==='plain'||copyNotesUnlocked()&&s.notesGeneration===notesGen(s.id));}catch(e){return false;}}
+function buildCopy(snapshot){const work=CopyState.buildTail.catch(()=>{}).then(()=>copyBuildOne(snapshot));CopyState.buildTail=work.then(()=>undefined,()=>undefined);return localWork(work);}
+async function copyBuildOne(snapshot){const epoch=capturePrivateEpoch();if(!copySnapshotCurrent(snapshot))throw Error('copy_stale');
+ const worker=new Worker(APP_ROOT+'mycopy-pdf.js');CopyState.worker=worker;CopyState.activeId=snapshot.id;
+ try{const result=await privateAwait(new Promise((resolve,reject)=>{CopyState.workerReject=reject;worker.onmessage=e=>e.data.type==='copyResult'?resolve(e.data.result):reject(Error('copy_build'));worker.onerror=()=>reject(Error('copy_worker'));worker.postMessage({type:'buildCopy',snapshot});}),epoch);
+ if(!copySnapshotCurrent(snapshot)||result.id!==snapshot.id||result.kind!==snapshot.kind||result.sourceHash!==snapshot.sourceHash||result.revision!==snapshot.revision||await copyHash(result.bytes)!==result.outputHash)throw Error('copy_stale');
+ // An independent PDF.js parse checks the actual completed bytes before any delivery.
+ const lib=await loadPdfJs(),doc=await privatePdfDocument(lib,{data:new Uint8Array(result.bytes),isEvalSupported:false,verbosity:0});try{if(doc.numPages<snapshot.pages.length)throw Error('copy_output');for(let n=1;n<=doc.numPages;n++){const page=await privateAwait(doc.getPage(n),epoch);await privateAwait(page.getOperatorList(),epoch);if(!copySnapshotCurrent(snapshot))throw Error('copy_stale');}}finally{destroyPdfDocument(doc);}return result;
+ }finally{worker.terminate();if(CopyState.worker===worker){CopyState.worker=null;CopyState.workerReject=null;CopyState.activeId=null;}}
+}
+async function copyFlushEditors(){const epoch=capturePrivateEpoch(),owner=captureNotesOwner();await privateAwait(endAdjust(true),epoch);await privateAwait(closeAnnoCard(),epoch);await privateAwait(finishNotesEdit(),epoch);if(_hw)await privateAwait(saveHandwritten(),epoch);if(Ink.cancelGesture)Ink.cancelGesture();await privateAwait(flushInk(),epoch);if(owner.paper&&!owner.current())throw Error('copy_visit');}
+function copyCloseCapturedSession(session,token){return window.fetch(COPY_HELPER+'/copies/session',{method:'POST',body:JSON.stringify({action:'close',session}),headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},redirect:'error',credentials:'omit',cache:'no-store',keepalive:true}).catch(()=>{});}
+function copyOpenSession(){if(CopyState.session)return Promise.resolve(CopyState.session);if(CopyState.opening)return CopyState.opening;const serial=CopyState.serial,token=copyLocalToken(),epoch=capturePrivateEpoch();const work=(async()=>{const lease=await copiesJSON('/copies/session',{action:'open'});if(typeof lease.session!=='string')throw Error('copy_session');let current=false;try{checkPrivateEpoch(epoch);current=serial===CopyState.serial;}catch(e){}if(!current){await copyCloseCapturedSession(lease.session,token);throw Error('copy_cancelled');}CopyState.session=lease.session;clearInterval(CopyState.leaseTimer);CopyState.leaseTimer=setInterval(privateCallback(()=>{if(CopyState.session)copiesJSON('/copies/session',{action:'renew',session:CopyState.session}).catch(()=>copyCancelDerived());}),30000);return lease.session;})();CopyState.opening=work;work.finally(()=>{if(CopyState.opening===work)CopyState.opening=null;}).catch(()=>{});return work;}
+async function deliverCopy(result,snapshot){requireOwner();if(!copySnapshotCurrent(snapshot))throw Error('copy_stale');if(CopyState.helperState!=='ready'||copyMoving())throw Error('copy_paused');const h=CopyState.helper;if(snapshot.expectedReceipt!==(CopyState.receipts.get(result.id+':'+result.kind)?.outputHash||null)||snapshot.helperGeneration!==h.generation||snapshot.settingsVersion!==h.settingsVersion){await copyRevalidateForExport(result.id);throw Error('copy_receipt_changed');}const session=await copyOpenSession(),p=findPaper(result.id);
+ CopyState.activeId=result.id;
+ const meta={session,id:result.id,kind:result.kind,titleHint:p.uploaded?'':String(p.title||'').slice(0,300),sourceHash:result.sourceHash,revision:result.revision,outputHash:result.outputHash,size:result.bytes.byteLength,expectedReceipt:snapshot.expectedReceipt,generation:snapshot.helperGeneration,settingsVersion:snapshot.settingsVersion};
+ let ticket;try{ticket=await copiesJSON('/copies/prepare',meta);if(typeof ticket.ticket!=='string')throw Error('copy_ticket');if(!copySnapshotCurrent(snapshot))throw Error('copy_stale');
+ const uploaded=await copiesFetch('/copies/upload?ticket='+encodeURIComponent(ticket.ticket),{method:'POST',headers:{'Content-Type':'application/pdf'},body:new Blob([result.bytes],{type:'application/pdf'})});if(!uploaded.ok)throw Error('copy_upload');
+ if(!copySnapshotCurrent(snapshot)||!copyKinds().includes(result.kind)||!copyEligible(p)&&!snapshot.manual)throw Error('copy_stale');
+ const receipt=(await copiesJSON('/copies/commit',{session,ticket:ticket.ticket})).receipt||{};if(receipt.outputHash!==result.outputHash||receipt.revision!==result.revision)throw Error('copy_receipt');const saved={id:receipt.id,kind:receipt.kind,filename:receipt.filename,sourceHash:receipt.sourceHash,revision:receipt.revision,outputHash:receipt.outputHash,generation:receipt.generation};CopyState.receipts.set(result.id+':'+result.kind,saved);await copyDB('receipts','readwrite',st=>st.put(saved,_acceptedTarget+':'+result.id+':'+result.kind));
+ }catch(e){if(ticket)copiesJSON('/copies/cancel',{session,ticket:ticket.ticket}).catch(()=>{});if(e.status===409){await copyHelperRetry();if(result.kind==='annotated')await revalidatePaperNotes(result.id,null);}throw e;}finally{if(CopyState.activeId===result.id)CopyState.activeId=null;}
+}
+async function copyCloseSession(){clearInterval(CopyState.leaseTimer);const session=CopyState.session;CopyState.session=null;if(session)try{await copiesJSON('/copies/session',{action:'close',session});}catch(e){}}
+function copiesSoon(delay=1500){if(!CopyState||!_dataLoaded||!isOwner())return;clearTimeout(CopyState.timer);CopyState.timer=setTimeout(privateCallback(()=>{CopyState.timer=0;reconcileCopies().catch(()=>{});}),delay);}
+function queueCopy(id,reason){if(!isOwner()||!findPaper(id))return;CopyState.notes.set(id,(CopyState.notes.get(id)||0)+1);for(const k of ['plain','annotated'])CopyState.revisions.delete(id+':'+k);copiesSoon(reason==='notes'?1500:100);}
+/* Skip, before any snapshot is built, a paper whose source and notes have not changed since its receipt (its revision is dropped on every source or notes change). */
+function copyUnchanged(id){const kinds=copyKinds();return kinds.length>0&&kinds.every(k=>{const r=CopyState.receipts.get(id+':'+k),v=CopyState.revisions.get(id+':'+k);return !!r&&!!v&&r.revision===v;});}
+async function reconcileCopies(){requireOwner();if(copyMobile()||!CopyState.prefs.folderDone||copyMoving())return;const epoch=capturePrivateEpoch();if(CopyState.helperState!=='ready'){if(Date.now()>=CopyState.retryAt){CopyState.retryAt=Date.now()+30000;await copyHelperRetry();}if(CopyState.helperState!=='ready'){copiesSoon(30000);return;}}const M=await privateAwait(copyLoadModule(),epoch);
+ if(!CopyState.queue)CopyState.queue=M.createQueue({epoch:()=>Private.epoch,eligible:id=>copyEligible(findPaper(id)),enabled:copyKinds,snapshot:copySnapshot,current:copySnapshotCurrent,build:buildCopy,already:s=>CopyState.receipts.get(s.id+':'+s.kind)?.revision===s.revision,deliver:deliverCopy,error:()=>{CopyState.message="Couldn't save this paper. Your notes are safe.";renderCopySettingsIfOpen();},progress:()=>{if(!CopyState.queue.size)CopyState.message='';renderCopySettingsIfOpen();}});
+ await privateAwait(copyLocalSources(),epoch);if(CopyState.remoteWork)await privateAwait(CopyState.remoteWork,epoch);
+ for(const p of copyPapers().filter(copyEligible).filter(p=>!copyUnchanged(p.id)))CopyState.queue.queueCopy(p.id,'reconcile');await privateAwait(localWork(CopyState.queue.drain()),epoch);await copyCloseSession();renderCopySettingsIfOpen();
+}
+async function copyRevalidateForExport(id){if(!copyNotesUnlocked())return;const epoch=capturePrivateEpoch(),generation=vaultGeneration(),before=notesGen(id);const local=await privateAwait(nfGet(id+'.json'),epoch),ix=Vault.index?.papers?.[id];
+ if(navigator.onLine&&ix&&local&&local.dirty){const remote=await privateAwait(ghNoteRead(id+'.json'),epoch);checkVaultGeneration(generation);if(remote){const other=await privateAwait(validateVaultCandidate(id+'.json',remote.env,Vault.key,epoch,generation),epoch);if(notesGen(id)!==before)throw Error('copy_edit');const mine=await privateAwait(paperNotes(id),epoch),merged=mergePaperNotes(other,mine);if(JSON.stringify(copyRevisionContent(merged))!==JSON.stringify(copyRevisionContent(mine))){if(_rn===mine&&(_rnEditing||_acId||_acPending||_hw||Adj))throw Error('copy_edit');await privateAwait(savePaperNotes(merged),epoch);if(_rn===mine){_rn=merged;redrawAnnoLayers();renderReaderPanel();}}}}
+ else await privateAwait(revalidatePaperNotes(id,null),epoch);
+ const current=await privateAwait(nfGet(id+'.json'),epoch);if(ix&&current&&!current.dirty&&(current.env.updated||'')<(ix.updated||''))throw Error('copy_notes_pending');
+}
+function copyRemoteIndex(){if(!copyNotesUnlocked())return Promise.resolve();if(CopyState.remoteWork)return CopyState.remoteWork;const epoch=capturePrivateEpoch();const work=(async()=>{await privateAwait(copyLocalSources(),epoch);for(const p of copyPapers().filter(copyEligible)){await privateAwait(paperNotes(p.id),epoch);await privateAwait(copyRevalidateForExport(p.id),epoch);}copiesSoon(0);})();CopyState.remoteWork=work;work.finally(()=>{if(CopyState.remoteWork===work)CopyState.remoteWork=null;}).catch(()=>{});return work;}
+function copyFileName(id,kind){const previous=CopyState.receipts.get(id+':'+kind)?.filename;if(previous)return previous;const p=findPaper(id),suffix=kind==='annotated'?'--my-copy':'';if(p?.uploaded)return id+suffix+'.pdf';const safeID=id.replace(/[^A-Za-z0-9._-]/g,'-').slice(0,160),budget=240-new TextEncoder().encode('--'+safeID+'--my-copy.pdf').length;let title='';for(const ch of String(p?.title||'paper').normalize('NFKC').replace(/[^\p{L}\p{N} _.-]/gu,'-')){if(new TextEncoder().encode(title+ch).length>budget)break;title+=ch;}return (title||'paper')+'--'+safeID+suffix+'.pdf';}
+async function prepareShare(id,kinds){const files=[];for(const kind of kinds){const snapshot=await copySnapshot(id,kind),result=await buildCopy(snapshot);if(!copySnapshotCurrent(snapshot))throw Error('copy_stale');const filename=copyFileName(id,kind),file=new File([result.bytes],filename,{type:'application/pdf'});file._copySnapshot=snapshot;if(copyMobile()){const meta={id,kind,filename,sourceHash:result.sourceHash,revision:result.revision,outputHash:result.outputHash,generation:0};await copyDB('receipts','readwrite',st=>st.put(meta,_acceptedTarget+':'+id+':'+kind));CopyState.receipts.set(id+':'+kind,meta);}files.push(file);}return files;}
+async function copyShareStart(ids,manual=false){if(!await requireDeviceSetup('save'))return;await copyFlushEditors();const epoch=capturePrivateEpoch(),M=await privateAwait(copyLoadModule(),epoch);await privateAwait(copyLocalSources(),epoch);CopyState.message='';
+ CopyState.share=M.createShare({enabled:copyKinds,eligible:id=>!!findPaper(id)&&(manual||copyEligible(findPaper(id))),current:files=>files.every(f=>copySnapshotCurrent(f._copySnapshot)),prepare:prepareShare,share:files=>{if(!(navigator.canShare&&navigator.canShare({files}))){CopyState.message='Open each PDF to save a copy.';renderCopySettingsIfOpen();return Promise.reject(Object.assign(Error('copy_share_unavailable'),{code:'share_unavailable'}));}return navigator.share({files});},persist:pending=>{CopyState.prefs.pending=pending;copyPrefsSave().catch(()=>{});},changed:()=>{CopyState.shareFiles=CopyState.share?.ready?.files||null;renderCopySettingsIfOpen();},release:()=>{CopyState.shareFiles=null;},error:e=>{CopyState.message=e.code==='share_unavailable'?'Open each PDF to save a copy.':"Couldn't save this paper. Your notes are safe.";renderCopySettingsIfOpen();}});
+ const pending=!ids&&CopyState.prefs.pending;await privateAwait(CopyState.share.start(ids||copyPapers().filter(copyEligible).map(p=>p.id),pending&&pending.cursor<pending.ids.length?pending:null),epoch);renderCopySettingsIfOpen();
+}
+function copyShareHandoff(){return CopyState.share?.handoff();}
+function copyShareCancel(){CopyState.share?.cancel();CopyState.shareFiles=null;renderCopySettingsIfOpen();}
+function copyOpenPDF(i){const file=CopyState.shareFiles?.[i];if(!file||!copySnapshotCurrent(file._copySnapshot))return;const url=URL.createObjectURL(file);CopyState.urls.add(url);const a=document.createElement('a');a.href=url;a.download=file.name;a.target='_blank';a.rel='noopener';a.click();setTimeout(()=>{URL.revokeObjectURL(url);CopyState.urls.delete(url);},60000);}
+async function saveMyCopy(){const owner=captureNotesOwner(),id=_reader.paper?.id;if(id&&copyDeviceName()==='computer'){toast('Saving copies to a folder is available on a Mac.');return;}if(!id||!copyKinds().length||!await requireDeviceSetup('save')||!owner.current())return;await copyFlushEditors();if(copyMobile()){await copyShareStart([id],true);if(CopyState.share?.ready&&navigator.canShare?.({files:CopyState.shareFiles})){const epoch=capturePrivateEpoch();if(await privateAwait(showConfirm('Your copy is ready','Open the share sheet to save this paper.','Save'),epoch))return copyShareHandoff();copyShareCancel();}else location.hash='settings';return;}
+ try{for(const kind of copyKinds()){const s=await copySnapshot(id,kind),snapshot={...s,manual:true},r=await buildCopy(snapshot);await deliverCopy(r,snapshot);}await copyCloseSession();toast('Your copy is saved');}catch(e){CopyState.message="Couldn't save this paper. Your notes are safe.";toastError(CopyState.message);}}
+function copyCancelDerived(){for(const c of CopyState.controllers)c.abort();CopyState.controllers.clear();CopyState.activeId=null;CopyState.serial++;CopyState.buildTail=Promise.resolve();CopyState.opening=null;clearTimeout(CopyState.timer);CopyState.queue?.cancel();CopyState.workerReject?.(Error('copy_cancelled'));CopyState.workerReject=null;CopyState.worker?.terminate();CopyState.worker=null;CopyState.share?.invalidate();CopyState.shareFiles=null;for(const url of CopyState.urls)URL.revokeObjectURL(url);CopyState.urls.clear();copyCloseSession().catch(()=>{});}
+function copySourceChanged(id){if(CopyState.activeId===id)copyCancelDerived();if(/^up-/.test(id))CopyState.uploads.add(id);CopyState.sources.set(id,(CopyState.sources.get(id)||0)+1);for(const k of ['plain','annotated'])CopyState.revisions.delete(id+':'+k);if(CopyState.shareFiles?.some(f=>f._copySnapshot.id===id)){CopyState.share?.invalidate();CopyState.shareFiles=null;}if(currentTab==='settings')copyRefreshAvailability().catch(privateCallback(()=>{}));copiesSoon();}
+async function copyErase(){copyCancelDerived();await copyDB('prefs','readwrite',st=>st.clear());await copyDB('receipts','readwrite',st=>st.clear());}
+function copyEraseDatabase(){return new Promise(resolve=>{let r;try{r=indexedDB.deleteDatabase('scholar_mycopy');}catch(e){resolve(false);return;}r.onsuccess=()=>resolve(true);r.onerror=()=>resolve(false);});}
+function copyTeardown(){copyCancelDerived();clearTimeout(CopyState.poll);CopyState.unlockPending=false;CopyState.loaded=null;CopyState.helper=null;CopyState.helperState='unavailable';CopyState.queue=null;CopyState.receipts.clear();CopyState.lastSource.clear();CopyState.sources.clear();CopyState.notes.clear();CopyState.revisions.clear();CopyState.uploads.clear();CopyState.offline.clear();CopyState.remoteWork=null;CopyState.prefs={plain:true,annotated:true,notesDone:false,folderDone:false};DeviceSetup.started=false;DeviceSetup.submitting=false;if(DeviceSetup.open)closeVaultModal(false);document.getElementById('copySettings').replaceChildren();}
+window.addEventListener('online',()=>{if(isOwner())copiesSoon(0);});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isOwner()){copiesSoon(0);if(!copyMobile()&&currentTab==='settings')copyHelperRetry().catch(()=>{});}});
+/* ===== END MY COPY ===== */
+
+
 // Public browsing keeps its original behavior. Private navigation and rendering
 // validate before reading state, and nested ownership checks stop the whole render.
 (function () {
-  const views = ['applyPapers', 'switchTab', 'applyHash', 'backFromList', 'refresh', 'applyFilters', 'toggleRel', 'setListSort',
+  const views = ['renderCopySettings', 'syncReaderNotesVisibility', 'applyPapers', 'switchTab', 'applyHash', 'backFromList', 'refresh', 'applyFilters', 'toggleRel', 'setListSort',
     'showGlobalSearch', 'hideGlobalSearch', 'renderGlobalSearch', 'setSearchFilter', 'setSearchSelect', 'clearSearchFilters',
     'renderFeed', 'feedRefresh', 'feedMountMore', 'feedPageOn', 'feedRepaintPost', 'feedTabsRender', 'openSaveSheet', 'relayout', 'repaintPaper', 'repaintShownPapers', 'feedCheckNew', 'refreshShow',
     // Phase 17: For you's sort and interest menus. Setters, drawing and opening only: closeFeedMenu and feedMenuDrop
@@ -23145,6 +23437,7 @@ Config.startup = bootstrapApp();
       return isAsync ? Promise.resolve(false) : undefined;
     };
   };
+  ALWAYS.push('requireDeviceSetup', 'submitDeviceSetup', 'copySettingsBack', 'copySetSwitch', 'copyChangeFolder', 'copyHelperSetup', 'copyHelperRetry', 'copyHelperConnect', 'copyTryAgain', 'copySettingsUnlock', 'copySettingsLock', 'saveMyCopy', 'copyShareStart', 'copyShareHandoff', 'copyShareCancel', 'copyOpenPDF', 'toggleReaderNotesVisible', 'setReaderNotesVisible');
   ALWAYS.push('keptToggle', 'keptKeep', 'keptRemove', 'keptReconcile', 'keptPaperMenu', 'keptPaperAction');   // PDFs kept on this device (offline reading)
   ALWAYS.forEach(n => wrap(n));
   Object.entries(WHEN).forEach(([n, ok]) => wrap(n, ok));
