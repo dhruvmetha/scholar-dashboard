@@ -114,19 +114,58 @@ a { color: inherit; text-decoration: none; }
 .interest-group-body::-webkit-scrollbar-thumb:hover,
 
 /* [2] Loading skeleton */
-@keyframes shimmer {
-  0% { background-position: -600px 0; }
-  100% { background-position: 600px 0; }
-}
-.skeleton-wrap { max-width: 1200px; margin: 0 auto; padding: 24px; transition: opacity 0.4s ease; }
+:root { --sk: rgba(255,255,255,0.045); --sk-hi: rgba(255,255,255,0.085); }
+/* Daily is the only light surface; use the same device/host theme as that page. */
+:root:has(body.daily-mode) { --sk: light-dark(rgba(0,0,0,0.045), rgba(255,255,255,0.045)); --sk-hi: light-dark(rgba(0,0,0,0.085), rgba(255,255,255,0.085)); }
+@keyframes sk-pulse { 50% { background: var(--sk-hi); } }
+.skeleton-wrap { width: 100%; margin: 0 auto; transition: opacity 0.2s ease; pointer-events: none; }
 .skeleton-wrap.hidden { opacity: 0; pointer-events: none; position: absolute; }
-.skel-block { border-radius: 8px; background: linear-gradient(90deg, var(--bg-surface) 25%, var(--bg-hover) 50%, var(--bg-surface) 75%); background-size: 600px 100%; animation: shimmer 1.6s ease-in-out infinite; }
-.skel-top-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 24px; }
-.skel-lead { height: 200px; }
-.skel-sidebar { display: flex; flex-direction: column; gap: 1px; }
-.skel-sidebar-item { height: 66px; }
-.skel-topics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.skel-topic-card { height: 220px; border-radius: 12px; }
+/* privateView enters loading only after verification. The route bars replace its box only at startup. */
+html.private-locked:has(#skeleton:not(.hidden)):has(#privateAccess[data-state="loading"]:not([hidden])) #mainScroll,
+html.private-locked:has(#skeleton:not(.hidden)):has(#privateAccess[data-state="loading"]:not([hidden])) #skeleton { display: block !important; }
+html.private-locked:has(#skeleton:not(.hidden)):has(#privateAccess[data-state="loading"]:not([hidden])) #mainScroll > :not(#skeleton),
+html.private-locked:has(#skeleton:not(.hidden)) #privateAccess[data-state="loading"] { display: none !important; }
+.skeleton-wrap .sk { display: block; height: 12px; border-radius: 6px; background: var(--sk); animation: sk-pulse 1.8s ease-in-out infinite; }
+.skeleton-wrap .skpost { padding: 14px 16px 2px; border-bottom: 1px solid var(--line); }
+.skeleton-wrap .skl { display: flex; align-items: center; }
+.skeleton-wrap .l-meta { height: 19.5px; }
+.skeleton-wrap .l-meta .sk { height: 11px; }
+.skeleton-wrap .l-title { height: 25px; margin-top: 6px; }
+.skeleton-wrap .l-title.n { margin-top: 0; }
+.skeleton-wrap .l-title .sk { height: 17px; }
+.skeleton-wrap .l-dek { height: 21px; margin-top: 6px; }
+.skeleton-wrap .l-by { height: 19.5px; margin-top: 6px; }
+.skeleton-wrap .l-by .sk { height: 11px; }
+.skeleton-wrap .sk-gap { height: 50px; }
+.skeleton-wrap .feed-head { position: static; }
+.skeleton-wrap .feed-tabs .tab { display: inline-flex; align-items: center; }
+.skeleton-wrap .feed-ctl { min-height: 44px; }
+.skeleton-wrap .feed-cp { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 5px 10px 5px 14px; border: 1px solid #536471; border-radius: 9999px; color: var(--text); font-size: 15px; font-weight: 700; line-height: 20px; }
+.skeleton-wrap .feed-cp svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+.skeleton-wrap .list-bar { display: flex; align-items: center; gap: 4px; min-height: 52px; }
+.skeleton-wrap .sk-back { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 44px; height: 44px; margin-left: -10px; }
+.skeleton-wrap .sk-back svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+.skeleton-wrap .sk-kicker { max-width: 150px; }
+.skeleton-wrap .sk-paper-title { height: 30px; margin-top: 18px; border-radius: 8px; }
+.skeleton-wrap .sk-paper-title + .sk-paper-title { margin-top: 10px; }
+.skeleton-wrap .sk-paper-title.phone { display: none; }
+.skeleton-wrap .sk-authors { height: 13px; margin-top: 22px; }
+.skeleton-wrap .sk-prose { display: flex; flex-direction: column; gap: 14px; margin-top: 36px; }
+.skeleton-wrap .sk-prose .sk { height: 14px; }
+.skeleton-wrap .sk-generic { max-width: 640px; margin: 0 auto; padding: 24px 16px; }
+.skeleton-wrap .sk-heading { height: 24px; margin-bottom: 24px; }
+.skeleton-wrap .sk-row { padding: 20px 0; border-bottom: 1px solid var(--line); }
+@media (max-width: 660px) {
+  .skeleton-wrap .sk { width: var(--sk-phone) !important; }
+  .skeleton-wrap .sk-kicker { max-width: 130px; }
+  .skeleton-wrap .sk-paper-title { height: 26px; }
+  .skeleton-wrap .sk-paper-title + .sk-paper-title { margin-top: 9px; }
+  .skeleton-wrap .sk-paper-title.phone { display: block; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-wrap .sk { animation: none; }
+  .skeleton-wrap { transition: none; }
+}
 
 /* NAV */
 .navbar { background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); flex-shrink: 0; z-index: 100; box-shadow: 0 0.2rem 0.8rem rgba(255,255,255,0.03); }
@@ -140,11 +179,9 @@ a { color: inherit; text-decoration: none; }
 .nav-tab:hover { color: var(--accent); }
 .nav-tab.active { color: var(--text); border-bottom-color: var(--accent); }
 .nav-tab .tab-badge { margin-left: 6px; font-size: 11px; background: rgba(255,255,255,0.07); padding: 1px 7px; border-radius: 10px; color: var(--text-muted); }
-.nav-search { margin-left: auto; position: relative; width: 260px; flex-shrink: 0; }
-.nav-search input { width: 100%; min-height: 44px; padding: 8px 12px 8px 36px; background: rgba(255,255,255,0.05); border: 1px solid var(--line); border-radius: 24px; color: var(--text); font-size: 13px; outline: none; transition: border-color 0.3s ease-in-out; }
-.nav-search input:focus { border-color: var(--accent); }
-.nav-search input::placeholder { color: var(--text-muted); }
-.nav-search-toggle { display: none; }
+.nav-search-toggle { display: inline-flex; align-items: center; justify-content: center; margin-left: auto; flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; border: none; background: none; color: var(--text-secondary); cursor: pointer; }
+.nav-search-toggle:hover, .nav-search-toggle.active { background: rgba(255,255,255,0.08); color: var(--text); }
+.nav-search-toggle svg { width: 20px; height: 20px; fill: currentColor; }
 /* The key to sign in, the bar's last control (html.ro shows it). Phase 22 (Sol's correction 7): its spacing is its own
    now that the refresh button beside it is gone: 12 px from the search box on a laptop (the bar's 24 px gap less 12),
    and on a phone right beside Scout (the bar's 8 px gap less 8, below), where it always was */
@@ -179,16 +216,6 @@ html.ro #libAddBtn, html.ro #libUploadBtn, html.ro .lib-head .btn-new-list, html
 html.ro .interest-actions, html.ro .group-drag-handle, html.ro .tt-line,
 html.ro #readerNotesBtn, html.ro #readerPanel, html.ro #rpResize, html.ro #selBar, html.ro .reader-change, html.ro .anno-mark,
 html.ro #vaultOverlay { display: none !important; }
-@media (max-width: 600px) {
-  .nav-search-toggle { display: inline-flex; align-items: center; justify-content: center; margin-left: auto; width: 40px; height: 40px; border-radius: 50%; border: none; background: none; color: var(--text-secondary); cursor: pointer; transition: background 0.15s, color 0.15s; }
-  .nav-search-toggle:hover, body.search-open .nav-search-toggle { background: rgba(255,255,255,0.08); color: var(--text); }
-  .nav-search-toggle svg { width: 20px; height: 20px; fill: currentColor; }
-
-  body.search-open .nav-search { order: 4; flex-basis: 100%; width: 100%; margin: 0 0 10px; }
-  body.search-open .nav-search input { font-size: 16px; padding: 10px 14px 10px 38px; }   /* 16px stops iOS zooming in */
-}
-.nav-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; fill: var(--text-muted); }
-
 /* BRIEFING */
 .briefing { max-width: 1200px; margin: 0 auto; padding: 24px 24px 0; display: flex; flex-direction: column; align-items: center; }
 .briefing h2 { font-size: 28px; font-weight: 400; }
@@ -747,19 +774,35 @@ button.pd-tq-chip:hover:not(:disabled) { color: var(--accent); border-color: var
 .pd-info { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 0 4px; transition: color 0.15s; }
 .pd-info:hover { color: var(--text); }
 .pd-matches { display: flex; flex-wrap: wrap; gap: 6px; }
-.pd-match-row { display: inline-flex; align-items: stretch; gap: 0; }
-.pd-match-list { flex-direction: column; align-items: stretch; gap: 5px; }
-.pd-match-list .pd-match-row { display: flex; }
-.pd-match-list .pd-match { flex: 1; min-width: 0; text-align: left; word-break: normal; overflow-wrap: break-word; }
-.pd-match-list .pd-strength { flex-shrink: 0; justify-content: flex-end; padding: 2px 8px; }
-.pd-match-row .pd-match:has(+ .pd-strength) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
-.pd-strength { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 11.5px; line-height: 1.4; padding: 2px 7px; border-radius: 0 6px 6px 0; border: none; border-left: 1px solid var(--line); background: rgba(255,255,255,0.04); color: var(--text-muted); white-space: nowrap; }
-button.pd-strength { cursor: pointer; transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease); }
-button.pd-strength:hover { color: var(--text); background: rgba(255,255,255,0.1); }
-.pd-strength svg { width: 8px; height: 5px; fill: none; stroke: currentColor; stroke-width: 1.4; }
-.pd-strength.lv-definitely { color: var(--accent); }   /* a Core interest: it's what can make the paper Must Read */
-.pd-strength.unrated { font-style: italic; }
-.pd-score { margin-left: 8px; font-size: 12.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.rv-head { font-size: 14px; }
+.rv-bar { position: relative; height: 6px; margin: 12px 0 28px; border-radius: 3px; background: rgba(255,255,255,0.07); }
+.rv-seg { position: absolute; top: 0; bottom: 0; }
+.rv-seg.core { left: 0; border-radius: 3px 0 0 3px; background: color-mix(in srgb, var(--accent) 58%, var(--bg-surface)); }
+.rv-seg.ctx { background: color-mix(in srgb, var(--text) 34%, var(--bg-surface)); }
+.rv-tick { position: absolute; top: -3px; width: 1px; height: 12px; }
+.rv-tick::before { content: ""; position: absolute; inset: 0; background: rgba(255,255,255,0.4); }
+.rv-tick span { position: absolute; top: 15px; left: -1px; font-size: 11px; line-height: 1; color: var(--text-muted); white-space: nowrap; }
+.rv-group + .rv-group { margin-top: 14px; }
+.rv-gl { display: flex; align-items: center; gap: 7px; margin-bottom: 2px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.rv-gl i { width: 7px; height: 7px; border-radius: 50%; }
+.rv-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 10px; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06); }
+.rv-gl + .rv-row { border-top: none; }
+.rv-name { font-size: 13.5px; line-height: 1.35; color: var(--text); overflow-wrap: anywhere; }
+.rv-name.pd-match { padding: 0; background: none; border: none; border-radius: 0; font-size: 13.5px; color: var(--text); }
+.rv-name.pd-match:hover { color: var(--accent); }
+.rv-str { display: inline-flex; align-items: center; gap: 7px; width: 106px; min-height: 30px; margin-right: -8px; padding: 0 8px; border: none; background: none; border-radius: 8px; font: inherit; font-size: 12.5px; color: var(--text-secondary); white-space: nowrap; }
+button.rv-str { cursor: pointer; }
+button.rv-str:hover { background: rgba(255,255,255,0.06); }
+.rv-str.lv-definitely { color: var(--accent); }
+.rv-str.unrated { font-style: italic; }
+.rv-meter { display: inline-flex; align-items: flex-end; gap: 2px; }
+.rv-meter b { width: 3px; border-radius: 1px; background: rgba(255,255,255,0.16); }
+.rv-meter b:nth-child(1) { height: 5px; }
+.rv-meter b:nth-child(2) { height: 8px; }
+.rv-meter b:nth-child(3) { height: 11px; }
+.rv-meter b.on { background: currentColor; }
+.rv-str svg { width: 8px; height: 5px; margin-left: auto; fill: none; stroke: currentColor; stroke-width: 1.4; opacity: 0.6; }
+@media (pointer: coarse) { button.rv-str { min-height: 44px; } }
 .pd-match { font: inherit; font-size: 12px; line-height: 1.4; color: var(--text-secondary); background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; text-align: left; transition: border-color 0.15s, color 0.15s; }
 .pd-match:hover { color: var(--text); border-color: var(--line); }
 .badge-link { font: inherit; font-size: 11px; cursor: pointer; border: 1px solid transparent; transition: border-color 0.15s, color 0.15s; }
@@ -1097,22 +1140,95 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 .pd-topics .group-add-wrap { opacity: 1; pointer-events: auto; }
 .pd-topics .group-add-dd { max-height: none; overflow: visible; }
 
-/* SEARCH RESULTS (flat list) */
-.search-filters { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-.search-filters .tl-chips { align-items: center; }
-.search-results .tl-chip, .search-results .chip-select, .search-results .v-more, .search-results #searchMore .ui-btn { min-height: 44px; }
-.search-results .search-row-controls { grid-column: 1 / -1; display: flex; align-items: center; gap: 4px; min-width: 0; margin-top: 6px; }
-.search-row-controls .chip { flex: 0 1 auto; max-width: calc(100% - 112px); justify-content: flex-start; }
-.search-row-controls .save-anchor, .search-row-controls .btn-link { flex: none; }
-.search-row-controls .btn-icon, .search-row-controls .btn-link { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
-.search-results .top-row { content-visibility: auto; contain-intrinsic-size: auto 110px; --text-muted: var(--text-muted-raised); }
-.search-results .paper-list .top-row.is-read { opacity: 0.85; }
-.search-results .top-row mark { color: var(--text); }
+/* SEARCH PAGE: Scout's search box, folding rail and phone sheet. */
+.search-results { display: grid; grid-template-columns: 196px minmax(0,1fr); column-gap: 24px; max-width: 1080px; margin: 0 auto; padding: 24px 20px 32px; --text-muted: var(--text-muted-raised); }
+.search-results .search-box-wrap { grid-column: 2; }
+.search-results [hidden] { display: none !important; }
+.search-results button, .search-results input, .search-results select { font: inherit; }
+.search-results button { cursor: pointer; }
+.search-results .sf { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 48px; padding: 7px 8px 7px 42px; border: 1px solid rgba(255,255,255,0.34); border-radius: 12px; background: rgba(255,255,255,0.06); }
+.search-results .sf:focus-within { border-color: var(--accent); }
+.search-results .sf .gl { position: absolute; left: 14px; top: 14px; width: 18px; height: 18px; color: var(--text-muted); fill: none; stroke: currentColor; stroke-width: 2; }
+.search-results .wrap { display: contents; }
+.search-results .kc { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; min-height: 30px; padding: 0 2px 0 11px; border-radius: 999px; background: rgba(255,255,255,0.08); font-size: 13px; color: var(--text); }
+.search-results .kc .k { flex: none; color: var(--text-muted); }
+.search-results .kc .kv { min-width: 0; overflow-wrap: anywhere; }
+.search-results .kc .x { display: inline-grid; place-items: center; flex: none; width: 30px; height: 30px; border: 0; border-radius: 50%; background: none; color: var(--text-muted); font-size: 20px; }
+.search-results #searchInput { flex: 1 1 100px; min-width: 60px; width: 100px; max-width: 100%; min-height: 44px; padding: 0; border: 0; outline: none; background: transparent; color: var(--text); font-size: 16px; }
+.search-results #searchInput::placeholder { color: var(--text-muted); }
+.search-results #searchMode { margin-left: auto; }
+.search-results .seg { display: inline-flex; align-self: flex-start; flex: none; min-height: 32px; padding: 2px; border: 1px solid var(--line); border-radius: 999px; }
+.search-results .seg button { display: inline-flex; align-items: center; justify-content: center; min-height: 30px; min-width: 44px; padding: 0 12px; border: 0; border-radius: 999px; background: none; font-size: 12.5px; color: var(--text-muted); white-space: nowrap; }
+.search-results .seg button[aria-pressed="true"] { background: rgba(255,255,255,0.1); color: var(--text); }
+.search-results .help { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border: 0; background: none; font-size: 20px; color: var(--text-muted); }
+.search-results .res-bar { display: flex; align-items: center; gap: 10px; margin: 14px 0 0; min-height: 36px; font-size: 13px; color: var(--text-muted); }
+.search-results .cp { display: inline-flex; align-items: center; gap: 7px; flex: none; min-height: 36px; padding: 0 13px; border: 1px solid var(--pill-edge, #536471); border-radius: 999px; background: var(--bg); font-size: 14px; font-weight: 600; color: var(--text); }
+.search-results #searchSort { margin-left: auto; max-width: 150px; }
+.search-results #searchFiltersBtn { display: none; }
+.search-results .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.search-results .sb-page { display: contents; }
+.search-results .rail { grid-column: 1; grid-row: 1 / 3; min-width: 0; display: flex; flex-direction: column; padding-top: 2px; }
+.search-results .rail .seg { margin: 0 0 10px 6px; }
+.search-results .sec { border-top: 1px solid rgba(255,255,255,0.06); }
+.search-results .sec.open { padding-bottom: 10px; }
+.search-results .sec-h { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 10px 12px; border: 0; background: none; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.search-results .sec-h>span:last-child { margin-left: auto; }
+.search-results .sec-h .sel { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--text-secondary); }
+.search-results .sub { display: flex; align-items: center; gap: 8px; padding: 4px 12px 3px; font-size: 11.5px; color: var(--text-muted); }
+.search-results .ri { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; padding: 6px 12px; border: 0; border-radius: 8px; background: none; text-align: left; font-size: 13px; line-height: 1.35; color: var(--text-secondary); }
+.search-results .ri.on { background: rgba(255,255,255,0.08); color: var(--text); }
+.search-results .sf-label { min-width: 0; overflow-wrap: anywhere; }
+.search-results .ri .n { margin-left: auto; color: var(--text-muted); }
+.search-results .tick { color: var(--accent); }
+.search-results .search-body { grid-column: 2; min-width: 0; margin-top: 10px; }
+.search-results #searchRows .top-row { display: flex; flex-direction: column; align-items: stretch; gap: 0; margin: 0; padding: 12px 0; border: 0; border-radius: 0; border-bottom: 1px solid var(--line); content-visibility: auto; contain-intrinsic-size: auto 160px; }
+.search-results #searchRows .top-row::before, .search-results #searchRows .tl-section::before { display: none; }
+.search-results .tr-main { display: contents; }
+.search-results .tr-headline { order: 0; font-size: 19px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.3; color: var(--text); text-wrap: pretty; }
+.search-results .tr-title, .search-results .tr-groups, .search-results .f-new { display: none; }
+.search-results .tr-side { order: 1; display: flex; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 4px 12px; margin-top: 6px; font-size: 12px; color: var(--text-muted); text-align: left; }
+.search-results .tr-venue-line { justify-content: flex-start; }
+.search-results .tr-line { order: 2; margin-top: 2px; font-size: 12px; }
+.search-results .is-read .tr-side::after { content: '✓ Read'; }
+.search-results .paper-list .top-row.is-read { opacity: 1; }
+.search-results .is-read .tr-headline { color: var(--text-secondary); }
+.search-results .search-row-controls { order: 3; display: flex; align-items: center; gap: 4px; min-width: 0; margin-top: 2px; }
+.search-results .search-row-controls .chip { flex: 0 1 auto; max-width: calc(100% - 112px); justify-content: flex-start; }
+.search-results .search-row-controls .save-anchor, .search-results .search-row-controls .btn-link { flex: none; }
+.search-results .search-row-controls .btn-icon, .search-results .search-row-controls .btn-link { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+.search-results .top-row .tr-actions { order: 4; }
 /* Collapsed search actions need no layout. Focus or hover opens them on hover-capable screens. */
 .search-results .top-row .tr-actions { display: none; }
 @media (hover: hover) {
   :where(#mainScroll:not(.scrolling)) .search-results .top-row:hover .tr-actions, .search-results .top-row:focus-within .tr-actions,
   .search-results .top-row .tr-actions:has(.p-detail-panel.open) { display: grid; }
+}
+.search-results .scrim { position: fixed; z-index: 210; inset: 0; background: rgba(0,0,0,0.5); }
+.search-results .bsheet { position: fixed; z-index: 211; left: 50%; bottom: 0; transform: translateX(-50%); width: min(560px,100%); max-height: 72dvh; display: flex; flex-direction: column; background: var(--bg-surface); border-top: 1px solid rgba(255,255,255,0.14); border-radius: 16px 16px 0 0; box-shadow: 0 -20px 50px rgba(0,0,0,0.5); }
+.search-results .bs-head { display: flex; align-items: center; gap: 6px; padding: 12px 12px 10px 18px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.search-results .bs-head b { margin-right: auto; font-size: 16px; font-weight: 600; }
+.search-results .bs-head button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border: 0; border-radius: 999px; background: none; font-size: 14px; color: var(--text-secondary); }
+.search-results .bs-head .done { background: rgba(255,255,255,0.1); color: var(--text); }
+.search-results .bs-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 18px 22px; }
+.search-results .help-sheet .bs-body { line-height: 1.6; }
+.search-results mark { background: color-mix(in srgb,var(--accent) 22%,transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
+.search-results .tl-empty { line-height: 1.6; max-width: 560px; margin: 12px auto; padding: 16px 12px; }
+.search-results .search-empty strong { display: block; color: var(--text); margin-bottom: 6px; }
+.search-results .v-more, .search-results #searchMore .ui-btn { min-height: 44px; }
+.search-results #searchClear .v-more { margin: 0; font-size: 12px; }
+@media (max-width: 600px) {
+  .search-results { display: block; padding: 16px 16px 24px; }
+  .search-results .sb-page { display: block; padding-top: 10px; }
+  .search-results #searchRail { display: none; }
+  .search-results #searchFiltersBtn { display: inline-flex; }
+  .search-results #searchStatus { font-size: 12px; }
+  .search-results #searchClear { display: none; }
+  .search-results .res-bar { flex-wrap: wrap; }
+  .search-results .bsheet { height: 62dvh; }
+  .search-results .help-sheet { height: auto; }
+  .search-results .bs-body .seg button, .search-results .bs-body .ri { min-height: 44px; }
+  .search-results .bs-body .tc { display: inline-flex; align-items: center; width: auto; max-width: 100%; margin: 4px 6px 4px 0; padding: 0 14px; border: 1px solid transparent; border-radius: 999px; background: rgba(255,255,255,0.055); font-size: 13.5px; }
+  .search-results .bs-body .tc.on { background: var(--accent-dim); border-color: color-mix(in srgb,var(--accent) 70%,transparent); color: var(--accent); }
 }
 .chip-select { -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.055) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24'%3E%3Cpath fill='%239aa0a6' d='M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z'/%3E%3C/svg%3E") no-repeat right 9px center; border: 1px solid transparent; color: var(--text-secondary); font: inherit; font-size: 12px; padding: 3px 26px 3px 10px; border-radius: 999px; cursor: pointer; transition: border-color 0.15s, color 0.15s; max-width: 240px; }
 .chip-select:hover { border-color: var(--line); color: var(--text); }
@@ -1781,7 +1897,7 @@ kbd { display: inline-block; min-width: 22px; text-align: center; font: 12px ui-
 .search-results .tl-empty { line-height: 1.6; max-width: 560px; margin: 12px auto; padding: 16px 12px; }
 .search-empty strong { display: block; color: var(--text); margin-bottom: 6px; }
 .search-results-header .v-more { margin: 0 0 0 8px; padding: 0 2px; }
-.search-results { max-width: 1200px; margin: 0 auto; padding: 0 24px 32px; }
+
 .search-results-header { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
 /* [9] Softer card rendering */
 .search-list { background: var(--bg-surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.45); }
@@ -2358,7 +2474,7 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 
 /* RESPONSIVE */
 @media (max-width: 900px) { .topics-grid { grid-template-columns: repeat(2, 1fr); } .top-grid { grid-template-columns: 1fr; } .skel-top-grid { grid-template-columns: 1fr; } .skel-topics { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 600px) { .topics-grid { grid-template-columns: 1fr; } .top-grid { grid-template-columns: 1fr; } .nav-search { display: none; } body.search-open .nav-search { display: block; } .nav-inner { padding: 0 16px; gap: 12px; } .briefing, .filters, .top-papers, .topics-grid { padding-left: 16px; padding-right: 16px; } .skel-topics { grid-template-columns: 1fr; } .skel-top-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .topics-grid { grid-template-columns: 1fr; } .top-grid { grid-template-columns: 1fr; } .nav-inner { padding: 0 16px; gap: 12px; } .briefing, .filters, .top-papers, .topics-grid { padding-left: 16px; padding-right: 16px; } .skel-topics { grid-template-columns: 1fr; } .skel-top-grid { grid-template-columns: 1fr; } }
 
 /* AUTH */
 .auth-overlay { position: fixed; inset: 0; z-index: 400; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0); visibility: hidden; pointer-events: none; transition: background 0.2s ease; }
@@ -2795,11 +2911,7 @@ body:has(#sec-library.active) .save-bar[data-state="saving"] { visibility: hidde
       <button class="nav-tab" data-tab="email" onclick="switchTab('email')" hidden>Email Digest</button>   <!-- off: SHOW_EMAIL_TAB -->
       <button class="nav-tab" data-tab="venues" onclick="switchTab('venues')" hidden>Venues</button>   <!-- off: SHOW_VENUES_TAB -->
     </div>
-    <button class="nav-search-toggle" id="navSearchToggle" onclick="toggleMobileSearch()" aria-label="Search" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>
-    <div class="nav-search">
-      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-      <input type="text" id="searchInput" placeholder="Search papers and authors..." oninput="debouncedSearch()" onkeydown="if (event.key === 'Escape') { event.preventDefault(); this.value = ''; clearTimeout(_searchTimer); hideGlobalSearch(); this.blur(); }">
-    </div>
+    <button class="nav-search-toggle" id="navSearchToggle" onclick="toggleMobileSearch()" aria-controls="sec-search" aria-label="Search" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>
     <button class="nav-key" id="navKey" onclick="connectGitHub()" title="Sign in" aria-label="Sign in"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M18 5l2 2"/></svg></button>
   </div>
 </nav>
@@ -2821,24 +2933,7 @@ body:has(#sec-library.active) .save-bar[data-state="saving"] { visibility: hidde
 <div class="main-scroll" id="mainScroll">
 
 <!-- [2] LOADING SKELETON -->
-<div class="skeleton-wrap" id="skeleton">
-  <div style="height:28px;width:200px;margin-bottom:16px;" class="skel-block"></div>
-  <div style="height:14px;width:140px;margin-bottom:20px;" class="skel-block"></div>
-  <div class="skel-top-grid">
-    <div class="skel-topic-card skel-block" style="height:160px;border-radius:12px;"></div>
-    <div class="skel-topic-card skel-block" style="height:160px;border-radius:12px;"></div>
-    <div class="skel-topic-card skel-block" style="height:160px;border-radius:12px;"></div>
-    <div class="skel-topic-card skel-block" style="height:160px;border-radius:12px;"></div>
-    <div class="skel-topic-card skel-block" style="height:160px;border-radius:12px;"></div>
-    <div class="skel-topic-card skel-block" style="height:160px;border-radius:12px;"></div>
-  </div>
-  <div style="height:16px;width:120px;margin-bottom:16px;" class="skel-block"></div>
-  <div class="skel-topics">
-    <div class="skel-topic-card skel-block"></div>
-    <div class="skel-topic-card skel-block"></div>
-    <div class="skel-topic-card skel-block"></div>
-  </div>
-</div>
+<div class="skeleton-wrap" id="skeleton" aria-hidden="true"></div>
 
 <!-- PAPERS TAB (all / email) -->
 <div class="tab-section" id="sec-papers">
@@ -2897,9 +2992,34 @@ body:has(#sec-library.active) .save-bar[data-state="saving"] { visibility: hidde
 
 <!-- GLOBAL SEARCH VIEW (cross-category) -->
 <div class="tab-section" id="sec-search">
-  <div class="search-results" id="globalSearchResults" style="padding-top:24px;">
-    <div class="search-results-header"><span id="searchStatus" role="status" aria-live="polite" aria-atomic="true"></span><span id="searchClear"></span></div>
-    <div id="searchControls"></div><div id="searchRows"></div><div id="searchMore" class="feed-more"></div>
+  <div class="search-results" id="globalSearchResults">
+<div class="search-box-wrap">
+  <div class="sf" role="search" aria-label="Search papers">
+    <svg class="gl" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg>
+    <span id="searchChips" class="wrap"></span>
+    <input type="text" id="searchInput" aria-label="Search papers" placeholder="Search papers" autocomplete="off" oninput="debouncedSearch()">
+    <span id="searchMode"></span>
+    <button type="button" id="searchHelpBtn" class="help" aria-label="Search help" aria-expanded="false" onclick="sfSheet(true,true)">ⓘ</button>
+  </div>
+  <div class="res-bar">
+    <button type="button" id="searchFiltersBtn" class="cp" aria-controls="searchFilterSheet" aria-expanded="false" onclick="sfSheet(true)">Filters <i class="dot" hidden></i>⌄</button>
+    <span id="searchStatus" role="status" aria-live="polite" aria-atomic="true"></span><span id="searchClear"></span>
+    <select id="searchSort" class="cp" aria-label="Order" onchange="setSearchFilter('sort',this.value)"><option value="match">Best match</option><option value="newest">Newest</option></select>
+  </div>
+</div>
+<div class="sb-page">
+  <aside id="searchRail" class="rail" aria-label="Search filters"><div id="searchControls"></div></aside>
+  <div class="search-body"><div id="searchRows"></div><div id="searchMore" class="feed-more"></div></div>
+</div>
+<div id="searchScrim" class="scrim" hidden onclick="sfSheet(false);sfSheet(false,true)"></div>
+<section id="searchFilterSheet" class="bsheet" hidden role="dialog" aria-modal="true" aria-label="Filters">
+  <div class="bs-head"><b>Filters</b><button type="button" class="sf-clear" onclick="clearSearchFilters()">Clear</button><button type="button" class="done" onclick="sfSheet(false)">Done</button></div>
+  <div id="searchFilterBody" class="bs-body"></div>
+</section>
+<section id="searchHelpSheet" class="bsheet help-sheet" hidden role="dialog" aria-modal="true" aria-label="Search help">
+  <div class="bs-head"><b>Search help</b><button type="button" class="done" onclick="sfSheet(false,true)">Done</button></div>
+  <div class="bs-body"><p>Type author: before a name to search authors only. title:, interest:, venue: and year: work the same way. Put quotes around words to keep them together.</p></div>
+</section>
   </div>
 </div>
 
@@ -4844,7 +4964,8 @@ function byNew(arr) {
    the score (SCORE_CUTS): Must Read means about your research (or partly, with a strong related match). */
 const LEVEL_NAME = { definitely: 'Core', probably: 'Related', mildly: 'Peripheral' };
 const STRENGTH = { about: 1, partly: 0.6, touches: 0.25 };
-const STRENGTH_NAME = { about: 'About', partly: 'Partly about', touches: 'Touches' };
+const STRENGTH_NAME = { about: 'Strong', partly: 'Moderate', touches: 'Weak' };
+const STRENGTH_HELP = { about: "It's what the paper is about", partly: 'A substantial part of it', touches: 'Appears, but not substantially' };
 const STRENGTH_DEFAULT = 'partly';   // a match not rated yet
 const SCORE_CUTS = { definitely: 2.5, probably: 0.6 };   // Must Read at 2.5+, Interesting at 0.6+, else Tangential
 function matchStrengths(p) {
@@ -6214,6 +6335,37 @@ function buildGroupOrder() {
     .map(g => norm(g.group_name));
 }
 
+/* The first view comes from the address alone, before any library request. */
+function skeletonHTML(hash) {
+  const route = String(hash || '').replace(/^#/, '');
+  const bar = (width, cls = '', phone = width) => `<i class="sk${cls ? ' ' + cls : ''}" style="width:${width}%;--sk-phone:${phone}%"></i>`;
+  const caret = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  const back = '<span class="sk-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7 7-7-7 7-7"/></svg></span>';
+  if (/^(paper|read)\//.test(route)) {
+    return `<div class="pd" data-shape="paper"><div class="pd-bar"><div class="pd-bar-inner">${back}<span>Back</span></div></div>
+      <div class="pd-article">${bar(100, 'sk-kicker')}${bar(88, 'sk-paper-title', 94)}${bar(62, 'sk-paper-title', 84)}${bar(58, 'sk-paper-title phone')}${bar(46, 'sk-authors', 62)}
+      <div class="sk-prose">${[100, 97, 99, 68].map(w => bar(w)).join('')}</div></div></div>`;
+  }
+  let name = null, feed = /^(all|following|daily|search(?:\?.*)?)?$/.test(route);
+  if (route.startsWith('list/')) {
+    try { name = decodeURIComponent(route.slice(5)); }
+    catch (e) { feed = true; }
+  }
+  if (feed || name !== null) {
+    const widths = name === null ? [[30, 88, 60, 42], [26, 90, 52, 38], [22, 86, 64, 40]] : [[32, 90, 56, 46], [26, 94, 62, 40], [30, 88, 54, 44]];
+    const phoneWidths = name === null ? [[34, 92, 60, 48], [28, 94, 50, 42], [30, 90, 66, 44]] : widths;
+    const posts = widths.map(([meta, title, next, by], i) => `<div class="skpost"><div class="skl l-meta">${bar(meta, '', phoneWidths[i][0])}</div><div class="skl l-title">${bar(title, '', phoneWidths[i][1])}</div><div class="skl l-title n">${bar(next, '', phoneWidths[i][2])}</div><div class="skl l-dek"></div><div class="skl l-by">${bar(by, '', phoneWidths[i][3])}</div><div class="sk-gap"></div></div>`).join('');
+    const head = name === null ? `<div class="feed-head"><div class="feed-tabs"><span class="tab${route === 'following' || route === 'daily' ? '' : ' on'}">For you</span><span class="tab${route === 'following' ? ' on' : ''}">Following</span><span class="tab${route === 'daily' ? ' on' : ''}">Daily</span></div><div class="feed-ctl"><span class="feed-cp">Best${caret}</span><span class="feed-cp">All interests${caret}</span></div></div>`
+      : `<div class="list-bar">${back}<span class="lb-name">${esc(name)}</span></div>`;
+    return `<div class="feed" data-shape="${name === null ? 'feed' : 'list'}">${head}${posts}</div>`;
+  }
+  return `<div class="sk-generic" data-shape="generic">${bar(30, 'sk-heading')}${[88, 72, 94, 64, 82, 70].map(w => `<div class="sk-row">${bar(w)}</div>`).join('')}</div>`;
+}
+function skeletonShow() {
+  document.getElementById('skeleton').innerHTML = skeletonHTML(location.hash);
+}
+skeletonShow();
+
 /* [2] Skeleton -> content reveal */
 function revealContent() {
   if (_dataLoaded) return;
@@ -6224,7 +6376,8 @@ function revealContent() {
   setTimeout(privateCallback(requestsLoad), 0);   // Phase 24: the requests this device was following, carried over a reload
   const skel = document.getElementById('skeleton');
   skel.classList.add('hidden');
-  setTimeout(privateCallback(() => { skel.style.display = 'none'; fitTopPapers(); }), 400);   // the loader held the page's place: fit Top Papers now it's gone
+  pageIn(document.querySelector('.tab-section.active'));
+  setTimeout(privateCallback(() => { skel.style.display = 'none'; fitTopPapers(); }), 200);   // the loader held the page's place: fit Top Papers now it's gone
 }
 
 /* ===== NEW SINCE LAST VISIT =====
@@ -6458,10 +6611,9 @@ function buildRelevanceBreakdown(p) {
   const parts = scoreParts(p), rel = dynamicRelevance(p);
   let html = `<div class="relevance-breakdown"><div class="relevance-score-row"><span class="relevance-score-label"><strong>${relLabel(rel)}</strong><br>How this paper relates to your interests</span></div>`;
   if (parts.matches.length) {
-    const words = { about: 'A main focus of this paper', partly: 'A substantial part of this paper', touches: 'Mentioned briefly in this paper' };
     const rows = parts.matches.slice().sort((a, b) => b.value - a.value).map(m => `<div class="relevance-interest-row">
       <span class="badge badge-${m.level} relevance-interest-score">${LEVEL_NAME[m.level]}</span>
-      <span class="relevance-interest-name">${esc(m.name)}<span class="rel-strength">${m.rated ? words[m.strength] : 'How closely it matches is still to be described'}</span></span>
+      <span class="relevance-interest-name">${esc(m.name)}<span class="rel-strength"><span${m.rated ? '' : ' style="font-style:italic" title="(not rated yet)"'}>${STRENGTH_NAME[m.strength]}</span>: ${esc(STRENGTH_HELP[m.strength])}</span></span>
     </div>`).join('');
     html += `<div class="relevance-interests"><div class="relevance-interests-title">Matching interests</div>${rows}</div>`;
   } else {
@@ -6487,67 +6639,56 @@ function sortPapers(arr) {
 let _searchTimer = null;
 function debouncedSearch() {
   searchOff();
+  sfChipInput();
   const gen = Search.gen, route = location.hash, epoch = Private.epoch;
   _searchTimer = setTimeout(() => {
     if (gen !== Search.gen || route !== location.hash || epoch !== Private.epoch || !searchBound(epoch)) return;
-    const q = (document.getElementById('searchInput').value||'').trim();
-    if (q) {
-      showGlobalSearch(q);
-    } else {
-      hideGlobalSearch();
-    }
-  }, 50);
+    showGlobalSearch(sfQuery());
+  }, 0);
 }
 
 /* ===== GLOBAL SEARCH (cross-category) ===== */
 let _searchActive = false;
-/* Phone: the search box sits behind a button in the nav */
-function toggleMobileSearch(force) {
-  const open = typeof force === 'boolean' ? force : !document.body.classList.contains('search-open');
-  document.body.classList.toggle('search-open', open);
-  document.getElementById('navSearchToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
-  markAppSearch();
-  if (open) setTimeout(privateCallback(() => document.getElementById('searchInput').focus()), 0);
-}
+function toggleMobileSearch(force) { if (force !== false) { showGlobalSearch(_searchActive ? sfQuery() : ''); document.getElementById('searchInput').focus(); } }
+function sfRoute(hash) { return hash === '#search' || hash.startsWith('#search?q='); }
 function showGlobalSearch(q, fromHash) {
+  q = (q || '').trim();
+  searchShell();
+  const freshEntry = !fromHash && !sfRoute(location.hash) && (Search.entry !== location.hash || !_searchActive || _paperViewActive);
   if (fromHash) Search.entry = null;
-  else if (!location.hash.startsWith('#search?q=')) Search.entry = location.hash;
-  if (_searchActive && !_paperViewActive && location.hash.startsWith('#search?q=') && document.getElementById('sec-search').classList.contains('active')) {
-    if (!document.body.classList.contains('search-open') && window.matchMedia('(max-width: 600px)').matches) {
-      document.body.classList.add('search-open');
-      document.getElementById('navSearchToggle').setAttribute('aria-expanded', 'true');
-    }
-    renderGlobalSearch(q.toLowerCase(), { typing: !fromHash, restore: fromHash && Search.q === q.toLowerCase() });
+  else if (!sfRoute(location.hash)) Search.entry = location.hash;
+  if (_searchActive && !_paperViewActive && sfRoute(location.hash) && document.getElementById('sec-search').classList.contains('active')) {
+    if (fromHash || sfQuery() !== q) sfSetQuery(q);
+    renderGlobalSearch(q, { typing: !fromHash, restore: fromHash && Search.q === q });
     return;
   }
   const ms = document.getElementById('mainScroll');
-  const returning = fromHash && Search.q === q.toLowerCase();
-  if (!fromHash && !location.hash.startsWith('#search?q=')) Search.origin = { hash: location.hash, scroll: ms.scrollTop };
-  if (!_searchActive && !_paperViewActive) _tabScroll[currentTab] = ms.scrollTop;
+  const returning = fromHash && Search.q === q && !!Search.job;
+  if (freshEntry) Search.origin = { hash: location.hash, scroll: ms.scrollTop };
+  if (!_searchActive && !_paperViewActive) {
+    _tabScroll[currentTab] = ms.scrollTop;
+    if (!returning && currentTab === 'all' && Feed.mode === 'foryou' && Feed.interest) SF.interest = [Feed.interest];
+  }
   leaveListView();
   _searchActive = true;
-  if (window.matchMedia('(max-width: 600px)').matches) {
-    document.body.classList.add('search-open');
-    document.getElementById('navSearchToggle').setAttribute('aria-expanded', 'true');
-  }
   for (const id of ['sec-papers', 'sec-library', 'sec-venues', 'sec-interests', 'sec-people', 'sec-paper']) document.getElementById(id).classList.remove('active');
   document.getElementById('sec-search').classList.add('active');
   feedOff();
   _paperViewActive = false;
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   markAppSearch();
-  searchShell();
-  renderGlobalSearch(q.toLowerCase(), { typing: !fromHash, restore: returning });
+  if (fromHash || sfQuery() !== q) sfSetQuery(q);
+  renderGlobalSearch(q, { typing: !fromHash, restore: returning });
 }
 function hideGlobalSearch() {
   searchOff();
-  document.getElementById('searchInput').value = '';
+  sfSetQuery('');
   Search.entry = null;
   if (!_searchActive || _paperViewActive || !document.getElementById('sec-search').classList.contains('active')) return;
   if (Search.origin && location.hash === Search.origin.hash) {
     Search.back = Search.origin;
     applyHash();
-  } else if (location.hash.startsWith('#search?q=') && Search.origin) {
+  } else if (sfRoute(location.hash) && Search.origin) {
     Search.back = Search.origin;
     history.back();
   } else {
@@ -6555,70 +6696,256 @@ function hideGlobalSearch() {
     applyHash();
   }
 }
-/* Search ranks by where the words match (headline/title, then authors, then venue, then summary/abstract/
-   notes), highlights them, and narrows with chips: relevance, unread, topic, year. */
-let _searchFilters = { rel: 'all', unread: false, topic: null, year: null };
+function sfEmpty() { return { text: '', any: false, show: 'all', sort: 'match', interest: [], venue: [], year: [], list: [] }; }
+let SF = sfEmpty();
+const SF_MULTI = ['interest', 'venue', 'year', 'list'];
+let _sfChips = [], _sfOpts = [], _sfFold = {}, _sfMemo = null;
+// Kept for the existing one-paper repaint hook. Read and list changes also refresh the facet counts.
+let _searchFilters = { get unread() { return SF.show !== 'all'; } };
 let _lastSearchQ = '';
+const SF_FIELDS = {
+  title: { w: 4, of: p => (p.headline || '') + '\n' + (p.title || '') },
+  author: { w: 3, of: p => p.authors || '' },
+  interest: { w: 2, of: p => effMatches(p).join('\n') },
+  venue: { w: 2, of: p => (p.venue || '') + '\n' + rowVenueLabel(p) },
+  year: { w: 1, of: p => String(Math.floor(pubKey(p) / 100) || '') },
+  abstract: { w: 1, of: p => p.abstract || '' },
+  summary: { w: 1, of: p => p.summary || '' }
+};
+const SF_ALIAS = { by: 'author', authors: 'author', in: 'venue', interests: 'interest', headline: 'title' };
+const sfFieldOf = name => { const f = (name || '').toLowerCase(); return Object.hasOwn(SF_FIELDS, f) ? f : Object.hasOwn(SF_ALIAS, f) ? SF_ALIAS[f] : null; };
+const SF_FIELD_AT = /(^|\s)([A-Za-z]+):/g;
+function sfFieldMarks(text) {
+  const quoted = []; let quote = false;
+  for (let i=0; i<text.length; i++) {
+    quoted[i] = quote;
+    if (text[i] === '\\' && /["\\]/.test(text[i+1] || '')) { quoted[++i] = quote; continue; }
+    if (text[i] === '"') quote = !quote;
+  }
+  return [...text.matchAll(SF_FIELD_AT)].filter(m => !quoted[m.index+m[1].length] && sfFieldOf(m[2])).map(m => ({ f: sfFieldOf(m[2]), at: m.index + m[1].length, v: m.index + m[0].length }));
+}
+function sfWords(text) {
+  text = text || '';
+  const out = [];
+  const add = (f, t, raw) => { t = (t || '').replace(/\s+/g, ' ').trim(); if (!t) return; const id = (f || '') + ':' + t.toLowerCase(); if (!out.some(k => k.id === id)) out.push({ raw: raw.trim(), f, t, id }); };
+  const unquote = t => t.replace(/\\(["\\])/g,'$1');
+  const words = seg => seg.replace(/"((?:\\.|[^"\\])*)"?|(\S+)/g, (m, ph, w) => add(null, ph !== undefined ? unquote(ph) : w, m));
+  const marks = sfFieldMarks(text);
+  words(text.slice(0, marks.length ? marks[0].at : text.length));
+  marks.forEach((k, i) => {
+    const end = i + 1 < marks.length ? marks[i + 1].at : text.length, seg = text.slice(k.v, end), q = seg.match(/^\s*"((?:\\.|[^"\\])*)"?/);
+    if (q) { add(k.f, unquote(q[1]), text.slice(k.at, k.v + q[0].length)); words(seg.slice(q[0].length)); }
+    else {
+      const word = seg.match(/^\s*(\S+)/);
+      if (word) { add(k.f,word[1],text.slice(k.at,k.v+word[0].length)); words(seg.slice(word[0].length)); }
+    }
+  });
+  return out;
+}
+function sfCopy(s) { return { ...s, ...Object.fromEntries(SF_MULTI.map(f => [f, s[f].slice()])) }; }
+function sfQuery() { return [..._sfChips.map(k => k.raw), document.getElementById('searchInput')?.value || ''].filter(Boolean).join(' ').trim(); }
+function sfChipRender() {
+  const el = document.getElementById('searchChips');
+  if (el) el.innerHTML = _sfChips.map((k,i) => `<span class="kc">${k.f ? `<span class="k">${esc(k.f)}:</span>` : ''}<span class="kv">${esc(k.t)}</span><button type="button" class="x" aria-label="Remove ${dataAttr(k.raw)}" onclick="sfChipRemove(${i})">×</button></span>`).join('');
+}
+function sfChipInput() {
+  const inp = document.getElementById('searchInput');
+  if (!inp) return;
+  let quote = false, end = 0;
+  for (let i = 0; i < inp.value.length; i++) {
+    if (inp.value[i] === '\\' && /["\\]/.test(inp.value[i+1] || '')) { i++; continue; }
+    if (inp.value[i] === '"') quote = !quote;
+    if (!quote && /\s/.test(inp.value[i])) end = i + 1;
+  }
+  const pending = inp.value.slice(0,end).match(/(?:^|\s)([A-Za-z]+):\s*$/);
+  if (pending && sfFieldOf(pending[1])) end = pending.index;
+  if (!end) return;
+  _sfChips.push(...sfWords(inp.value.slice(0,end)));
+  inp.value = inp.value.slice(end);
+  sfChipRender();
+}
+function sfSetQuery(q) {
+  _sfChips = [];
+  const inp = document.getElementById('searchInput');
+  if (!inp) return;
+  inp.value = q;
+  sfChipInput(); sfChipRender();
+}
+function sfChipRemove(i) {
+  _sfChips.splice(i,1); sfChipRender();
+  showGlobalSearch(sfQuery());
+  document.getElementById('searchInput').focus({ preventScroll: true });
+}
 function setSearchFilter(key, value) {
-  _searchFilters[key] = _searchFilters[key] === value ? (key === 'rel' ? 'all' : key === 'unread' ? false : null) : value;
+  if (key === 'unread') { SF.show = SF.show === 'unread' ? 'all' : 'unread'; }
+  else if (SF_MULTI.includes(key)) { value = String(value); SF[key] = SF[key].includes(value) ? SF[key].filter(v => v !== value) : [...SF[key], value]; }
+  else if (key === 'show' && ['all','read','unread'].includes(value)) SF.show = value;
+  else if (key === 'any') SF.any = !!value;
+  else if (key === 'sort' && ['match','newest'].includes(value)) SF.sort = value;
   searchFilterRender(true);
 }
-function setSearchSelect(key, v) { _searchFilters[key] = v === '' ? null : key === 'year' ? parseInt(v) : v; searchFilterRender(true); }
-function clearSearchFilters() { _searchFilters = { rel: 'all', unread: false, topic: null, year: null }; searchFilterRender(true); }
+function setSearchSelect(key, value) { if (SF_MULTI.includes(key)) SF[key] = value ? [String(value)] : []; searchFilterRender(true); }
+function sfOption(i) { const o = _sfOpts[i]; if (o) setSearchFilter(o[0], o[1]); }
+function clearSearchFilters() { SF.show = 'all'; SF_MULTI.forEach(f => { SF[f] = []; }); searchFilterRender(true); if (!document.getElementById('searchFilterSheet')?.hidden) sfSheet(false); }
 function searchFilterRender(reset) {
-  const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  if (!q) { hideGlobalSearch(); return; }
-  renderGlobalSearch(q, { restore: !reset && Search.q === q });
+  if (!_searchActive || _paperViewActive) return;
+  const q = sfQuery();
+  renderGlobalSearch(q, { typing: q !== Search.q || !!Search.entry, restore: !reset && Search.q === q });
 }
-/* Phase 15 (A7): each paper's lowercased search text, kept by row and used only while the row still has the strings
-   it was made from (a received change can replace them in the same row). Notes are lowercased on every search and
-   never kept: a save or a received change edits them in place. applyPapers and the lock drop every entry. */
+function sfFold(id) { _sfFold[id] = !sfIsOpen(id); searchFilterRender(); }
+function sfPlaceControls() {
+  const controls = document.getElementById('searchControls');
+  if (!controls) return;
+  const phone = window.matchMedia('(max-width: 600px)').matches;
+  const parent = document.getElementById(phone ? 'searchFilterBody' : 'searchRail');
+  if (parent && controls.parentNode !== parent) parent.appendChild(controls);
+  if (!phone && !document.getElementById('searchFilterSheet')?.hidden) sfSheet(false);
+}
+window.addEventListener('resize',sfPlaceControls,{passive:true});
+function sfIsOpen(id) { return id in _sfFold ? _sfFold[id] : id === 'interest'; }
+function sfSheet(open, help) {
+  const sheet = document.getElementById(help ? 'searchHelpSheet' : 'searchFilterSheet');
+  const scrim = document.getElementById('searchScrim');
+  if (!sheet || !scrim) return;
+  document.getElementById('searchFilterSheet').hidden = true;
+  document.getElementById('searchHelpSheet').hidden = true;
+  sheet.hidden = !open; scrim.hidden = !open;
+  const btn = document.getElementById(help ? 'searchHelpBtn' : 'searchFiltersBtn');
+  if (btn) btn.setAttribute('aria-expanded', String(!!open));
+  if (open) sheet.querySelector('button')?.focus({ preventScroll: true });
+  else btn?.focus({ preventScroll: true });
+}
+/* Text stays lazy, and notes stay current when edited in place. */
 let _searchText = new WeakMap();
 function searchText(p) {
   let e = _searchText.get(p);
-  if (!e || e.headline !== p.headline || e.title !== p.title || e.authors !== p.authors || e.venue !== p.venue || e.summary !== p.summary || e.abstract !== p.abstract) {
+  if (!e || e.headline !== p.headline || e.title !== p.title || e.authors !== p.authors || e.venue !== p.venue || e.summary !== p.summary || e.abstract !== p.abstract || e.date !== p.publishing_date) {
     const low = v => (v || '').toLowerCase();
-    e = { headline: p.headline, title: p.title, authors: p.authors, venue: p.venue, summary: p.summary, abstract: p.abstract,
-      head: low(p.headline) + ' ' + low(p.title), auth: null, ven: null, body: null };
+    e = { headline: p.headline, title: p.title, authors: p.authors, venue: p.venue, summary: p.summary, abstract: p.abstract, date: p.publishing_date,
+      head: low(p.headline) + ' ' + low(p.title), auth: null, ven: null, body: null, fields: Object.create(null) };
     _searchText.set(p, e);
   }
   return e;
 }
-function searchScore(p, tokens) {
+function searchScore(p, tokens, any) {
   const text = searchText(p);
   let score = 0, notes;
-  for (const t of tokens) {   // Prepare a lower-weight field only when the earlier fields did not match.
-    if (text.head.includes(t)) score += 4;
-    else if ((text.auth ??= (p.authors || '').toLowerCase()).includes(t)) score += 3;
-    else if ((text.ven ??= (p.venue || '').toLowerCase()).includes(t)) score += 2;
+  for (const k of tokens) {
+    const t = (typeof k === 'string' ? k : k.t).toLowerCase(), f = typeof k === 'string' ? null : k.f;
+    let hit = 0;
+    if (f && SF_FIELDS[f]) {
+      const raw = f === 'interest' ? SF_FIELDS[f].of(p).toLowerCase() : (text.fields[f] ??= SF_FIELDS[f].of(p).toLowerCase());
+      if (raw.includes(t)) hit = SF_FIELDS[f].w;
+    } else if (text.head.includes(t)) hit = 4;
+    else if ((text.auth ??= (p.authors || '').toLowerCase()).includes(t)) hit = 3;
+    else if ((text.ven ??= (p.venue || '').toLowerCase()).includes(t)) hit = 2;
     else if ((text.body ??= (p.summary || '').toLowerCase() + ' ' + (p.abstract || '').toLowerCase()).includes(t)
-        || (notes ??= (p.user_notes || '').toLowerCase()).includes(t)) score += 1;
-    else return 0;
+      || (notes ??= (p.user_notes || '').toLowerCase()).includes(t)) hit = 1;
+    if (!hit && !any) return 0;
+    score += hit;
   }
   return score;
 }
+function sfMemo() {
+  const iv = JSON.stringify(allInterests.map(i => [i.interest_name,i.status,i.relevance_mapping,i.aliases]));
+  if (!_sfMemo || _sfMemo.src !== allPapers || _sfMemo.n !== allPapers.length || _sfMemo.iv !== iv || _sfMemo.text !== _searchText) _sfMemo = { src: allPapers, n: allPapers.length, iv, text: _searchText, vals: new Map(), html: new Map() };
+  return _sfMemo;
+}
+function sfVals(p, memo, lists) {
+  const read = readSet.has(paperKey(p));
+  const sig = [p.venue,p.publishing_date,p.matched_interests,p.machine_strengths,p.match_strengths,p.residual_score,p.relevance_tier,p.user_lists,_editGen,read].join('\u0000');
+  let v = memo.vals.get(p);
+  if (!v || v.sig !== sig) {
+    const date = pubKey(p), interests = effMatches(p), k = paperKey(p);
+    v = { sig, interest: interests, venue: [rowVenueLabel(p)].filter(Boolean), year: date ? [String(Math.floor(date/100))] : [],
+      list: lists.filter(n => listHolds(n,k) || nameList(p.user_lists).includes(n)), read, date, rel: dynamicRelevance(p), score: scoreParts(p).score };
+    memo.vals.set(p,v);
+  }
+  return v;
+}
+function sfCompute(q, s) {
+  const keys = sfWords(q), records = [], counts = Object.fromEntries(SF_MULTI.map(f => [f,new Map()])), base = Object.fromEntries(SF_MULTI.map(f => [f,new Map()]));
+  const memo = sfMemo(), lists = [TO_READ,...projectNames()];
+  let total = 0;
+  for (const p of allPapers) {
+    const score = keys.length ? searchScore(p,keys,s.any) : null;
+    if (keys.length && !score) continue;
+    total++;
+    const v = sfVals(p,memo,lists), failed = [];
+    if (s.show !== 'all' && s.show !== (v.read ? 'read' : 'unread')) failed.push('show');
+    for (const f of SF_MULTI) {
+      v[f].forEach(x => base[f].set(x,(base[f].get(x)||0)+1));
+      if (s[f].length && !s[f].some(x => v[f].includes(x))) failed.push(f);
+    }
+    if (!failed.length) records.push({ p, s: score ?? v.score, rel: v.rel, date: v.date });
+    if (failed.length < 2) for (const f of SF_MULTI) if (!failed.length || failed[0] === f) v[f].forEach(x => counts[f].set(x,(counts[f].get(x)||0)+1));
+  }
+  const rank = (a,b) => b.s-a.s || (REL_ORDER[a.rel]??9)-(REL_ORDER[b.rel]??9) || b.date-a.date;
+  records.sort(s.sort === 'newest' ? (a,b) => b.date-a.date || b.s-a.s : rank);
+  return { keys, records, counts, base, total };
+}
+function sfControls(job) {
+  const s = job.sf, count = SF_MULTI.reduce((n,f) => n+s[f].length, s.show === 'all' ? 0 : 1);
+  const segment = (key,values) => `<div class="seg" role="group" aria-label="${key === 'show' ? 'Show' : 'Match words'}">${values.map(([v,label]) => `<button type="button" data-search-filter="${key}-${v}" aria-pressed="${s[key] === v}" onclick="setSearchFilter('${key}',${typeof v === 'boolean' ? v : `'${v}'`})">${label}</button>`).join('')}</div>`;
+  document.getElementById('searchMode').innerHTML = segment('any',[[false,'All'],[true,'Any']]);
+  const option = (f,v) => {
+    const i = _sfOpts.push([f,v])-1, on = s[f].includes(v);
+    return `<button type="button" class="ri tc${on?' on':''}" data-sf-opt="${i}" data-search-filter="option-${i}" aria-pressed="${on}" onclick="sfOption(${i})"><span class="sf-label" data-sf-field="${f}">${esc(v)}</span><span class="n">${job.counts[f].get(v)||0}</span>${on ? '<span class="tick" aria-hidden="true">✓</span>' : ''}</button>`;
+  };
+  _sfOpts = [];
+  const section = f => {
+    const names = [...new Set([...job.base[f].keys(),...s[f]])];
+    names.sort(f === 'year' ? (a,b)=>Number(b)-Number(a) : (a,b)=>a.localeCompare(b));
+    let body;
+    if (f === 'interest') {
+      const levels = new Map(allInterests.filter(i=>i.status==='confirmed').map(i=>[i.interest_name,i.relevance_mapping]));
+      body = [['definitely','Core'],['probably','Related'],['mildly','Peripheral']].map(([level,label]) => {
+        const ns = names.filter(n=>levels.get(n)===level);
+        return ns.length ? `<div class="sub">${label}</div>${ns.map(n=>option(f,n)).join('')}` : '';
+      }).join('');
+    } else body = names.map(n=>option(f,n)).join('');
+    const open = sfIsOpen(f), label = {interest:'Interests',venue:'Venue',year:'Year',list:'Lists'}[f];
+    return `<section class="sec${open?' open':''}"><button type="button" class="sec-h" data-search-filter="fold-${f}" aria-expanded="${open}" onclick="sfFold('${f}')">${label}<span class="sel">${esc(s[f].join(', '))}</span><span aria-hidden="true">${open?'⌃':'⌄'}</span></button><div${open?'':' hidden'}>${body}</div></section>`;
+  };
+  const html = segment('show',[['all','All'],['unread','Unread'],['read','Read']])+SF_MULTI.map(section).join('');
+  document.getElementById('searchControls').innerHTML = html;
+  // One set of facets moves into the phone sheet, retaining the same controls and focus targets.
+  const parent = document.getElementById(window.matchMedia('(max-width: 600px)').matches ? 'searchFilterBody' : 'searchRail');
+  if (document.getElementById('searchControls').parentNode !== parent) parent.appendChild(document.getElementById('searchControls'));
+  document.getElementById('searchSort').value = s.sort;
+  document.querySelector('#searchFiltersBtn .dot').hidden = !count;
+  document.getElementById('searchClear').innerHTML = count ? '<button type="button" class="v-more" data-search-filter="clear" onclick="clearSearchFilters()">Clear filters</button>' : '';
+  highlightTokens(document.getElementById('searchControls'),job.tokens);
+}
 function highlightTokens(root, tokens) {
   if (!tokens.length) return;
-  const escRe = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // the whole phrase first, so "conformal prediction" lights up as one span where it appears together
-  const alts = (tokens.length > 1 ? [tokens.map(escRe).join('\\s+')] : []).concat(tokens.map(escRe));
-  const re = new RegExp('(' + alts.join('|') + ')', 'gi');
-  root.querySelectorAll('.tr-headline, .tr-title, .tr-authors').forEach(el => {
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-    nodes.forEach(n => {
-      if (!re.test(n.nodeValue)) return;
+  const keys = tokens.map(k => typeof k === 'string' ? {f:null,t:k} : k);
+  root.querySelectorAll('.tr-headline, .tr-title, .tr-authors, .tr-venue, .sf-label').forEach(el => {
+    const field = el.dataset.sfField || (el.matches('.tr-authors') ? 'author' : el.matches('.tr-venue') ? 'venue' : 'title');
+    const words = keys.filter(k=>!k.f || k.f === field).map(k=>k.t).filter(Boolean);
+    if (!words.length) return;
+    const escRe = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const alts = (words.length>1 ? [words.map(escRe).join('\\s+')] : []).concat(words.map(escRe));
+    const re = new RegExp(alts.join('|'),'gi'), walker = document.createTreeWalker(el,NodeFilter.SHOW_TEXT), nodes = [];
+    while (walker.nextNode()) if (!walker.currentNode.parentElement.closest('mark')) nodes.push(walker.currentNode);
+    for (const node of nodes) {
+      const value = node.nodeValue, frag = document.createDocumentFragment(); let at = 0, m;
       re.lastIndex = 0;
-      const span = document.createElement('span');
-      span.innerHTML = esc(n.nodeValue).replace(re, '<mark>$1</mark>');
-      n.replaceWith(...span.childNodes);
-    });
+      while ((m=re.exec(value))) { frag.append(document.createTextNode(value.slice(at,m.index))); const mark=document.createElement('mark'); mark.textContent=m[0]; frag.append(mark); at=m.index+m[0].length; }
+      if (at) { frag.append(document.createTextNode(value.slice(at))); node.replaceWith(frag); }
+    }
   });
 }
 /* The ranked order is complete; only its drawn rows are paged. Every delayed step belongs to one input, route
    and sign-in. Leaving search keeps its rows for Back, but stops both paging and a pending query. */
 const Search = { gen: 0, frame: 0, obs: null, job: null, q: '', records: [], shown: 0, origin: null, back: null, dirty: false, scroll: 0, entry: null, scrollMode: null, chips: new Map() };
+// Follow the existing state-change notification, including Undo and papers with no mounted row.
+const _sfViewsSync = viewsSync;
+viewsSync = function () {
+  _sfViewsSync();
+  const job = Search.job;
+  if (searchLive(job) && job.edits !== _editGen) searchFilterRender();
+};
 // History may restore scroll before hashchange. Keep the last position on the committed route.
 function searchScrollMode(active) {
   if (Search.scrollMode === null) {
@@ -6640,7 +6967,7 @@ function searchOff(drop) {
   cancelAnimationFrame(Search.frame); Search.frame = 0;
   if (Search.obs) Search.obs.disconnect();
   Search.obs = null;
-  if (drop) { searchScrollMode(false); Search.scrollMode = null; Search.job = null; Search.records = []; Search.shown = 0; Search.q = ''; Search.origin = Search.back = Search.entry = null; Search.scroll = 0; Search.chips.clear(); Search.dirty = true; }
+  if (drop) { searchScrollMode(false); Search.scrollMode = null; Search.job = null; Search.records = []; Search.shown = 0; Search.q = ''; Search.origin = Search.back = Search.entry = null; Search.scroll = 0; Search.chips.clear(); Search.dirty = true; SF = sfEmpty(); _sfChips = []; _sfOpts = []; _sfFold = {}; _sfMemo = null; sfSheet(false); sfSheet(false,true); sfChipRender(); }
 }
 function searchRestoreOrigin() {
   const back = Search.back;
@@ -6663,84 +6990,101 @@ function searchLive(job) {
 }
 function searchShell() {
   const el = document.getElementById('globalSearchResults');
-  if (!document.getElementById('searchStatus')) el.innerHTML = `<div class="search-results-header"><span id="searchStatus" role="status" aria-live="polite" aria-atomic="true"></span><span id="searchClear"></span></div><div id="searchControls"></div><div id="searchRows"></div><div id="searchMore" class="feed-more"></div>`;
+  if (!document.getElementById('searchInput')) el.innerHTML = `<div class="search-box-wrap">
+  <div class="sf" role="search" aria-label="Search papers">
+    <svg class="gl" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg>
+    <span id="searchChips" class="wrap"></span>
+    <input type="text" id="searchInput" aria-label="Search papers" placeholder="Search papers" autocomplete="off" oninput="debouncedSearch()">
+    <span id="searchMode"></span>
+    <button type="button" id="searchHelpBtn" class="help" aria-label="Search help" aria-expanded="false" onclick="sfSheet(true,true)">ⓘ</button>
+  </div>
+  <div class="res-bar">
+    <button type="button" id="searchFiltersBtn" class="cp" aria-controls="searchFilterSheet" aria-expanded="false" onclick="sfSheet(true)">Filters <i class="dot" hidden></i>⌄</button>
+    <span id="searchStatus" role="status" aria-live="polite" aria-atomic="true"></span><span id="searchClear"></span>
+    <select id="searchSort" class="cp" aria-label="Order" onchange="setSearchFilter('sort',this.value)"><option value="match">Best match</option><option value="newest">Newest</option></select>
+  </div>
+</div>
+<div class="sb-page">
+  <aside id="searchRail" class="rail" aria-label="Search filters"><div id="searchControls"></div></aside>
+  <div class="search-body"><div id="searchRows"></div><div id="searchMore" class="feed-more"></div></div>
+</div>
+<div id="searchScrim" class="scrim" hidden onclick="sfSheet(false);sfSheet(false,true)"></div>
+<section id="searchFilterSheet" class="bsheet" hidden role="dialog" aria-modal="true" aria-label="Filters">
+  <div class="bs-head"><b>Filters</b><button type="button" class="sf-clear" onclick="clearSearchFilters()">Clear</button><button type="button" class="done" onclick="sfSheet(false)">Done</button></div>
+  <div id="searchFilterBody" class="bs-body"></div>
+</section>
+<section id="searchHelpSheet" class="bsheet help-sheet" hidden role="dialog" aria-modal="true" aria-label="Search help">
+  <div class="bs-head"><b>Search help</b><button type="button" class="done" onclick="sfSheet(false,true)">Done</button></div>
+  <div class="bs-body"><p>Type author: before a name to search authors only. title:, interest:, venue: and year: work the same way. Put quotes around words to keep them together.</p></div>
+</section>
+`;
 }
 function renderGlobalSearch(q, opts) {
   opts = opts || {};
   const focus = document.activeElement && document.activeElement.getAttribute('data-search-filter');
   const extent = opts.restore ? Search.shown : FEED_PAGE;
   searchOff();
-  if (q !== _lastSearchQ) { _searchFilters.topic = null; _searchFilters.year = null; }
-  if (!SHOW_TOPICS) _searchFilters.topic = null;
+  SF.text = q;
   _lastSearchQ = q;
-  const tokens = q.split(/\s+/).filter(Boolean), f = { ..._searchFilters };
-  const scored = [];
-  const topicCounts = {}, yearCounts = {}, relCounts = {};
-  for (const p of allPapers) {
-    const s = searchScore(p, tokens);
-    if (!s) continue;
-    const rel = dynamicRelevance(p), date = pubKey(p);
-    scored.push({ p, s, rel, date });
-    relCounts[rel] = (relCounts[rel] || 0) + 1;
-    shownTopics(p).forEach(g => topicCounts[g] = (topicCounts[g] || 0) + 1);
-    const y = date ? Math.floor(date / 100) : null;
-    if (y) yearCounts[y] = (yearCounts[y] || 0) + 1;
-  }
-  const shown = scored.filter(x => (f.rel === 'all' || x.rel === f.rel) && (!f.unread || !readSet.has(paperKey(x.p)))
-    && (!f.topic || groupsOfPaper(x.p).includes(f.topic)) && (!f.year || Math.floor(x.date / 100) === f.year));
-  shown.sort((a, b) => b.s - a.s || (REL_ORDER[a.rel] ?? 9) - (REL_ORDER[b.rel] ?? 9) || b.date - a.date);
-  const chip = (key, value, label, n) => `<button data-search-filter="${key}-${value}" class="tl-chip ${f[key] === value ? 'active' : ''}" onclick="setSearchFilter('${key}', ${typeof value === 'string' ? `'${escAttr(value)}'` : value})">${esc(label)}${n != null ? `<span class="n">${n}</span>` : ''}</button>`;
-  const rels = [['definitely', 'Must Read'], ['probably', 'Interesting'], ['mildly', 'Tangential']].filter(([r]) => relCounts[r]);
-  const topics = GROUP_ORDER.filter(g => topicCounts[g]);
-  const years = Object.keys(yearCounts).map(Number).sort((a, b) => b - a);
-  const active = f.rel !== 'all' || f.unread || f.topic || f.year;
-  const controls = scored.length ? `<div class="search-filters"><div class="tl-chips">${rels.map(([r, l]) => chip('rel', r, l, relCounts[r])).join('')}${chip('unread', true, 'Unread only', null)}
-    ${topics.length > 1 ? `<select data-search-filter="topic" class="chip-select ${f.topic ? 'active' : ''}" aria-label="Topic" onchange="setSearchSelect('topic', this.value)"><option value="">All topics</option>${topics.map(g => `<option value="${dataAttr(g)}" ${f.topic === g ? 'selected' : ''}>${esc(g)} (${topicCounts[g]})</option>`).join('')}</select>` : ''}
-    ${years.length > 1 ? `<select data-search-filter="year" class="chip-select ${f.year ? 'active' : ''}" aria-label="Year" onchange="setSearchSelect('year', this.value)"><option value="">Any year</option>${years.map(y => `<option value="${y}" ${f.year === y ? 'selected' : ''}>${y} (${yearCounts[y]})</option>`).join('')}</select>` : ''}</div></div>` : '';
-  const count = shown.length === scored.length ? `${scored.length} result${scored.length !== 1 ? 's' : ''}` : `${shown.length} of ${scored.length} results`;
-  const job = { gen: Search.gen, route: location.hash, epoch: Private.epoch, q, tokens, records: shown, controls, active, committed: false,
-    status: `${count} for "${q}"`, empty: !scored.length, typing: opts.typing || Search.entry === location.hash || (location.hash.startsWith('#search?q=') && location.hash !== '#search?q=' + encodeURIComponent(q)), restore: opts.restore, extent, focus };
+  const s = sfCopy(SF), computed = sfCompute(q,s), {keys,records,counts,base,total} = computed;
+  const active = s.show !== 'all' || SF_MULTI.some(f=>s[f].length);
+  const count = records.length === total ? `${total} result${total !== 1 ? 's' : ''}` : `${records.length} of ${total} results`;
+  const job = { gen: Search.gen, route: location.hash, epoch: Private.epoch, q, tokens: keys, records, sf: s, counts, base, active, committed: false,
+    status: q ? `${count} for "${q}"` : count, empty: !total, typing: opts.typing || Search.entry === location.hash,
+    restore: opts.restore, extent, focus };
   Search.job = job;
   Search.frame = requestAnimationFrame(() => searchCommit(job));
+}
+function searchRowHTML(p) {
+  const memo = _sfMemo || sfMemo(), signature = JSON.stringify(p) + _editGen + readSet.has(paperKey(p)) + starSet.has(paperKey(p));
+  let cached = memo.html.get(p);
+  if (!cached || cached.signature !== signature) {
+    cached = { signature, html: topRowHTML(p,shownTopics(p),{search:true}) };
+    memo.html.set(p,cached);
+  }
+  return cached.html;
 }
 function searchCommit(job) {
   if (!searchLive(job)) return;
   Search.frame = 0;
   if (job.typing) {
-    const url = APP_ROOT + location.search + '#search?q=' + encodeURIComponent(job.q);
-    if (location.hash.startsWith('#search?q=')) history.replaceState(history.state, '', url);
+    const url = APP_ROOT + location.search + (job.q ? '#search?q=' + encodeURIComponent(job.q) : '#search');
+    if (sfRoute(location.hash)) history.replaceState(history.state, '', url);
     else history.pushState(history.state, '', url);
     _appliedHash = job.route = location.hash;
     Search.entry = null;
   }
-  searchScrollMode(location.hash.startsWith('#search?q='));
+  searchScrollMode(sfRoute(location.hash));
   searchShell();
   const rows = document.getElementById('searchRows');
+  const extent = Math.min(job.extent || FEED_PAGE, job.records.length);
+  const same = extent > 0 && !Search.dirty && extent === Search.shown && rows.querySelectorAll('.top-row').length === extent
+    && Search.records.slice(0,extent).every((x,i)=>paperKey(x.p)===paperKey(job.records[i].p));
   if (!job.restore) {
-    // Collapse the outgoing pages before resetting scroll, so they need no layout at the new position.
-    rows.hidden = true;
+    if (!same) rows.hidden = true;
     Search.scroll = 0; jumpScroll(document.getElementById('mainScroll'), 0);
   }
-  const same = job.restore && !Search.dirty && Search.q === job.q && Search.records.length === job.records.length
-    && Search.records.every((x, i) => paperKey(x.p) === paperKey(job.records[i].p));
   Search.q = job.q; Search.records = job.records; Search.dirty = false;
   if (!same) Search.chips = feedChipTargets(job.records.map(x => paperKey(x.p)));
   document.getElementById('searchStatus').textContent = job.status;
-  document.getElementById('searchClear').innerHTML = job.active ? ' <button class="v-more" data-search-filter="clear" onclick="clearSearchFilters()">Clear filters</button>' : '';
-  document.getElementById('searchControls').innerHTML = job.controls;
+  SF = sfCopy(job.sf);
+  sfControls(job);
   if (!same) {
     Search.shown = Math.min(job.extent || FEED_PAGE, job.records.length);
-    const html = job.records.slice(0, Search.shown).map(x => topRowHTML(x.p, shownTopics(x.p), { search: true }));
+    const html = job.records.slice(0, Search.shown).map(x => searchRowHTML(x.p));
     rows.innerHTML = job.records.length ? `<div class="paper-list flat"><section class="tl-section">${html.join('')}</section></div>`
-      : job.empty ? `<div class="tl-empty search-empty"><strong>No papers match "${esc(job.q)}".</strong>Try fewer words, an author's last name, or a venue like RSS or L4DC. Search looks at titles, headlines, authors, venues, summaries, abstracts and your notes.</div>`
+      : job.empty ? `<div class="tl-empty search-empty"><strong>No papers match "${esc(job.q)}".</strong>Try fewer words, a name, or a different filter.</div>`
       : `<div class="tl-empty">No results with these filters. <button class="v-more" data-search-filter="clear" onclick="clearSearchFilters()">Clear filters</button></div>`;
     highlightTokens(rows, job.tokens);
     rows.querySelectorAll('.top-row').forEach((el, i) => { el._html = html[i]; });
   } else {
     rows.querySelectorAll('.top-row').forEach(el => {
-      const p = feedRow(el.dataset.key), h = topRowHTML(p, shownTopics(p), { search: true });
+      const p = feedRow(el.dataset.key), h = searchRowHTML(p);
       if (el._html !== h) rowsSync(rows, el.dataset.key);
     });
+    rows.querySelectorAll('mark').forEach(m=>m.replaceWith(document.createTextNode(m.textContent)));
+    rows.normalize();
+    highlightTokens(rows,job.tokens);
   }
   rows.hidden = false;
   if (job.restore) jumpScroll(document.getElementById('mainScroll'), Search.scroll);
@@ -6752,6 +7096,7 @@ function searchCommit(job) {
   }
   searchObserveMore(job);
   job.committed = true;
+  job.edits = _editGen;
   saveSheetSync();
 }
 function searchMoreRender() {
@@ -6772,7 +7117,7 @@ function searchMountMore(focus) {
     if (!list) return;
     const page = job.records.slice(start, start + FEED_PAGE);
     for (const x of page) {
-      const h = topRowHTML(x.p, shownTopics(x.p), { search: true });
+      const h = searchRowHTML(x.p);
       list.insertAdjacentHTML('beforeend', h);
       const el = list.lastElementChild; el._html = h;
       highlightTokens(el, job.tokens);
@@ -6806,9 +7151,9 @@ function switchTab(tab, fromHash) {
   // Clear search when switching tabs
   if (_searchActive) {
     _searchActive = false;
-    document.getElementById('searchInput').value = '';
+    sfSetQuery('');
     document.getElementById('sec-search').classList.remove('active');
-    toggleMobileSearch(false);
+    sfSheet(false); sfSheet(false,true);
   }
   currentTab = tab;
   if (!fromHash) location.hash = tabHash(tab);
@@ -6849,10 +7194,10 @@ function markNavTabs(tab) {
   markAppSearch();
 }
 function markAppSearch() {
-  const b = document.querySelector('.app-search');
-  if (!b) return;
-  const on = document.body.classList.contains('search-open') || _searchActive;
-  b.classList.toggle('active', on); b.setAttribute('aria-expanded', String(on));
+  const on = _searchActive;
+  for (const b of [document.querySelector('.app-search'),document.getElementById('navSearchToggle')]) {
+    if (b) { b.classList.toggle('active',on); b.setAttribute('aria-expanded',String(on)); }
+  }
 }
 /* ===== PHASE 31: THE MENU (navigation A) =====
    The button at the top left opens a drawer over the page, at every width: Lists, Interests, People you follow and the
@@ -13739,10 +14084,10 @@ function openStrengthDD(e, key, name) {
   const p = findPaper(key); if (!p) return;
   const cur = effStrengths(p)[name] || STRENGTH_DEFAULT;
   const dd = document.createElement('div'); dd.className = 'interest-dropdown level-dd'; dd.setAttribute('role', 'menu');
-  [['about', 'It\u2019s what the paper is about'], ['partly', 'A substantial part of it'], ['touches', 'Appears, but not substantially']].forEach(([v, help]) => {
+  Object.entries(STRENGTH_HELP).forEach(([v, help]) => {
     const item = document.createElement('div');
     item.className = 'interest-dropdown-item' + (v === cur ? ' selected' : ''); item.setAttribute('role', 'menuitem');
-    item.innerHTML = `<strong style="font-weight:500;min-width:84px">${STRENGTH_NAME[v]}</strong><span class="level-dd-help">${help}</span>`;
+    item.innerHTML = `<strong style="font-weight:500;min-width:84px">${STRENGTH_NAME[v]}</strong><span class="level-dd-help">${esc(help)}</span>`;
     item.onclick = ev => { ev.stopPropagation(); closeInterestDD(); setMatchStrength(key, name, v); };
     dd.appendChild(item);
   });
@@ -20802,6 +21147,40 @@ function pageIn(el) { if (el && !reduceMotion()) replay(el, 'page-in'); }
 /* The paper's page drawn again after an edit made on it, the paper found among every row: a hidden paper's page is
    reached from Library and from its post in the feed */
 function paperAgain(k) { const p = everyPaper().find(x => paperKey(x) === k); if (p) renderPaperDetail(p); }
+/* Names stay in the page's option array, never inside inline JavaScript. */
+let _rvOpts = [];
+function relevanceCardHTML(p, ka) {
+  const parts = scoreParts(p), rel = dynamicRelevance(p), own = isOwner();
+  _rvOpts = effMatches(p);
+  const byName = new Map(parts.matches.map(m => [m.name, m]));
+  const core = parts.core ? parts.core.value : 0, context = parts.context ? parts.context.value : 0;
+  const coreWidth = core / 4 * 100, contextWidth = context / 4 * 100;
+  const position = core + context >= SCORE_CUTS.definitely ? 'Past Must Read'
+    : core + context >= SCORE_CUTS.probably ? 'Between Interesting and Must Read' : 'Below Interesting';
+  const row = name => {
+    const index = _rvOpts.indexOf(name), m = byName.get(name);
+    const link = `<button class="pd-match rv-name" onclick="openInterest(_rvOpts[${index}])" title="Papers that match ${dataAttr(name)}">${esc(name)}</button>`;
+    if (!m) return `<div class="rv-row">${link}</div>`;
+    const tip = `${LEVEL_NAME[m.level]} interest \u00b7 ${STRENGTH_NAME[m.strength].toLowerCase()}${m.rated ? '' : ' (not rated yet)'}`;
+    const steps = { about: 3, partly: 2, touches: 1 }[m.strength];
+    const meter = `<span class="rv-meter" aria-hidden="true">${[1, 2, 3].map(n => `<b${n <= steps ? ' class="on"' : ''}></b>`).join('')}</span>`;
+    const classes = `rv-str lv-${m.level}${m.rated ? '' : ' unrated'}`;
+    const strength = own ? `<button class="${classes}" onclick="event.stopPropagation();openStrengthDD(event,'${ka}',_rvOpts[${index}])" title="${dataAttr(tip)}. Change how strongly this paper matches it" aria-haspopup="true">${meter}${STRENGTH_NAME[m.strength]}<svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>`
+      : `<span class="${classes}" title="${dataAttr(tip)}">${meter}${STRENGTH_NAME[m.strength]}</span>`;
+    return `<div class="rv-row">${link}${strength}</div>`;
+  };
+  const groups = ['definitely', 'probably', 'mildly'].map(level => {
+    const matches = parts.matches.filter(m => m.level === level).sort((a, b) => b.value - a.value);
+    if (!matches.length) return '';
+    return `<div class="rv-group"><div class="rv-gl"><i style="background:var(${level === 'definitely' ? '--accent' : '--text-secondary'})"></i>${LEVEL_NAME[level]} interests</div>${matches.map(m => row(m.name)).join('')}</div>`;
+  }).join('');
+  const former = _rvOpts.filter(name => !byName.has(name)).map(row).join('');
+  return `<div class="pd-card"><h3>Relevance</h3>
+    <div class="rv-head"><span class="f-rel rel-${rel}"><i></i>${relLabel(rel)}</span><span class="triage-anchor" onmouseenter="showRelevancePopup(this,'${ka}')" onmouseleave="hideRelevancePopup(this)"><button class="pd-info" title="How it matches your interests" aria-label="How it matches your interests" aria-expanded="false" onclick="toggleRelevancePopup(event,this.parentElement,'${ka}')">&#9432;</button></span></div>
+    <div class="rv-bar" role="img" aria-label="${position}"><span class="rv-seg core" style="width:${coreWidth}%"></span><span class="rv-seg ctx" style="left:${coreWidth}%;width:${contextWidth}%"></span>
+      <span class="rv-tick" style="left:${SCORE_CUTS.probably / 4 * 100}%"><span>Interesting</span></span><span class="rv-tick" style="left:${SCORE_CUTS.definitely / 4 * 100}%"><span>Must Read</span></span>
+    </div>${groups}${former}</div>`;
+}
 /* The paper's page as HTML: { bar, article, glow }. Nothing here touches the document; paperPostRender does what needs
    the page in place. */
 function paperPageHTML(p, opts) {
@@ -20885,20 +21264,6 @@ function paperPageHTML(p, opts) {
   if (paperDate(p)) facts.push(['Published', esc(paperDate(p))]);
   if (p.date_found) facts.push(['Added', esc(shortDate(p.date_found))]);
   if (via) facts.push(['Found via', `${esc(via)}${why && why.source ? `<span class="pd-sub">${esc(why.source)} alert</span>` : ''}`]);
-  facts.push(['Relevance', `<span class="f-rel rel-${rel}"><i></i>${relLabel(rel)}</span><span class="triage-anchor" onmouseenter="showRelevancePopup(this,'${ka}')" onmouseleave="hideRelevancePopup(this)"><button class="pd-info" title="How it matches your interests" aria-label="How it matches your interests" aria-expanded="false" onclick="toggleRelevancePopup(event,this.parentElement,'${ka}')">&#9432;</button></span>`]);
-  if (matches.length) {   // each interest it matches, and how strongly (yours to change)
-    const sp = scoreParts(p), byName = new Map(sp.matches.map(m => [m.name, m]));
-    const ordered = matches.slice().sort((a, b) => ((byName.get(b) || {}).value || 0) - ((byName.get(a) || {}).value || 0));   // strongest first
-    facts.push(['Matches', `<span class="pd-matches pd-match-list">${ordered.map(name => {
-      const m = byName.get(name);
-      const chip = `<button class="pd-match" onclick="openInterest('${escAttr(name)}')" title="Papers that match ${dataAttr(name)}">${esc(name)}</button>`;
-      if (!m) return `<span class="pd-match-row">${chip}</span>`;   // not a current interest: no strength to set
-      const tip = `${LEVEL_NAME[m.level]} interest \u00b7 ${STRENGTH_NAME[m.strength].toLowerCase()}${m.rated ? '' : ' (not rated yet)'}`;
-      const str = isOwner() ? `<button class="pd-strength lv-${m.level}${m.rated ? '' : ' unrated'}" onclick="event.stopPropagation();openStrengthDD(event,'${ka}','${escAttr(name)}')" title="${dataAttr(tip)}. Change how strongly this paper matches it" aria-haspopup="true">${STRENGTH_NAME[m.strength]}<svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>`
-        : `<span class="pd-strength lv-${m.level}" title="${dataAttr(tip)}">${STRENGTH_NAME[m.strength]}</span>`;
-      return `<span class="pd-match-row">${chip}${str}</span>`;
-    }).join('')}</span>`]);
-  }
 
   const groups = effTopics(p);   // yours and the tagger's, less the ones you removed
   const x = `<svg width="10" height="10" viewBox="0 0 10 10"><line x1="2" y1="2" x2="8" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="2" x2="2" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
@@ -20907,6 +21272,7 @@ function paperPageHTML(p, opts) {
 
   const aside = `<aside class="pd-aside">
     <div class="pd-card"><dl class="pd-facts">${facts.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join('')}</dl></div>
+    ${relevanceCardHTML(p, ka)}
     ${SHOW_TOPICS ? `<div class="pd-card"><h3>Topics</h3><div class="pd-topics paper-detail-tags">${topics}${addBtn}</div></div>` : ''}
   </aside>`;
 
@@ -21946,7 +22312,7 @@ function applyHash() {
   const retired = retiredHash(location.hash);   // replaced in place, without a new Back step
   if (retired) history.replaceState(null, '', location.pathname + location.search + retired);
   searchOff();
-  searchScrollMode(location.hash.startsWith('#search?q='));
+  searchScrollMode(sfRoute(location.hash));
   if (_searchActive && Search.origin && Search.origin.hash === location.hash) Search.back = Search.origin;
   syncAddress();
   _appliedHash = location.hash;
@@ -21981,8 +22347,8 @@ function applyHash() {
         if (pp) renderPaperDetail(pp);   // notes may have changed
         if (/\/questions$/.test(hash)) briefSheetFocusBack();   // Phase 24: the sheet a pill left, back on that pill
       }
-      else if (hash.startsWith('search?q=') && _searchActive) {
-        document.getElementById('searchInput').value = Search.q;
+      else if ((hash === 'search' || hash.startsWith('search?q=')) && _searchActive) {
+        sfSetQuery(Search.q);
         renderGlobalSearch(Search.q, { restore: true });
       }
       else if (feedActive()) feedRefresh();   // the posts, as they are now
@@ -22079,14 +22445,11 @@ function applyHash() {
   // Leaving a list page: the view it was opened from comes back where it was
   const wasInList = leaveListView();
 
-  if (hash.startsWith('search?q=')) {
-    const q = decodeURIComponent(hash.slice(9));
-    if (q) {
-      const si = document.getElementById('searchInput');
-      si.value = q;
-      showGlobalSearch(q, true);
-      return;
-    }
+  if (hash === 'search' || hash.startsWith('search?q=')) {
+    let q = '';
+    try { q = hash === 'search' ? '' : decodeURIComponent(hash.slice(9)); } catch (e) {}
+    showGlobalSearch(q, true);
+    return;
   }
   if (hash.startsWith('interests/')) {   // with SHOW_TOPICS, the old Topics and Interests toggle
     const sub = hash.slice(10);
