@@ -3985,25 +3985,28 @@ window.addEventListener('resize', placePrivateAccess, { passive: true });
 if (window.visualViewport) { window.visualViewport.addEventListener('resize', placePrivateAccess); window.visualViewport.addEventListener('scroll', placePrivateAccess); }
 function lockPrivate(state = 'required', detail) {
   if (!isPrivate()) return;
-  copyTeardown();
-  searchOff(true);
+  // Revoke first. A broken teardown must not retain authorization or stop the others.
+  const cleanup = fn => { try { fn(); } catch (e) { console.error(e); } };
   Private.epoch++; Private.authorized = false; Private.token = null; Private.state = state; Private.verifying = null; Private.verificationBinding = null;
   Private.detail = detail === undefined ? null : detail; clearTimeout(Private.recheckTimer); Private.recheckTimer = null;   // Phase 19: any lock ends the quiet re-check
   try { Private.lockToken = localStorage.getItem('gh_pat'); } catch (e) { Private.lockToken = undefined; }
   _ownerAtLoad = false; _ownerToken = null; _ownerDecisionDone = false;
-  for (const revoke of Private.waiters) revoke(); Private.waiters.clear();
-  for (const ctl of Private.controllers) ctl.abort(); Private.controllers.clear();
+  cleanup(() => closeVaultModal(false, false));
+  cleanup(copyTeardown); cleanup(() => searchOff(true));
+  const waiters = [...Private.waiters]; Private.waiters.clear();
+  for (const revoke of waiters) cleanup(revoke);
+  for (const ctl of Private.controllers) cleanup(() => ctl.abort()); Private.controllers.clear();
   for (const tx of Private.transactions) { try { tx.abort(); } catch (e) {} } Private.transactions.clear();
-  libCacheLock(state);
+  cleanup(() => libCacheLock(state));
   document.documentElement.classList.add('ro', 'private-locked');
-  for (const close of Private.uiTeardowns) close(); Private.uiTeardowns.clear();
-  for (const reset of Private.interactionResets) reset();
+  for (const close of Private.uiTeardowns) cleanup(close); Private.uiTeardowns.clear();
+  for (const reset of Private.interactionResets) cleanup(reset);
   // Body-level popovers are outside the hidden library. Close them immediately,
   // without fades whose callbacks belong to the revoked authorization.
-  closeAbsPopup(); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeRelevancePopup(); closeVenueTooltip();
+  cleanup(() => closeAbsPopup()); cleanup(() => closeSaveDD()); cleanup(() => closeCopyDD()); cleanup(() => closeInterestDD()); cleanup(() => closeRelevancePopup()); cleanup(() => closeVenueTooltip());
   _absBtn = null; _dismissTap = null; clearTimeout(_relPopupTimer); _relPopupTimer = null;
-  if (typeof dailyTeardown === 'function') dailyTeardown();
-  feedTeardown(); refreshTeardown(); briefTeardown(); activityTeardown(); tasteTeardown(); peopleTeardown(); requestsTeardown(); listDefsTeardown();
+  if (typeof dailyTeardown === 'function') cleanup(() => dailyTeardown());
+  cleanup(() => feedTeardown()); cleanup(() => refreshTeardown()); cleanup(() => briefTeardown()); cleanup(() => activityTeardown()); cleanup(() => tasteTeardown()); cleanup(() => peopleTeardown()); cleanup(() => requestsTeardown()); cleanup(() => listDefsTeardown());
   const askSelection = document.getElementById('chatAskSel'); if (askSelection) askSelection.remove();
   const readerMenu = document.getElementById('readerMenu'); if (readerMenu) { clearTimeout(readerMenu._leaveT); readerMenu.classList.remove('open', 'glide', 'leaving'); }
   const readerMore = document.getElementById('readerMore'); if (readerMore) readerMore.setAttribute('aria-expanded', 'false');
@@ -4012,11 +4015,11 @@ function lockPrivate(state = 'required', detail) {
   _backupTimer = _autoPushTimer = _searchTimer = _listQueryTimer = _readerSaveTimer = _acTimer = _liveTimer = Vault.pushTimer = Ink.saveTimer = _toastTimer = null;
   _readerPendingPosition = null;
   _toastUndo = null; _stateDirty = _interestsDirty = _groupsDirty = _readingDirty = false;
-  if (Ink.cancelGesture) Ink.cancelGesture();
+  if (Ink.cancelGesture) cleanup(() => Ink.cancelGesture());
   _pushing = _pushAgain = Vault.pushing = Vault.pushAgain = false;
-  allPapers = []; _hiddenPapers = []; allInterests = []; allGroups = []; GROUP_ORDER = []; rowIndexClear(); _listsRead = false;
+  allPapers = []; _hiddenPapers = []; allInterests = []; allGroups = []; GROUP_ORDER = []; cleanup(() => rowIndexClear()); _listsRead = false;
   readSet.clear(); starSet.clear(); libraryLists = Object.create(null); _loadedPaperFields.clear(); _loadedInterestNames = []; _loadedGroupNames = []; _loadedGroupFields = new Map(); _loadedInterestFields = new Map();
-  _papersText = _papersFresh = _emptyPapersCandidate = null; _dataLoaded = false; _restoreAnnounced = false; Synced.clear(); _searchText = new WeakMap(); stateTeardown();
+  _papersText = _papersFresh = _emptyPapersCandidate = null; _dataLoaded = false; _restoreAnnounced = false; Synced.clear(); _searchText = new WeakMap(); cleanup(() => stateTeardown());
   _uploads = {}; _uploadRemovals = {}; _uploadRemovalBusy = false; _uploadObjs.clear(); _lastSeen = null; _listSig = null;
   _libPapers = {}; _libSent = ''; _paperTextCache.clear(); _relIndex = null; _relIndexKey = null; _interestCounts = _interestCountsKey = null; _colorSlots = null; _colorKey = ''; _kbKey = null;
   clearTimeout(AddPaper.poll); clearTimeout(TopicTag.poll); clearTimeout(Pinch.timer); clearTimeout(_reader.panelT); clearTimeout(_reader.leaveT);
@@ -4025,13 +4028,13 @@ function lockPrivate(state = 'required', detail) {
   _collapsedGroups.clear(); _venuesOpen.clear(); _ipOpen.clear(); _ipDismissedOpen = false;
   for (const task of Private.renderTasks) { try { task.cancel(); } catch (e) {} } Private.renderTasks.clear();
   for (const task of Private.pdfTasks) { try { Promise.resolve(task.destroy()).catch(() => {}); } catch (e) {} } Private.pdfTasks.clear();
-  readerReleaseFocus();
-  _reader.visit++; _reader.token++; if (_reader.obs) _reader.obs.disconnect(); if (_reader.far) _reader.far.disconnect();
+  cleanup(() => readerReleaseFocus());
+  _reader.visit++; _reader.token++; if (_reader.obs) cleanup(() => _reader.obs.disconnect()); if (_reader.far) cleanup(() => _reader.far.disconnect());
   if (_reader.leaveClear) { try { _reader.leaveClear(); } catch (e) {} }
-  for (const doc of new Set([...Private.pdfDocuments, _reader.doc])) destroyPdfDocument(doc);
+  for (const doc of new Set([...Private.pdfDocuments, _reader.doc])) cleanup(() => destroyPdfDocument(doc));
   Private.pdfDocuments.clear();
   _reader.doc = null; _reader.leaveClear = null; _reader.paper = null; _reader.pendingNotes = null; _reader.under = null;
-  invalidateVaultWork(); Vault.key = null; Vault.meta = undefined; Vault.index = null; Vault.cache.clear(); Vault.inflight = new Map(); Vault.loadFailed = new Set(); Vault.seen = {}; Vault.loads = {}; Vault.gen = {};
+  cleanup(() => invalidateVaultWork()); Vault.key = null; Vault.meta = undefined; Vault.index = null; Vault.cache.clear(); Vault.inflight = new Map(); Vault.loadFailed = new Set(); Vault.seen = {}; Vault.loads = {}; Vault.gen = {};
   _rn = null; _rnLoadP = null; _rnState = 'ready'; _rnEditing = null; _rnFinish = null; _rnDraft = ''; _rnFresh = null; _rnPendingRefs = []; _rnRange = null; _rnDrawnSig = null; _notesSyncText = ''; _rnFilter = { colors: new Set(), comments: false, notes: false, q: '' };
   _acId = _acPending = _acOrigin = _selPending = _citeCtx = _mentionCtx = _pendingJump = null; _chatApplied.clear(); _chatPending.clear(); _chatDrafts.clear();
   Object.assign(Chat, { token: '', pid: null, messages: [], history: [], draft: { quotes: [], images: [], mentions: [] }, draftText: '', loadedFor: null, streaming: '', tool: '', error: '', running: false, refreshing: false, pairCode: '', status: 'setup' });
@@ -4051,13 +4054,14 @@ function lockPrivate(state = 'required', detail) {
   const genericInput = document.getElementById('genericInput'); if (genericInput) { genericInput.placeholder = ''; genericInput.onkeydown = null; }
   for (const id of ['interestsBadge', 'igBadgeGroups', 'igBadgeInterests']) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
   const dotTab = document.getElementById('navMenuBtn'); if (dotTab) dotTab.classList.remove('dot');   // Phase 16: the dot goes with the badge (Phase 31: on the menu button)
-  closeAppMenu(false, false);   // Phase 31
+  cleanup(() => closeAppMenu(false, false));   // Phase 31
   document.querySelectorAll('#filtersBar .pill-count, #interestChips .pill-count').forEach(el => { el.textContent = ''; });
   const external = document.getElementById('readerExternal'); if (external) external.removeAttribute('href');
   document.body.classList.remove('search-open'); document.body.style.overflow = '';
   if (document.fullscreenElement && document.exitFullscreen) { try { Promise.resolve(document.exitFullscreen()).catch(() => {}); } catch (e) {} }
-  if (_genericResolve) { _genericResolve(null); _genericResolve = null; }
-  if (_vaultResolve) { _vaultResolve(false); _vaultResolve = null; }
+  const genericResolve = _genericResolve, vaultResolve = _vaultResolve; _genericResolve = _vaultResolve = null;
+  if (genericResolve) cleanup(() => genericResolve(null));
+  if (vaultResolve) cleanup(() => vaultResolve(false));
   _vaultMode = null;
   privateView(state, detail);
 }
@@ -6593,13 +6597,16 @@ function skeletonHTML(hash) {
     const tabs = active => `<div class="feed-head" data-sk="head"><div class="feed-tabs home" data-sk="tabs"><div class="ft-tabs">${['For you', 'Following', 'Daily'].map((t, i) => `<span class="tab${i === active ? ' on' : ''}">${t}</span>`).join('')}</div></div>${active === 0 ? `<div class="feed-ctl"><span class="ctl-btn ctl-sort" data-sk="sort"><span class="ctl-pill">Best${chevron}</span></span>${picker()}</div>` : ''}</div>`;
     const posts = (list = false) => [84, 72, 90].map(w => `<div class="skpost" data-sk="card"><div class="sk-meta" data-sk="meta">${lines(1, 38)}</div><div class="sk-title" data-sk="title">${lines(2, w)}</div><div class="sk-dek" data-sk="dek">${lines(2, 62)}</div><div class="sk-by" data-sk="authors">${lines(1, 48)}</div>${list ? `<div class="sk-acts" data-sk="actions">${bar(24)}${bar(24)}${bar(30)}</div>` : `<div class="sk-icons" data-sk="actions">${Array.from({ length: 4 }, () => `<span class="sk-icon">${bar()}</span>`).join('')}</div>`}</div>`).join('');
     if (route.startsWith('read/')) {
-      const readerBar = document.querySelector('#reader > .reader-bar').cloneNode(true);
-      readerBar.dataset.sk = 'bar';
-      for (const [key, selector] of Object.entries({back:'.reader-back', title:'.reader-title', tools:'.reader-tools', notes:'.rt-panel-btn', more:'.rt-more'})) readerBar.querySelector(selector).dataset.sk = key;
-      readerBar.querySelector('.reader-pageno').innerHTML = '<i class="sk" style="width:24px;height:9px"></i>';
-      readerBar.querySelector('.copy-eye').innerHTML = '<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
-      readerBar.querySelector('.reader-title').innerHTML = bar(45);
-      readerBar.querySelectorAll('*').forEach(el => {
+      const readerBar = document.querySelector('#reader > .reader-bar')?.cloneNode?.(true);
+      if (readerBar) readerBar.dataset.sk = 'bar';
+      for (const [key, selector] of Object.entries({back:'.reader-back', title:'.reader-title', tools:'.reader-tools', notes:'.rt-panel-btn', more:'.rt-more'})) {
+        const el = readerBar?.querySelector(selector); if (el) el.dataset.sk = key;
+      }
+      const pageNo = readerBar?.querySelector('.reader-pageno'), eye = readerBar?.querySelector('.copy-eye'), title = readerBar?.querySelector('.reader-title');
+      if (pageNo) pageNo.innerHTML = '<i class="sk" style="width:24px;height:9px"></i>';
+      if (eye) eye.innerHTML = '<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+      if (title) title.innerHTML = bar(45);
+      readerBar?.querySelectorAll('*').forEach(el => {
         el.removeAttribute('id'); el.classList.remove('owner-only');
         for (const attr of [...el.attributes]) if (attr.name.startsWith('on')) el.removeAttribute(attr.name);
         if (el.matches('button, a, input')) el.setAttribute('tabindex', '-1');
@@ -6607,10 +6614,10 @@ function skeletonHTML(hash) {
       // The reader replaces the whole viewport, not the paper-detail article.
       // applyPanelWidth resolves the saved fraction, layout mode and bounds later in startup.
       // Share its result before paint and keep the placeholder in sync while it is visible.
-      queueMicrotask(() => {
+      if (readerBar) queueMicrotask(() => {
         const reader = document.getElementById('reader'), skeleton = document.getElementById('skeleton');
-        const placeholder = skeleton.querySelector('.sk-reader');
-        if (!placeholder) return;
+        const placeholder = skeleton?.querySelector('.sk-reader');
+        if (!reader || !placeholder) return;
         const sync = () => {
           if (!placeholder.isConnected || _dataLoaded) { observer.disconnect(); return; }
           placeholder.style.setProperty('--rp-w', reader.style.getPropertyValue('--rp-w'));
@@ -6621,7 +6628,7 @@ function skeletonHTML(hash) {
         sync();
       });
       let dark = false; try { dark = localStorage.getItem('scholar_reader_dark') === 'true'; } catch (e) {}
-      return `<div class="sk-reader${dark ? ' dark' : ''}" data-shape="reader">${readerBar.outerHTML}<div class="sk-reader-split"><div class="sk-reader-body"><div class="sk-reader-page" data-sk="page"></div></div><aside class="sk-reader-panel" data-sk="panel"><div class="rp-head"><div class="rp-tabs"><button tabindex="-1" class="on">Notes</button><button tabindex="-1">Chat</button></div><span class="grow"></span><span class="rp-icon-btn">×</span></div><div class="rp-scroll">${lines(4, 62)}</div></aside></div></div>`;
+      return `<div class="sk-reader${dark ? ' dark' : ''}" data-shape="reader">${readerBar?.outerHTML || ''}<div class="sk-reader-split"><div class="sk-reader-body"><div class="sk-reader-page" data-sk="page"></div></div><aside class="sk-reader-panel" data-sk="panel"><div class="rp-head"><div class="rp-tabs"><button tabindex="-1" class="on">Notes</button><button tabindex="-1">Chat</button></div><span class="grow"></span><span class="rp-icon-btn">×</span></div><div class="rp-scroll">${lines(4, 62)}</div></aside></div></div>`;
     }
     if (route.startsWith('paper/')) {
       const act = (label, icon = '✓', extra = '', key = '') => `<span class="pd-act sk-owner ${extra}"${key ? ` data-sk="${key}"` : ''}>${icon}<span class="pd-act-label"><span>${label}</span></span></span>`;
@@ -6661,11 +6668,12 @@ function skeletonHTML(hash) {
     return `<div class="feed" data-shape="feed">${tabs(route === 'following' ? 1 : 0)}${posts()}</div>`;
   })();
   if (route.startsWith('read/')) return content;
-  const nav = `<div class="sk-nav"><div class="nav-inner"><span class="nav-menu">${document.getElementById('navMenuBtn').innerHTML}</span><span class="nav-brand">${document.querySelector('.nav-brand').innerHTML}</span><span class="sk-nav-search">${document.getElementById('navSearchToggle').innerHTML}</span></div></div>`;
+  const nav = `<div class="sk-nav"><div class="nav-inner"><span class="nav-menu">${document.getElementById('navMenuBtn')?.innerHTML || ''}</span><span class="nav-brand">${document.querySelector('.nav-brand')?.innerHTML || ''}</span><span class="sk-nav-search">${document.getElementById('navSearchToggle')?.innerHTML || ''}</span></div></div>`;
   return nav + content;
 }
 function skeletonShow() {
-  document.getElementById('skeleton').innerHTML = skeletonHTML(location.hash);
+  const skeleton = document.getElementById('skeleton');
+  if (skeleton) skeleton.innerHTML = skeletonHTML(location.hash);
 }
 skeletonShow();
 
@@ -7264,13 +7272,14 @@ function searchSaveScroll() {
 }
 document.getElementById('mainScroll').addEventListener('scroll', searchSaveScroll, { passive: true });
 function searchOff(drop) {
-  searchSaveScroll();
-  Search.gen++;
-  clearTimeout(_searchTimer); _searchTimer = null;
-  cancelAnimationFrame(Search.frame); Search.frame = 0;
-  if (Search.obs) Search.obs.disconnect();
-  Search.obs = null;
-  if (drop) { searchScrollMode(false); Search.scrollMode = null; Search.job = null; Search.records = []; Search.shown = 0; Search.q = ''; Search.origin = Search.back = Search.entry = null; Search.scroll = 0; Search.chips.clear(); Search.dirty = true; SF = sfEmpty(); _sfChips = []; _sfOpts = []; _sfFold = {}; _sfMemo = null; sfSheet(false); sfSheet(false,true); sfChipRender(); }
+  const cleanup = fn => { try { fn(); } catch (e) { console.error(e); } };
+  const obs = Search.obs, frame = Search.frame, timer = _searchTimer, scrollMode = Search.scrollMode;
+  if (!drop) cleanup(() => searchSaveScroll());
+  Search.gen++; Search.obs = null; Search.frame = 0; _searchTimer = null;
+  if (drop) { Search.scrollMode = null; Search.job = null; Search.records = []; Search.shown = 0; Search.q = ''; Search.origin = Search.back = Search.entry = null; Search.scroll = 0; Search.chips.clear(); Search.dirty = true; SF = sfEmpty(); _sfChips = []; _sfOpts = []; _sfFold = {}; _sfMemo = null; }
+  cleanup(() => clearTimeout(timer)); cleanup(() => cancelAnimationFrame(frame));
+  if (obs) cleanup(() => obs.disconnect());
+  if (drop) { if (scrollMode !== null) cleanup(() => { history.scrollRestoration = scrollMode; }); cleanup(() => sfSheet(false)); cleanup(() => sfSheet(false,true)); cleanup(() => sfChipRender()); }
 }
 function searchRestoreOrigin() {
   const back = Search.back;
@@ -8744,9 +8753,9 @@ function pressWhat(el) {
   if (dd) return { kind: 'dd', dd: Number(dd.dataset.dd || 0), key: dd.dataset.key || '', n: el.dataset.n || '', ident: `dd:${dd.dataset.dd || ''}:${el.dataset.n || ''}` };
   const cd = el.closest('.copy-dd');
   if (cd) return { kind: 'copy', copy: Number(cd.dataset.copy || 0), n: el.dataset.n || '', ident: `copy:${cd.dataset.copy || ''}:${el.dataset.n || (el.classList.contains('copy-dd-new') ? 'new' : '')}` };
-  if (el.closest('#paperDetail .pd-bar')) { const page = document.querySelector('#paperDetail [data-pid]'), k = page ? page.dataset.pid : ''; return { kind: 'pd', act: el.dataset.act || '', key: k, ident: `pd:${k}:${el.dataset.act || ''}` }; }
+  if (el.closest('#paperDetail .pd-bar')) { const page = document.querySelector('#paperDetail .pd-article[data-pid]'), k = page ? page.dataset.pid : ''; return { kind: 'pd', act: el.dataset.act || '', key: k, ident: `pd:${k}:${el.dataset.act || ''}` }; }
   const rel = el.closest('#paperDetail .pd-related .feed-item');
-  if (rel) { const page = document.querySelector('#paperDetail [data-pid]'), pid = page ? page.dataset.pid : '', k = rel.dataset.key || '', act = el === rel ? 'page' : el.dataset.act || ''; return { kind: 'rel', act, key: k, page: pid, ident: `rel:${pid}:${k}:${act}` }; }
+  if (rel) { const page = document.querySelector('#paperDetail .pd-article[data-pid]'), pid = page ? page.dataset.pid : '', k = rel.dataset.key || '', act = el === rel ? 'page' : el.dataset.act || ''; return { kind: 'rel', act, key: k, page: pid, ident: `rel:${pid}:${k}:${act}` }; }
   const head = el.closest('#libraryContent [data-lib] .library-actions');
   if (head) { const g = el.closest('[data-lib]').dataset.lib; return { kind: 'libhead', act: el.dataset.act || '', group: g, ident: `libhead:${g}:${el.dataset.act || ''}` }; }
   const row = el.closest('#libraryContent .top-row'), group = row && row.closest('[data-lib]');
@@ -8806,11 +8815,11 @@ function pressStill(pr) {
     return !pr.n || copyDestOK(cd.src, pr.n);
   }
   if (pr.kind === 'pd') {   // the paper page still showing that paper, which is still here, its control showing the same value
-    const page = _paperViewActive ? document.querySelector('#paperDetail [data-pid]') : null, p = feedRow(pr.key);
+    const page = _paperViewActive ? document.querySelector('#paperDetail .pd-article[data-pid]') : null, p = feedRow(pr.key);
     return !!page && page.dataset.pid === pr.key && !!p && !p._goneRemote && markOf(pr.key, pr.act) === pr.on;
   }
   if (pr.kind === 'rel') {   // the same paper's page, the related paper still drawn on it and still here, its control showing the same value
-    const page = _paperViewActive ? document.querySelector('#paperDetail [data-pid]') : null, p = feedRow(pr.key);
+    const page = _paperViewActive ? document.querySelector('#paperDetail .pd-article[data-pid]') : null, p = feedRow(pr.key);
     if (!page || page.dataset.pid !== pr.page || !p || p._goneRemote) return false;
     return [...document.querySelectorAll('#paperDetail .pd-related .feed-item')].some(el => el.dataset.key === pr.key) && markOf(pr.key, pr.act) === pr.on;
   }
@@ -9737,10 +9746,12 @@ function dailyCancelPress() {
   if (p && p.el) { p.el.style.transform = ''; p.el.classList.remove('dragging'); p.el.style.setProperty('--stamp-opacity', '0'); }
 }
 function dailyTeardown() {
-  dailyCloseInterestSheet(false);
-  if (Daily.footerObs) { Daily.footerObs.disconnect(); Daily.footerObs = null; }
-  document.body.classList.remove('daily-mode'); clearTimeout(Daily.timer); Daily.timer = 0;
-  dailyCancelPress(); Daily.seq++; Daily.generation++; Daily.active = Daily.pending = Daily.interest = Daily.undo = Daily.sheet = null; Daily.status = 'waiting'; Daily.edits.clear(); Daily.destinations.clear(); Daily.handled = { schema: 1, operations: {}, undone: [] };
+  const cleanup = fn => { try { fn(); } catch (e) { console.error(e); } };
+  cleanup(() => dailyCloseInterestSheet(false));
+  if (Daily.footerObs) { cleanup(() => Daily.footerObs.disconnect()); Daily.footerObs = null; }
+  clearTimeout(Daily.timer); Daily.timer = 0;
+  Daily.seq++; Daily.generation++; Daily.active = Daily.pending = Daily.interest = Daily.undo = Daily.sheet = null; Daily.status = 'waiting'; Daily.edits.clear(); Daily.destinations.clear(); Daily.handled = { schema: 1, operations: {}, undone: [] };
+  cleanup(() => dailyCancelPress()); document.body.classList.remove('daily-mode');
   const body = document.getElementById('dailyBody'); if (body) body.innerHTML = '';
 }
 function dailyUnion(a, b) {
@@ -10722,18 +10733,22 @@ window.addEventListener('resize', privateCallback(() => { if (Feed.mounted) feed
 /* Lock or a new target: every piece of the feed's state goes, with what it drew; a press under way is kept only as
    cancelled (pressForget), so its release and click still reach nothing after an unlock */
 function feedTeardown() {
-  pressForget();
-  pullReset();
-  if (Feed.obs) Feed.obs.disconnect();
-  if (Feed.more) cancelAnimationFrame(Feed.more);   // a page's continuation waiting for its frame
-  feedMenuDrop();   // Phase 17: an open menu and its listeners (nothing in it is guarded: it goes after the sign-in did)
-  closeListMenu();   // Phase 25: a list's menu, its listeners and its instance
-  if (Feed.headObs) Feed.headObs.disconnect();
-  Object.assign(Feed, { keys: [], shown: 0, project: null, ranked: null, near: null, switched: false, fresh: false, mounted: false,
-    gen: Feed.gen + 1, tabsGen: Feed.tabsGen + 1, tabNames: null, recs: new Map(), focus: null, sheet: null, edit: null, noted: false, layout: null, obs: null, more: 0,
-    sort: 'best', interest: null, ctlGen: Feed.ctlGen + 1, menu: null, drawing: false, headObs: null, split: 0, chips: new Map(), ladd: null, lsig: null, pressDeferred: false });   // the sort is read back at sign-in
-  _projectNear = { sig: null, rows: null, map: null }; _listEv = null; rowIndexClear();
-  _chipNear = { rows: null, gen: -1, map: new Map() }; _listAddAt = new Map(); ListAdd.pending = null; ListView.interest.clear(); ListView.ids.clear();   // Phase 25: each list's choice lasts the visit
+  const cleanup = fn => { try { fn(); } catch (e) { console.error(e); } };
+  try {
+    cleanup(() => pressForget());
+    cleanup(() => pullReset());
+    if (Feed.obs) cleanup(() => Feed.obs.disconnect());
+    if (Feed.more) cleanup(() => cancelAnimationFrame(Feed.more));   // a page's continuation waiting for its frame
+    cleanup(() => feedMenuDrop());   // Phase 17: an open menu and its listeners (nothing in it is guarded: it goes after the sign-in did)
+    cleanup(() => closeListMenu());   // Phase 25: a list's menu, its listeners and its instance
+    if (Feed.headObs) cleanup(() => Feed.headObs.disconnect());
+  } finally {
+    Object.assign(Feed, { keys: [], shown: 0, project: null, ranked: null, near: null, switched: false, fresh: false, mounted: false,
+      gen: Feed.gen + 1, tabsGen: Feed.tabsGen + 1, tabNames: null, recs: new Map(), focus: null, sheet: null, edit: null, noted: false, layout: null, obs: null, more: 0,
+      sort: 'best', interest: null, ctlGen: Feed.ctlGen + 1, menu: null, drawing: false, headObs: null, split: 0, chips: new Map(), ladd: null, lsig: null, pressDeferred: false });   // the sort is read back at sign-in
+    _projectNear = { sig: null, rows: null, map: null }; _listEv = null; cleanup(() => rowIndexClear());
+    _chipNear = { rows: null, gen: -1, map: new Map() }; _listAddAt = new Map(); ListAdd.pending = null; ListView.interest.clear(); ListView.ids.clear();   // Phase 25: each list's choice lasts the visit
+  }
   const box = document.getElementById('topStories'); if (box) box.innerHTML = '';
   const m = document.getElementById('saveSheet');
   if (m) {
@@ -11388,7 +11403,8 @@ function toggleAbsPopup(btn, key) {
   _absBtn = btn;
 }
 function closeAbsPopup() {
-  if (_absPopup) { _absPopup.remove(); _absPopup = null; _absBtn = null; }
+  const popup = _absPopup; _absPopup = null; _absBtn = null;
+  if (popup) popup.remove();
 }
 
 /* ===== VENUE TOOLTIP ===== */
@@ -11409,7 +11425,8 @@ function showVenueTooltip(el) {
   setTimeout(privateCallback(() => closeVenueTooltip()), 3000);
 }
 function closeVenueTooltip() {
-  if (_venueTooltip) { _venueTooltip.remove(); _venueTooltip = null; }
+  const tip = _venueTooltip; _venueTooltip = null;
+  if (tip) tip.remove();
 }
 function markTruncatedVenues() {
   document.querySelectorAll('.badge-venue').forEach(el => {
@@ -11484,7 +11501,7 @@ function saveDDAnchor(dd) {
   if (dd.from && dd.from.isConnected) return dd.from;
   const all = [...document.querySelectorAll('.save-anchor [data-act="list"]')];
   return all.find(b => {
-    if (dd.page) { const page = document.querySelector('#paperDetail [data-pid]'); return !!b.closest('#paperDetail .pd-bar') && !!page && page.dataset.pid === dd.key; }
+    if (dd.page) { const page = document.querySelector('#paperDetail .pd-article[data-pid]'); return !!b.closest('#paperDetail .pd-bar') && !!page && page.dataset.pid === dd.key; }
     const row = b.closest('[data-key]'); if (!row || row.dataset.key !== dd.key) return false;
     const g = b.closest('[data-lib]'); return (g ? g.dataset.lib : null) === dd.group;
   }) || null;
@@ -14574,7 +14591,7 @@ const LEVEL_HELP = {   // Phase 16: what each level changes in recommendations
   mildly: 'Peripheral: background. Papers that match it get a small boost in For you.'
 };
 let _openInterestDD = null;
-function closeInterestDD() { if (_openInterestDD) { _openInterestDD.remove(); _openInterestDD = null; } document.removeEventListener('click', _onInterestDDOutside, true); }
+function closeInterestDD() { const dd = _openInterestDD; _openInterestDD = null; try { if (dd) dd.remove(); } finally { document.removeEventListener('click', _onInterestDDOutside, true); } }
 function _onInterestDDOutside(e) { if (_openInterestDD && !_openInterestDD.contains(e.target)) closeInterestDD(); }
 function toggleInterestDropdown(e, name, field) {
   closeInterestDD();
@@ -15529,10 +15546,13 @@ function keptLoad() {
   return Kept.loading;
 }
 function keptReset() {
-  keptPaperClose();
-  clearTimeout(Kept.soon); clearTimeout(Kept.gap); clearTimeout(Kept.drawT);
-  if (Kept.busy && Kept.busy.ctl) Kept.busy.ctl.abort();
+  const busy = Kept.busy, timers = [Kept.soon, Kept.gap, Kept.drawT];
   Object.assign(Kept, { epoch: null, meta: new Map(), fails: new Map(), loading: null, queue: [], busy: null, soon: 0, gap: 0, full: false, warmed: new Set(), drawn: '', drawT: 0 });
+  try { keptPaperClose(); }
+  finally {
+    for (const timer of timers) clearTimeout(timer);
+    if (busy && busy.ctl) busy.ctl.abort();
+  }
 }
 function keptProgress() { return new Set(continueReadingList(true, true).map(x => x.p.id)); }
 /* In the set every device keeps: liked or In progress, and neither hidden nor passed */
@@ -15776,9 +15796,12 @@ function keptActionLabel(p) {
   return keptHand(p.id) ? 'Remove from this device' : pdfSourceOf(p) && !isHiddenRow(p) && !isPassed(p) ? 'Keep on this device' : '';
 }
 function keptPaperClose() {
-  if (Dl.mq) { Dl.mq.removeEventListener('change', keptPaperClose); Dl.mq = null; }
-  const menu = document.getElementById('keptPaperMenu'); if (menu) menu.remove();
-  const button = document.getElementById('paperDownload'); if (button) button.setAttribute('aria-expanded', 'false');
+  const mq = Dl.mq; Dl.mq = null;
+  try { if (mq) mq.removeEventListener('change', keptPaperClose); }
+  finally {
+    const menu = document.getElementById('keptPaperMenu'); if (menu) menu.remove();
+    const button = document.getElementById('paperDownload'); if (button) button.setAttribute('aria-expanded', 'false');
+  }
 }
 function dlMenuHTML(p) {
   const info = Dl.info || { has: false, here: false }, ios = dlIOS(), off = !info.has || !!Dl.busy;
@@ -17595,13 +17618,22 @@ function openVaultModal(mode) {
   const promise = new Promise(res => { _vaultResolve = res; });
   if (isPrivate()) Vault.modalPromise = promise; return promise;
 }
-function closeVaultModal(ok) {
+function closeVaultModal(ok, savePrefs = true) {
   if (DeviceSetup.open && DeviceSetup.submitting && ok) { document.getElementById('vaultPw').value=''; document.getElementById('vaultPw2').value=''; DeviceSetup.notesDone = true; return; }
-  if (DeviceSetup.open) { if (!ok && !DeviceSetup.submitting && CopyState.prefs && !CopyState.prefs.later) { CopyState.prefs.later = true; copyPrefsSave().catch(() => {}); } DeviceSetup.open = false; document.getElementById('vaultOverlay').classList.remove('copy-setup'); document.getElementById('copySetupStep').hidden = true; document.getElementById('copySetupNotes').hidden = true; if (DeviceSetup.resolve) { DeviceSetup.resolve(!!ok); DeviceSetup.resolve = null; } DeviceSetup.action=null; }
+  const setupOpen = DeviceSetup.open, setupResolve = DeviceSetup.resolve, vaultResolve = _vaultResolve;
+  const saveLater = setupOpen && savePrefs && !ok && !DeviceSetup.submitting && CopyState.prefs && !CopyState.prefs.later;
+  // Clear state before saving or resolving: either may re-enter lock teardown.
+  DeviceSetup.open = false; DeviceSetup.resolve = null; DeviceSetup.action = null;
+  _vaultResolve = null; Vault.modalPromise = null;
+  if (setupOpen) { document.getElementById('vaultOverlay').classList.remove('copy-setup'); document.getElementById('copySetupStep').hidden = true; document.getElementById('copySetupNotes').hidden = true; }
   document.getElementById('vaultPw').value = ''; document.getElementById('vaultPw2').value = '';
   document.getElementById('vaultOverlay').classList.remove('open');
-  if (_vaultResolve) { _vaultResolve(ok); _vaultResolve = null; }
-  Vault.modalPromise = null;
+  try {
+    if (saveLater) { CopyState.prefs.later = true; copyPrefsSave().catch(() => {}); }
+  } finally {
+    try { if (setupResolve) setupResolve(!!ok); }
+    finally { if (vaultResolve) vaultResolve(ok); }
+  }
 }
 async function submitVault() {
   if (DeviceSetup.open && !DeviceSetup.submitting) return submitDeviceSetup();
@@ -21234,7 +21266,12 @@ async function chatLockNow() {
   if(ChatSync.retry.size)throw new Error('Chat save pending');
   _chatDrafts.clear();_chatPending.clear();
 }
-function chatTeardown() { const history=document.getElementById('chatHist');if(history){if(history._close)history._close();else history.remove();}ChatSync.opening=null;ChatSync.importing.clear();ChatSync.hidden=true;ChatSync.accepting.clear();ChatSync.bridgeRunning.clear();ChatSync.retry.clear();ChatSync.papers.clear();for(const live of _apiTurns.values())live.stop();Chat.messages=[];Chat.history=[];Chat.streaming='';Chat.draftText='';Chat.loadedFor=null;Chat.selected=null;Chat.draft={quotes:[],images:[],mentions:[]};_chatDrafts.clear();_chatPending.clear(); }
+function chatTeardown() {
+ const turns=[..._apiTurns.values()]; _apiTurns.clear();
+ ChatSync.opening=null;ChatSync.importing.clear();ChatSync.hidden=true;ChatSync.accepting.clear();ChatSync.bridgeRunning.clear();ChatSync.retry.clear();ChatSync.papers.clear();Chat.messages=[];Chat.history=[];Chat.streaming='';Chat.draftText='';Chat.loadedFor=null;Chat.selected=null;Chat.draft={quotes:[],images:[],mentions:[]};_chatDrafts.clear();_chatPending.clear();
+ for(const live of turns)try{live.stop();}catch(e){console.error(e);}
+ const history=document.getElementById('chatHist');if(history){if(history._close)history._close();else history.remove();}
+}
 function chatTrack(work) { ChatSync.saving.add(work);work.finally(()=>ChatSync.saving.delete(work)).catch(()=>{});return work; }
 async function chatRecoverable(name,save) { const c=chatCapture(); try{const result=await save();ChatSync.retry.delete(name);return result}catch(e){c.check();ChatSync.retry.set(name,save);throw plainError('Your chat hasn’t been saved yet. Trying again.')} }
 async function chatResumeSaved() { if(!chatAvailable()||!_reader.paper||Chat.running||_chatPending.size)return;try{await chatLoadSaved();renderChatPanel(true)}catch(e){if(chatAvailable()){Chat.error='Your chat hasn’t been saved yet. Trying again.';renderChatPanel(true)}} }
@@ -22410,7 +22447,7 @@ function paperPostRender(root, p) {
   if (Vault.key && !Vault.cache.has(p.id) && ix) paperNotes(p.id).then(privateCallback(() => repaintPaper(p)));
   if (!vn || !(vn.entries || []).length) return;
   root.querySelectorAll('[data-pdnote]').forEach(el => {
-    const page = el.closest('[data-pid]');
+    const page = el.closest('.pd-article[data-pid]');
     if (!page || page.dataset.pid !== p.id) return;
     const e = vn.entries.find(x => x.id === el.dataset.pdnote);
     if (e) renderNotesMarkdown(el, e.text, vn);
@@ -22425,7 +22462,7 @@ function repaintPaper(p) {
 /* The notes unlocked, locked or were reset: every paper page in the document, on screen or not (under the reader, or
    left behind by another view). A post shows no notes. */
 function repaintShownPapers() {
-  const page = document.querySelector('#paperDetail [data-pid]');
+  const page = document.querySelector('#paperDetail .pd-article[data-pid]');
   if (page) { const p = feedRow(page.dataset.pid); if (p) renderPaperDetail(p); }
 }
 /* ===== TEN QUESTIONS (Phase 14) =====
@@ -23034,7 +23071,7 @@ function briefRetry(btn) {
 /* A pill pressed in the sheet opens the reader for that paper over it. The jump waits for the PDF, bound to the paper,
    the hash of the PDF the answers were made from, the authorization epoch, Brief.gen and the reader's generation. */
 function briefPillClick(btn) {
-  const sec = btn.closest('[data-brief]'), page = btn.closest('[data-pid]'), pid = sec && sec.dataset.brief, r = pid && Brief.files.get(pid);
+  const sec = btn.closest('[data-brief]'), page = btn.closest('.tq-panel[data-pid]'), pid = sec && sec.dataset.brief, r = pid && Brief.files.get(pid);
   if (!r || r.state !== 'answered' || !page || page.dataset.pid !== pid) return;
   const m = /^(\d+)\.(\d+)$/.exec(btn.dataset.bp || ''), a = m && r.data.answers[+m[1] - 1], tok = a && briefTokens(a.answer)[+m[2]];
   if (!tok) return;
@@ -23153,7 +23190,7 @@ function briefRefresh() {
   if (Brief.sheet && ![...document.querySelectorAll('#paperDetail [data-tq]')].some(b => b.dataset.tq === Brief.sheet.pid)) { briefRedraw(Brief.sheet.pid); briefStart(Brief.sheet.pid); }
 }
 /* Run by lockPrivate. Nothing of the session's briefs outlives the authorization. */
-function briefTeardown() { briefInvalidate(); briefSheetHide(); Brief.visit = { pid: null, open: new Set() }; Brief.focus = null; Brief.pushed = null; }
+function briefTeardown() { briefInvalidate(); Brief.visit = { pid: null, open: new Set() }; Brief.focus = null; Brief.pushed = null; briefSheetHide(); }
 
 /* ===== the paper page follows the paper (Phase 13e) =====
    paperBarSync, on every change (viewsSync): the bar's ★, ✓ and ☰ patched from the row's marks as they are now, so a
@@ -23162,7 +23199,7 @@ function briefTeardown() { briefInvalidate(); briefSheetHide(); Brief.visit = { 
    the whole page again (received topics, notes or related papers), or the unavailable page. */
 function paperBarSync() {
   if (!_paperViewActive) return;
-  const page = document.querySelector('#paperDetail [data-pid]');
+  const page = document.querySelector('#paperDetail .pd-article[data-pid]');
   if (!page) return;
   const k = page.dataset.pid, p = feedRow(k);
   if (!p) { paperUnavailable(k); return; }
@@ -23180,7 +23217,7 @@ function paperBarSync() {
   if (l) { l.classList.toggle('on-list', m.listed); l.setAttribute('aria-label', m.listed ? 'Saved. Change where' : 'Save to a list or To read'); const t = l.querySelector('.pd-act-label span'); if (t) t.textContent = m.listed ? 'Saved' : 'Save'; }
 }
 function paperViewSync() {
-  const page = document.querySelector('#paperDetail [data-pid]');
+  const page = document.querySelector('#paperDetail .pd-article[data-pid]');
   if (!page) return;
   const p = feedRow(page.dataset.pid);
   if (p) { renderPaperDetail(p); saveDDSync(); } else paperUnavailable(page.dataset.pid);
@@ -23460,7 +23497,7 @@ function applyHash() {
     if (questions) id = id.slice(0, -'/questions'.length);
     if (id && uploadById(id)) { history.replaceState(null, '', '#read/' + encodeURIComponent(id)); applyHash(); return; }
     if (id) {
-      const page = _paperViewActive && document.querySelector('#paperDetail [data-pid]');
+      const page = _paperViewActive && document.querySelector('#paperDetail .pd-article[data-pid]');
       if (!page || page.dataset.pid !== id) { briefSheetHide(); showPaperDetail(id); }   // another paper: its page, from the top
       if (questions) briefSheetShow(id); else briefSheetHide();   // the same paper: only the sheet comes or goes
       return;
@@ -23654,7 +23691,7 @@ function copyDB(store,mode,fn) { requireOwner(); const epoch=capturePrivateEpoch
 async function copyPrefsLoad() { if(CopyState.loaded)return CopyState.loaded;const epoch=capturePrivateEpoch();
  CopyState.loaded=privateAwait(Promise.all([copyDB('prefs','readonly',st=>st.get(_acceptedTarget)),copyDB('receipts','readonly',st=>st.getAll())]),epoch).then(privateCallback(([p,receipts])=>{if(p)CopyState.prefs={plain:p.plain!==false,annotated:p.annotated!==false,notesDone:p.notesDone===true,folderDone:p.folderDone===true,later:p.later===true,...(p.pending?{pending:p.pending}:{})};if(copyMobile())for(const r of receipts||[])if(r&&typeof r.id==='string'&&['plain','annotated'].includes(r.kind)&&typeof r.filename==='string')CopyState.receipts.set(r.id+':'+r.kind,r);}));return CopyState.loaded;
 }
-function copyPrefsSave() { const p={plain:CopyState.prefs.plain,annotated:CopyState.prefs.annotated,notesDone:CopyState.prefs.notesDone,folderDone:CopyState.prefs.folderDone,later:CopyState.prefs.later===true};if(CopyState.prefs.pending)p.pending={ids:CopyState.prefs.pending.ids.slice(),kinds:CopyState.prefs.pending.kinds.slice(),cursor:CopyState.prefs.pending.cursor};return copyDB('prefs','readwrite',st=>st.put(p,_acceptedTarget)); }
+async function copyPrefsSave(epoch = capturePrivateEpoch()) { checkPrivateEpoch(epoch); const p={plain:CopyState.prefs.plain,annotated:CopyState.prefs.annotated,notesDone:CopyState.prefs.notesDone,folderDone:CopyState.prefs.folderDone,later:CopyState.prefs.later===true};if(CopyState.prefs.pending)p.pending={ids:CopyState.prefs.pending.ids.slice(),kinds:CopyState.prefs.pending.kinds.slice(),cursor:CopyState.prefs.pending.cursor};return copyDB('prefs','readwrite',st=>st.put(p,_acceptedTarget)); }
 async function deviceSetupAfterSignIn() { requireOwner();if(DeviceSetup.started)return;DeviceSetup.started=true;
  const epoch=capturePrivateEpoch();await privateAwait(copyPrefsLoad(),epoch);
  const ready=await privateAwait(vaultReady(true),epoch);DeviceSetup.notesDone=ready;
@@ -23688,11 +23725,11 @@ async function requireDeviceSetup(action) { requireOwner();const epoch=capturePr
 async function submitDeviceSetup() { const epoch=capturePrivateEpoch();if(DeviceSetup.submitting)return;DeviceSetup.submitting=true;
  try{
  const needNotes=DeviceSetup.action!=='save'||CopyState.prefs.annotated;
- if(!DeviceSetup.notesDone&&needNotes){await privateAwait(submitVault(),epoch);if(!DeviceSetup.notesDone)return;CopyState.prefs.notesDone=true;await privateAwait(copyPrefsSave(),epoch);}
+ if(!DeviceSetup.notesDone&&needNotes){await privateAwait(submitVault(),epoch);if(!DeviceSetup.notesDone)return;CopyState.prefs.notesDone=true;await privateAwait(copyPrefsSave(epoch),epoch);}
  if(DeviceSetup.notesDone&&['notes','chat'].includes(DeviceSetup.action)){DeviceSetup.submitting=false;closeVaultModal(true);renderCopySettingsIfOpen();return;}
- if(!copyMobile()&&!CopyState.prefs.folderDone){try{await privateAwait(copyHelperRetry(),epoch);if(CopyState.helperState!=='ready'){decorateDeviceSetup();return;}const j=await copiesJSON('/copies/folder',{action:'default',expectedGeneration:CopyState.helper.generation});await copyHelperRetry();if(!CopyState.helper?.folderLabel){decorateDeviceSetup();return;}CopyState.prefs.folderDone=true;}catch(e){checkPrivateEpoch(epoch);decorateDeviceSetup();return;}}
- CopyState.prefs.later=false;await privateAwait(copyPrefsSave(),epoch);DeviceSetup.submitting=false;closeVaultModal(true);renderCopySettingsIfOpen();copiesSoon(0);
- }finally{DeviceSetup.submitting=false;if(DeviceSetup.open)decorateDeviceSetup();}
+ if(!copyMobile()&&!CopyState.prefs.folderDone){try{await privateAwait(copyHelperRetry(),epoch);if(CopyState.helperState!=='ready'){decorateDeviceSetup();return;}await privateAwait(copiesJSON('/copies/folder',{action:'default',expectedGeneration:CopyState.helper.generation}),epoch);await privateAwait(copyHelperRetry(),epoch);if(!CopyState.helper?.folderLabel){decorateDeviceSetup();return;}CopyState.prefs.folderDone=true;}catch(e){checkPrivateEpoch(epoch);decorateDeviceSetup();return;}}
+ CopyState.prefs.later=false;await privateAwait(copyPrefsSave(epoch),epoch);DeviceSetup.submitting=false;closeVaultModal(true);renderCopySettingsIfOpen();copiesSoon(0);
+ }finally{if(!isPrivate()||Private.authorized&&Private.epoch===epoch){DeviceSetup.submitting=false;if(DeviceSetup.open)decorateDeviceSetup();}}
 }
 function copyHelperLine() { const state=CopyState.helperState;
  if(state==='ready')return '';
@@ -23729,10 +23766,10 @@ function renderCopySettings(){requireOwner();const device=copyDeviceName(),mobil
 async function copySettingsUnlock(){if(await requireDeviceSetup('notes'))renderCopySettingsIfOpen();}
 async function copySettingsLock(){await lockNotes();renderCopySettingsIfOpen();}
 async function copySetSwitch(kind,on){requireOwner();if(!['plain','annotated'].includes(kind))return;const epoch=capturePrivateEpoch();
- if(!copyMobile()&&CopyState.helperState==='ready'){try{await privateAwait(copiesJSON('/copies/config',{plain:kind==='plain'?!!on:CopyState.prefs.plain,annotated:kind==='annotated'?!!on:CopyState.prefs.annotated,expectedSettingsVersion:CopyState.helper.settingsVersion}),epoch);await copyHelperRetry();}catch(e){checkPrivateEpoch(epoch);await copyHelperRetry();CopyState.message="Couldn't save this paper. Your notes are safe.";renderCopySettingsIfOpen();return;}}
+ if(!copyMobile()&&CopyState.helperState==='ready'){try{await privateAwait(copiesJSON('/copies/config',{plain:kind==='plain'?!!on:CopyState.prefs.plain,annotated:kind==='annotated'?!!on:CopyState.prefs.annotated,expectedSettingsVersion:CopyState.helper.settingsVersion}),epoch);await privateAwait(copyHelperRetry(),epoch);}catch(e){checkPrivateEpoch(epoch);await privateAwait(copyHelperRetry(),epoch);CopyState.message="Couldn't save this paper. Your notes are safe.";renderCopySettingsIfOpen();return;}}
  else if(!copyMobile()){CopyState.message="Scout's Mac helper isn't available.";renderCopySettingsIfOpen();return;}
  else CopyState.prefs[kind]=!!on;
- CopyState.share?.invalidate();CopyState.shareFiles=null;await privateAwait(copyPrefsSave(),epoch);renderCopySettingsIfOpen();if(on)copiesSoon(0);
+ CopyState.share?.invalidate();CopyState.shareFiles=null;await privateAwait(copyPrefsSave(epoch),epoch);renderCopySettingsIfOpen();if(on)copiesSoon(0);
 }
 async function copyLoadModule(){if(!window.ScoutCopies)await loadScript(APP_ROOT+'mycopy.js');return window.ScoutCopies;}
 function copyLocalToken(){const direct=localStorage.getItem('claude_bridge_local_token');return direct||(!bridgeRemote()&&localStorage.getItem('claude_bridge_token_origin')===COPY_HELPER?Chat.token:'');}
@@ -23748,9 +23785,9 @@ async function copyHelperRetry(){requireOwner();if(copyMobile())return;const epo
  if(!Number.isSafeInteger(h.generation)||!Number.isSafeInteger(h.settingsVersion)||typeof h.plain!=='boolean'||typeof h.annotated!=='boolean')throw Error('copy_status');
  const mv=h.move&&typeof h.move==='object'?h.move:null,op=h.operation&&typeof h.operation==='object'?h.operation:null;/* join fix: the helper sends folder {state,label} and move {state,done,total}; the page models folderLabel and operation */h.folderLabel=typeof h.folder?.label==='string'&&h.folder.label?h.folder.label:null;h.refused=!mv&&op?.state==='rejected';h.operation=mv?{state:mv.state==='failed'?'paused':mv.state,done:mv.done,total:mv.total}:op&&['picking','moving'].includes(op.state)?op:null;
  CopyState.helper=h;CopyState.helperState='ready';CopyState.prefs.plain=h.plain;CopyState.prefs.annotated=h.annotated;
- CopyState.prefs.folderDone=!!h.folderLabel;CopyState.receipts=new Map((h.receipts||[]).map(r=>[r.id+':'+r.kind,r]));await copyPrefsSave();
+ CopyState.prefs.folderDone=!!h.folderLabel;CopyState.receipts=new Map((h.receipts||[]).map(r=>[r.id+':'+r.kind,r]));await copyPrefsSave(epoch);
  }catch(e){checkPrivateEpoch(epoch);CopyState.helperState=e.status===401||e.status===403?'unpaired':'unavailable';}
- finally{renderCopySettingsIfOpen();if(DeviceSetup.open)decorateDeviceSetup();clearTimeout(CopyState.poll);if(copyMoving())CopyState.poll=setTimeout(privateCallback(()=>copyHelperRetry().catch(()=>{})),1000);else if(CopyState.helperState==='ready'&&CopyState.prefs.folderDone&&(!wasReady||wasMoving))copiesSoon(0);}
+ finally{if(!isPrivate()||Private.authorized&&Private.epoch===epoch){renderCopySettingsIfOpen();if(DeviceSetup.open)decorateDeviceSetup();clearTimeout(CopyState.poll);if(copyMoving())CopyState.poll=setTimeout(privateCallback(()=>copyHelperRetry().catch(()=>{})),1000);else if(CopyState.helperState==='ready'&&CopyState.prefs.folderDone&&(!wasReady||wasMoving))copiesSoon(0);}}
 }
 async function copyChangeFolder(){if(copyMobile())return;if(CopyState.helperState!=='ready'){copyHelperSetup();return;}const epoch=capturePrivateEpoch();
  try{await privateAwait(copiesJSON('/copies/folder',{action:'choose',expectedGeneration:CopyState.helper.generation}),epoch);await copyHelperRetry();}
@@ -23817,7 +23854,11 @@ function queueCopy(id,reason){if(!isOwner()||!findPaper(id))return;CopyState.not
 /* Skip, before any snapshot is built, a paper whose source and notes have not changed since its receipt (its revision is dropped on every source or notes change). */
 function copyUnchanged(id){const kinds=copyKinds();return kinds.length>0&&kinds.every(k=>{const r=CopyState.receipts.get(id+':'+k),v=CopyState.revisions.get(id+':'+k);return !!r&&!!v&&r.revision===v;});}
 async function reconcileCopies(){requireOwner();if(copyMobile()||!CopyState.prefs.folderDone||copyMoving())return;const epoch=capturePrivateEpoch();if(CopyState.helperState!=='ready'){if(Date.now()>=CopyState.retryAt){CopyState.retryAt=Date.now()+30000;await copyHelperRetry();}if(CopyState.helperState!=='ready'){copiesSoon(30000);return;}}const M=await privateAwait(copyLoadModule(),epoch);
- if(!CopyState.queue)CopyState.queue=M.createQueue({epoch:()=>Private.epoch,eligible:id=>copyEligible(findPaper(id)),enabled:copyKinds,snapshot:copySnapshot,current:copySnapshotCurrent,build:buildCopy,already:s=>CopyState.receipts.get(s.id+':'+s.kind)?.revision===s.revision,deliver:deliverCopy,error:()=>{CopyState.message="Couldn't save this paper. Your notes are safe.";renderCopySettingsIfOpen();},progress:()=>{if(!CopyState.queue.size)CopyState.message='';renderCopySettingsIfOpen();}});
+ if(!CopyState.queue){
+  const current=()=>{try{checkPrivateEpoch(epoch);return CopyState.queue===queue;}catch(e){return false;}};
+  const queue=M.createQueue({epoch:()=>Private.epoch,eligible:id=>copyEligible(findPaper(id)),enabled:copyKinds,snapshot:copySnapshot,current:copySnapshotCurrent,build:buildCopy,already:s=>CopyState.receipts.get(s.id+':'+s.kind)?.revision===s.revision,deliver:deliverCopy,error:()=>{if(!current())return;CopyState.message="Couldn't save this paper. Your notes are safe.";renderCopySettingsIfOpen();},progress:()=>{if(!current())return;if(!queue.size)CopyState.message='';renderCopySettingsIfOpen();}});
+  CopyState.queue=queue;
+ }
  await privateAwait(copyLocalSources(),epoch);if(CopyState.remoteWork)await privateAwait(CopyState.remoteWork,epoch);
  for(const p of copyPapers().filter(copyEligible).filter(p=>!copyUnchanged(p.id)))CopyState.queue.queueCopy(p.id,'reconcile');await privateAwait(localWork(CopyState.queue.drain()),epoch);await copyCloseSession();renderCopySettingsIfOpen();
 }
@@ -23830,7 +23871,7 @@ function copyRemoteIndex(){if(!copyNotesUnlocked())return Promise.resolve();if(C
 function copyFileName(id,kind){const previous=CopyState.receipts.get(id+':'+kind)?.filename;if(previous)return previous;const p=findPaper(id),suffix=kind==='annotated'?'--my-copy':'';if(p?.uploaded)return id+suffix+'.pdf';const safeID=id.replace(/[^A-Za-z0-9._-]/g,'-').slice(0,160),budget=240-new TextEncoder().encode('--'+safeID+'--my-copy.pdf').length;let title='';for(const ch of String(p?.title||'paper').normalize('NFKC').replace(/[^\p{L}\p{N} _.-]/gu,'-')){if(new TextEncoder().encode(title+ch).length>budget)break;title+=ch;}return (title||'paper')+'--'+safeID+suffix+'.pdf';}
 async function prepareShare(id,kinds){const files=[];for(const kind of kinds){const snapshot=await copySnapshot(id,kind),result=await buildCopy(snapshot);if(!copySnapshotCurrent(snapshot))throw Error('copy_stale');const filename=copyFileName(id,kind),file=new File([result.bytes],filename,{type:'application/pdf'});file._copySnapshot=snapshot;if(copyMobile()){const meta={id,kind,filename,sourceHash:result.sourceHash,revision:result.revision,outputHash:result.outputHash,generation:0};await copyDB('receipts','readwrite',st=>st.put(meta,_acceptedTarget+':'+id+':'+kind));CopyState.receipts.set(id+':'+kind,meta);}files.push(file);}return files;}
 async function copyShareStart(ids,manual=false){if(!await requireDeviceSetup('save'))return;await copyFlushEditors();const epoch=capturePrivateEpoch(),M=await privateAwait(copyLoadModule(),epoch);await privateAwait(copyLocalSources(),epoch);CopyState.message='';
- CopyState.share=M.createShare({enabled:copyKinds,eligible:id=>!!findPaper(id)&&(manual||copyEligible(findPaper(id))),current:files=>files.every(f=>copySnapshotCurrent(f._copySnapshot)),prepare:prepareShare,share:files=>{if(!(navigator.canShare&&navigator.canShare({files}))){CopyState.message='Open each PDF to save a copy.';renderCopySettingsIfOpen();return Promise.reject(Object.assign(Error('copy_share_unavailable'),{code:'share_unavailable'}));}return navigator.share({files});},persist:pending=>{CopyState.prefs.pending=pending;copyPrefsSave().catch(()=>{});},changed:()=>{CopyState.shareFiles=CopyState.share?.ready?.files||null;renderCopySettingsIfOpen();},release:()=>{CopyState.shareFiles=null;},error:e=>{CopyState.message=e.code==='share_unavailable'?'Open each PDF to save a copy.':"Couldn't save this paper. Your notes are safe.";renderCopySettingsIfOpen();}});
+ CopyState.share=M.createShare({enabled:copyKinds,eligible:id=>!!findPaper(id)&&(manual||copyEligible(findPaper(id))),current:files=>files.every(f=>copySnapshotCurrent(f._copySnapshot)),prepare:prepareShare,share:files=>{if(!(navigator.canShare&&navigator.canShare({files}))){CopyState.message='Open each PDF to save a copy.';renderCopySettingsIfOpen();return Promise.reject(Object.assign(Error('copy_share_unavailable'),{code:'share_unavailable'}));}return navigator.share({files});},persist:pending=>{checkPrivateEpoch(epoch);CopyState.prefs.pending=pending;copyPrefsSave(epoch).catch(()=>{});},changed:privateCallback(()=>{CopyState.shareFiles=CopyState.share?.ready?.files||null;renderCopySettingsIfOpen();}),release:()=>{CopyState.shareFiles=null;},error:privateCallback(e=>{CopyState.message=e.code==='share_unavailable'?'Open each PDF to save a copy.':"Couldn't save this paper. Your notes are safe.";renderCopySettingsIfOpen();})});
  const pending=!ids&&CopyState.prefs.pending;await privateAwait(CopyState.share.start(ids||copyPapers().filter(copyEligible).map(p=>p.id),pending&&pending.cursor<pending.ids.length?pending:null),epoch);renderCopySettingsIfOpen();
 }
 function copyShareHandoff(){return CopyState.share?.handoff();}
@@ -23838,11 +23879,21 @@ function copyShareCancel(){CopyState.share?.cancel();CopyState.shareFiles=null;r
 function copyOpenPDF(i){const file=CopyState.shareFiles?.[i];if(!file||!copySnapshotCurrent(file._copySnapshot))return;const url=URL.createObjectURL(file);CopyState.urls.add(url);const a=document.createElement('a');a.href=url;a.download=file.name;a.target='_blank';a.rel='noopener';a.click();setTimeout(()=>{URL.revokeObjectURL(url);CopyState.urls.delete(url);},60000);}
 async function saveMyCopy(){const owner=captureNotesOwner(),id=_reader.paper?.id;if(id&&copyDeviceName()==='computer'){toast('Saving copies to a folder is available on a Mac.');return;}if(!id||!copyKinds().length||!await requireDeviceSetup('save')||!owner.current())return;await copyFlushEditors();if(copyMobile()){await copyShareStart([id],true);if(CopyState.share?.ready&&navigator.canShare?.({files:CopyState.shareFiles})){const epoch=capturePrivateEpoch();if(await privateAwait(showConfirm('Your copy is ready','Open the share sheet to save this paper.','Save'),epoch))return copyShareHandoff();copyShareCancel();}else location.hash='settings';return;}
  try{for(const kind of copyKinds()){const s=await copySnapshot(id,kind),snapshot={...s,manual:true},r=await buildCopy(snapshot);await deliverCopy(r,snapshot);}await copyCloseSession();toast('Your copy is saved');}catch(e){CopyState.message="Couldn't save this paper. Your notes are safe.";toastError(CopyState.message);}}
-function copyCancelDerived(){for(const c of CopyState.controllers)c.abort();CopyState.controllers.clear();CopyState.activeId=null;CopyState.serial++;CopyState.buildTail=Promise.resolve();CopyState.opening=null;clearTimeout(CopyState.timer);CopyState.queue?.cancel();CopyState.workerReject?.(Error('copy_cancelled'));CopyState.workerReject=null;CopyState.worker?.terminate();CopyState.worker=null;CopyState.share?.invalidate();CopyState.shareFiles=null;for(const url of CopyState.urls)URL.revokeObjectURL(url);CopyState.urls.clear();copyCloseSession().catch(()=>{});}
+function copyCancelDerived(){
+ const cleanup=fn=>{try{fn();}catch(e){console.error(e);}};
+ const controllers=[...CopyState.controllers],urls=[...CopyState.urls],queue=CopyState.queue,workerReject=CopyState.workerReject,worker=CopyState.worker,share=CopyState.share;
+ CopyState.controllers.clear();CopyState.urls.clear();CopyState.activeId=null;CopyState.serial++;CopyState.buildTail=Promise.resolve();CopyState.opening=null;clearTimeout(CopyState.timer);CopyState.timer=0;CopyState.workerReject=null;CopyState.worker=null;CopyState.shareFiles=null;
+ for(const c of controllers)cleanup(()=>c.abort());
+ cleanup(()=>queue?.cancel());cleanup(()=>workerReject?.(Error('copy_cancelled')));cleanup(()=>worker?.terminate());cleanup(()=>share?.invalidate());
+ for(const url of urls)cleanup(()=>URL.revokeObjectURL(url));
+ cleanup(()=>copyCloseSession().catch(()=>{}));
+}
 function copySourceChanged(id){paperDownloadDot().catch(()=>{});if(CopyState.activeId===id)copyCancelDerived();if(/^up-/.test(id))CopyState.uploads.add(id);CopyState.sources.set(id,(CopyState.sources.get(id)||0)+1);for(const k of ['plain','annotated'])CopyState.revisions.delete(id+':'+k);if(CopyState.shareFiles?.some(f=>f._copySnapshot.id===id)){CopyState.share?.invalidate();CopyState.shareFiles=null;}if(currentTab==='settings')copyRefreshAvailability().catch(privateCallback(()=>{}));copiesSoon();}
 async function copyErase(){copyCancelDerived();await copyDB('prefs','readwrite',st=>st.clear());await copyDB('receipts','readwrite',st=>st.clear());}
 function copyEraseDatabase(){return new Promise(resolve=>{let r;try{r=indexedDB.deleteDatabase('scholar_mycopy');}catch(e){resolve(false);return;}r.onsuccess=()=>resolve(true);r.onerror=()=>resolve(false);});}
-function copyTeardown(){dlReset();copyCancelDerived();clearTimeout(CopyState.poll);CopyState.unlockPending=false;CopyState.installOpen=false;CopyState.loaded=null;CopyState.helper=null;CopyState.helperState='unavailable';CopyState.queue=null;CopyState.receipts.clear();CopyState.lastSource.clear();CopyState.sources.clear();CopyState.notes.clear();CopyState.revisions.clear();CopyState.uploads.clear();CopyState.offline.clear();CopyState.remoteWork=null;CopyState.prefs={plain:true,annotated:true,notesDone:false,folderDone:false};DeviceSetup.started=false;DeviceSetup.submitting=false;if(DeviceSetup.open)closeVaultModal(false);document.getElementById('copySettings').replaceChildren();}
+function copyTeardown(){
+ const cleanup=fn=>{try{fn();}catch(e){console.error(e);}};
+ cleanup(dlReset);cleanup(copyCancelDerived);clearTimeout(CopyState.poll);CopyState.unlockPending=false;CopyState.installOpen=false;CopyState.loaded=null;CopyState.helper=null;CopyState.helperState='unavailable';CopyState.queue=null;CopyState.share=null;CopyState.shareFiles=null;CopyState.message='';CopyState.receipts.clear();CopyState.lastSource.clear();CopyState.sources.clear();CopyState.notes.clear();CopyState.revisions.clear();CopyState.uploads.clear();CopyState.offline.clear();CopyState.remoteWork=null;CopyState.prefs={plain:true,annotated:true,notesDone:false,folderDone:false};DeviceSetup.started=false;DeviceSetup.submitting=false;if(DeviceSetup.open)cleanup(()=>closeVaultModal(false, false));document.getElementById('copySettings').replaceChildren();}
 window.addEventListener('online',()=>{if(isOwner())copiesSoon(0);});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isOwner()){copiesSoon(0);if(!copyMobile()&&currentTab==='settings')copyHelperRetry().catch(()=>{});}});
 /* ===== END MY COPY ===== */

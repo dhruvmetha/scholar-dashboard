@@ -26,8 +26,8 @@ function createQueue(a) {
     try {const s=await a.snapshot(id,kind);if(run!==cancelled||job.epoch!==a.epoch()||!a.current(s))continue;
      if(a.already&&await a.already(s))continue;
      const r=await a.build(s);if(run!==cancelled||!a.current(s)||!a.eligible(id)||!a.enabled().includes(kind))continue;
-     await a.deliver(r,s);if(a.progress)a.progress(id,kind,r);
-    }catch(e){if(e&&e.skip)continue;if(run===cancelled&&job.epoch===a.epoch())failed.set(id,job);if(a.error)a.error(e,id,kind);}
+     await a.deliver(r,s);if(run===cancelled&&job.epoch===a.epoch()&&a.progress)a.progress(id,kind,r);
+    }catch(e){if(e&&e.skip)continue;if(run===cancelled&&job.epoch===a.epoch()){failed.set(id,job);if(a.error)a.error(e,id,kind);}}
    }
   }
  }
