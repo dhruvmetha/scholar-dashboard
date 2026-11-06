@@ -17250,12 +17250,21 @@ async function afterUnlock(candidateKey) { const _authEpoch = capturePrivateEpoc
 async function lockNotes() { const _authEpoch = capturePrivateEpoch(); requireOwner();
   if (Ink.cancelGesture) Ink.cancelGesture(); await privateAwait(flushInk(), _authEpoch);
   if (_hw) await privateAwait(saveHandwritten(), _authEpoch);
-  try { await privateAwait(chatLockNow(), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch); toastError('Couldn’t finish locking. Try again.'); return; }
+  // A half-unlocked state (a key without its metadata, or not ready) cannot capture or save a chat at all: what is in memory is
+  // dropped and the lock goes on, so the key never stays. A save that fails in a fully unlocked state still asks to try again.
+  try { await privateAwait(chatLockNow(), _authEpoch); } catch (e) {
+    checkPrivateEpoch(_authEpoch);
+    if (Vault.meta && Vault.ready) { toastError('Couldn’t finish locking. Try again.'); return; }
+    chatTeardown(); Chat.running = false; Chat.history = []; try { renderChatPanel(true); } catch (e2) {}
+  }
   ChatSync.channel?.postMessage({ lock: true });
   const generation = vaultGeneration();
-  await privateAwait(endAdjust(true), _authEpoch); requireOwner();   // a highlight being adjusted keeps its new extent, as on leaving the paper
-  await privateAwait(closeAnnoCard(), _authEpoch); requireOwner();   // the open comment is settled (kept, restored or discarded) while the key is still here
-  await privateAwait(finishNotesEdit(), _authEpoch); requireOwner(); checkVaultGeneration(generation);
+  try {   // a failure here must not keep the key: what could not be settled is dropped with the rest
+    await privateAwait(endAdjust(true), _authEpoch); requireOwner();   // a highlight being adjusted keeps its new extent, as on leaving the paper
+    await privateAwait(closeAnnoCard(), _authEpoch); requireOwner();   // the open comment is settled (kept, restored or discarded) while the key is still here
+    await privateAwait(finishNotesEdit(), _authEpoch); requireOwner();
+  } catch (e) { checkPrivateEpoch(_authEpoch); requireOwner(); }
+  checkVaultGeneration(generation);
   endDraft('discard');
   copyCancelDerived(); CopyState.unlockPending=false;
   invalidateVaultWork(); Vault.key = null; Vault.index = null; Vault.cache.clear(); _rn = null; _acPending = null;
