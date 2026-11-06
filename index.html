@@ -7304,7 +7304,7 @@ function markAppSearch() {
    Back closes it; a tap outside, Escape or a choice closes it too, and focus goes back to the button. While it is open
    the rest of the page is inert, so Tab stays in it. A choice takes the menu's step in history, so Back from the page
    it opened lands where the menu was opened. */
-const AppMenu = { open: false, pushed: false };
+const AppMenu = { open: false, pushed: false, edge: null };
 function appMenuSync() {
   const menu = document.getElementById('appMenu');
   if (!menu) return;
@@ -7333,6 +7333,7 @@ function closeAppMenu(back = true, focusBack = true) {
   const menu = document.getElementById('appMenu'), scrim = document.getElementById('appMenuScrim'), btn = document.getElementById('navMenuBtn');
   if (!AppMenu.open) return;
   AppMenu.open = false;
+  AppMenu.edge = null;
   if (menu) menu.hidden = true;
   if (scrim) scrim.hidden = true;
   for (const el of [document.querySelector('.navbar'), document.getElementById('mainScroll')]) if (el) el.inert = false;
@@ -7342,6 +7343,63 @@ function closeAppMenu(back = true, focusBack = true) {
   if (back && pushed && history.state && history.state.scoutMenu) history.back();
 }
 window.addEventListener('popstate', () => { if (AppMenu.open) closeAppMenu(false); });   // Back closes the menu
+/* A fine mouse resting at the left edge opens the same drawer. A click inside keeps it open; otherwise leaving
+   right closes this visit. Defer while editing: making the page inert would interrupt the field even without focus(). */
+(() => {
+  const fine = matchMedia('(hover: hover) and (pointer: fine)');
+  let opening = 0, closing = 0, point = null, buttons = 0;
+  const clear = () => { clearTimeout(opening); clearTimeout(closing); opening = closing = 0; };
+  const reset = () => { clear(); point = null; buttons = 0; };
+  const eligible = () => {
+    if (!fine.matches || buttons || AppMenu.open || document.visibilityState === 'hidden'
+        || document.documentElement.classList.contains('private-locked')) return false;
+    const a = document.activeElement;
+    if (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return false;
+    const surfaces = POPOVERS + ', dialog[open], [role="dialog"], [role="menu"], [popover]:popover-open, '
+      + '.auth-overlay.open, .hide-sheet.open, .keys-help.open, #briefSheet:not([hidden])';
+    return ![...document.querySelectorAll(surfaces)].some(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden');
+  };
+  const move = e => {
+    if (e.pointerType !== 'mouse') { reset(); return; }
+    point = { x: e.clientX, y: e.clientY }; buttons = e.buttons;
+    if (!fine.matches || buttons) { clear(); return; }
+    if (AppMenu.open) {
+      clearTimeout(opening); opening = 0;
+      const menu = document.getElementById('appMenu'), visit = AppMenu.edge;
+      if (visit && point.x > menu.getBoundingClientRect().right) {
+        if (!closing) closing = setTimeout(() => {
+          closing = 0;
+          if (fine.matches && !buttons && AppMenu.open && AppMenu.edge === visit) closeAppMenu();
+        }, 300);
+      } else { clearTimeout(closing); closing = 0; }
+      return;
+    }
+    clearTimeout(closing); closing = 0;
+    if (point.x < 0 || point.x > 6 || point.y < 0 || point.y >= innerHeight || !eligible()) {
+      clearTimeout(opening); opening = 0; return;
+    }
+    if (!opening) opening = setTimeout(() => {
+      opening = 0;
+      if (!point || point.x < 0 || point.x > 6 || !eligible()) return;
+      openAppMenu();
+      if (AppMenu.open) AppMenu.edge = {};
+    }, 200);
+  };
+  document.addEventListener('pointermove', move, true);
+  document.addEventListener('pointerdown', e => { buttons = e.buttons; clear(); }, true);
+  document.addEventListener('pointerup', move, true);
+  document.addEventListener('pointercancel', reset, true);
+  document.documentElement.addEventListener('pointerleave', e => {
+    if (AppMenu.open) move(e);
+    clearTimeout(opening); opening = 0; point = null;
+  });
+  window.addEventListener('popstate', reset);
+  window.addEventListener('hashchange', reset);
+  document.getElementById('appMenu').addEventListener('click', () => { AppMenu.edge = null; clear(); });
+  fine.addEventListener('change', reset);
+  window.addEventListener('blur', reset);
+  document.addEventListener('visibilitychange', reset);
+})();
 function appMenuKey(e) {
   if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeAppMenu(); return; }
   if (e.key !== 'Tab') return;
