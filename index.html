@@ -115,8 +115,11 @@ a { color: inherit; text-decoration: none; }
 
 /* [2] Loading skeleton */
 :root { --sk: rgba(255,255,255,0.045); --sk-hi: rgba(255,255,255,0.085); }
-/* Daily is the only light surface; use the same device/host theme as that page. */
-:root:has(body.daily-mode) { --sk: light-dark(rgba(0,0,0,0.045), rgba(255,255,255,0.045)); --sk-hi: light-dark(rgba(0,0,0,0.085), rgba(255,255,255,0.085)); }
+/* Daily adopts its device/host theme while its route is still loading, too. */
+:root:has(body.daily-mode), :root:has(#skeleton:not(.hidden) [data-shape="daily"]):not(:has(#privateAccess:not([hidden]):not([data-state="loading"]))) { --sk: light-dark(rgba(0,0,0,0.045), rgba(255,255,255,0.045)); --sk-hi: light-dark(rgba(0,0,0,0.085), rgba(255,255,255,0.085)); }
+:root:has(#skeleton:not(.hidden) [data-shape="daily"]):not(:has(#privateAccess:not([hidden]):not([data-state="loading"]))) { color-scheme: light dark; --bg: light-dark(#fff,#000); --bg-surface: light-dark(#f7f9fa,#16181c); --bg-card: var(--bg-surface); --bg-raise: light-dark(#eff3f4,#202327); --line: light-dark(#eff3f4,#2f3336); --text: light-dark(#0f1419,#e7e9ea); --text-secondary: light-dark(#34434f,rgb(231 233 234 / 84%)); --text-muted: light-dark(#536471,#71767b); --text-muted-raised: light-dark(#536471,#8b9096); --glass: light-dark(rgba(255,255,255,.9),rgba(0,0,0,.78)); --accent: light-dark(#008cff,#1d9bf0); --accent-dim: light-dark(#008cff0f,#1d9bf020); }
+:root[data-theme=light]:has(#skeleton:not(.hidden) [data-shape="daily"]):not(:has(#privateAccess:not([hidden]):not([data-state="loading"]))) { color-scheme: light; }
+:root[data-theme=dark]:has(#skeleton:not(.hidden) [data-shape="daily"]):not(:has(#privateAccess:not([hidden]):not([data-state="loading"]))) { color-scheme: dark; }
 @keyframes sk-pulse { 50% { background: var(--sk-hi); } }
 .skeleton-wrap { width: 100%; margin: 0 auto; transition: opacity 0.2s ease; pointer-events: none; }
 .skeleton-wrap.hidden { opacity: 0; pointer-events: none; position: absolute; }
@@ -125,42 +128,181 @@ html.private-locked:has(#skeleton:not(.hidden)):has(#privateAccess[data-state="l
 html.private-locked:has(#skeleton:not(.hidden)):has(#privateAccess[data-state="loading"]:not([hidden])) #skeleton { display: block !important; }
 html.private-locked:has(#skeleton:not(.hidden)):has(#privateAccess[data-state="loading"]:not([hidden])) #mainScroll > :not(#skeleton),
 html.private-locked:has(#skeleton:not(.hidden)) #privateAccess[data-state="loading"] { display: none !important; }
+/* Daily placeholders share the view's layout, with their own classes so hidden loaders never match live-control queries. */
+.sk-daily-feed{height:100%;display:flex;flex-direction:column;min-height:0}
+.sk-daily-feed .feed-head{flex:none}
+.sk-daily-feed .feed-list{flex:1;min-height:0}
+.sk-daily-feed .feed-head{position:static}
+.sk-daily-picker{min-width:0;flex:none;display:flex;align-items:center;gap:10px;width:100%;height:46px;padding:0 20px;border:0;border-bottom:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.lb-int .sk-daily-picker,.lib-int .sk-daily-picker{background:none}
+.sk-daily-picker-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.sk-daily-picker svg{flex:none;width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.sk-daily-area{flex:1;min-height:0;padding:16px 20px calc(var(--daily-footer-height) + 16px);overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scroll-padding-bottom:var(--daily-footer-height)}
+.sk-daily-card{touch-action:pan-y;position:relative;padding:26px 25px 23px;border:1px solid var(--line);border-radius:18px;background:var(--bg);min-height:100%;box-shadow:0 6px 24px rgba(0,0,0,.055);transform-origin:50% 88%;cursor:grab;overflow-wrap:anywhere}
+.sk-daily-card h2{font-size:29px;font-weight:650;line-height:1.18;margin:0;letter-spacing:-.025em}
+.sk-daily-card h2 a{color:var(--text);text-decoration:none}
+.sk-daily-authors{margin-top:15px;font-size:13px;color:var(--text-muted)}
+.sk-daily-venue{margin-top:4px;font-size:12px;color:var(--text-secondary)}
+.sk-daily-headline{font-size:16px;font-weight:500;line-height:1.45;letter-spacing:-.01em;padding:20px 0;margin:20px 0 0;border-top:1px solid var(--line)}
+.sk-daily-summary,.sk-daily-abstract{font-size:14px;line-height:1.75;color:var(--text-secondary)}
+.sk-daily-abstract-label,.sk-daily-matches-label{font-size:12px;font-weight:600;color:var(--text-muted);margin:24px 0 9px}
+.sk-daily-abstract{white-space:pre-wrap;overflow-wrap:anywhere}
+.sk-daily-matches{margin-top:24px;border-top:1px solid var(--line)}
+.sk-daily-matches-label{margin-top:18px}
+.sk-daily-match{display:flex;align-items:baseline;gap:16px;justify-content:space-between;padding:7px 0;font-size:13px;color:var(--text-secondary)}
+.sk-daily-actions{position:absolute;z-index:3;bottom:0;left:0;right:0;display:flex;align-items:flex-start;justify-content:center;gap:53px;min-height:108px;padding:16px 16px calc(16px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--line);background:var(--bg)}
+.sk-daily-action{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:64px;max-width:35%;padding:0;border:0;background:none;color:var(--text-muted);font-size:12px;cursor:pointer}
+.sk-daily-action span{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border:1px solid var(--line);border-radius:50%;color:var(--text-secondary)}
+.sk-daily-action.save span{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line));background:var(--accent-dim)}
+.sk-daily-action b{font-weight:400;overflow-wrap:anywhere}
+.sk-daily-action svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:600px){.sk-daily-picker{padding:0 16px}
+.sk-daily-area{padding:16px 16px calc(var(--daily-footer-height) + 16px)}
+.sk-daily-card{padding:23px 20px 19px}
+.sk-daily-card h2{font-size:27px}
+.sk-daily-headline{margin-top:18px;padding:17px 0;font-size:15px}
+.sk-daily-summary,.sk-daily-abstract{font-size:13px;line-height:1.7}
+.sk-daily-authors{margin-top:13px;font-size:12px}
+.sk-daily-venue{font-size:11px}
+.sk-daily-actions{gap:clamp(15px,10vw,43px)}
+.sk-daily-action span{width:50px;height:50px}}
+@media(prefers-reduced-motion:reduce){.sk-daily-card,.sk-daily-action{transition:none!important;animation:none!important}}
+/* The verified loader reserves the owner's bar without enabling the locked controls. */
+#skeleton .sk-nav { display: none; }
+html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])) #skeleton .sk-nav { display: block; position: fixed; inset: 0 0 auto; z-index: 101; border-bottom: 1px solid var(--line); }
+#skeleton .sk-nav .nav-brand { visibility: hidden; }   /* the real Scout link stays reachable in this reserved slot */
+html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(#skeleton:not(.hidden)) .navbar .nav-brand { margin-left: 58px; }
+html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(#skeleton:not(.hidden)) .navbar .nav-key { visibility: hidden; }
+#skeleton .sk-nav-search { display: inline-flex; align-items: center; justify-content: center; margin-left: auto; flex-shrink: 0; width: 40px; height: 40px; color: var(--text-secondary); }
+#skeleton .sk-nav-search svg { width: 20px; height: 20px; fill: currentColor; }
 .skeleton-wrap .sk { display: block; height: 12px; border-radius: 6px; background: var(--sk); animation: sk-pulse 1.8s ease-in-out infinite; }
+.skeleton-wrap .sk-line { display: flex; align-items: center; height: 1lh; }
+.skeleton-wrap .sk-line .sk { height: .65em; }
 .skeleton-wrap .skpost { padding: 14px 16px 2px; border-bottom: 1px solid var(--line); }
-.skeleton-wrap .skl { display: flex; align-items: center; }
-.skeleton-wrap .l-meta { height: 19.5px; }
-.skeleton-wrap .l-meta .sk { height: 11px; }
-.skeleton-wrap .l-title { height: 25px; margin-top: 6px; }
-.skeleton-wrap .l-title.n { margin-top: 0; }
-.skeleton-wrap .l-title .sk { height: 17px; }
-.skeleton-wrap .l-dek { height: 21px; margin-top: 6px; }
-.skeleton-wrap .l-by { height: 19.5px; margin-top: 6px; }
-.skeleton-wrap .l-by .sk { height: 11px; }
-.skeleton-wrap .sk-gap { height: 50px; }
+.skeleton-wrap .sk-meta, .skeleton-wrap .sk-by { font-size: 13px; line-height: 1.5; }
+.skeleton-wrap .sk-title { margin-top: 6px; font-size: 20px; line-height: 1.25; }
+.skeleton-wrap .sk-dek { margin-top: 6px; font-size: 14.5px; line-height: 1.45; }
+.skeleton-wrap .sk-by { margin-top: 6px; }
+.skeleton-wrap .sk-dek .sk-line + .sk-line { display: none; }
+.skeleton-wrap .sk-icons { display: flex; align-items: center; justify-content: space-between; height: 44px; max-width: 380px; margin: 4px -12px 0; }
+.skeleton-wrap .sk-icon { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex: none; }
+.skeleton-wrap .sk-icon .sk { width: 18px; height: 18px; border-radius: 4px; }
+.skeleton-wrap .sk-acts { display: flex; align-items: center; gap: 12px; height: 44px; margin: 4px 0; }
+.skeleton-wrap .sk-acts .sk { width: 72px; height: 16px; }
 .skeleton-wrap .feed-head { position: static; }
-.skeleton-wrap .feed-tabs .tab { display: inline-flex; align-items: center; }
-.skeleton-wrap .feed-ctl { min-height: 44px; }
-.skeleton-wrap .feed-cp { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 5px 10px 5px 14px; border: 1px solid #536471; border-radius: 9999px; color: var(--text); font-size: 15px; font-weight: 700; line-height: 20px; }
-.skeleton-wrap .feed-cp svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; }
-.skeleton-wrap .list-bar { display: flex; align-items: center; gap: 4px; min-height: 52px; }
+.skeleton-wrap .feed-tabs .tab { display: inline-flex; align-items: center; justify-content: center; }
+/* Use a class in place of #feedCtl, without duplicating a live id. */
+#skeleton .feed-ctl .sk-daily-picker { flex: 1; width: auto; padding: 0 10px; border-bottom: 0; background: none; }
+#skeleton .list-bar { display: block; }
 .skeleton-wrap .sk-back { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 44px; height: 44px; margin-left: -10px; }
 .skeleton-wrap .sk-back svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; }
-.skeleton-wrap .sk-kicker { max-width: 150px; }
-.skeleton-wrap .sk-paper-title { height: 30px; margin-top: 18px; border-radius: 8px; }
-.skeleton-wrap .sk-paper-title + .sk-paper-title { margin-top: 10px; }
-.skeleton-wrap .sk-paper-title.phone { display: none; }
-.skeleton-wrap .sk-authors { height: 13px; margin-top: 22px; }
-.skeleton-wrap .sk-prose { display: flex; flex-direction: column; gap: 14px; margin-top: 36px; }
-.skeleton-wrap .sk-prose .sk { height: 14px; }
-.skeleton-wrap .sk-generic { max-width: 640px; margin: 0 auto; padding: 24px 16px; }
-.skeleton-wrap .sk-heading { height: 24px; margin-bottom: 24px; }
-.skeleton-wrap .sk-row { padding: 20px 0; border-bottom: 1px solid var(--line); }
+.skeleton-wrap .sk-list-head { height: 1px; border-bottom: 1px solid var(--border); }
+/* Authorization already gates the whole skeleton. Its inert placeholders reserve owner controls' space. */
+#skeleton .sk-owner { display: inline-flex !important; }
+#skeleton [data-shape="paper"] .pd-title { margin: 0; }
+#skeleton [data-shape="paper"] .pd-title .sk-line:last-child, #skeleton .sk-daily-card h2 .sk-line:last-child, #skeleton .sk-daily-headline .sk-line:last-child, #skeleton .sk-daily-summary .sk-line:last-child { display: none; }
+#skeleton [data-shape="paper"] .pd-kicker { height: 19.5px; }
+#skeleton [data-shape="paper"] .pd-kicker .sk { width: 150px; }
+#skeleton [data-shape="paper"] .pd-why { font-size: 13.5px; line-height: 1.5; }
+#skeleton [data-shape="paper"] .pd-why-label { height: 16.5px; }
+#skeleton .pd-dek .sk-line + .sk-line { display: none; }
+#skeleton .pd-body .sk-line { font-size: 19px; line-height: 1.65; }
+#skeleton .sk-profile .briefing, #skeleton .sk-profile .interests-scroll { max-width: 760px; }
+#skeleton .sk-profile .interests-scroll { margin: 0 auto; padding: 8px 24px 48px; }
+#skeleton .sk-profile .ip-week { margin-bottom: 0; }
+#skeleton .ip-name .sk { height: 14px; }
+#skeleton .ip-meta .sk { height: 12px; }
+#skeleton .ip-meta .sk-line { width: 100%; }
+#skeleton .sk-profile .ip-meta { min-height: 23.5px; }
+#skeleton .ip-card-head { text-align: left; }
+#skeleton .fw-chip:not(.fw-add) { width: 152px; }
+#skeleton .copy-back { line-height: normal; }
+#skeleton .sk-sync { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-muted); }
+
+#skeleton .sk-sync .sk { width: 126px; }
+#skeleton .sk-sync .sync-btn { display: inline-flex !important; }
+#skeleton .sk-library-buttons { display: flex; gap: 8px; }
+#skeleton .sk-library-buttons .btn-new-list { display: inline-flex !important; align-items: center; justify-content: center; }
+#skeleton .sk-list-avatar { width: 48px; height: 48px; border-radius: 12px; }
+#skeleton .ls-link .sk-list-text { display: flex; flex: 1; flex-direction: column; gap: 8px; }
+#skeleton .ls-link .sk-list-text .sk + .sk { height: 10px; }
+#skeleton .sk-search-input { flex: 1; min-height: 44px; display: flex; align-items: center; }
+#skeleton .sk-search-input .sk { width: 150px; }
+#skeleton .sk-search-sort { margin-left: auto; }
+#skeleton .sk-search-filters { display: none; }
+#skeleton .sk-search-rail-row { min-height: 44px; padding: 12px; border-top: 1px solid var(--line); }
+#skeleton .sk-search-card { padding: 12px 0; border-bottom: 1px solid var(--line); }
+#skeleton .sk-search-title { font-size: 19px; line-height: 1.3; }
+#skeleton .sk-search-title .sk-line + .sk-line, #skeleton .lp-h .sk-line + .sk-line { display: none; }
+#skeleton .sk-search-meta { margin-top: 6px; height: 46px; display: flex; align-items: center; }
+#skeleton .sk-search-by { margin-top: 2px; height: 18px; display: flex; align-items: center; }
+#skeleton .sk-search-actions { height: 44px; margin-top: 2px; display: flex; gap: 8px; align-items: center; }
+#skeleton .sk-search-actions .sk { width: 64px; }
+#skeleton:has(.sk-daily) { height: 100%; }
+#skeleton .sk-daily { --daily-footer-height: calc(108px + env(safe-area-inset-bottom, 0px)); }
+#skeleton .sk-daily-body { position: relative; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+#skeleton .sk-daily-card h2 { font-size: 29px; }
+#skeleton .sk-daily-abstract .sk-line:last-child { display: none; }
+#skeleton .sk-daily-match { min-height: calc(1lh + 14px); }
+#skeleton .lp-sec-h { min-height: 34px; }
+#skeleton .sk-daily-authors, #skeleton .sk-daily-venue { display: flex; align-items: center; height: 1lh; }
+#skeleton .sk-daily-authors .sk { height: 10px; }
+#skeleton .sk-daily-venue .sk { height: 9px; }
+#skeleton .sk-daily-headline .sk-line { font-size: 16px; line-height: 1.45; }
+#skeleton .sk-daily-summary .sk-line { font-size: 14px; line-height: 1.75; }
+#skeleton .sk-reader { position: fixed; inset: 0; z-index: 320; display: flex; flex-direction: column; background: var(--bg); }
+#skeleton .sk-reader-split { display: flex; flex: 1; min-height: 0; }
+#skeleton .sk-reader-panel { display: none; width: var(--rp-w, 380px); border-left: 1px solid var(--border); background: var(--reader-bar); }
+@media (min-width: 1024px) { #skeleton .sk-reader-panel { display: block; } }
+#skeleton .sk-reader .reader-title { height: 1.5em; display: flex; align-items: center; }
+#skeleton .sk-reader-body { flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
+#skeleton .sk-reader-page, #readerBody .reader-skel > div { width: min(calc(100% - 36px), 1000px); aspect-ratio: 8.5 / 11; max-height: none; margin: 18px auto 0; border-radius: 2px; }
+#skeleton .sk-reader-page { background-color: #dedee1; }
+#skeleton .sk-reader.dark .sk-reader-page { background-color: var(--bg-surface); }
+#reader:has(.reader-skel) .reader-pageno { min-width: 24px; }
+#readerBody .reader-skel { padding: 0; }
+#readerBody .reader-skel > div { flex: none; }
+@media (min-width: 701px) {
+  #skeleton .list-bar { display: flex; }
+}
+@media (max-width: 1080px) {
+  html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(#skeleton:not(.hidden)) .navbar .nav-brand { margin-left: 50px; }
+}
+@media (max-width: 999px) {
+  #skeleton [data-shape="paper"] .pd-bar-inner { flex-wrap: wrap; align-items: flex-start; }
+  #skeleton [data-shape="paper"] .pd-actions { flex-wrap: wrap; overflow: visible; padding-right: 0; mask-image: none; -webkit-mask-image: none; gap: 4px; }
+  #skeleton [data-shape="paper"] .pd-actions .pd-open { width: auto; min-width: 44px; height: 44px; }
+}
+@media (max-width: 700px) {
+  #skeleton .sk-reader-page, #readerBody .reader-skel > div { width: 100%; margin-top: 10px; }
+}
 @media (max-width: 660px) {
-  .skeleton-wrap .sk { width: var(--sk-phone) !important; }
-  .skeleton-wrap .sk-kicker { max-width: 130px; }
-  .skeleton-wrap .sk-paper-title { height: 26px; }
-  .skeleton-wrap .sk-paper-title + .sk-paper-title { margin-top: 9px; }
-  .skeleton-wrap .sk-paper-title.phone { display: block; }
+  .skeleton-wrap .sk-dek .sk-line + .sk-line { display: flex; }
+}
+@media (max-width: 600px) {
+  #skeleton .sk-nav .nav-inner { column-gap: 8px; }
+  html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(#skeleton:not(.hidden)) .navbar .nav-brand { margin-left: 42px; }
+  #skeleton .sk-nav-search { width: 36px; height: 36px; }
+  #skeleton .pd-dek .sk-line + .sk-line { display: flex; }
+  #skeleton .sk-profile .briefing { padding: 24px 16px 0; }
+  #skeleton .sk-profile .briefing h2 { font-size: 40px; line-height: 1.1; }
+  #skeleton .sk-profile .interests-scroll { padding: 4px 16px 40px; }
+  #skeleton .sk-library-buttons { display: contents; }
+  #skeleton .sk-library-buttons .btn-new-list { order: 1; }
+  #skeleton .sk-sync { order: 2; flex-basis: 100%; }
+  #skeleton .sk-search-filters { display: inline-flex; }
+  #skeleton .sk-search-title .sk-line + .sk-line, #skeleton .lp-h .sk-line + .sk-line { display: flex; }
+  #skeleton .lp-meta { min-height: 40px; }
+  #skeleton .search-results .rail { display: none; }
+  #skeleton .pd-actions .sk-hide { display: none !important; }
+  #skeleton [data-shape="paper"] .pd-title .sk-line:last-child { display: flex; }
+  #skeleton .sk-daily-card h2 .sk-line:last-child { display: flex; }
+  #skeleton .sk-daily-headline .sk-line:last-child { display: flex; }
+  #skeleton .sk-daily-summary .sk-line:last-child { display: flex; }
+  #skeleton .sk-daily-card h2 { font-size: 27px; }
+  #skeleton .sk-daily-abstract .sk-line:last-child { display: flex; }
+  #skeleton .sk-daily-headline .sk-line { font-size: 15px; }
+  #skeleton .sk-daily-summary .sk-line { font-size: 13px; line-height: 1.7; }
 }
 @media (prefers-reduced-motion: reduce) {
   .skeleton-wrap .sk { animation: none; }
@@ -6438,29 +6580,89 @@ function buildGroupOrder() {
 
 /* The first view comes from the address alone, before any library request. */
 function skeletonHTML(hash) {
-  const route = String(hash || '').replace(/^#/, '');
-  const bar = (width, cls = '', phone = width) => `<i class="sk${cls ? ' ' + cls : ''}" style="width:${width}%;--sk-phone:${phone}%"></i>`;
-  const caret = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
-  const back = '<span class="sk-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7 7-7-7 7-7"/></svg></span>';
-  if (/^(paper|read)\//.test(route)) {
-    return `<div class="pd" data-shape="paper"><div class="pd-bar"><div class="pd-bar-inner">${back}<span>Back</span></div></div>
-      <div class="pd-article">${bar(100, 'sk-kicker')}${bar(88, 'sk-paper-title', 94)}${bar(62, 'sk-paper-title', 84)}${bar(58, 'sk-paper-title phone')}${bar(46, 'sk-authors', 62)}
-      <div class="sk-prose">${[100, 97, 99, 68].map(w => bar(w)).join('')}</div></div></div>`;
-  }
-  let name = null, feed = /^(all|following|daily|search(?:\?.*)?)?$/.test(route);
-  if (route.startsWith('list/')) {
-    try { name = decodeURIComponent(route.slice(5)); }
-    catch (e) { feed = true; }
-  }
-  if (feed || name !== null) {
-    const widths = name === null ? [[30, 88, 60, 42], [26, 90, 52, 38], [22, 86, 64, 40]] : [[32, 90, 56, 46], [26, 94, 62, 40], [30, 88, 54, 44]];
-    const phoneWidths = name === null ? [[34, 92, 60, 48], [28, 94, 50, 42], [30, 90, 66, 44]] : widths;
-    const posts = widths.map(([meta, title, next, by], i) => `<div class="skpost"><div class="skl l-meta">${bar(meta, '', phoneWidths[i][0])}</div><div class="skl l-title">${bar(title, '', phoneWidths[i][1])}</div><div class="skl l-title n">${bar(next, '', phoneWidths[i][2])}</div><div class="skl l-dek"></div><div class="skl l-by">${bar(by, '', phoneWidths[i][3])}</div><div class="sk-gap"></div></div>`).join('');
-    const head = name === null ? `<div class="feed-head"><div class="feed-tabs"><span class="tab${route === 'following' || route === 'daily' ? '' : ' on'}">For you</span><span class="tab${route === 'following' ? ' on' : ''}">Following</span><span class="tab${route === 'daily' ? ' on' : ''}">Daily</span></div><div class="feed-ctl"><span class="feed-cp">Best${caret}</span><span class="feed-cp">All interests${caret}</span></div></div>`
-      : `<div class="list-bar">${back}<span class="lb-name">${esc(name)}</span></div>`;
-    return `<div class="feed" data-shape="${name === null ? 'feed' : 'list'}">${head}${posts}</div>`;
-  }
-  return `<div class="sk-generic" data-shape="generic">${bar(30, 'sk-heading')}${[88, 72, 94, 64, 82, 70].map(w => `<div class="sk-row">${bar(w)}</div>`).join('')}</div>`;
+  let route = String(hash || '').replace(/^#/, '');
+  // These disabled/obsolete addresses return to For you, just as applyHash does.
+  if (/^(email|venues|latest)$/.test(route) || /^(group|alert)\//.test(route)) route = 'all';
+  const content = (() => {
+    const bar = (width = 70) => `<i class="sk" style="width:${width}%"></i>`;
+    const lines = (count, width = 96) => Array.from({ length: count }, (_, i) => `<span class="sk-line">${bar(i === count - 1 ? width : 100)}</span>`).join('');
+    const chevron = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+    const backIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>';
+    const back = `<span class="sk-back">${backIcon}</span>`;
+    const picker = (label = 'All interests', key = 'picker') => `<div class="sk-daily-picker" data-sk="${key}"><span class="sk-daily-picker-name">${label}</span>${chevron}</div>`;
+    const tabs = active => `<div class="feed-head" data-sk="head"><div class="feed-tabs home" data-sk="tabs"><div class="ft-tabs">${['For you', 'Following', 'Daily'].map((t, i) => `<span class="tab${i === active ? ' on' : ''}">${t}</span>`).join('')}</div></div>${active === 0 ? `<div class="feed-ctl"><span class="ctl-btn ctl-sort" data-sk="sort"><span class="ctl-pill">Best${chevron}</span></span>${picker()}</div>` : ''}</div>`;
+    const posts = (list = false) => [84, 72, 90].map(w => `<div class="skpost" data-sk="card"><div class="sk-meta" data-sk="meta">${lines(1, 38)}</div><div class="sk-title" data-sk="title">${lines(2, w)}</div><div class="sk-dek" data-sk="dek">${lines(2, 62)}</div><div class="sk-by" data-sk="authors">${lines(1, 48)}</div>${list ? `<div class="sk-acts" data-sk="actions">${bar(24)}${bar(24)}${bar(30)}</div>` : `<div class="sk-icons" data-sk="actions">${Array.from({ length: 4 }, () => `<span class="sk-icon">${bar()}</span>`).join('')}</div>`}</div>`).join('');
+    if (route.startsWith('read/')) {
+      const readerBar = document.querySelector('#reader > .reader-bar').cloneNode(true);
+      readerBar.dataset.sk = 'bar';
+      for (const [key, selector] of Object.entries({back:'.reader-back', title:'.reader-title', tools:'.reader-tools', notes:'.rt-panel-btn', more:'.rt-more'})) readerBar.querySelector(selector).dataset.sk = key;
+      readerBar.querySelector('.reader-pageno').innerHTML = '<i class="sk" style="width:24px;height:9px"></i>';
+      readerBar.querySelector('.copy-eye').innerHTML = '<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+      readerBar.querySelector('.reader-title').innerHTML = bar(45);
+      readerBar.querySelectorAll('*').forEach(el => {
+        el.removeAttribute('id'); el.classList.remove('owner-only');
+        for (const attr of [...el.attributes]) if (attr.name.startsWith('on')) el.removeAttribute(attr.name);
+        if (el.matches('button, a, input')) el.setAttribute('tabindex', '-1');
+      });
+      // The reader replaces the whole viewport, not the paper-detail article.
+      // applyPanelWidth resolves the saved fraction, layout mode and bounds later in startup.
+      // Share its result before paint and keep the placeholder in sync while it is visible.
+      queueMicrotask(() => {
+        const reader = document.getElementById('reader'), skeleton = document.getElementById('skeleton');
+        const placeholder = skeleton.querySelector('.sk-reader');
+        if (!placeholder) return;
+        const sync = () => {
+          if (!placeholder.isConnected || _dataLoaded) { observer.disconnect(); return; }
+          placeholder.style.setProperty('--rp-w', reader.style.getPropertyValue('--rp-w'));
+        };
+        const observer = new MutationObserver(sync);
+        observer.observe(reader, { attributes: true, attributeFilter: ['style'] });
+        observer.observe(skeleton, { childList: true, attributes: true, attributeFilter: ['class'] });
+        sync();
+      });
+      let dark = false; try { dark = localStorage.getItem('scholar_reader_dark') === 'true'; } catch (e) {}
+      return `<div class="sk-reader${dark ? ' dark' : ''}" data-shape="reader">${readerBar.outerHTML}<div class="sk-reader-split"><div class="sk-reader-body"><div class="sk-reader-page" data-sk="page"></div></div><aside class="sk-reader-panel" data-sk="panel"><div class="rp-head"><div class="rp-tabs"><button tabindex="-1" class="on">Notes</button><button tabindex="-1">Chat</button></div><span class="grow"></span><span class="rp-icon-btn">×</span></div><div class="rp-scroll">${lines(4, 62)}</div></aside></div></div>`;
+    }
+    if (route.startsWith('paper/')) {
+      const act = (label, icon = '✓', extra = '', key = '') => `<span class="pd-act sk-owner ${extra}"${key ? ` data-sk="${key}"` : ''}>${icon}<span class="pd-act-label"><span>${label}</span></span></span>`;
+      const icon = '<svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-6-4-6 4z"/></svg>';
+      return `<div class="pd" data-shape="paper"><div class="pd-bar" data-sk="bar"><div class="pd-bar-inner"><span class="pd-back" data-sk="back">${backIcon}<span class="pd-back-label">Back</span></span><div class="pd-bar-title"></div><div class="pd-actions has-dl" data-sk="actions">${act('Mark read')}${act('Save', icon)}${act('Hide', icon, 'sk-hide')}${act('', '<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>', 'pd-dl', 'download')}<span class="pd-read" data-sk="read"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Read</span><span class="pd-open" data-sk="open"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span></div></div></div><div class="pd-article" data-sk="article"><header class="pd-head"><div class="pd-kicker" data-sk="kicker">${bar(100)}</div><div class="pd-title" data-sk="title">${lines(3, 76)}</div><div class="pd-dek" data-sk="dek">${lines(2, 80)}</div><div class="pd-authors" data-sk="authors">${lines(1, 52)}</div><div class="pd-why"><span class="pd-why-label">${bar(14)}</span><div class="why">${lines(1, 38)}</div></div></header><div class="pd-body" data-sk="body"><div><h2>Summary</h2>${lines(4, 70)}<br><h2>Abstract</h2>${lines(7, 80)}</div><aside>${lines(5, 68)}</aside></div></div></div>`;
+    }
+    if (route === 'settings') {
+      const row = (label, sub = '', control = '') => `<div class="copy-item" data-sk="row"><div class="copy-label">${label}${sub ? `<small>${sub}</small>` : ''}</div>${control}</div>`;
+      const button = label => `<span class="ui-btn ui-btn-secondary">${label}</span>`;
+      const mac = /Mac/.test(navigator.platform) && navigator.maxTouchPoints < 2;
+      const saving = mac ? row('Save to a folder on this Mac', 'Every saved paper, plain and with your notes, in Documents / Scout', button('Set up'))
+        : row('Kept inside Scout', lines(1, 40)) + row('Plain PDFs', '', '<span class="copy-switch"></span>') + row('Your copies', '', '<span class="copy-switch"></span>') + row('Save all to Files', 'Opens the share sheet once for every paper', button('Save'));
+      return `<div class="copy-settings" data-shape="settings"><div class="copy-back" data-sk="heading">‹ &nbsp; Settings</div><div class="copy-group" data-sk="section"><div class="copy-gh">Saving papers</div>${saving}</div><div class="copy-group"><div class="copy-gh">Notes</div>${row('Notes are locked on this device', '', button('Unlock'))}</div></div>`;
+    }
+    if (route === 'interests' || route.startsWith('interests/') || route === 'people') {
+      const people = route === 'people', title = people ? 'People' : 'Interests';
+      return `<div class="sk-profile" data-shape="${people ? 'people' : 'interests'}"><div class="interests-header"><div class="briefing" data-sk="head"><h2 data-sk="heading">${title}</h2><p class="ip-lede" data-sk="lede">${people ? 'Scout looks for new papers by the people you follow.' : 'Choose what you want to see in your recommendations.'}</p></div></div>${people ? '' : `<div class="ip-week"><div class="ip-week-head"><h3>This week</h3></div><div class="ip-week-line">${lines(1, 54)}</div></div>`}<div class="interests-scroll"><section class="ip-sec"><div class="ip-sec-head" data-sk="section"><h3>${people ? 'People you follow' : 'Your interests'}</h3></div>${people ? `<div class="fw-chips"><span class="fw-chip" data-sk="card">${bar(80)}</span><span class="fw-chip fw-add">+ Follow someone</span></div>` : `<div class="ip-list">${[68, 52, 74].map(w => `<div class="ip-card"><div class="ip-card-head" data-sk="card"><span class="ip-name">${lines(1, w)}</span><span class="ip-meta" data-sk="meta">${lines(1, 36)}</span>${chevron.replace('<svg', '<svg class="ip-chev"')}</div></div>`).join('')}</div><button tabindex="-1" class="ip-add">+ Add an interest</button>`}</section><section class="ip-sec"><div class="ip-sec-head"><h3>${people ? 'Who to follow' : 'Suggested'}</h3></div><div class="ip-card">${lines(2, 66)}</div></section></div></div>`;
+    }
+    if (route === 'lists' || route === 'library') {
+      return `<div data-shape="lists"><div class="lib-head" data-sk="head"><h2 data-sk="heading">Lists</h2><div class="lib-head-actions sk-library-buttons" data-sk="buttons"><span class="sync-status sk-sync"><span class="sync-dot"></span>Saved automatically<button tabindex="-1" class="sync-btn quiet">Sign out</button></span>${['+ Add paper', 'Upload PDF', '+ New list'].map(t => `<button tabindex="-1" class="btn-new-list">${t}</button>`).join('')}</div></div><div class="library-wrap"><section class="ls-sec"><div class="lib-sec-head ip-sec-head" data-sk="section"><h3>Your lists</h3><span class="grow"></span><span class="lib-sort"><select tabindex="-1"><option>Created</option><option>Last updated</option><option>Name</option></select></span><span class="lib-sort-dir">Oldest first${chevron}</span></div><div class="ls-cards">${[70, 54].map(w => `<div class="ls-card" data-sk="card"><span class="ls-link"><i class="sk sk-list-avatar"></i><span class="sk-list-text">${bar(w)}${bar(30)}</span></span><span class="sk-icon">${bar()}</span></div>`).join('')}</div></section><div class="lib-sec-head ip-sec-head ls-reading" data-sk="reading"><h3>Reading</h3></div>${[55, 70, 48].map(w => `<div class="interest-group collapsed" data-sk="readingCard"><div class="interest-group-inner"><div class="interest-group-header" data-sk="readingBar"><button tabindex="-1" class="lib-disc"><span class="lib-icon">☰</span><span style="width:150px">${bar(w)}</span><span class="interest-group-count">${bar(100)}</span></button><svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>`).join('')}</div></div>`;
+    }
+    if (/^search(?:\?.*)?$/.test(route)) {
+      return `<div class="search-results" data-shape="search"><div class="search-box-wrap"><div class="sf" data-sk="box"><div class="sk-search-input">${bar(60)}</div><span class="help">ⓘ</span></div><div class="res-bar" data-sk="bar"><span class="cp sk-search-filters">Filters ⌄</span>${bar(25)}<span class="cp sk-search-sort">Best match</span></div></div><div class="sb-page"><aside class="rail" data-sk="rail"><div><div class="seg">${lines(1, 60)}</div>${[64, 75, 55, 70, 68].map(w => `<div class="sk-search-rail-row">${bar(w)}</div>`).join('')}</div></aside><div class="search-body" data-sk="body"><div class="paper-list">${[80, 65, 90].map(w => `<div class="sk-search-card" data-sk="card"><div class="sk-search-title">${lines(2, w)}</div><div class="sk-search-meta">${bar(40)}</div><div class="sk-search-by">${bar(36)}</div><div class="sk-search-actions">${bar(25)}${bar(25)}</div></div>`).join('')}</div></div></div></div>`;
+    }
+    if (/^(interest|venue)\//.test(route) || route === 'top') {
+      let name = 'Top Papers'; try { if (route !== 'top') name = decodeURIComponent(route.split('/').slice(1).join('/')); } catch (e) {}
+      return `<div class="lp" data-shape="legacy"><div class="pd-bar lp-bar" data-sk="bar"><div class="pd-bar-inner"><span class="pd-back">${backIcon}For you</span><span class="pd-bar-title"></span><span class="pd-act lp-search-btn sk-owner">${bar(50)}</span></div></div><div class="lp-wrap"><aside class="lp-rail">${lines(5, 68)}</aside><div class="lp-main"><div class="lp-chiprow"><span class="tl-chip">${esc(name)}</span></div><div class="lp-head" data-sk="head"><div class="lp-head-text"><div class="lp-eyebrow">${route.startsWith('interest/') ? 'Interest' : route.startsWith('venue/') ? 'Venue' : 'For you'}</div><h1 class="lp-title">${esc(name)}</h1>${route.startsWith('interest/') ? '<p class="lp-sub">'+lines(1, 30)+'</p>' : ''}<div class="lp-stats">${lines(1, 20)}</div></div></div><div class="lp-tools"><div class="lp-controls"><div class="tl-sort"><button tabindex="-1">Best</button><button tabindex="-1">Recently added</button><button tabindex="-1">Newest published</button></div></div></div><div class="lp-body ranked" data-sk="body"><section class="lp-sec">${route !== 'top' ? '<div class="lp-sec-h">'+bar(20)+'</div>' : ''}${[70, 85, 62].map(w => `<div class="lp-row" data-sk="row"><span class="lp-num">${bar(80)}</span><div class="lp-row-main"><div class="lp-h">${lines(2, w)}</div><div class="why-line">${lines(1, 40)}</div><div class="lp-meta">${lines(1, 50)}</div></div></div>`).join('')}</section></div></div></div></div>`;
+    }
+    let name = null;
+    if (route.startsWith('list/')) { try { name = decodeURIComponent(route.slice(5)); } catch (e) {} }
+    if (name !== null) {
+      return `<div class="feed" data-shape="list"><div class="sk-list-head"></div><div class="list-bar" data-sk="bar"><div class="lb-row">${back}<span class="lb-name">${esc(name)}</span><span class="lb-more">⋯</span><span class="lb-grow"></span><span class="lb-add"><span class="lb-pill">+ Add a paper</span></span></div><div class="lb-int" data-sk="picker">${picker('All interests', 'list-picker')}</div></div><h3 class="list-sec mine" data-sk="section">In this list</h3>${posts(true)}</div>`;
+    }
+    if (route === 'daily') {
+      return `<div class="feed sk-daily-feed sk-daily" data-shape="daily">${tabs(2)}<div class="sk-daily-body">${picker(bar(48))}<div class="sk-daily-area" data-sk="area"><article class="sk-daily-card" data-sk="card"><h2 data-sk="title">${lines(3, 82)}</h2><div class="sk-daily-authors" data-sk="authors">${bar(56)}</div><div class="sk-daily-venue" data-sk="venue">${bar(30)}</div><div class="sk-daily-headline" data-sk="headline">${lines(2, 85)}</div><div class="sk-daily-summary" data-sk="summary">${lines(3, 80)}</div><h3 class="sk-daily-abstract-label">Abstract</h3><div class="sk-daily-abstract" data-sk="abstract">${lines(4, 76)}</div><div class="sk-daily-matches" data-sk="matches"><h3 class="sk-daily-matches-label">Matching interests</h3><div class="sk-daily-match">${bar(68)}</div></div></article></div><footer class="sk-daily-actions" data-sk="actions">${['Pass', 'To read', 'Mark read'].map((t, i) => `<div class="sk-daily-action${i === 1 ? ' save' : ''}"><span>${bar(35)}</span><b>${t}</b></div>`).join('')}</footer></div></div>`;
+    }
+    return `<div class="feed" data-shape="feed">${tabs(route === 'following' ? 1 : 0)}${posts()}</div>`;
+  })();
+  if (route.startsWith('read/')) return content;
+  const nav = `<div class="sk-nav"><div class="nav-inner"><span class="nav-menu">${document.getElementById('navMenuBtn').innerHTML}</span><span class="nav-brand">${document.querySelector('.nav-brand').innerHTML}</span><span class="sk-nav-search">${document.getElementById('navSearchToggle').innerHTML}</span></div></div>`;
+  return nav + content;
 }
 function skeletonShow() {
   document.getElementById('skeleton').innerHTML = skeletonHTML(location.hash);
