@@ -2423,12 +2423,36 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 /* Phase 13e: a fixed menu placed by placeFixedMenu, inside what shows of the screen; its rows scroll inside, and a long
    name wraps (an unbroken one too) rather than widening the menu past the viewport */
 #safeProbe { position: fixed; top: 0; left: 0; width: 0; height: 0; visibility: hidden; pointer-events: none; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
-.copy-dd, .kept-paper-menu { position: fixed; z-index: 9999; background: var(--bg-surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); overflow: hidden; min-width: 180px; display: flex; flex-direction: column; animation: dropdown-in 0.15s ease forwards; }
+.copy-dd { position: fixed; z-index: 9999; background: var(--bg-surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); overflow: hidden; min-width: 180px; display: flex; flex-direction: column; animation: dropdown-in 0.15s ease forwards; }
 .copy-dd-head { padding: 8px 14px 6px; font-size: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .copy-dd-list { overflow-y: auto; min-height: 0; flex: 1 1 auto; }
-.copy-dd-item, .kept-paper-menu button { display: block; width: 100%; text-align: left; background: none; border: none; font: inherit; padding: 8px 14px; font-size: 13px; cursor: pointer; color: var(--text-secondary); transition: background 0.1s; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
-.kept-paper-menu button { min-height: 44px; }
-.copy-dd-item:hover, .kept-paper-menu button:hover { background: var(--bg-hover); color: var(--text); }
+.copy-dd-item { display: block; width: 100%; text-align: left; background: none; border: none; font: inherit; padding: 8px 14px; font-size: 13px; cursor: pointer; color: var(--text-secondary); transition: background 0.1s; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+.copy-dd-item:hover { background: var(--bg-hover); color: var(--text); }
+/* The paper page's download button and its menu: a popover under the button, a bottom sheet on a phone */
+.pd-act.pd-dl { position: relative; }
+.pd-act.pd-dl.kept { color: var(--accent); }
+.pd-act.pd-dl.kept::after { content: ''; position: absolute; right: 4px; bottom: 4px; width: 9px; height: 9px; box-sizing: border-box; border-radius: 50%; background: var(--green); border: 2px solid var(--bg); }
+.dl-menu { position: fixed; z-index: 9999; width: 268px; background: var(--bg-surface); border: 1px solid var(--line); border-radius: 14px; padding: 6px; box-shadow: 0 12px 32px rgba(0,0,0,0.55); animation: dropdown-in 0.15s ease forwards; }
+.dl-body { display: flex; flex-direction: column; }
+.dl-item { display: flex; align-items: flex-start; gap: 11px; width: 100%; min-height: 44px; padding: 10px 11px; border: none; border-radius: 9px; background: none; color: var(--text); font: inherit; font-size: 14px; font-weight: 550; text-align: left; cursor: pointer; }
+.dl-item:hover:not(:disabled), .dl-item:focus-visible { background: var(--bg-hover); }
+.dl-item:disabled { opacity: 0.4; cursor: default; }
+.dl-item > svg { flex: none; width: 18px; height: 18px; margin-top: 1px; fill: none; stroke: var(--text-secondary); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.dl-item > span { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.dl-item small { color: var(--text-muted-raised); font-size: 12.5px; font-weight: 450; }
+.dl-sep { height: 1px; margin: 5px 8px; background: var(--line); }
+.dl-noico { padding-left: 40px !important; }
+.dl-foot { display: flex; align-items: center; gap: 11px; padding: 8px 11px 6px; color: var(--text-muted-raised); font-size: 12.5px; }
+.dl-foot::before { content: ''; flex: none; width: 18px; height: 18px; background: radial-gradient(circle, var(--green) 0 3.5px, transparent 4px); }
+.dl-note { margin: 0; padding: 8px 11px 8px 40px; color: var(--text-muted-raised); font-size: 12.5px; }
+.dl-note.dl-bad { color: #ef8a8a; }
+.dl-hide, .dl-hidesep { display: none; }
+.dl-sheet { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.45); }
+.dl-sheet .dl-panel { position: absolute; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 560px; max-height: 80vh; overflow-y: auto; background: var(--bg-surface); border: 1px solid var(--line); border-bottom: none; border-radius: 18px 18px 0 0; padding: 10px 12px calc(14px + env(safe-area-inset-bottom, 0px)); }
+.dl-grip { display: block; width: 36px; height: 4px; margin: 0 auto 8px; border-radius: 2px; background: rgba(255,255,255,0.25); }
+.dl-sheet .dl-item { min-height: 48px; padding: 12px 11px; font-size: 15px; }
+.dl-cancel { margin-top: 8px; width: 100%; min-height: 44px; border: none; border-radius: 12px; background: var(--bg-raise); color: var(--text); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+@media (max-width: 600px) { .dl-hide { display: flex; } .dl-hidesep { display: block; } .pd-actions.has-dl .pd-act[data-act="hide"], .pd-actions.has-dl .pd-act[data-act="restore"] { display: none; } }   /* the bar is full on a phone: Hide moves into the sheet */
 .copy-dd-item.copy-dd-new { border-top: 1px solid var(--border); color: var(--accent); }
 .copy-dd-item:disabled { opacity: 0.45; cursor: default; }
 
@@ -2938,6 +2962,8 @@ body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.au
 .copy-setup .vault-box h3 {font-family:inherit;font-size:19px;font-weight:680;letter-spacing:-.01em}
 .copy-setup .vault-remember {display:none}
 .copy-setup #vaultPw {margin-bottom:8px}
+.copy-inst {padding:0 16px 14px;display:flex;flex-direction:column;gap:10px}
+.copy-inst p {font-size:13px;color:var(--text-secondary);margin:0}
 .copy-step {margin:18px 0;display:flex;flex-direction:column;gap:9px}
 .copy-step strong,#copySetupNotes {font-size:14.5px;display:flex;align-items:center;gap:9px}
 .copy-stepnum {display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--bg-raise);font-size:12px;flex:none}
@@ -15373,40 +15399,171 @@ function keptDrawn() {
     if (currentTab === 'library' && !_paperViewActive && !_listViewActive && !_searchActive) renderLibrary();
   }), KEPT_DRAW_MS);
 }
-/* The reader's ⋯ menu: "Keep on this device" for a paper outside the set, "Remove from this device" for one kept by
-   hand (a paper in the set is kept anyway: neither shows) */
+/* DOWNLOAD, on the paper's page (owner only): a ↓ button on the bar, green when this paper's PDF is on this device, and
+   its menu (a popover; a bottom sheet on a phone) with the two downloads, the device line and Keep or Remove. The
+   downloads need no Mac helper. A Mac or other computer saves a file; an iPhone or iPad opens the share sheet (Save to
+   Files), and when preparing used up the tap's permission to share it asks for a second tap. */
+const Dl = { id: '', info: null, busy: '', ready: null, failed: false, sending: false, op: 0, gen: 0, mq: null };
+/* Everything a download holds (a prepared file can carry decrypted notes) goes at a lock or sign-out, and work still in flight is cancelled */
+function dlReset() { Dl.gen++; Dl.op++; Dl.id = ''; Dl.info = null; Dl.busy = ''; Dl.ready = null; Dl.failed = false; Dl.sending = false; keptPaperClose(); }
+const DL_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>';
+function dlIOS() { const d = copyDeviceName(); return d === 'iPhone' || d === 'iPad'; }
+function dlPhone() { return window.matchMedia('(max-width: 600px)').matches; }
+/* has: some PDF to download; here: it is on this device (a file dropped in, a kept copy, or an uploaded paper) */
+async function dlInfo(p) { const epoch = capturePrivateEpoch();
+  if (!p || !isOwner()) return { has: false, here: false };
+  try {
+    const local = p.uploaded ? true : (await privateAwait(localPdfGet(p.id), epoch)) instanceof Blob;
+    const kept = local ? true : !!(await privateAwait(keptCopy(p), epoch));
+    return { has: !!(local || kept || pdfSourceOf(p)), here: !!(local || kept) };
+  } catch (e) { return { has: !!p.uploaded || !!pdfSourceOf(p), here: !!p.uploaded }; }
+}
+function paperDownloadButton(p) {
+  return `<button type="button" class="pd-act pd-dl" id="paperDownload" data-pid="${dataAttr(p.id)}" aria-label="Download" title="Download" aria-haspopup="menu" aria-expanded="false" onclick="event.stopPropagation();paperDownloadMenu(this,'${escAttr(p.id)}').catch(()=>{})"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button>`;
+}
+let _dlDotSeq = 0;
+async function paperDownloadDot() {
+  const b = document.getElementById('paperDownload'); if (!b) return;
+  const id = b.dataset.pid, seq = ++_dlDotSeq, epoch = capturePrivateEpoch();
+  let info;
+  try { info = await privateAwait(dlInfo(findPaper(id)), epoch); } catch (e) { return; }
+  const now = document.getElementById('paperDownload');
+  if (seq !== _dlDotSeq || !now || now.dataset.pid !== id) return;
+  now.classList.toggle('kept', info.here);
+  if (Dl.id === id) { Dl.info = info; dlMenuSync(); }
+}
 function keptActionLabel(p) {
   if (!p || !keptOn() || p.uploaded || p._goneRemote || keptInSet(p)) return '';
   return keptHand(p.id) ? 'Remove from this device' : pdfSourceOf(p) && !isHiddenRow(p) && !isPassed(p) ? 'Keep on this device' : '';
 }
-function keptPaperControl(p) {
-  return keptActionLabel(p) ? `<button type="button" class="pd-act" id="paperKeepMore" aria-label="More" aria-haspopup="menu" aria-expanded="false" onclick="event.stopPropagation();keptPaperMenu(this,'${escAttr(p.id)}')"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>` : '';
-}
 function keptPaperClose() {
+  if (Dl.mq) { Dl.mq.removeEventListener('change', keptPaperClose); Dl.mq = null; }
   const menu = document.getElementById('keptPaperMenu'); if (menu) menu.remove();
-  const button = document.getElementById('paperKeepMore'); if (button) button.setAttribute('aria-expanded', 'false');
+  const button = document.getElementById('paperDownload'); if (button) button.setAttribute('aria-expanded', 'false');
 }
-function keptPaperMenu(button, id) {
+function dlMenuHTML(p) {
+  const info = Dl.info || { has: false, here: false }, ios = dlIOS(), off = !info.has || !!Dl.busy;
+  const item = (kind, label, small) => {
+    if (Dl.ready && Dl.ready.kind === kind) return `<button type="button" class="dl-item dl-go" role="menuitem" data-kind="${kind}" onclick="event.stopPropagation();paperDownloadHandoff()">${DL_ICON}<span>${Dl.ready.mode === 'open' ? 'Open PDF' : 'Save'}</span></button>`;
+    return `<button type="button" class="dl-item" role="menuitem" data-kind="${kind}"${off ? ' disabled' : ''} onclick="event.stopPropagation();paperDownloadGo('${kind}').catch(()=>{})">${DL_ICON}<span>${Dl.busy === kind ? 'Preparing…' : label}<small>${esc(small)}</small></span></button>`;
+  };
+  let h = item('plain', ios ? 'Save PDF to Files' : 'Download PDF', 'The paper as published') + item('annotated', ios ? 'Save your copy to Files' : 'Download your copy', 'With your notes, highlights and writing');
+  if (!info.has) h += '<p class="dl-note">This paper has no open PDF</p>';
+  if (Dl.failed) h += "<p class=\"dl-note dl-bad\" role=\"status\">Couldn't download this paper. Try again.</p>";
+  const keep = keptActionLabel(p), foot = (info.here ? `<div class="dl-foot">On this ${esc(copyDeviceName())}, opens offline</div>` : '') + (keep ? `<button type="button" class="dl-item dl-noico dl-keep" role="menuitem" onclick="event.stopPropagation();keptPaperAction(this.closest('#keptPaperMenu').dataset.id)"><span>${esc(keep)}</span></button>` : '');
+  h += (foot ? '<div class="dl-sep"></div>' + foot : '<div class="dl-sep dl-hidesep"></div>');
+  const hid = isHiddenRow(p);
+  h += `<button type="button" class="dl-item dl-noico dl-hide" role="menuitem" onclick="event.stopPropagation();keptPaperClose();${hid ? 'unhidePaper' : 'askHide'}('${escAttr(paperKey(p))}')"><span>${hid ? 'Restore paper' : 'Hide paper'}</span></button>`;
+  return h;
+}
+function dlMenuSync() {
+  const m = document.getElementById('keptPaperMenu'); if (!m) return;
+  const p = findPaper(m.dataset.id), body = m.querySelector('.dl-body');
+  if (!p || !body) { keptPaperClose(); return; }
+  if (Dl.ready && !copySnapshotCurrent(Dl.ready.file._copySnapshot)) Dl.ready = null;   // the notes changed or were locked since
+  const html = dlMenuHTML(p);
+  if (m._html !== html) { m._html = html; body.innerHTML = html; }
+}
+async function paperDownloadMenu(button, id) {
   const open = document.getElementById('keptPaperMenu');
   closePopovers();
-  const p = findPaper(id), label = keptActionLabel(p);
-  if (open || !label || !_paperViewActive) return;
-  const menu = document.createElement('div');
-  menu.id = 'keptPaperMenu'; menu.className = 'kept-paper-menu'; menu.setAttribute('role', 'menu'); menu.dataset.id = id;
-  menu.innerHTML = `<button type="button" role="menuitem" onclick="event.stopPropagation();keptPaperAction(this.parentElement.dataset.id)">${esc(label)}</button>`;
-  document.body.appendChild(menu); button.setAttribute('aria-expanded', 'true'); placeFixedMenu(menu, button.getBoundingClientRect());
+  if (open || !_paperViewActive) return;
+  requireOwner();
+  const p = findPaper(id), epoch = capturePrivateEpoch(); if (!p) return;
+  const info = await privateAwait(dlInfo(p), epoch);
+  if (!_paperViewActive || !button.isConnected || document.getElementById('keptPaperMenu')) return;
+  if (Dl.id !== id) { Dl.id = id; Dl.op++; Dl.busy = ''; Dl.ready = null; }
+  Dl.failed = false;
+  if (Dl.ready && !copySnapshotCurrent(Dl.ready.file._copySnapshot)) Dl.ready = null;
+  Dl.info = info;
+  const phone = dlPhone(), menu = document.createElement('div');
+  menu.id = 'keptPaperMenu'; menu.dataset.id = id;
+  if (phone) {
+    menu.className = 'dl-sheet'; menu.setAttribute('role', 'dialog'); menu.setAttribute('aria-label', 'Download');
+    menu.innerHTML = '<div class="dl-panel"><span class="dl-grip" aria-hidden="true"></span><div class="dl-body"></div><button type="button" class="dl-cancel" onclick="keptPaperClose()">Cancel</button></div>';
+    menu.onclick = e => { if (e.target === menu) keptPaperClose(); };
+  } else { menu.className = 'dl-menu'; menu.setAttribute('role', 'menu'); menu.innerHTML = '<div class="dl-body"></div>'; }
+  document.body.appendChild(menu); dlMenuSync(); button.setAttribute('aria-expanded', 'true');
+  Dl.mq = window.matchMedia('(max-width: 600px)'); Dl.mq.addEventListener('change', keptPaperClose);   // crossing the phone line closes it: it has the other layout
+  if (!phone) placeFixedMenu(menu, button.getBoundingClientRect());
 }
 async function keptPaperAction(id) {
   keptPaperClose();
   if (!keptActionLabel(findPaper(id))) return false;
   return keptHand(id) ? keptRemove(id) : keptKeep(id);
 }
+/* The bytes of one kind of copy as a file named like the folder copies: the paper as it came (a file dropped in, a kept
+   copy, then the network, as the reader looks), or the paper with the full verified notes, as the your-copy pipeline builds it */
+async function dlPrepare(id, kind) { const epoch = capturePrivateEpoch();
+  const snapshot = await privateAwait(copySnapshot(id, kind), epoch);
+  const bytes = kind === 'plain' ? snapshot.sourceBytes : (await privateAwait(buildCopy(snapshot), epoch)).bytes;
+  if (!copySnapshotCurrent(snapshot)) throw Error('copy_stale');
+  const file = new File([bytes], copyFileName(id, kind), { type: 'application/pdf' });
+  file._copySnapshot = snapshot;
+  return file;
+}
+function dlLink(file, blank) {
+  const url = URL.createObjectURL(file); CopyState.urls.add(url);
+  const a = document.createElement('a'); a.href = url; a.download = file.name; a.rel = 'noopener'; a.style.display = 'none';
+  if (blank) a.target = '_blank';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => { URL.revokeObjectURL(url); CopyState.urls.delete(url); }, 60000);
+}
+function dlFail(show) {
+  if (!show) return;
+  if (document.getElementById('keptPaperMenu')) { Dl.failed = true; dlMenuSync(); } else toastError("Couldn't download this paper. Try again.");
+}
+async function paperDownloadGo(kind) {
+  const id = Dl.id, p = findPaper(id);
+  if (!p || Dl.busy || !['plain', 'annotated'].includes(kind)) return;
+  requireOwner();
+  const epoch = capturePrivateEpoch(), op = ++Dl.op, gen = Dl.gen, live = () => op === Dl.op;
+  Dl.busy = kind; Dl.failed = false; Dl.ready = null; dlMenuSync();
+  const idle = () => { if (live()) { Dl.busy = ''; dlMenuSync(); } };
+  try {
+    if (kind === 'annotated') {
+      if (!copyNotesUnlocked()) keptPaperClose();   // the password step shows over the page
+      if (!await privateAwait(requireDeviceSetup('notes'), epoch)) { idle(); return; }
+      await privateAwait(copyFlushEditors(), epoch);
+    }
+    const file = await privateAwait(dlPrepare(id, kind), epoch);
+    if (gen !== Dl.gen) return;   // locked or signed out while it was prepared
+    if (!dlIOS()) { dlLink(file, false); if (live()) { Dl.busy = ''; keptPaperClose(); } return; }
+    let how = 'open';
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      how = 'done';
+      try { await privateAwait(navigator.share({ files: [file] }), epoch); }
+      catch (e) { checkPrivateEpoch(epoch); how = e && e.name === 'AbortError' ? 'quiet' : e && e.name === 'NotAllowedError' ? 'save' : 'fail'; }
+    }
+    if (how === 'fail') throw Error('dl_share');
+    if (!live()) return;
+    Dl.busy = '';
+    if (how === 'save' || how === 'open') Dl.ready = { kind, file, mode: how === 'open' ? 'open' : 'share' };
+    if (how === 'done') keptPaperClose(); else dlMenuSync();
+  } catch (e) {
+    idle();
+    try { checkPrivateEpoch(epoch); } catch (x) { return; }
+    if (kind === 'annotated' && !copyNotesUnlocked()) return;   // locked meanwhile: the password is asked again next time
+    dlFail(live());
+  }
+}
+/* The second tap: sharing needs a fresh one when preparing took long */
+function paperDownloadHandoff() {
+  const r = Dl.ready; if (!r || Dl.sending) return;
+  const epoch = capturePrivateEpoch();
+  try { requireOwner(); if (!copySnapshotCurrent(r.file._copySnapshot)) throw Error('copy_stale'); } catch (e) { Dl.ready = null; dlFail(true); dlMenuSync(); return; }
+  if (r.mode === 'open') { dlLink(r.file, true); Dl.ready = null; keptPaperClose(); return; }
+  Dl.sending = true;
+  let sent; try { sent = navigator.share({ files: [r.file] }); } catch (e) { sent = Promise.reject(e); }
+  Promise.resolve(sent).then(() => { Dl.ready = null; keptPaperClose(); }, e => {
+    try { checkPrivateEpoch(epoch); } catch (x) { return; }
+    if (!(e && e.name === 'AbortError')) { Dl.ready = null; dlFail(true); }
+  }).finally(() => { Dl.sending = false; dlMenuSync(); });
+}
 function keptMenuSync() {
   const b = document.getElementById('readerKeep');
   if (b) { const label = keptActionLabel(_reader.paper); b.textContent = label; b.hidden = !label; }
-  const page = document.querySelector('#paperDetail [data-pid]'), control = document.getElementById('paperKeepControl');
-  if (page && control) { control.innerHTML = keptPaperControl(findPaper(page.dataset.pid)); control.hidden = !control.innerHTML; }
-  keptPaperClose();
+  paperDownloadDot().catch(() => {}); dlMenuSync();
 }
 async function keptToggle() {
   const p = _reader.paper;
@@ -17247,7 +17404,7 @@ async function afterUnlock(candidateKey) { const _authEpoch = capturePrivateEpoc
   copyRemoteIndex().catch(privateCallback(() => {}));
   setTimeout(privateCallback(() => reconcileNotesIndex().catch(privateCallback(() => {}))), 3000);   // after the page has what it needs
 }
-async function lockNotes() { const _authEpoch = capturePrivateEpoch(); requireOwner();
+async function lockNotes() { const _authEpoch = capturePrivateEpoch(); requireOwner(); dlReset();
   if (Ink.cancelGesture) Ink.cancelGesture(); await privateAwait(flushInk(), _authEpoch);
   if (_hw) await privateAwait(saveHandwritten(), _authEpoch);
   // A half-unlocked state (a key without its metadata, or not ready) cannot capture or save a chat at all: what is in memory is
@@ -21814,12 +21971,12 @@ function paperPageHTML(p, opts) {
   const bar = `<div class="pd-bar"><div class="pd-bar-inner">
     ${showBack ? `<button class="pd-back" onclick="paperBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg><span class="pd-back-label">Back</span></button>` : ''}
     <div class="pd-bar-title" aria-hidden="true">${esc(p.title)}</div>
-    <div class="pd-actions">
+    <div class="pd-actions${isOwner() && !gone ? ' has-dl' : ''}">
       ${navHTML}
       <button class="pd-act ${ir?'on-read':''}" data-act="read" aria-pressed="${ir}" onclick="toggleRead('${ka}',this)" title="${ir?'Mark unread':'Mark as read'}" aria-label="${ir?'Mark unread':'Mark as read'}"${gone ? ' disabled' : ''}>&#10003;<span class="pd-act-label"><span>${ir?'Read':'Mark read'}</span></span></button>
       <span class="save-anchor"><button class="pd-act ${inAny?'on-list':''}" data-act="list" aria-haspopup="true" aria-expanded="false" onclick="event.stopPropagation();openSaveTo(event,this,'${ka}')" title="Save to a list or To read" aria-label="${inAny ? 'Saved. Change where' : 'Save to a list or To read'}"${gone ? ' disabled' : ''}>${FEED_ICON.save}<span class="pd-act-label"><span>${inAny?'Saved':'Save'}</span></span></button></span>
-      <button class="pd-act" data-act="${isHiddenRow(p) ? 'restore' : 'hide'}" onclick="${isHiddenRow(p) ? 'unhidePaper' : 'hidePaper'}('${ka}')" title="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper (restore it from Lists)'}" aria-label="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper'}"${gone ? ' disabled' : ''}><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${isHiddenRow(p) ? '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg><span class="pd-act-label"><span>${isHiddenRow(p) ? 'Restore' : 'Hide'}</span></span></button>
-      ${isOwner() && !gone ? `<span id="paperKeepControl" hidden></span>` : ''}
+      <button class="pd-act" data-act="${isHiddenRow(p) ? 'restore' : 'hide'}" onclick="${isHiddenRow(p) ? 'unhidePaper' : 'askHide'}('${ka}')" title="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper (restore it from Lists)'}" aria-label="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper'}"${gone ? ' disabled' : ''}><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${isHiddenRow(p) ? '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg><span class="pd-act-label"><span>${isHiddenRow(p) ? 'Restore' : 'Hide'}</span></span></button>
+      ${isOwner() && !gone ? paperDownloadButton(p) : ''}
       ${isOwner() && isPassed(p) ? `<button class="pd-act pd-passed" data-act="unpass" onclick="unpassPaper('${ka}')" title="You passed on it in For you. Put it back there" aria-label="Passed. Put it back in For you"${gone ? ' disabled' : ''}>&#10005;<span class="pd-act-label"><span>Passed &middot; Put back</span></span></button>` : ''}
       ${isOwner() || pdfSourceOf(p) ? `<button class="pd-read" onclick="openReader('${ka}')" title="${pdfSourceOf(p) ? 'Read the PDF here' : conferenceCopyUrl(p) ? 'Read the free copy on the conference site' : 'Add a PDF to read it here'}"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>${readLabelHTML(p)}</button>` : ''}
       ${paperOpenUrl(p) ? `<a class="pd-open" href="${dataAttr(paperOpenUrl(p))}" target="_blank" rel="noopener" title="${dataAttr(paperOpenTitle(p))}" aria-label="Open paper"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}
@@ -23134,7 +23291,7 @@ Config.startup = bootstrapApp();
 
 /* ===== MY COPY: device setup, delivery adapters and reader eye ===== */
 const DeviceSetup = {open:false,submitting:false,bypass:false,notesDone:false,resolve:null,started:false,loading:false,action:null};
-const CopyState = {prefs:{plain:true,annotated:true,notesDone:false,folderDone:false},loaded:null,helper:null,helperState:'unavailable',session:null,queue:null,worker:null,timer:0,poll:0,serial:0,urls:new Set(),share:null,shareFiles:null,message:'',receipts:new Map(),lastSource:new Map(),sources:new Map(),notes:new Map(),revisions:new Map(),workerReject:null,buildTail:Promise.resolve(),leaseTimer:0,uploads:new Set(),offline:new Set(),remoteWork:null,opening:null,retryAt:0,controllers:new Set(),activeId:null,unlockPending:false};
+const CopyState = {prefs:{plain:true,annotated:true,notesDone:false,folderDone:false},loaded:null,helper:null,helperState:'unavailable',session:null,queue:null,worker:null,timer:0,poll:0,serial:0,urls:new Set(),share:null,shareFiles:null,message:'',receipts:new Map(),lastSource:new Map(),sources:new Map(),notes:new Map(),revisions:new Map(),workerReject:null,buildTail:Promise.resolve(),leaseTimer:0,uploads:new Set(),offline:new Set(),remoteWork:null,opening:null,retryAt:0,controllers:new Set(),activeId:null,unlockPending:false,installOpen:false};
 let ReaderNotesVisible = true;
 const COPY_HELPER = 'http://127.0.0.1:7823';
 function copyDeviceName() { return /iPhone|iPod/.test(navigator.userAgent+' '+navigator.platform) ? 'iPhone' : /iPad/.test(navigator.userAgent+' '+navigator.platform) || navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform) ? 'iPad' : /Mac/.test(navigator.platform) ? 'Mac' : 'computer'; }   /* only a Mac has the folder helper */
@@ -23212,18 +23369,20 @@ function renderCopySettings(){requireOwner();const device=copyDeviceName(),mobil
  const button=(label,fn,disabled=false)=>`<button class="ui-btn ui-btn-secondary" onclick="${fn}"${disabled?' disabled':''}>${label}</button>`;
  const toggle=(k,label)=>`<button class="copy-switch" role="switch" aria-label="${label}" aria-checked="${!!CopyState.prefs[k]}" onclick="copySetSwitch('${k}',${!CopyState.prefs[k]})"></button>`;
  const papers=copyPapers().filter(copyEligible),offline=papers.filter(p=>CopyState.offline.has(p.id)).length;
- let saving=mobile?row('Kept inside Scout',offline+' papers, open offline'):row('Folder',esc(h?.folderLabel||'Documents / Scout'),button('Change','copyChangeFolder()',copyMoving()));
- saving+=row('Plain PDFs',mobile?'':'The paper as published',toggle('plain','Plain PDFs'))+row('Your copies',mobile?'':'The paper with your notes, highlights and writing on it',toggle('annotated','Your copies'));
- if(mobile&&device==='computer')saving+=row('Saving to a folder','Available on a Mac');
+ if(CopyState.helperState==='ready')CopyState.installOpen=false;
+ const away=!mobile&&CopyState.helperState!=='ready'&&!copyMoving(),hs=CopyState.helperState;
+ let saving=mobile?row('Kept inside Scout',offline+' papers, open offline'):away?row(hs==='old'?"Update Scout's Mac helper":'Save to a folder on this Mac','Every saved paper, plain and with your notes, in Documents / Scout',button(hs==='unpaired'?'Connect':'Set up',hs==='unpaired'?'copyHelperConnect()':'copyHelperSetup()'))+(CopyState.installOpen&&hs!=='unpaired'?`<div class="copy-inst" id="copyInstall"><p>${hs==='old'?'Run the install command from your Scout board in Notion again in Terminal, then tap Try again.':'This needs a one-time install on this Mac. Paste the install command from your Scout board in Notion into Terminal, then tap Try again.'}</p><div><button type="button" class="ui-btn ui-btn-secondary" onclick="copyHelperRetry()">Try again</button></div></div>`:''):row('Folder',esc(h?.folderLabel||'Documents / Scout'),button('Change','copyChangeFolder()',copyMoving()));
+ if(!away)saving+=row('Plain PDFs',mobile?'':'The paper as published',toggle('plain','Plain PDFs'))+row('Your copies',mobile?'':'The paper with your notes, highlights and writing on it',toggle('annotated','Your copies'));
+ if(away){}
+ else if(mobile&&device==='computer')saving+=row('Saving to a folder','Available on a Mac');
  else if(mobile){const sh=CopyState.share,ready=sh?.ready;
  saving+=row('Save all to Files','Opens the share sheet once for every paper',button(ready?(sh.state.cursor?'Save next':'Save'):'Save',ready?'copyShareHandoff()':'copyShareStart()',!copyKinds().length||!!sh?.busy||!!ready&&!(navigator.canShare&&navigator.canShare({files:CopyState.shareFiles}))));
  if(sh?.state.ids.length)saving+=row('Your papers stay in Scout',Math.min(sh.state.cursor+1,sh.state.ids.length)+' of '+sh.state.ids.length,button('Cancel','copyShareCancel()'));
  if(CopyState.shareFiles&&!(navigator.canShare&&navigator.canShare({files:CopyState.shareFiles})))saving+=row('Open each PDF to save a copy','',CopyState.shareFiles.map((f,i)=>button('Open PDF','copyOpenPDF('+i+')')).join(''));
  }else if(copyMoving()){const int=v=>Math.max(0,Math.min(1e9,Math.trunc(Number(v))||0)),done=int(op.done),total=int(op.total);saving+=row(op.state==='paused'?"Couldn't finish moving your papers. Your files are safe.":'Moving your papers to the new folder',`${done} of ${total}<div class="copy-progress"><i style="width:${total?Math.max(0,Math.min(100,done/total*100)):0}%"></i></div>`,op.state==='paused'?button('Try again','copyTryAgain()'):'');}
-  else if(CopyState.helperState!=='ready')saving+=`<div class="copy-item">${copyHelperLine()}</div>`;
- else {const enabled=copyKinds(),saved=papers.filter(p=>enabled.length&&enabled.every(k=>CopyState.revisions.has(p.id+':'+k)&&CopyState.receipts.get(p.id+':'+k)?.revision===CopyState.revisions.get(p.id+':'+k))).length;
+  else {const enabled=copyKinds(),saved=papers.filter(p=>enabled.length&&enabled.every(k=>CopyState.revisions.has(p.id+':'+k)&&CopyState.receipts.get(p.id+':'+k)?.revision===CopyState.revisions.get(p.id+':'+k))).length;
  saving+=row(CopyState.message||(!enabled.length?'':saved===papers.length?`${saved} papers saved, up to date`:'Saving your papers'),CopyState.message?'':saved===papers.length?'':saved+' of '+papers.length,CopyState.message?button('Try again','copyTryAgain()'):'');}
- if(h?.refused&&!mobile&&CopyState.helperState==='ready')saving+=row("That folder can't be used. Choose a different one.",'',button('Change','copyChangeFolder()',copyMoving()));
+ if(!away&&h?.refused&&!mobile&&CopyState.helperState==='ready')saving+=row("That folder can't be used. Choose a different one.",'',button('Change','copyChangeFolder()',copyMoving()));
  const unlocked=copyNotesUnlocked();
  document.getElementById('copySettings').innerHTML=`<button class="copy-back" onclick="copySettingsBack()" aria-label="Back">&#8249; &nbsp; Settings</button><div class="copy-group"><div class="copy-gh">Saving papers</div>${saving}</div><div class="copy-group"><div class="copy-gh">Notes</div>${row(unlocked?'Unlocked on this '+device:'Notes are locked on this device',unlocked&&!mobile?'Notes and saved chats open without the password':'',button(unlocked?'Lock':'Unlock',unlocked?'copySettingsLock()':'copySettingsUnlock()'))}</div>`;
 }
@@ -23257,7 +23416,9 @@ async function copyChangeFolder(){if(copyMobile())return;if(CopyState.helperStat
  try{await privateAwait(copiesJSON('/copies/folder',{action:'choose',expectedGeneration:CopyState.helper.generation}),epoch);await copyHelperRetry();}
  catch(e){checkPrivateEpoch(epoch);CopyState.message="Couldn't finish moving your papers. Your files are safe.";renderCopySettingsIfOpen();}
 }
-function copyHelperSetup(){requireOwner();if(copyMobile())return;const existing=document.getElementById('copyInstall');if(existing){existing.scrollIntoView({block:'nearest'});return;}const step=DeviceSetup.open?document.getElementById('copySetupHelper'):document.getElementById('copySettings');
+function copyHelperSetup(){requireOwner();if(copyMobile())return;const existing=document.getElementById('copyInstall');if(existing){existing.scrollIntoView({block:'nearest'});return;}
+ if(!DeviceSetup.open){CopyState.installOpen=true;if(currentTab==='settings'){renderCopySettings();const own=document.getElementById('copyInstall');if(own)own.scrollIntoView({block:'nearest'});}return;}
+ const step=document.getElementById('copySetupHelper');
  if(!step)return;step.insertAdjacentHTML('beforeend',`<div class="copy-step" id="copyInstall"><p>Scout's Mac helper needs a one-time install on this Mac. Paste the install command from your Scout board in Notion into Terminal, then tap Try again.</p><div><button type="button" class="ui-btn ui-btn-secondary" onclick="copyHelperRetry()">Try again</button></div></div>`);
 }
 async function copyHelperConnect(){const epoch=capturePrivateEpoch();try{const code=String(Math.floor(1000+Math.random()*9000));toast('Approve this code on your Mac: '+code,null,{duration:60000});const pair=await privateAwait(copiesJSON('/pair',{code}),epoch);if(typeof pair.token!=='string'||!pair.token)throw Error('copy_pair');privateSet('claude_bridge_local_token',pair.token);await copyHelperRetry();}catch(e){checkPrivateEpoch(epoch);CopyState.helperState='unpaired';renderCopySettingsIfOpen();}}
@@ -23338,10 +23499,10 @@ function copyOpenPDF(i){const file=CopyState.shareFiles?.[i];if(!file||!copySnap
 async function saveMyCopy(){const owner=captureNotesOwner(),id=_reader.paper?.id;if(id&&copyDeviceName()==='computer'){toast('Saving copies to a folder is available on a Mac.');return;}if(!id||!copyKinds().length||!await requireDeviceSetup('save')||!owner.current())return;await copyFlushEditors();if(copyMobile()){await copyShareStart([id],true);if(CopyState.share?.ready&&navigator.canShare?.({files:CopyState.shareFiles})){const epoch=capturePrivateEpoch();if(await privateAwait(showConfirm('Your copy is ready','Open the share sheet to save this paper.','Save'),epoch))return copyShareHandoff();copyShareCancel();}else location.hash='settings';return;}
  try{for(const kind of copyKinds()){const s=await copySnapshot(id,kind),snapshot={...s,manual:true},r=await buildCopy(snapshot);await deliverCopy(r,snapshot);}await copyCloseSession();toast('Your copy is saved');}catch(e){CopyState.message="Couldn't save this paper. Your notes are safe.";toastError(CopyState.message);}}
 function copyCancelDerived(){for(const c of CopyState.controllers)c.abort();CopyState.controllers.clear();CopyState.activeId=null;CopyState.serial++;CopyState.buildTail=Promise.resolve();CopyState.opening=null;clearTimeout(CopyState.timer);CopyState.queue?.cancel();CopyState.workerReject?.(Error('copy_cancelled'));CopyState.workerReject=null;CopyState.worker?.terminate();CopyState.worker=null;CopyState.share?.invalidate();CopyState.shareFiles=null;for(const url of CopyState.urls)URL.revokeObjectURL(url);CopyState.urls.clear();copyCloseSession().catch(()=>{});}
-function copySourceChanged(id){if(CopyState.activeId===id)copyCancelDerived();if(/^up-/.test(id))CopyState.uploads.add(id);CopyState.sources.set(id,(CopyState.sources.get(id)||0)+1);for(const k of ['plain','annotated'])CopyState.revisions.delete(id+':'+k);if(CopyState.shareFiles?.some(f=>f._copySnapshot.id===id)){CopyState.share?.invalidate();CopyState.shareFiles=null;}if(currentTab==='settings')copyRefreshAvailability().catch(privateCallback(()=>{}));copiesSoon();}
+function copySourceChanged(id){paperDownloadDot().catch(()=>{});if(CopyState.activeId===id)copyCancelDerived();if(/^up-/.test(id))CopyState.uploads.add(id);CopyState.sources.set(id,(CopyState.sources.get(id)||0)+1);for(const k of ['plain','annotated'])CopyState.revisions.delete(id+':'+k);if(CopyState.shareFiles?.some(f=>f._copySnapshot.id===id)){CopyState.share?.invalidate();CopyState.shareFiles=null;}if(currentTab==='settings')copyRefreshAvailability().catch(privateCallback(()=>{}));copiesSoon();}
 async function copyErase(){copyCancelDerived();await copyDB('prefs','readwrite',st=>st.clear());await copyDB('receipts','readwrite',st=>st.clear());}
 function copyEraseDatabase(){return new Promise(resolve=>{let r;try{r=indexedDB.deleteDatabase('scholar_mycopy');}catch(e){resolve(false);return;}r.onsuccess=()=>resolve(true);r.onerror=()=>resolve(false);});}
-function copyTeardown(){copyCancelDerived();clearTimeout(CopyState.poll);CopyState.unlockPending=false;CopyState.loaded=null;CopyState.helper=null;CopyState.helperState='unavailable';CopyState.queue=null;CopyState.receipts.clear();CopyState.lastSource.clear();CopyState.sources.clear();CopyState.notes.clear();CopyState.revisions.clear();CopyState.uploads.clear();CopyState.offline.clear();CopyState.remoteWork=null;CopyState.prefs={plain:true,annotated:true,notesDone:false,folderDone:false};DeviceSetup.started=false;DeviceSetup.submitting=false;if(DeviceSetup.open)closeVaultModal(false);document.getElementById('copySettings').replaceChildren();}
+function copyTeardown(){dlReset();copyCancelDerived();clearTimeout(CopyState.poll);CopyState.unlockPending=false;CopyState.installOpen=false;CopyState.loaded=null;CopyState.helper=null;CopyState.helperState='unavailable';CopyState.queue=null;CopyState.receipts.clear();CopyState.lastSource.clear();CopyState.sources.clear();CopyState.notes.clear();CopyState.revisions.clear();CopyState.uploads.clear();CopyState.offline.clear();CopyState.remoteWork=null;CopyState.prefs={plain:true,annotated:true,notesDone:false,folderDone:false};DeviceSetup.started=false;DeviceSetup.submitting=false;if(DeviceSetup.open)closeVaultModal(false);document.getElementById('copySettings').replaceChildren();}
 window.addEventListener('online',()=>{if(isOwner())copiesSoon(0);});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isOwner()){copiesSoon(0);if(!copyMobile()&&currentTab==='settings')copyHelperRetry().catch(()=>{});}});
 /* ===== END MY COPY ===== */
@@ -23447,7 +23608,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
     };
   };
   ALWAYS.push('requireDeviceSetup', 'submitDeviceSetup', 'copySettingsBack', 'copySetSwitch', 'copyChangeFolder', 'copyHelperSetup', 'copyHelperRetry', 'copyHelperConnect', 'copyTryAgain', 'copySettingsUnlock', 'copySettingsLock', 'saveMyCopy', 'copyShareStart', 'copyShareHandoff', 'copyShareCancel', 'copyOpenPDF', 'toggleReaderNotesVisible', 'setReaderNotesVisible');
-  ALWAYS.push('keptToggle', 'keptKeep', 'keptRemove', 'keptReconcile', 'keptPaperMenu', 'keptPaperAction');   // PDFs kept on this device (offline reading)
+  ALWAYS.push('keptToggle', 'keptKeep', 'keptRemove', 'keptReconcile', 'paperDownloadMenu', 'paperDownloadGo', 'paperDownloadHandoff', 'keptPaperAction');   // PDFs kept on this device (offline reading)
   ALWAYS.forEach(n => wrap(n));
   Object.entries(WHEN).forEach(([n, ok]) => wrap(n, ok));
   const bf = window.bridgeFetch;   // every request to the laptop goes through here
