@@ -2560,6 +2560,22 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 .library-list-empty { padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px; font-style: italic; }
 .library-list-empty .lib-hint-btn { min-height: 44px; margin-top: 8px; padding: 0 16px; font-style: normal; }   /* Show all papers: a 44 px target (Sol's review #7) */
 
+/* Similar papers: one ranked list, with library papers tagged. */
+.similar-list { border-top: 1px solid var(--border); }
+.similar-row { display: flex; gap: 12px; align-items: flex-start; padding: 13px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.similar-main { flex: 1; min-width: 0; }
+.similar-title { display: block; color: var(--text); font: inherit; font-weight: 600; line-height: 1.4; text-align: left; background: none; border: 0; padding: 0; text-decoration: none; overflow-wrap: anywhere; cursor: pointer; }
+.similar-title:hover { text-decoration: underline; }
+.similar-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; color: var(--text-muted); font-size: 12px; margin-top: 5px; }
+.similar-close { font-weight: 650; }
+.similar-close[data-level="very"] { color: #e98680; }
+.similar-close[data-level="close"] { color: #d99b4c; }
+.similar-library { border: 0; border-radius: 999px; padding: 2px 8px; background: var(--accent-dim); color: var(--accent); font: inherit; cursor: pointer; }
+.similar-add { flex: none; white-space: nowrap; font-size: 12px; padding: 0 10px; }
+.similar-more { border: 0; background: none; color: var(--accent); font: inherit; font-size: 13px; font-weight: 600; margin-top: 12px; padding: 6px 0; cursor: pointer; }
+.similar-state { display: flex; gap: 8px; align-items: center; color: var(--text-muted); font-size: 13px; }
+.similar-spinner { width: 12px; height: 12px; flex: none; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; }
+
 /* Private upload pages and their status lines, on phones as well as the desktop. */
 .upload-brief-state { color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-top: 7px; overflow-wrap: anywhere; }
 .upload-brief-state:empty { display: none; }
@@ -4285,7 +4301,9 @@ function privatePathCap(path) {
   if (/^briefs\/[a-z0-9][a-z0-9-]{0,199}\.json$/.test(path) && !path.startsWith('briefs/up-')) return 64 * 1024;   // one paper's answers
   if (path === 'taste.json') return 4 * 1024 * 1024;   // Phase 25b: private worker output, read only
   if (path === 'activity.json') return 64 * 1024;   // Phase 16: Claude's weekly note (ACTIVITY_FILE), read only
-  if (/^requests\/[0-9a-f]{32}(?:\.stop|\.status)?\.json$/.test(path)) return 8 * 1024;   // Phase 24: a request, its stop, its status
+  if (path === 'seal/arrakis.json') return 4096;
+  if (/^requests\/[0-9a-f]{32}\.status\.json$/.test(path)) return 64 * 1024;
+  if (/^requests\/[0-9a-f]{32}(?:\.stop)?\.json$/.test(path)) return 40 * 1024;   // Phase 24: a request, its stop, its status
   throw new Error('Private repository path is not allowed');
 }
 /* superseded: for a load, true once a newer result was accepted or staged since it began. Its failures then neither
@@ -10566,6 +10584,17 @@ function paperArxivId(p) {
   const u = String(p.url || '').match(/arxiv\.org\/(?:abs|pdf|html)\/([a-z.-]+\/\d{7}|\d{4}\.\d{4,5})/i), id = String(p.arxiv_id || '').trim().toLowerCase().replace(/^arxiv:/, '').replace(/v\d+$/, '');
   return id || (u ? u[1].toLowerCase() : '');
 }
+/* The existing-paper action is shared with Similar papers, including membership checks and Undo. */
+function listAddExisting(n, hit, say) {
+  requireOwner();
+  const k = paperKey(hit);
+  if (!listDestOK(n)) { say(goneMessage(n)); return false; }
+  if (isHiddenRow(hit)) { say('That paper is hidden. Restore it in Lists to read it here.'); return false; }
+  if (listHolds(n, k)) { say(`It is already in ${esc(n)}.`); return false; }
+  if (!listSet(n, k, true)) return false;
+  listShowChange(k, n); listToast(n, k, true);
+  return true;
+}
 async function listAddSubmit() { const _authEpoch = capturePrivateEpoch();
   requireOwner();
   const ed = Feed.ladd, input = document.getElementById('listAddInput'), n = Feed.project;
@@ -10577,13 +10606,8 @@ async function listAddSubmit() { const _authEpoch = capturePrivateEpoch();
   if (!listDestOK(n)) { say(goneMessage(n)); return false; }
   const hit = listPaperFor(text);
   if (hit) {
-    const k = paperKey(hit);
-    if (isHiddenRow(hit)) { say('That paper is hidden. Restore it in Lists to read it here.'); return false; }
-    if (listHolds(n, k)) { say(`It is already in ${esc(n)}.`); return false; }
-    listSet(n, k, true);
-    listAddEnd(false);
-    listRelist();
-    listToast(n, k, true);
+    if (!listAddExisting(n, hit, say)) return false;
+    listAddEnd(false); listRelist();
     return true;
   }
   if (AddPaper.job && AddPaper.job.state === 'running') { say('Scout is adding another paper. Try again once it is in.'); return false; }
@@ -10652,7 +10676,7 @@ function listAddSettle() {
         return left.length > 0;
       } : null, { duration: 6000, fullTarget: true });
     } finally { delete pend.settling; }
-  } } finally { ListAdd.settling = false; }
+  } } finally { ListAdd.settling = false; similarPaint(); }
 }
 
 /* ---- each list's interest (section D, Sol's correction 8) ----
@@ -11950,7 +11974,7 @@ function searchRepaint(k, what) {
 }
 /* Every view that shows marks follows a change: the feed's sheet, records and presses, a paper page's bar and the open
    picker. Called wherever feedSync was: the lists read (bootstrapStateFromCSV) and every save bar (showSaveBar). */
-function viewsSync() { listOpsWatch(); listAddSettle(); feedSync(); paperBarSync(); saveDDSync(); }
+function viewsSync() { similarPaint(); listOpsWatch(); listAddSettle(); feedSync(); paperBarSync(); saveDDSync(); }
 /* One paper's rows under `root` drawn again in place from the row as it is now (Library's rows, a page's related papers,
    search results), focus kept with the row */
 function rowsSync(root, k) {
@@ -12732,14 +12756,14 @@ function requestBody(r) {
 }
 function requestLive(r) { return !!r && !r.gone && (!r.status || ['waiting', 'working', 'retrying'].includes(r.status.state)); }
 function requestFor(kind, paper) {   // this device's newest request of a kind (for a paper)
-  for (let i = Requests.items.length - 1; i >= 0; i--) { const r = Requests.items[i]; if (r.kind === kind && (paper === undefined || r.paper === paper)) return r; }
+  for (let i = Requests.items.length - 1; i >= 0; i--) { const r = Requests.items[i]; if (r.kind === kind && !r.fromSimilar && (paper === undefined || r.paper === paper)) return r; }
   return null;
 }
 /* This device's requests, kept in this browser while they run: a private library's signed-in owner only */
 function requestsStore() {
   if (!isPrivate() || !isOwner()) return;
   const keep = Requests.items.filter(r => r.destination || requestLive(r) || Date.now() - (r.ended || 0) < REQUEST_KEEP_MS).filter((r, i, a) => r.destination || i >= a.length - 20)
-    .map(r => ({ id: r.id, kind: r.kind, paper: r.paper || null, input: r.input || null, star: !!r.star, at: r.at, sent: !!r.sent, stop: !!r.stop, stopAt: r.stopAt || null, stopSent: !!r.stopSent, ended: r.ended || null, destination: r.destination || null,
+    .map(r => ({ id: r.id, kind: r.kind, paper: r.paper || null, input: r.input || null, star: !!r.star, fromSimilar: !!r.fromSimilar, at: r.at, sent: !!r.sent, stop: !!r.stop, stopAt: r.stopAt || null, stopSent: !!r.stopSent, ended: r.ended || null, destination: r.destination || null,
       status: r.status && !requestLive(r) ? { state: r.status.state, reason: r.status.reason, at: r.status.at, added: (r.status.added || []).map(p => p.id), existing: r.status.existing || [] } : null }));
   try { checkedStorageSet(REQUESTS_KEY, JSON.stringify({ v: 1, items: keep })); } catch (e) {}
 }
@@ -12768,7 +12792,7 @@ function requestsTeardown() {
 function requestStart(what) {
   requireOwner();
   if (!isPrivate()) throw new Error('Requests need a private library');
-  const r = { id: requestNewId(), kind: what.kind, at: requestStamp(Date.now()), sent: false, stop: false, stopSent: false, status: null };
+  const r = { id: requestNewId(), kind: what.kind, fromSimilar: !!what.fromSimilar, at: requestStamp(Date.now()), sent: false, stop: false, stopSent: false, status: null };
   if (what.kind === 'brief') r.paper = what.paper; else { r.input = requestInputFit(what.input); r.star = !!what.star; }
   if (what.kind === 'add' && typeof what.list === 'string' && listDestOK(what.list)) {
     const def = listDefLive(what.list);
@@ -12878,6 +12902,7 @@ function requestChanged(r, was) {
   if (AddPaper.req && AddPaper.req.id === r.id) setAddJob(r);
   if (r.status && (r.status.state !== 'done' || !(r.status.added.length || r.status.existing.length))) listAddFinished(r);
   if (r.status && r.status.state === 'done' && (!was || was.state !== 'done') && (r.status.added.length || r.status.existing.length)) addPaperFinished(r);
+  similarPaint();
 }
 
 /* ===== ADD A PAPER =====
@@ -13009,7 +13034,7 @@ async function addPaperRefresh() { const _authEpoch = capturePrivateEpoch();
   finally { if (op === Pull.op) Pull.busy = false; }
 }
 function addPaperFinished(r) {
-  AddPaper.text = '';
+  if (AddPaper.req?.id === r.id) AddPaper.text = '';
   const forList = !!r.destination;
   listAddFinished(r);
   addPaperRefresh().then(privateCallback(renderAddPaper));
@@ -15074,6 +15099,7 @@ function pageMayWrite(path) {
   tastePath.split(/[?#]/)[0].split('/').forEach(part => { if (part === '..') tasteParts.pop(); else if (part && part !== '.') tasteParts.push(part); });
   if (tasteParts.join('/') === 'daily/current.json') throw new Error('Daily picks are written by the worker only');
   if (tasteParts.join('/') === 'taste.json') throw new Error('taste.json is written by the worker only');
+  if (tasteParts.join('/') === 'seal/arrakis.json') throw new Error('The sealing key is written by the worker only');
   if (p === 'activity.json') throw new Error('activity.json is written by the worker only');
   if (/^requests\/.*\.status\.json$/.test(p)) throw new Error('A request status is written by the worker only');   // Phase 24
 }
@@ -16123,7 +16149,7 @@ async function reviewRecordsSync() {
   requireOwner(); const epoch = capturePrivateEpoch(), generation = vaultGeneration();
   const folders = await privateAwait(reviewFolderRecord(_reviewFolders), epoch); checkVaultGeneration(generation);
   _reviewFolders = mergeReviewFolders(_reviewFolders, folders); reviewStoreFolders();
-  for (const id of Object.keys(_uploads)) { await privateAwait(reviewUploadRecord(id), epoch); checkVaultGeneration(generation); }
+  for (const id of Object.keys(_uploads)) { await privateAwait(reviewUploadRecord(id), epoch); checkVaultGeneration(generation); await privateAwait(similarRecord(id), epoch); checkVaultGeneration(generation); }
   storeUploads(); reviewRestoreRead(); reviewRefresh();
   const index = Vault.index;
   if (index) {
@@ -16409,6 +16435,7 @@ function mergeUploads(a, b) {
     // summary's updated time as a folder membership clock. Folder, Done and To read resolve by their own clocks.
     const newer = (u.updated || '') > (old.updated || '') ? u : old;
     const older = newer === u ? old : u;
+    const similar = similarMerge(old.similar, u.similar);
     const brief = mergeUploadBrief(old.brief, u.brief);
     // Live Rename carries titleAt unchanged and advances updated, even on a row carrying a brief.
     // A summary's own timestamp is never a title clock. New summaries retain the previous title clock;
@@ -16418,7 +16445,7 @@ function mergeUploads(a, b) {
     const named = [old, u].filter(x => x.title).sort((a, b) =>
       titleClock(b).localeCompare(titleClock(a)) || (b.updated || '').localeCompare(a.updated || '') ||
       (b.title || '').localeCompare(a.title || ''))[0];
-    out[id] = mergeUploadReview(old, u, { ...older, ...newer, ...(brief ? { brief } : {}), ...(named ? { title: named.title, titleAt: titleClock(named), ...((old.renamed || u.renamed) ? { renamed: true } : {}) } : {}) });
+    out[id] = mergeUploadReview(old, u, { ...older, ...newer, ...(similar ? { similar } : {}), ...(brief ? { brief } : {}), ...(named ? { title: named.title, titleAt: titleClock(named), ...((old.renamed || u.renamed) ? { renamed: true } : {}) } : {}) });
   });
   return out;
 }
@@ -16438,7 +16465,7 @@ function storeUploads() {
   if (!sameUploads(_uploads, saved)) privateSet(UPLOADS_KEY, JSON.stringify(_uploads));
 }
 function saveUploads() {
-  storeUploads();
+  storeUploads(); similarSoon();
   if (Vault.key && Vault.index) { Vault.index.reviewFolders = mergeReviewFolders(Vault.index.reviewFolders, _reviewFolders); Vault.index.uploads = mergeUploads(Vault.index.uploads, _uploads); nfSave('_index.json', Vault.index).catch(privateCallback(() => {})); }
   reviewRestoreRead(); reviewRecordsSoon();
   reviewRefresh();   // REVIEW FOLDERS HOOK: page, private To read and copy queue follow edits
@@ -16490,7 +16517,7 @@ function syncUploadsWithIndex() {
   reviewRestoreRead(); reviewRefresh();
   if ((!sameUploads(merged, Vault.index.uploads) || foldersChanged) && Vault.key) { Vault.index.uploads = merged; nfSave('_index.json', Vault.index).catch(privateCallback(() => {})); }
   reviewRecordsSoon();
-  uploadBriefSoon();
+  uploadBriefSoon(); similarSoon();
 }
 /* One private brief per upload. Attempts belong to this device, never the encrypted index. The queue lock also
    covers extraction and saving, so two tabs cannot send the same PDF or run different uploads together. */
@@ -16529,6 +16556,7 @@ function uploadBriefPaint() {
   if (id?.startsWith('up-') && _paperViewActive) { const p = uploadById(id); if (p) renderPaperDetail(p); else { homeGo('#lists', true); listsShowReview(); } }
 }
 function uploadBriefCancel(id) {
+  try { similarCancel(id); } catch (e) { console.error(e); }
   const jobs = [...UploadBrief.jobs].filter(([pid]) => !id || pid === id), queue = !id && UploadBrief.queue;
   if (!id) { UploadBrief.serial++; const timer = UploadBrief.timer; UploadBrief.timer = 0; UploadBrief.here.clear(); UploadBrief.queue = null; try { clearTimeout(timer); } catch (e) { console.error(e); } }
   for (const [, live] of jobs) live.stopped = true;
@@ -16651,6 +16679,264 @@ window.addEventListener('storage', privateCallback(e => {
   } else if (e.key === UPLOAD_BRIEF_TRIES_KEY) uploadBriefPaint();
   else if (e.key === API_KEY_NAME) uploadBriefSoon();
 }));
+/* ===== SIMILAR PAPERS: private upload novelty lookup. Keep this block independent of upload folders. ===== */
+const SimilarSeal = (() => {
+// Browser reference, no Node imports. Keep the privateKey with this request on the asking device.
+const enc = new TextEncoder();
+const dec = new TextDecoder('utf-8', {fatal: true});
+const b64 = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes))).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
+const unb64 = (text, cap) => {
+  if (typeof text !== 'string' || text.length > Math.ceil(cap * 4 / 3) || !/^[A-Za-z0-9_-]+$/.test(text)) throw Error('Invalid encoding.');
+  const raw = Uint8Array.from(atob(text.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - text.length % 4) % 4)), c => c.charCodeAt(0));
+  if (raw.length > cap || b64(raw) !== text) throw Error('Invalid encoding.');
+  return raw;
+};
+const context = r => enc.encode(`scout-similar-v1\n${r.id}\n${r.key_id}\n${r.at}\n${r.public_key}`);
+async function publicKey(pub) {
+  if (pub.schema !== 1 || pub.algorithm !== 'P256-HKDF-SHA256-A256GCM' || Object.keys(pub).sort().join() !== 'algorithm,key_id,public_key,schema') throw Error('Reload Scout to get its key.');
+  const raw = unb64(pub.public_key, 65);
+  const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', raw))].map(n => n.toString(16).padStart(2, '0')).join('').slice(0,32);
+  if (pub.key_id !== digest) throw Error('Reload Scout to get its key.');
+  return crypto.subtle.importKey('raw', raw, {name: 'ECDH', namedCurve: 'P-256'}, false, []);
+}
+async function cipher(pub, privateKey, request, label) {
+  const shared = await crypto.subtle.deriveBits({name: 'ECDH', public: await publicKey(pub)}, privateKey, 256);
+  const material = await crypto.subtle.importKey('raw', shared, 'HKDF', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name: 'HKDF', hash: 'SHA-256', salt: await crypto.subtle.digest('SHA-256', context(request)), info: enc.encode(`scout-similar-v1/${label}`)}, material, {name: 'AES-GCM', length: 256}, false, ['encrypt','decrypt']);
+}
+async function sealRequest(pub, id, at, text) {
+  if (!/^[0-9a-f]{32}$/.test(id) || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(at)) throw Error('Invalid request.');
+  if (Object.keys(text).sort().join() !== 'abstract,title') throw Error('Send only title and abstract.');
+  for (const [name, cap] of [['title', 2000], ['abstract', 24000]]) {
+    if (typeof text[name] !== 'string' || !text[name].trim() || enc.encode(text[name]).length > cap || /\u0000|[\uD800-\uDFFF]/u.test(text[name])) throw Error('Title or abstract is missing or too long.');
+  }
+  const keys = await crypto.subtle.generateKey({name: 'ECDH', namedCurve: 'P-256'}, true, ['deriveBits']);
+  const nonce = crypto.getRandomValues(new Uint8Array(12));
+  const request = {schema: 1, id, kind: 'similar', at, key_id: pub.key_id, public_key: b64(await crypto.subtle.exportKey('raw', keys.publicKey)), nonce: b64(nonce)};
+  const key = await cipher(pub, keys.privateKey, request, 'request');
+  request.ciphertext = b64(await crypto.subtle.encrypt({name: 'AES-GCM', iv: nonce, additionalData: enc.encode(dec.decode(context(request)) + '\nrequest'), tagLength: 128}, key, enc.encode(JSON.stringify(text))));
+  if (enc.encode(JSON.stringify(request)).length > 40960) throw Error('Request is too long.');
+  return {request, privateKey: keys.privateKey};
+}
+async function openResponse(pub, privateKey, request, sealed) {
+  if (sealed.key_id !== request.key_id || pub.key_id !== request.key_id) throw Error('Reload Scout to get its key.');
+  const key = await cipher(pub, privateKey, request, 'response');
+  const raw = await crypto.subtle.decrypt({name: 'AES-GCM', iv: unb64(sealed.nonce, 12), additionalData: enc.encode(dec.decode(context(request)) + '\nresponse'), tagLength: 128}, key, unb64(sealed.ciphertext, 40976));
+  if (raw.byteLength > 40960) throw Error('Response is too long.');
+  return JSON.parse(dec.decode(raw));
+}
+
+return { sealRequest, openResponse, publicKey };
+})();
+const SIMILAR_KEYS = 'scholar_similar_keys_v1', SIMILAR_WAIT_MS = 20 * 60 * 1000, SIMILAR_RETRY_MS = 5 * 60 * 1000;
+const Similar = { timer: 0, work: null, serial: 0, pub: null, counts: new Map() };
+function similarAvailable() { return isPrivate() && isOwner() && !!(Vault.ready && Vault.key && Vault.index); }
+function similarWritable() { return similarAvailable() && navigator.onLine && Private.state === 'verified'; }
+function similarMerge(a, b) {
+  if (!a) return b; if (!b) return a;
+  if ((a.state === 'done') !== (b.state === 'done')) return a.state === 'done' ? a : b;
+  if ((a.attempts || 0) !== (b.attempts || 0)) return (a.attempts || 0) > (b.attempts || 0) ? a : b;
+  if (a.state !== b.state) return a.state === 'failed' ? a : b;
+  if ((a.at || '') !== (b.at || '')) return (a.at || '') > (b.at || '') ? a : b;
+  return JSON.stringify(a) >= JSON.stringify(b) ? a : b;
+}
+function similarKeys() {
+  try { const v = JSON.parse(localStorage.getItem(SIMILAR_KEYS) || '{}'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; } catch (e) { return {}; }
+}
+function similarForget(id) {
+  const keys = similarKeys();
+  if (id) { delete keys[id]; localStorage.setItem(SIMILAR_KEYS, JSON.stringify(keys)); }
+  else localStorage.removeItem(SIMILAR_KEYS);
+}
+function similarCancel(id) {
+  if (!id) { Similar.serial++; clearTimeout(Similar.timer); Similar.pub = null; Similar.counts.clear(); }
+  similarForget(id);
+}
+async function similarPublic(epoch) {
+  if (Similar.pub) return Similar.pub;
+  const file = await privateAwait(privateReadFile('seal/arrakis.json'), epoch);
+  const pub = JSON.parse(file.text); await privateAwait(SimilarSeal.publicKey(pub), epoch);
+  checkPrivateEpoch(epoch); Similar.pub = pub; return pub;
+}
+function similarPapers(value) {
+  if (!Array.isArray(value) || value.length > 20) throw Error('Invalid papers');
+  const seen = new Set();
+  return value.map(p => {
+    if (!p || !Number.isSafeInteger(p.paper_id) || p.paper_id < 1 || seen.has(p.paper_id) || typeof p.in_library !== 'boolean'
+      || !['Very close', 'Close', 'Related'].includes(p.closeness)
+      || !['title','venue','year'].every(k => typeof p[k] === 'string' && p[k].length <= ({title:1000,venue:200,year:20})[k]) || !p.title.trim()
+      || !(p.library_row_id === null || typeof p.library_row_id === 'string' && BRIEF_ID.test(p.library_row_id) && !p.library_row_id.startsWith('up-'))
+      || p.in_library && !p.library_row_id || !(p.url === null || typeof p.url === 'string' && p.url.length <= 2048 && similarIdentifier(p.url))) throw Error('Invalid paper');
+    seen.add(p.paper_id);
+    return { paper_id: p.paper_id, title: p.title, venue: p.venue, year: p.year, url: p.url, closeness: p.closeness, in_library: p.in_library, library_row_id: p.library_row_id };
+  });
+}
+function similarIdentifier(link) {
+  if (typeof link !== 'string') return null;
+  try {
+    const url = new URL(link);
+    if (url.protocol !== 'https:' || url.username || url.password || url.port || url.search || url.hash) return null;
+    const tail = decodeURIComponent(url.pathname);
+    if (url.hostname === 'arxiv.org' && /^\/abs\/(?:\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Z]{2})?\/\d{7})(?:v\d+)?$/.test(tail)) return tail.slice(5);
+    if (url.hostname === 'doi.org' && /^\/10\.\d{4,9}\/[^\s\x00-\x1f]+$/i.test(tail)) return tail.slice(1);
+  } catch (e) {} return null;
+}
+function similarStatus(text, request) {
+  const s = JSON.parse(text);
+  if (!s || s.schema !== 1 || s.kind !== 'similar' || s.id !== request.id || !briefStamp(s.at) || !(s.next_at === null || briefStamp(s.next_at))
+    || !['waiting','working','retrying','done','failed'].includes(s.state) || typeof s.reason !== 'string'
+    || Object.keys(s).some(k => !['schema','id','kind','state','reason','at','next_at','sealed'].includes(k))) throw Error('Invalid status');
+  if (s.sealed && (Object.keys(s.sealed).sort().join() !== 'ciphertext,key_id,nonce' || s.sealed.key_id !== request.key_id)) throw Error('Invalid sealed reply');
+  return s;
+}
+/* Like uploadBrief, the durable state lives outside the upload row in encrypted paper notes.
+   The existing notes CAS merges concurrent ordinary edits; old clients retain this top-level field. */
+async function similarRecord(id, check = () => {}) {
+  if (!Vault.key || !Vault.index || !uploadById(id)) return;
+  const epoch = capturePrivateEpoch(), generation = vaultGeneration();
+  check(); storeUploads();
+  const result = await privateAwait(reviewRecord(id, 'uploadSimilar', _uploads[id].similar, (a, b) => similarMerge(a, b) || {}), epoch);
+  checkVaultGeneration(generation); check();
+  if (!uploadById(id) || !result.state) return;
+  const merged = similarMerge(_uploads[id].similar, result);
+  if (JSON.stringify(_uploads[id].similar) !== JSON.stringify(merged)) {
+    _uploads[id] = { ..._uploads[id], similar: merged }; saveUploads(); similarPaint();
+  }
+}
+async function similarSave(id, result, check) {
+  check(); _uploads = mergeUploads(_uploads, JSON.parse(localStorage.getItem(UPLOADS_KEY) || '{}')); check();
+  const current = _uploads[id];
+  _uploads[id] = { ...current, similar: similarMerge(current.similar, result) };   // Similarity owns its clock; preserve Rename and folder clocks.
+  saveUploads();
+  await similarRecord(id, check); check(); similarPaint();
+}
+function similarSoon(delay = 0) {
+  if (!similarAvailable()) return;
+  clearTimeout(Similar.timer);
+  Similar.timer = setTimeout(privateCallback(() => {
+    if (Similar.work) return;
+    const work = similarScan(); Similar.work = work;
+    work.catch(() => {}).finally(() => { if (Similar.work === work) { Similar.work = null; if (similarAvailable()) similarSoon(15000); } });
+  }), delay);
+}
+async function similarUnanswered(id, result, check) {
+  if (result.retry_at > Date.now()) return;
+  similarForget(id);
+  await similarSave(id, {...result, state:'failed', at:new Date().toISOString(), retry_at:Date.now() + SIMILAR_RETRY_MS}, check);
+}
+async function similarScan() {
+  if (!similarWritable() || !navigator.locks) return;
+  const epoch = capturePrivateEpoch(), generation = vaultGeneration(), serial = Similar.serial;
+  const guard = () => { checkPrivateEpoch(epoch); checkVaultGeneration(generation); if (serial !== Similar.serial || !similarWritable()) throw Error('Lookup cancelled'); };
+  for (const p of uploadedPapers()) {
+    guard();
+    await privateAwait(navigator.locks.request('scout-similar:' + _acceptedTarget + ':' + p.id, {ifAvailable: true}, async lock => {
+      guard(); if (!lock) return;
+      _uploads = mergeUploads(_uploads, JSON.parse(localStorage.getItem(UPLOADS_KEY) || '{}'));
+      if (!uploadById(p.id)) { similarForget(p.id); return; }
+      const check = () => { guard(); if (!uploadById(p.id)) throw Error('Upload removed'); };
+      await similarRecord(p.id, check); check();
+      const brief = uploadBriefValue(_uploads[p.id]), result = _uploads[p.id].similar;
+      if (result?.state === 'done') { similarForget(p.id); return; }
+      if (result?.state === 'failed') similarForget(p.id);
+      if (!brief?.title.trim() || !brief.abstract.trim()) return;
+      if (result?.state === 'waiting') {
+        const local = similarKeys()[p.id];
+        if (!local || local.target !== _acceptedTarget || local.request.id !== result.request_id) { await similarUnanswered(p.id, result, check); return; }
+        // Losing a status read (including navigation cancelling it) does not close the sealed exchange.
+        let file;
+        try { file = await privateAwait(privateReadFile(requestPath(local.request.id, 'status'), true), epoch); check(); }
+        catch (e) { check(); await similarUnanswered(p.id, result, check); return; }
+        if (!file) { await similarUnanswered(p.id, result, check); return; }
+        try {
+          const status = similarStatus(file.text, local.request);
+          if (['waiting','working','retrying'].includes(status.state)) { await similarUnanswered(p.id, result, check); return; }
+          if (status.reason === 'reload') {
+            similarForget(p.id);
+            // One refresh, including a failed read. Keep the old public key if the replacement cannot be read.
+            if (!result.key_reloaded) {
+              const previous = Similar.pub || local.pub; Similar.pub = null;
+              try { await privateAwait(similarPublic(epoch), epoch); check(); }
+              catch (e) { check(); Similar.pub = previous; }
+            }
+            await similarSave(p.id, { ...result, state: 'failed', at: new Date().toISOString(), retry_at: Date.now() + SIMILAR_RETRY_MS, key_reloaded: true }, check); return;
+          }
+          if (status.reason !== 'sealed' || !status.sealed) throw Error('Lookup failed');
+          const key = await privateAwait(crypto.subtle.importKey('jwk', local.privateKey, {name:'ECDH',namedCurve:'P-256'}, false, ['deriveBits']), epoch); check();
+          const opened = await privateAwait(SimilarSeal.openResponse(local.pub, key, local.request, status.sealed), epoch); check();
+          if (status.state !== 'done' || opened.state !== 'done' || Object.keys(opened).sort().join() !== 'papers,state') throw Error('Lookup failed');
+          const papers = similarPapers(opened.papers);
+          await similarSave(p.id, {v:1, state:'done', at:new Date().toISOString(), attempts:result.attempts, papers}, check);
+          similarForget(p.id); return;
+        } catch (e) {
+          check(); similarForget(p.id);
+          await similarSave(p.id, {...result, state:'failed', at:new Date().toISOString(), retry_at:Date.now() + SIMILAR_RETRY_MS}, check); return;
+        }
+      }
+      if ((result?.attempts || 0) >= 3 || (result?.retry_at || 0) > Date.now()) return;
+      let attempt;
+      try {
+        const pub = await privateAwait(similarPublic(epoch), epoch); check();
+        const sealed = await privateAwait(SimilarSeal.sealRequest(pub, requestNewId(), requestStamp(Date.now()), {title:brief.title, abstract:brief.abstract}), epoch); check();
+        const privateKey = await privateAwait(crypto.subtle.exportKey('jwk', sealed.privateKey), epoch); check();
+        const keys = similarKeys(); keys[p.id] = {target:_acceptedTarget, pub, request:sealed.request, privateKey};
+        privateSet(SIMILAR_KEYS, JSON.stringify(keys));
+        attempt = {v:1, state:'waiting', at:new Date().toISOString(), attempts:(result?.attempts || 0) + 1, request_id:sealed.request.id, retry_at:Date.now() + SIMILAR_WAIT_MS, key_reloaded:!!result?.key_reloaded};
+        await similarSave(p.id, attempt, check);
+        await privateAwait(requestPut(requestPath(sealed.request.id), JSON.stringify(sealed.request), 'Ask Scout for similar papers'), epoch); check();
+      } catch (e) {
+        check(); similarForget(p.id);
+        await similarSave(p.id, {...(attempt || {v:1, attempts:(result?.attempts || 0) + 1}), state:'failed', at:new Date().toISOString(), retry_at:Date.now() + SIMILAR_RETRY_MS}, check);
+      }
+    }), epoch);
+  }
+}
+function similarSection(id) {
+  if (!similarAvailable() || !/^up-[0-9a-f]{12}$/.test(id) || !uploadById(id)) return '';
+  const u = _uploads[id], brief = uploadBriefValue(u), result = u.similar;
+  if (!brief?.title.trim() || !brief.abstract.trim()) return '';
+  let content;
+  if (result?.state === 'done') {
+    let papers; try { papers = similarPapers(result.papers); } catch (e) { papers = null; }
+    if (!papers) content = '<p class="similar-state">Couldn’t find similar papers.</p>';
+    else {
+      const count = Similar.counts.get(id) || 10;
+      content = papers.length ? '<div class="similar-list">' + papers.slice(0,count).map((p,i) => {
+        const meta = `<span class="similar-close" data-level="${p.closeness === 'Very close' ? 'very' : p.closeness === 'Close' ? 'close' : 'related'}">${esc(p.closeness)}</span><span>${esc([p.venue,p.year].filter(Boolean).join(' · '))}</span>`;
+        const hit = similarLibrary(p), inRead = !!hit && listHolds(TO_READ, paperKey(hit));
+        const title = hit ? `<button type="button" class="similar-title" onclick="openPaper('${escAttr(paperKey(hit))}')">${esc(p.title)}</button>` : p.url ? `<a class="similar-title" href="${dataAttr(p.url)}" target="_blank" rel="noopener noreferrer">${esc(p.title)}</a>` : `<span class="similar-title">${esc(p.title)}</span>`;
+        const pending = Requests.items.some(r => r.kind === 'add' && r.input === similarIdentifier(p.url) && (requestLive(r) || r.destination));
+        return `<div class="similar-row"><div class="similar-main">${title}<div class="similar-meta">${meta}${hit ? `<button type="button" class="similar-library" onclick="openPaper('${escAttr(paperKey(hit))}')">In your library</button>` : ''}</div></div>${similarIdentifier(p.url) ? `<button type="button" class="similar-add pd-act" onclick="similarAdd('${escAttr(id)}',${i})"${pending || inRead ? ' disabled' : ''}>${inRead ? 'In To read' : pending ? 'Adding' : '+ To read'}</button>` : ''}</div>`;
+      }).join('') + '</div>' : '<p class="similar-state">No similar papers found.</p>';
+      if (papers.length > count) content += `<button type="button" class="similar-more" onclick="similarMore('${escAttr(id)}')">Show 10 more</button>`;
+    }
+  } else content = `<p class="similar-state">${result?.state === 'failed' ? 'Couldn’t find similar papers.' : '<i class="similar-spinner" aria-hidden="true"></i>Looking for similar papers'}</p>`;
+  return `<section class="pd-section" data-similar="${dataAttr(id)}" aria-live="polite"><h2>Similar papers</h2>${content}</section>`;
+}
+function similarPaint() {
+  document.querySelectorAll('[data-similar]').forEach(el => { el.outerHTML = similarSection(el.dataset.similar); });
+}
+function similarMore(id) { requireOwner(); if (!similarAvailable() || !uploadById(id)) return; Similar.counts.set(id, (Similar.counts.get(id) || 10) + 10); similarPaint(); }
+function similarLibrary(p) {
+  const input = similarIdentifier(p.url), hit = input && listPaperFor(input);
+  if (hit) return hit;
+  const cached = p.library_row_id && findPaper(p.library_row_id);
+  return cached && !cached._goneRemote ? cached : null;
+}
+function similarAdd(id, index) {
+  requireOwner(); if (!similarWritable() || !uploadById(id)) return;
+  const p = _uploads[id].similar?.papers?.[index], input = p && similarIdentifier(p.url);
+  if (!input) return;
+  const hit = similarLibrary(p);
+  if (hit) { listAddExisting(TO_READ, hit, m => toast(m)); similarPaint(); return; }
+  if (Requests.items.some(r => r.kind === 'add' && r.input === input && (requestLive(r) || r.destination))) return;
+  requestStart({ kind: 'add', input, list: TO_READ, fromSimilar: true });
+  similarPaint();
+}
+window.addEventListener('online', privateCallback(() => similarSoon()));
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') similarSoon(); });
+/* ===== END SIMILAR PAPERS ===== */
+
 /* Option B: the ordinary paper-page shell, with private upload actions and safe abstract math. */
 function uploadPageHTML(p) {
   requireOwner();
@@ -16659,7 +16945,7 @@ function uploadPageHTML(p) {
   const bar = '<div class="pd-bar"><div class="pd-bar-inner review-page-bar"><button class="pd-back" onclick="paperBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg><span class="pd-back-label">Back</span></button><div class="review-bar-actions">' + reviewBarActionsHTML(p.id) + '</div></div></div>';
   const summary = p.summary ? `<section class="pd-section"><h2>Summary</h2><p class="pd-prose">${esc(p.summary)}</p></section>` : '';
   const abstract = p.abstract ? `<section class="pd-section"><h2>Abstract</h2><p class="pd-prose" data-abs-tex>${esc(p.abstract)}</p></section>` : '';
-  return { bar, glow: 'transparent', article: `<article class="pd-article pd-upload" data-pid="${dataAttr(p.id)}"><header class="pd-head"><div class="pd-kicker"><span class="upload-tag">To review</span>${u.added ? `<span>Added ${esc(shortDate(u.added.slice(0, 10)))}</span>` : ''}<span>${esc(counts || 'No notes yet')}</span></div><h1 class="pd-title">${esc(p.headline || p.title)}</h1>${p.headline ? `<p class="pd-dek">${esc(p.title)}</p>` : ''}<div class="upload-brief-state" data-upload-state="${ka}">${uploadBriefStateHTML(p.id)}</div>${p.authors ? `<div class="pd-authors">${esc(p.authors)}</div>` : ''}</header><div class="pd-body"><div class="pd-main">${summary}${abstract}</div></div></article>` };
+  return { bar, glow: 'transparent', article: `<article class="pd-article pd-upload" data-pid="${dataAttr(p.id)}"><header class="pd-head"><div class="pd-kicker"><span class="upload-tag">To review</span>${u.added ? `<span>Added ${esc(shortDate(u.added.slice(0, 10)))}</span>` : ''}<span>${esc(counts || 'No notes yet')}</span></div><h1 class="pd-title">${esc(p.headline || p.title)}</h1>${p.headline ? `<p class="pd-dek">${esc(p.title)}</p>` : ''}<div class="upload-brief-state" data-upload-state="${ka}">${uploadBriefStateHTML(p.id)}</div>${p.authors ? `<div class="pd-authors">${esc(p.authors)}</div>` : ''}</header><div class="pd-body"><div class="pd-main">${summary}${abstract}${similarSection(p.id)}</div></div></article>` };
 }
 
 /* Dropping a PDF anywhere on the Library uploads it */
@@ -17992,7 +18278,7 @@ async function nfSave(name, obj) { const _authEpoch = capturePrivateEpoch(); req
   const removalStamp = () => Object.keys(_uploads).filter(id => _uploads[id].deleted).sort().join('|');
   const indexRemovals = name === '_index.json' ? removalStamp() : null;
   if (name === '_index.json') { storeUploads(); obj.uploads = mergeUploads(obj.uploads, _uploads); obj.reviewFolders = mergeReviewFolders(mergeReviewFolders(obj.reviewFolders, _reviewFolders), JSON.parse(localStorage.getItem(REVIEW_FOLDERS_KEY) || '{}')); }
-  if (removed) { delete obj.uploadBrief; delete obj.uploadReview; }
+  if (removed) { delete obj.uploadBrief; delete obj.uploadReview; delete obj.uploadSimilar; }
   const stillCurrent = () => (!uploadId || removed === !!(_uploads[uploadId] || {}).deleted) && (indexRemovals === null || indexRemovals === removalStamp());
   if (removed && ['annos', 'entries', 'ink'].some(k => (obj[k] || []).length)) return;
   LocalWork.n++;   // Phase 22: a reload waits for the whole save: the wait for a writable copy, the encryption, the write
@@ -18034,11 +18320,12 @@ function mergePaperNotes(a, b) {
     return [...byId.values()].filter(x => !deleted[x.id] || deleted[x.id] < (x.updated || ''));
   };
   const uploadBrief = mergeUploadBrief(a.uploadBrief, b.uploadBrief);
-  const merged = { ...a, ...b, ...(uploadBrief ? { uploadBrief } : {}), entries: union(a.entries, b.entries).sort((x, y) => (x.created || '').localeCompare(y.created || '')), annos: union(a.annos, b.annos), ink: union(a.ink, b.ink), deleted, pdf: b.pdf || a.pdf };
+  const uploadSimilar = similarMerge(a.uploadSimilar, b.uploadSimilar);
+  const merged = { ...a, ...b, ...(uploadBrief ? { uploadBrief } : {}), ...(uploadSimilar ? { uploadSimilar } : {}), entries: union(a.entries, b.entries).sort((x, y) => (x.created || '').localeCompare(y.created || '')), annos: union(a.annos, b.annos), ink: union(a.ink, b.ink), deleted, pdf: b.pdf || a.pdf };
   const reviewFolders = mergeReviewFolders(a.reviewFolders, b.reviewFolders);
   if (a.reviewFolders || b.reviewFolders) merged.reviewFolders = reviewFolders;
   if (a.uploadReview || b.uploadReview) merged.uploadReview = mergeUploadReview(a.uploadReview, b.uploadReview, {});
-  if (_uploads[a.id]?.deleted) { delete merged.uploadBrief; delete merged.uploadReview; }
+  if (_uploads[a.id]?.deleted) { delete merged.uploadBrief; delete merged.uploadReview; delete merged.uploadSimilar; }
   return merged;
 }
 function mergeIndex(a, b) {
@@ -18611,7 +18898,7 @@ async function clearPaperNotes(id) { const _authEpoch = capturePrivateEpoch(); r
   obj.deleted = { ...(obj.deleted || {}) };
   (obj.annos || []).concat(obj.entries || [], obj.ink || []).forEach(x => { obj.deleted[x.id] = now; });
   obj.annos = []; obj.entries = []; obj.ink = [];
-  if (_uploads[id]?.deleted) { delete obj.uploadBrief; delete obj.uploadReview; }
+  if (_uploads[id]?.deleted) { delete obj.uploadBrief; delete obj.uploadReview; delete obj.uploadSimilar; }
   await privateAwait(savePaperNotes(obj), _authEpoch);
 }
 async function savePaperNotes(obj) { const _authEpoch = capturePrivateEpoch(); requireOwner();
@@ -18621,7 +18908,7 @@ async function savePaperNotes(obj) { const _authEpoch = capturePrivateEpoch(); r
     if ((_uploads[obj.id] || {}).deleted) {
       const now = new Date().toISOString(); obj.deleted = { ...(obj.deleted || {}) };
       (obj.annos || []).concat(obj.entries || [], obj.ink || []).forEach(x => { obj.deleted[x.id] = now; });
-      obj.annos = []; obj.entries = []; obj.ink = []; delete obj.uploadBrief; delete obj.uploadReview;
+      obj.annos = []; obj.entries = []; obj.ink = []; delete obj.uploadBrief; delete obj.uploadReview; delete obj.uploadSimilar;
     }
     bumpNotesGen(obj.id);
     dropUncitedRefs(obj);
@@ -23063,6 +23350,7 @@ function renderPaperDetail(p) {
     ${page.article}
   </div>`;
   paperPostRender(box, p);
+  if (p.uploaded) similarSoon();
   box.querySelectorAll('[data-abs-tex]').forEach(el => renderAbstractText(el, p.abstract));   // its TeX, once KaTeX is here
   if (!renderPaperDetail._scrollHooked) {
     document.getElementById('mainScroll').addEventListener('scroll', () => updatePaperBar(), { passive: true });
@@ -24615,7 +24903,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
     // Chat on this device's Claude API key (4 November 2026)
     'chatUseKey', 'chatForgetKey', 'chatApiRetry',
     // private papers and PDFs
-    'pickUploadPdf', 'uploadPdf', 'usePdfFile', 'openPdfChange', 'removeLocalPdf', 'removeUpload', 'renameUpload', 'startReview', 'saveUploads', 'uploadBriefRetry',
+    'pickUploadPdf', 'uploadPdf', 'usePdfFile', 'openPdfChange', 'removeLocalPdf', 'removeUpload', 'renameUpload', 'startReview', 'saveUploads', 'uploadBriefRetry', 'similarAdd', 'similarMore',
     // reading places and list times
     'noteReading', 'dismissReading', 'flushReading', 'showInProgress', 'saveListMeta', 'listDefsChange', 'listDefsRename', 'listDefEdit', 'takeListDefs', 'listDefsSaved', 'listDefsApply', 'refreshNotesIndex', 'rememberPanelTab', 'syncUploadsWithIndex', 'rememberHlColor', 'savePencil'];
   const WHEN = {   // allowed only when undoing: closing the panel, putting the Pencil back to reading
