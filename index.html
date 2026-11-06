@@ -2900,7 +2900,8 @@ body.daily-mode:has(.save-bar.visible) #toast{bottom:calc(var(--daily-footer-hei
 body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.auth-overlay.open) #toast{top:calc(8px + env(safe-area-inset-top, 0px));bottom:auto}
 .daily-feed #feedAdd,.daily-feed #feedCtl,.daily-feed #feedMore,.daily-feed #feedEnd,.daily-feed #listBar{display:none!important}
 .daily-feed .feed-head{position:static}.daily-feed #tabsMsg:empty{display:none}
-.daily-picker{flex:none;display:flex;align-items:center;gap:10px;width:100%;height:46px;padding:0 20px;border:0;border-bottom:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.daily-picker{min-width:0;flex:none;display:flex;align-items:center;gap:10px;width:100%;height:46px;padding:0 20px;border:0;border-bottom:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+#feedCtl .daily-picker{flex:1;width:auto;padding:0 10px;border-bottom:0;background:none}.lb-int .daily-picker,.lib-int .daily-picker{background:none}
 .daily-picker-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .daily-picker-count{flex:none;color:var(--text-muted);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .daily-picker svg{flex:none;width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -2911,6 +2912,7 @@ body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.au
 .daily-interest-row[aria-current=true] .sh-n{color:var(--accent);font-weight:600}
 .daily-interest-left{flex:none;white-space:nowrap;color:var(--text-muted);font-size:13px;font-variant-numeric:tabular-nums}
 .daily-interest-row.done .sh-n{color:var(--text-muted)}
+#dailyInterestTitle{overflow-wrap:anywhere}
 #dailyInterestSheet .sh-panel{max-height:90dvh;background:var(--bg-surface);animation:daily-sheet-in .18s ease-out}
 @keyframes daily-sheet-in{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){#dailyInterestSheet .sh-panel{animation:none}}
@@ -7315,6 +7317,8 @@ function appMenuSync() {
 function openAppMenu() {
   const menu = document.getElementById('appMenu'), scrim = document.getElementById('appMenuScrim'), btn = document.getElementById('navMenuBtn');
   if (!menu || AppMenu.open || document.documentElement.classList.contains('private-locked')) return;
+  if (InterestPicker.cur) InterestPicker.cur.close();
+  if (InterestPicker.back) { InterestPicker.afterClose = privateCallback(openAppMenu); return; }
   if (Feed.menu) closeFeedMenu();
   closeListMenu(); closeSaveSheet(); closeSaveDD(); closeCopyDD();
   appMenuSync();
@@ -7811,7 +7815,7 @@ function feedTabStep(d) {
    (feedChipNames, feedInChip, feedChipReconcile). */
 const FEED_SORTS = [['best', 'Best', 'Most relevant first'], ['new', 'New', 'What Scout added most recently']];
 function feedSortName(v) { return v === 'new' ? 'new' : 'best'; }
-function feedCtlOn() { return !projectMode() && !followingShown(); }   // Phase 31: Following has no sort or interest menu
+function feedCtlOn() { return Feed.mode !== 'daily' && !projectMode() && !followingShown(); }   // Daily and Following have no For you controls
 /* The interest menu's names: every confirmed interest, as the Interests page orders them (level, then papers, then name) */
 function feedChipNames() {
   const lv = i => LEVEL_RANK[i.relevance_mapping] ?? 3, seen = new Set();
@@ -7859,8 +7863,8 @@ function feedCtlSay() {
   const el = document.getElementById('feedCtlStatus');
   if (el) el.textContent = `${Feed.interest || 'All papers'}, ${Feed.keys.length} ${Feed.keys.length === 1 ? 'paper' : 'papers'}, ${Feed.sort === 'new' ? 'newest added first' : 'best first'}`;
 }
-/* The two menus: each button's id, its menu's id and the menu's name */
-const FEED_MENUS = { sort: { btn: 'feedSortBtn', menu: 'feedSortMenu', label: 'Sort' }, interest: { btn: 'feedInterestBtn', menu: 'feedInterestMenu', label: 'Interests' } };
+/* Sort keeps its menu; Interests uses the shared sheet. */
+const FEED_MENUS = { sort: { btn: 'feedSortBtn', menu: 'feedSortMenu', label: 'Sort' }, interest: { btn: 'feedInterestBtn', menu: 'dailyInterestSheet', label: 'Interests' } };
 const FEED_CHEVRON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 const FEED_TICK = '<svg class="sort-tick" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 /* The row: drawn once per mount (Feed.ctlGen: a press on an older row acts in none); the buttons' labels follow in
@@ -7868,7 +7872,7 @@ const FEED_TICK = '<svg class="sort-tick" viewBox="0 0 24 24" aria-hidden="true"
    focus goes back to Interests if it was in the menu. Hidden in a project tab. */
 function feedCtlHTML() {
   const btn = (kind, label) => `<button type="button" class="ctl-btn ctl-${kind === 'sort' ? 'sort' : 'int'}" id="${FEED_MENUS[kind].btn}" data-menu="${kind}" aria-haspopup="menu" aria-expanded="false" aria-controls="${FEED_MENUS[kind].menu}" onclick="openFeedMenu('${kind}', this)"><span class="ctl-pill"><span class="ctl-t">${label}</span>${FEED_CHEVRON}</span></button>`;
-  return btn('sort', 'Best') + btn('interest', 'All interests') + `<p class="ctl-status" id="feedCtlStatus" role="status" aria-live="polite"></p>`;
+  return btn('sort', 'Best') + interestPickerHTML('All interests', `id="feedInterestBtn" data-menu="interest" onclick="openFeedMenu('interest', this)"`) + `<p class="ctl-status" id="feedCtlStatus" role="status" aria-live="polite"></p>`;
 }
 function feedCtlSync() {
   const box = document.getElementById('feedCtl');
@@ -7883,7 +7887,7 @@ function feedCtlSync() {
     if (!b) continue;
     b.setAttribute('aria-label', aria); b.setAttribute('aria-expanded', String(!!Feed.menu && Feed.menu.kind === kind));
     if (title !== null) b.setAttribute('title', title);
-    const t = b.querySelector('.ctl-t'); if (t && t.textContent !== text) t.textContent = text;
+    const t = b.querySelector('.ctl-t, .daily-picker-name'); if (t && t.textContent !== text) t.textContent = text;
   }
 }
 /* The menus: a popover under its button on every layout, in the body so the head's blur does not hold it. One open
@@ -7901,12 +7905,17 @@ function openFeedMenu(kind, btn) {
   closeSaveSheet();
   const names = kind === 'interest' ? feedChipNames() : null;
   Feed.menu = { id: ++Feed.seq, kind, sig: names ? JSON.stringify(names) : null };
+  if (kind === 'interest') {
+    const opening = Feed.menu;
+    openInterestSheet({ button: btn, title: 'Interests', chosen: Feed.interest, rows: [null, ...names].map(n => ({ interest: n || '' })),
+      live: () => Feed.menu === opening && feedActive() && opening.sig === JSON.stringify(feedChipNames()),
+      close: () => closeFeedMenu(true), choose: n => { closeFeedMenu(true); setFeedView(Feed.sort, n || null); } });
+    return;
+  }
   const m = document.createElement('div');
-  m.id = f.menu; m.className = kind === 'interest' ? 'sort-menu int-menu' : 'sort-menu'; m.dataset.menu = String(Feed.menu.id);
+  m.id = f.menu; m.className = 'sort-menu'; m.dataset.menu = String(Feed.menu.id);
   m.setAttribute('role', 'menu'); m.setAttribute('aria-label', f.label);
-  m.innerHTML = kind === 'sort'
-    ? FEED_SORTS.map(([v, label, help]) => `<button type="button" class="sort-item" role="menuitemradio" aria-checked="${v === Feed.sort}" data-sort="${v}" onclick="feedMenuChoose(this)"><span class="sort-text"><span class="sort-name">${label}</span><span class="sort-help">${help}</span></span>${FEED_TICK}</button>`).join('')
-    : [null, ...names].map(n => `<button type="button" class="sort-item" role="menuitemradio" aria-checked="${(n || null) === Feed.interest}" data-n="${dataAttr(n || '')}" onclick="feedMenuChoose(this)"><span class="sort-text"><span class="sort-name">${esc(n || 'All interests')}</span></span>${FEED_TICK}</button>`).join('');
+  m.innerHTML = FEED_SORTS.map(([v, label, help]) => `<button type="button" class="sort-item" role="menuitemradio" aria-checked="${v === Feed.sort}" data-sort="${v}" onclick="feedMenuChoose(this)"><span class="sort-text"><span class="sort-name">${label}</span><span class="sort-help">${help}</span></span>${FEED_TICK}</button>`).join('');
   m.onkeydown = feedMenuKey;
   document.body.appendChild(m);
   btn.setAttribute('aria-expanded', 'true');
@@ -7918,7 +7927,7 @@ function openFeedMenu(kind, btn) {
   if (m.scrollHeight > m.clientHeight + 1 && on.offsetTop + on.offsetHeight > m.scrollTop + m.clientHeight) m.scrollTop = on.offsetTop + on.offsetHeight - m.clientHeight;   // a checked row further down: in view
 }
 function placeFeedMenu() {
-  if (!Feed.menu) return;
+  if (!Feed.menu || Feed.menu.kind === 'interest') return;
   const f = FEED_MENUS[Feed.menu.kind], m = document.getElementById(f.menu), btn = document.getElementById(f.btn);
   if (!m) return;
   if (!btn || !btn.isConnected) { closeFeedMenu(); return; }
@@ -7936,6 +7945,7 @@ function closeFeedMenu(focusBack) {
   pressReconcile();
 }
 function feedMenuDrop() {
+  if (Feed.menu?.kind === 'interest') closeInterestSheet();
   Feed.menu = null;
   for (const k of Object.keys(FEED_MENUS)) {
     const m = document.getElementById(FEED_MENUS[k].menu);
@@ -8509,6 +8519,8 @@ function markOf(k, act) {   // a control's value as it shows now: the paper's st
 }
 function pressWhat(el) {
   if (!el || !el.closest) return null;
+  const picker = el.closest('#dailyInterestSheet');
+  if (picker) return { kind: 'ipicker', menu: Number(picker.dataset.picker), ident: `ipicker:${picker.dataset.picker}:${el.dataset.interest || el.className || ''}` };
   if ((el.closest('.daily-feed') || el.closest('#dailyInterestSheet')) && el.matches('.daily-action, .daily-picker, .daily-interest-row, .daily-interest-done, #dailyInterestSheet')) return { kind: 'daily', dailyGen: Number(el.dataset.dailyGen), ident: 'daily:' + el.dataset.dailyGen + ':' + (el.dataset.dailyPaper || '') + ':' + (el.dataset.dailyAction || el.dataset.interest || el.className || '') };
   const post = el.closest('#feedList .post');
   if (post) { const act = el === post ? 'page' : el.dataset.act || ''; return { kind: 'post', act, key: post.dataset.key || '', n: act === 'chip' ? el.dataset.n || '' : undefined, ident: `post:${post.dataset.key || ''}:${act}:${el.dataset.reason || ''}:${act === 'chip' ? el.dataset.n || '' : ''}` }; }
@@ -8566,6 +8578,7 @@ function feedRecLive(id, kind) { const r = id ? feedRecById(id) : null; return !
 /* What a press was bound to still holds */
 function pressStill(pr) {
   if (pr.anon) return false;
+  if (pr.kind === 'ipicker') return !!InterestPicker.cur && InterestPicker.cur.id === pr.menu && InterestPicker.cur.live();
   if (pr.kind === 'daily') return pr.gen === Feed.gen && typeof dailyView === 'function' && dailyView() && pr.dailyGen === Daily.generation;   // from before a lock: nothing it could act on survives
   if (pr.kind === 'sheet') {   // the same sheet; for a row its list still a place to save to with the paper in it or not, as when the press began; for Add the same opening of the field
     if (pr.sheet !== (Feed.sheet ? Feed.sheet.id : 0)) return false;
@@ -9405,6 +9418,85 @@ function dailyResume() {
   if (dailyView() && Refresh.staged?.texts.dailyCurrent !== undefined) refreshShow();
   dailyAdopt();
 }
+/* One picker for Daily, For you and each list; callers retain their own state and validity checks. */
+const InterestPicker = { cur: null, seq: 0, back: false, afterClose: null };
+function interestPickerHTML(label, attrs = '', count = '') {
+  return `<button type="button" class="daily-picker" aria-haspopup="dialog" aria-expanded="false" aria-controls="dailyInterestSheet" ${attrs}><span class="daily-picker-name">${esc(label)}</span>${count ? `<span class="daily-picker-count">${esc(count)}</span>` : ''}${FEED_CHEVRON}</button>`;
+}
+function openInterestSheet(options) {
+  if (InterestPicker.cur) InterestPicker.cur.close();
+  const epoch = capturePrivateEpoch(), opening = InterestPicker.cur = { ...options, id: ++InterestPicker.seq };
+  const live = () => InterestPicker.cur === opening && opening.live();
+  const s = document.createElement('div'); s.id = 'dailyInterestSheet'; s.className = 'save-sheet'; s.dataset.picker = String(opening.id);
+  let group = '';
+  s.innerHTML = `<div class="sh-panel" role="dialog" aria-modal="true" aria-labelledby="dailyInterestTitle">
+    <div class="sh-head"><span class="sh-grip" aria-hidden="true"></span><div class="sh-what"><b id="dailyInterestTitle">${esc(options.title)}</b></div><button type="button" class="sh-done daily-interest-done">Done</button></div>
+    <div class="sh-list" role="radiogroup" aria-label="${dataAttr(options.title)}">${options.rows.map(row => {
+      const heading = row.group && row.group !== group ? `<h3 class="daily-interest-group">${esc(row.group)}</h3>` : ''; group = row.group;
+      return heading + `<button type="button" class="sh-row daily-interest-row${row.left === 0 ? ' done' : ''}" role="radio" data-interest="${dataAttr(row.interest)}" data-n="${dataAttr(row.interest)}" aria-checked="${row.interest === (options.chosen || '')}" aria-current="${row.interest === (options.chosen || '')}"><span class="sh-n">${esc(row.interest || 'All interests')}</span>${row.left === undefined ? '' : `<span class="daily-interest-left">${row.left ? row.left + ' left' : 'Done'}</span>`}</button>`;
+    }).join('')}</div></div>`;
+  const close = privateCallback(() => { checkPrivateEpoch(epoch); if (live()) opening.close(); });
+  s.onclick = e => { if (e.target === s) close(); };
+  s.querySelector('.sh-done').onclick = close;
+  s.querySelectorAll('.daily-interest-row').forEach(b => { b.onclick = privateCallback(() => { checkPrivateEpoch(epoch); if (live()) opening.choose(b.dataset.interest); }); });
+  opening.viewport = privateCallback(() => { const v = window.visualViewport; if (!v) return; Object.assign(s.style, { top: v.offsetTop + 'px', left: v.offsetLeft + 'px', width: v.width + 'px', height: v.height + 'px', right: 'auto', bottom: 'auto' }); s.querySelector('.sh-panel').style.maxHeight = (v.height * .9) + 'px'; });
+  if (window.visualViewport) { window.visualViewport.addEventListener('resize', opening.viewport); window.visualViewport.addEventListener('scroll', opening.viewport); }
+  document.body.appendChild(s); opening.viewport(); popIn(s);
+  if (options.button) options.button.setAttribute('aria-expanded', 'true');
+  if (!InterestPicker.back) interestSheetStep(opening);
+  const first = s.querySelector('[aria-current="true"]') || s.querySelector('.daily-interest-row');
+  if (first) { first.focus({ preventScroll: true }); const list = s.querySelector('.sh-list'); list.scrollTop = Math.max(0, first.offsetTop + first.offsetHeight - list.clientHeight); }
+  return s;
+}
+function closeInterestSheet() {
+  const opening = InterestPicker.cur; if (!opening) return;
+  InterestPicker.cur = null;
+  if (window.visualViewport) { window.visualViewport.removeEventListener('resize', opening.viewport); window.visualViewport.removeEventListener('scroll', opening.viewport); }
+  const s = document.getElementById('dailyInterestSheet'); if (s) s.remove();
+  if (opening.button) opening.button.setAttribute('aria-expanded', 'false');
+  if (typeof history !== 'undefined' && history.state?.scoutInterestPicker === opening.id) {
+    InterestPicker.back = { address: location.href, id: opening.id, state: opening.historyState };
+    Promise.resolve().then(() => {
+      interestSheetRoute();
+      history.back();
+    });
+  }
+}
+function interestSheetStep(opening) {
+  try {
+    opening.historyState = history.state;
+    history.replaceState({ ...history.state, scoutInterestBase: opening.id }, '', location.href);
+    history.pushState({ ...history.state, scoutInterestPicker: opening.id }, '', location.href);
+  } catch (_) {}
+}
+function interestSheetRoute() {
+  const back = InterestPicker.back;
+  if (!back || (location.href === back.address && (history.state?.scoutInterestPicker === back.id || history.state?.scoutInterestBase === back.id))) return;
+  const to = location.href, state = history.state;
+  InterestPicker.afterClose = () => {
+    // Back may land on the sheet's step or the page beneath it. Keep that page for the next Back.
+    if (history.state?.scoutInterestPicker) history.replaceState(state, '', to);
+    else history.pushState(state, '', to);
+  };
+}
+function interestSheetHistory() {
+  const opening = InterestPicker.cur;
+  if (InterestPicker.back) {
+    const back = InterestPicker.back;
+    if (location.href !== back.address || (history.state?.scoutInterestPicker !== back.id && history.state?.scoutInterestBase !== back.id)) { interestSheetRoute(); return; }
+    if (history.state?.scoutInterestPicker !== back.id) history.replaceState(back.state, '', location.href);
+    InterestPicker.back = false;
+    const next = InterestPicker.afterClose; InterestPicker.afterClose = null;
+    if (next) next();
+    else if (opening) interestSheetStep(opening);
+    return;
+  }
+  if (opening && history.state?.scoutInterestPicker !== opening.id) {
+    if (history.state?.scoutInterestBase === opening.id) history.replaceState(opening.historyState, '', location.href);
+    opening.close();
+  }
+}
+window.addEventListener('popstate', interestSheetHistory);
 function dailyOpenInterestSheet(event, button) {
   requireOwner();
   if (!dailyView() || Daily.sheet || !dailySections().length) return;
@@ -9415,36 +9507,17 @@ function dailyOpenInterestSheet(event, button) {
   const from = (!event || event.detail === 0) ? document.activeElement : null;
   const opening = Daily.picker = { epoch, generation, from, button };
   const live = () => Daily.picker === opening && Daily.generation === generation && dailyView();
-  const s = document.createElement('div'); s.id = 'dailyInterestSheet'; s.className = 'save-sheet';
-  const sections = dailySections(), cards = dailyCards();
-  s.innerHTML = `<div class="sh-panel" role="dialog" aria-modal="true" aria-labelledby="dailyInterestTitle">
-    <div class="sh-head"><span class="sh-grip" aria-hidden="true"></span><div class="sh-what"><b id="dailyInterestTitle">Today's interests</b></div><button type="button" class="sh-done daily-interest-done">Done</button></div>
-    <div class="sh-list">${['Core', 'Related'].map(group => {
-      const rows = sections.filter(section => (section.level === 'definitely') === (group === 'Core'));
-      return rows.length ? `<h3 class="daily-interest-group">${group}</h3>${rows.map(section => {
-        const left = cards.filter(c => c.interest === section.interest).length;
-        return `<button type="button" class="sh-row daily-interest-row${left ? '' : ' done'}" data-interest="${dataAttr(section.interest)}" aria-current="${section.interest === Daily.interest}"><span class="sh-n">${esc(section.interest)}</span><span class="daily-interest-left">${left ? left + ' left' : 'Done'}</span></button>`;
-      }).join('')}` : '';
-    }).join('')}</div></div>`;
-  const close = privateCallback(() => { checkPrivateEpoch(epoch); if (live()) dailyCloseInterestSheet(); });
-  s.onclick = e => { if (e.target === s) close(); };
-  s.querySelector('.sh-done').onclick = close;
-  s.querySelectorAll('.daily-interest-row').forEach(b => {
-    b.onclick = privateCallback(() => { checkPrivateEpoch(epoch); if (live()) dailySetInterest(b.dataset.interest); });
-  });
-  [s, ...s.querySelectorAll('button')].forEach(b => { b.dataset.dailyGen = String(generation); });
-  document.body.appendChild(s); popIn(s);
-  if (button) button.setAttribute('aria-expanded', 'true');
-  const first = s.querySelector('[aria-current=true]') || s.querySelector('.daily-interest-row');
-  if (first) first.focus({ preventScroll: true });
+  const cards = dailyCards();
+  openInterestSheet({ button, title: "Today's interests", chosen: Daily.interest,
+    rows: ['Core', 'Related'].flatMap(group => dailySections().filter(section => (section.level === 'definitely') === (group === 'Core')).map(section => ({ interest: section.interest, group, left: cards.filter(c => c.interest === section.interest).length }))),
+    live, close: () => dailyCloseInterestSheet(), choose: dailySetInterest });
 }
 function dailyCloseInterestSheet(adopt = true) {
   const opening = Daily.picker; if (!opening) return;
   Daily.picker = null;
   const s = document.getElementById('dailyInterestSheet'), inside = s && s.contains(document.activeElement);
   if (inside) document.activeElement.blur();
-  if (s) s.remove();
-  if (opening.button) opening.button.setAttribute('aria-expanded', 'false');
+  closeInterestSheet();
   if (adopt && dailyView()) { dailyResume(); dailyRender(); }
   if (adopt && inside && opening.from) {
     const to = opening.from.isConnected ? opening.from : document.querySelector('.daily-picker');
@@ -9791,7 +9864,7 @@ function dailyRender(focus, keepInterest) {
   dailyTick();
   const box = document.getElementById('topStories'); if (!box) return;
   const previousArea = box.querySelector('.daily-area'), previousPaper = box.querySelector('.daily-action')?.dataset.dailyPaper, previousScroll = previousArea?.scrollTop || 0;
-  const previousInterest = box.querySelector('.daily-picker-name')?.textContent;
+  const previousInterest = box.querySelector('#dailyBody .daily-picker-name')?.textContent;
   const old = box.querySelector('.daily-card'), hadFocus = !!focus || old && old.contains(document.activeElement);
   if (!box.querySelector('#dailyBody')) {
     box.innerHTML = `<div class="feed daily-feed" id="feed"><div class="feed-head" id="feedHead"><div class="feed-tabs home" id="feedTabs" role="tablist" aria-label="Feeds"><div class="ft-tabs" id="feedTabsIn"></div><div class="ft-add" id="feedAdd"></div></div><div id="feedCtl" hidden></div><p id="tabsMsg" role="status"></p></div><div id="listBar" hidden></div><div class="feed-list" id="feedList"><div id="dailyBody" role="tabpanel" aria-label="Daily"></div></div><div id="feedMore"></div><div id="feedEnd"></div></div>`;
@@ -9811,7 +9884,7 @@ function dailyRender(focus, keepInterest) {
   const position = card ? removed + card.position + 1 : total;
   const empty = Daily.status === 'retry' ? `Couldn't load your picks. <button type="button" data-daily-retry>Try again</button>` : !Daily.active || !section || Daily.status === 'waiting' || !sections.some(s => s.cards.length) ? 'Your next picks are on the way.' : "That's all for today. More tomorrow.";
   const icon = kind => kind === 'save' ? '<path d="M6 3h12v18l-6-4-6 4z"/>' : kind === 'pass' ? '<path d="m6 6 12 12M18 6 6 18"/>' : '<path d="m5 12 4 4L19 6"/>';
-  root.innerHTML = `${section ? `<button type="button" class="daily-picker" aria-haspopup="dialog" aria-expanded="false" aria-controls="dailyInterestSheet"><span class="daily-picker-name">${esc(section.interest)}</span><span class="daily-picker-count">${position} of ${total}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>` : ''}
+  root.innerHTML = `${section ? interestPickerHTML(section.interest, '', `${position} of ${total}`) : ''}
     <section class="daily-area">${card && row ? dailyCardHTML(card, row) + `</section><footer class="daily-actions" aria-label="Paper actions">${['pass', 'save', 'read'].map(kind => `<button type="button" class="daily-action ${kind}" data-daily-action="${kind}"${kind === 'save' ? ' aria-label="Choose a list" aria-haspopup="dialog" aria-expanded="false"' : ''}><span><svg viewBox="0 0 24 24" aria-hidden="true">${icon(kind)}</svg></span><b>${kind === 'pass' ? 'Pass' : kind === 'read' ? 'Mark read' : esc(dailyDestination(card.paper))}</b></button>`).join('')}</footer>` : `<div class="daily-empty" role="status">${empty}</div></section>`}`;
   dailyWatchFooter(root);
   root.querySelector('.daily-area').scrollTop = card && card.paper === previousPaper ? previousScroll : 0;
@@ -10151,7 +10224,7 @@ function listBarRender() {
 function listBarHTML() {
   const n = Feed.project;
   return `<div class="lb-row"><button type="button" class="lb-back" id="listBackBtn" aria-label="Back to lists" onclick="listPageBack()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><h2 class="lb-name" id="listName" title="${dataAttr(n)}">${esc(n)}</h2>${n === TO_READ ? '' : `<button type="button" class="lb-more" id="listMoreBtn" aria-haspopup="menu" aria-expanded="false" aria-label="More for ${dataAttr(n)}" onclick="openListMenu(this, Feed.project, 'more')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>`}<span class="lb-grow"></span><button type="button" class="lb-add" id="listAddBtn" aria-expanded="false" aria-controls="listAddBox" onclick="listAddOpen()"><span class="lb-pill">+ Add a paper</span></button></div>`
-    + `<div class="lb-addbox" id="listAddBox" hidden></div><div class="lb-int" id="listIntRow" hidden><button type="button" class="ctl-btn ctl-int" id="listIntBtn" aria-haspopup="menu" aria-expanded="false" onclick="openListMenu(this, Feed.project, 'interest')"><span class="ctl-pill"><span class="ctl-t">All interests</span>${FEED_CHEVRON}</span></button></div>`;
+    + `<div class="lb-addbox" id="listAddBox" hidden></div><div class="lb-int" id="listIntRow" hidden>${interestPickerHTML('All interests', `id="listIntBtn" onclick="openListMenu(this, Feed.project, 'interest')"`)}</div>`;
 }
 function listBarSync() {
   const bar = document.getElementById('listBar');
@@ -10161,7 +10234,7 @@ function listBarSync() {
   if (more) more.setAttribute('aria-label', `More for ${n}`);
   if (row) row.hidden = !listMembers(n).length;
   if (int) {
-    const chosen = listInterest(n), t = int.querySelector('.ctl-t'), label = chosen || 'All interests';
+    const chosen = listInterest(n), t = int.querySelector('.daily-picker-name'), label = chosen || 'All interests';
     if (t && t.textContent !== label) t.textContent = label;
     int.setAttribute('aria-label', `Interests in ${n}: ${chosen || 'all'}`); int.setAttribute('title', label);
   }
@@ -10342,12 +10415,17 @@ function openListMenu(btn, n, kind) {
   if (Feed.menu) closeFeedMenu();
   closeSaveSheet(); closeSaveDD(); closeCopyDD();
   const names = kind === 'interest' ? feedChipNames() : null, chosen = kind === 'interest' ? listInterest(n) : null;
+  if (kind === 'interest') {
+    const cur = ListMenu.cur = { id: ++ListMenu.seq, kind, list: n, btnId: btn.id, sig: JSON.stringify(names), where: btn.closest('#listBar') ? 'tab' : 'lib' };
+    cur.el = openInterestSheet({ button: btn, title: `Interests in ${n}`, chosen, rows: [null, ...names].map(x => ({ interest: x || '' })),
+      live: () => ListMenu.cur === cur && !!document.getElementById(cur.btnId) && hasList(n) && cur.sig === JSON.stringify(feedChipNames()),
+      close: () => closeListMenu(true), choose: x => { closeListMenu(true); setListInterest(n, x || null); const b = document.getElementById(cur.btnId); if (b) b.focus({ preventScroll: true }); } });
+    return;
+  }
   const id = ++ListMenu.seq, m = document.createElement('div');
-  m.id = 'listMenu' + id; m.className = kind === 'interest' ? 'sort-menu int-menu list-menu' : 'sort-menu list-menu'; m.dataset.menu = String(id);
+  m.id = 'listMenu' + id; m.className = 'sort-menu list-menu'; m.dataset.menu = String(id);
   m.setAttribute('role', 'menu'); m.setAttribute('aria-label', kind === 'interest' ? `Interests in ${n}` : `More for ${n}`);
-  m.innerHTML = kind === 'interest'
-    ? [null, ...names].map(x => `<button type="button" class="sort-item" role="menuitemradio" aria-checked="${(x || null) === chosen}" data-n="${dataAttr(x || '')}" onclick="listMenuChoose(this)"><span class="sort-text"><span class="sort-name">${esc(x || 'All interests')}</span></span>${FEED_TICK}</button>`).join('')
-    : `<button type="button" class="sort-item" role="menuitem" data-n="rename" onclick="listMenuChoose(this)"><span class="sort-text"><span class="sort-name">Rename list</span></span></button><button type="button" class="sort-item danger" role="menuitem" data-n="delete" onclick="listMenuChoose(this)"><span class="sort-text"><span class="sort-name">Delete list</span></span></button>`;
+  m.innerHTML = `<button type="button" class="sort-item" role="menuitem" data-n="rename" onclick="listMenuChoose(this)"><span class="sort-text"><span class="sort-name">Rename list</span></span></button><button type="button" class="sort-item danger" role="menuitem" data-n="delete" onclick="listMenuChoose(this)"><span class="sort-text"><span class="sort-name">Delete list</span></span></button>`;
   m.onkeydown = listMenuKey;
   document.body.appendChild(m);
   ListMenu.cur = { id, kind, list: n, btnId: btn.id, el: m, sig: names ? JSON.stringify(names) : null, where: btn.closest && btn.closest('#listBar') ? 'tab' : 'lib' };
@@ -10359,7 +10437,7 @@ function openListMenu(btn, n, kind) {
 }
 function placeListMenu() {
   const cur = ListMenu.cur;
-  if (!cur) return;
+  if (!cur || cur.kind === 'interest') return;
   const btn = document.getElementById(cur.btnId);
   if (!btn || !btn.isConnected) { closeListMenu(); return; }
   placePopover(cur.el, btn);
@@ -10369,12 +10447,13 @@ function closeListMenu(focusBack) {
   const cur = ListMenu.cur;
   if (!cur) return;
   ListMenu.cur = null;
+  if (cur.kind === 'interest') closeInterestSheet();
   const inside = !!document.activeElement && cur.el.contains(document.activeElement);
   if (cur.el._vv && window.visualViewport) { window.visualViewport.removeEventListener('resize', cur.el._vv); window.visualViewport.removeEventListener('scroll', cur.el._vv); }
   cur.el._vv = null; cur.el.onkeydown = null;
   cur.el.remove();
   const btn = document.getElementById(cur.btnId);
-  if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.removeAttribute('aria-controls'); if (btn.isConnected && (focusBack || inside)) btn.focus(); }
+  if (btn) { btn.setAttribute('aria-expanded', 'false'); if (cur.kind !== 'interest') btn.removeAttribute('aria-controls'); if (btn.isConnected && (focusBack || inside)) btn.focus(); }
   pressReconcile();
 }
 /* The open menu follows what it shows: its button gone, its list gone, or other interests to list: it closes */
@@ -12244,7 +12323,7 @@ function libAllPage(dir) {
 /* The interest menu's button at the top of an open list's group: its own id (listUid), its menu its own opening */
 function libIntHTML(name, chosen) {
   const label = chosen || 'All interests';
-  return `<div class="lib-int"><button type="button" class="ctl-btn ctl-int" id="libInt-${listUid(name)}" data-n="${dataAttr(name)}" aria-haspopup="menu" aria-expanded="false" aria-label="${dataAttr(`Interests in ${name}: ${chosen || 'all'}`)}" title="${dataAttr(label)}" onclick="openListMenu(this, this.dataset.n, 'interest')"><span class="ctl-pill"><span class="ctl-t">${esc(label)}</span>${FEED_CHEVRON}</span></button></div>`;
+  return `<div class="lib-int">${interestPickerHTML(label, `id="libInt-${listUid(name)}" data-n="${dataAttr(name)}" aria-label="${dataAttr(`Interests in ${name}: ${chosen || 'all'}`)}" title="${dataAttr(label)}" onclick="openListMenu(this, this.dataset.n, 'interest')"`)}</div>`;
 }
 /* A PDF you uploaded: it opens straight in the reader (there's no paper page for it) */
 function uploadRowHTML(p) {
@@ -23122,6 +23201,7 @@ function retiredHash(hash) {
 function applyHash() {
   if (!configReady() || !_ownerDecisionDone) return;
   try { requireTarget(); } catch (e) { return; }
+  interestSheetRoute();
   const retired = retiredHash(location.hash);   // replaced in place, without a new Back step
   if (retired) history.replaceState(null, '', location.pathname + location.search + retired);
   searchOff();
