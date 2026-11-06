@@ -1346,13 +1346,13 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
   .search-results .top-row .tr-actions:has(.p-detail-panel.open) { display: grid; }
 }
 .search-results .scrim { position: fixed; z-index: 210; inset: 0; background: rgba(0,0,0,0.5); }
-.search-results .bsheet { position: fixed; z-index: 211; left: 50%; bottom: 0; transform: translateX(-50%); width: min(560px,100%); max-height: 72dvh; display: flex; flex-direction: column; background: var(--bg-surface); border-top: 1px solid rgba(255,255,255,0.14); border-radius: 16px 16px 0 0; box-shadow: 0 -20px 50px rgba(0,0,0,0.5); }
+.search-results .bsheet { position: fixed; z-index: 211; left: round(nearest, max(0px, (100% - 560px) / 2), 1px); bottom: 0; width: min(560px,100%); max-height: round(nearest, 72dvh, 1px); display: flex; flex-direction: column; background: var(--bg-surface); border-top: 1px solid rgba(255,255,255,0.14); border-radius: 16px 16px 0 0; box-shadow: 0 -20px 50px rgba(0,0,0,0.5); }
 .search-results .bs-head { display: flex; align-items: center; gap: 6px; padding: 12px 12px 10px 18px; border-bottom: 1px solid rgba(255,255,255,0.07); }
 .search-results .bs-head b { margin-right: auto; font-size: 16px; font-weight: 600; }
 .search-results .bs-head button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border: 0; border-radius: 999px; background: none; font-size: 14px; color: var(--text-secondary); }
 .search-results .bs-head .done { background: rgba(255,255,255,0.1); color: var(--text); }
 .search-results .bs-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 18px 22px; }
-.search-results .help-sheet .bs-body { line-height: 1.6; }
+.search-results .help-sheet .bs-body { line-height: round(nearest, 1.6em, 1px); }
 .search-results mark { background: color-mix(in srgb,var(--accent) 22%,transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
 .search-results .tl-empty { line-height: 1.6; max-width: 560px; margin: 12px auto; padding: 16px 12px; }
 .search-results .search-empty strong { display: block; color: var(--text); margin-bottom: 6px; }
@@ -1366,7 +1366,7 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
   .search-results #searchStatus { font-size: 12px; }
   .search-results #searchClear { display: none; }
   .search-results .res-bar { flex-wrap: wrap; }
-  .search-results .bsheet { height: 62dvh; }
+  .search-results .bsheet { height: round(nearest, 62dvh, 1px); }
   .search-results .help-sheet { height: auto; }
   .search-results .bs-body .seg button, .search-results .bs-body .ri { min-height: 44px; }
   .search-results .bs-body .tc { display: inline-flex; align-items: center; width: auto; max-width: 100%; margin: 4px 6px 4px 0; padding: 0 14px; border: 1px solid transparent; border-radius: 999px; background: rgba(255,255,255,0.055); font-size: 13.5px; }
@@ -2646,9 +2646,12 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 .save-dd-item .dd-check.on { background: var(--list); border-color: var(--list); color: var(--bg); }
 .save-dd-empty { padding: 10px 12px; font-size: 12px; color: var(--text-muted); text-align: center; }
 
-/* [7] TOAST — frosted glass + accent border */
-.toast { position: fixed; bottom: 24px; left: 50%; width: max-content; max-width: calc(100vw - 32px); box-sizing: border-box; transform: translateX(-50%) translateY(calc(100% + 32px + env(safe-area-inset-bottom, 0px))); visibility: hidden; background: rgba(0,0,0,0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); color: var(--text); padding: 10px 20px; border-radius: 8px; font-size: 13px; border: 1px solid var(--line); border-left: 3px solid var(--accent); box-shadow: 0 8px 32px rgba(0,0,0,0.55); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s 0.3s; z-index: 450; pointer-events: none; display: flex; align-items: center; gap: 12px; }
-.toast.show { transform: translateX(-50%) translateY(0); pointer-events: auto; visibility: visible; transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s; }   /* hidden = invisible once it has slid away: nothing peeks above the home indicator */
+/* [7] TOAST — dark glass + accent border
+   Round both halves of centering: auto margins also leave intrinsic widths between pixels. Keep the same X
+   offset in both states so only Y slides, and no backdrop layer resamples the text at rest (including WebKit). */
+.toast { position: fixed; bottom: 24px; left: round(nearest, 50%, 1px); width: max-content; max-width: calc(100vw - 32px); box-sizing: border-box; transform: translateX(round(nearest, -50%, 1px)) translateY(round(nearest, calc(100% + 32px + env(safe-area-inset-bottom, 0px)), 1px)); visibility: hidden; background: rgba(0,0,0,0.88); color: var(--text); padding: 10px 20px; border-radius: 8px; font-size: 13px; line-height: round(nearest, 1.5em, 1px); border: 1px solid var(--line); border-left: 3px solid var(--accent); box-shadow: 0 8px 32px rgba(0,0,0,0.55); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s 0.3s; z-index: 450; pointer-events: none; display: flex; align-items: center; gap: 12px; }
+.toast.show { transform: translateX(round(nearest, -50%, 1px)) translateY(0); pointer-events: auto; visibility: visible; transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s; }   /* hidden = invisible once it has slid away: nothing peeks above the home indicator */
+@media (prefers-reduced-motion: reduce) { .toast, .toast.show { transition: none; } }
 /* iPhone / iPad edges (the page uses viewport-fit=cover): the notch or Dynamic Island in landscape, and the
    home indicator, never cover content or controls. Every env() is 0 on the Mac. */
 .navbar { padding-top: env(safe-area-inset-top, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
@@ -2770,7 +2773,7 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 /* up to laptop widths a centred toast would sit on the save bar (bottom-left): toasts rise above it */
 @media (min-width: 701px) and (max-width: 1280px) {
   body:has(.save-bar.visible) .toast { bottom: calc(160px + env(safe-area-inset-bottom, 0px)); }
-  body:has(.save-bar.visible) .toast:not(.show) { transform: translateX(-50%) translateY(calc(100% + 168px + env(safe-area-inset-bottom, 0px))); }
+  body:has(.save-bar.visible) .toast:not(.show) { transform: translateX(round(nearest, -50%, 1px)) translateY(round(nearest, calc(100% + 168px + env(safe-area-inset-bottom, 0px)), 1px)); }
 }
 @media (max-width: 700px) {
   .save-bar { left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); max-width: none; flex-wrap: nowrap; padding: 10px 12px; }
@@ -2779,7 +2782,7 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
   .save-bar .save-bar-btns { width: auto; }
   .save-bar .btn-dismiss-bar { position: static; order: 3; }
   body:has(.save-bar.visible) .toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
-  body:has(.save-bar.visible) .toast:not(.show) { transform: translateX(-50%) translateY(calc(100% + 92px + env(safe-area-inset-bottom, 0px))); }   /* hidden fully off-screen when lifted */
+  body:has(.save-bar.visible) .toast:not(.show) { transform: translateX(round(nearest, -50%, 1px)) translateY(round(nearest, calc(100% + 92px + env(safe-area-inset-bottom, 0px)), 1px)); }   /* hidden fully off-screen when lifted */
 }
 .save-bar-btns .btn-save-csv { white-space: nowrap; }
 .btn-save-csv { padding: 5px 12px; background: rgba(255,255,255,0.1); border: 1px solid var(--line); border-radius: 6px; color: var(--text); font-size: 12px; font-weight: 500; cursor: pointer; transition: background 0.15s; flex: 1; text-align: center; margin: 0 2px; }
@@ -2810,14 +2813,14 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 @media (max-width: 700px) { .save-bar[data-state] { right: auto; max-width: calc(100% - 24px); } }
 @media (min-width: 701px) and (max-width: 1280px) {
   body:has(.save-bar.visible) .toast { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
-  body:has(.save-bar.visible) .toast:not(.show) { transform: translateX(-50%) translateY(calc(100% + 80px + env(safe-area-inset-bottom, 0px))); }
+  body:has(.save-bar.visible) .toast:not(.show) { transform: translateX(round(nearest, -50%, 1px)) translateY(round(nearest, calc(100% + 80px + env(safe-area-inset-bottom, 0px)), 1px)); }
 }
 
 /* ===== PHASE 13d: pull to refresh on For you (phones and phones sideways) =====
    A small pill over the sticky tab row says what a pull will do; the content does not move. Its four states are
    pulling, ready, busy and hidden (no data-state). --pull is how far the finger has come, halved and capped. */
 .feed { position: relative; }
-.pull-hint { position: absolute; top: 0; left: 50%; z-index: 31; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 999px; background: var(--bg-raise); border: 1px solid var(--line); color: var(--text); font-size: 13px; white-space: nowrap; box-shadow: 0 6px 20px rgba(0,0,0,0.35); transform: translate(-50%, calc(-100% - 8px + var(--pull, 0px))); opacity: 0; pointer-events: none; transition: transform 0.2s var(--ease), opacity 0.2s; }
+.pull-hint { position: absolute; top: 0; left: round(nearest, 50%, 1px); z-index: 31; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 999px; background: var(--bg-raise); border: 1px solid var(--line); color: var(--text); font-size: 13px; white-space: nowrap; box-shadow: 0 6px 20px rgba(0,0,0,0.35); transform: translate(round(nearest, -50%, 1px), round(nearest, calc(-100% - 8px + var(--pull, 0px)), 1px)); opacity: 0; pointer-events: none; transition: transform 0.2s var(--ease), opacity 0.2s; }
 .pull-hint[data-state] { opacity: var(--pull-o, 1); }
 .pull-hint .pull-arrow { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s var(--ease); }
 .pull-hint[data-state="ready"] .pull-arrow { transform: rotate(180deg); }
@@ -3156,13 +3159,32 @@ body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.au
 
 
 /* Review folders: names wrap in groups and truncate on the compact upload bar. */
-.review-groups { padding: 8px 0 14px; min-width: 0; }
-.review-groups .interest-group { margin: 8px 0; }
-.review-groups .interest-group-header { min-width: 0; flex-wrap: wrap; }
-.review-groups .lib-disc { min-width: 0; flex: 1; }
-.review-groups .lib-name { overflow-wrap: anywhere; }
-.review-groups .library-actions { flex-shrink: 0; }
-.review-new { padding: 12px; }
+[data-lib="review"] > .interest-group-inner > .interest-group-body { min-width: 0; }
+.review-groups { padding: 4px 16px 0; min-width: 0; }
+.review-key-hint { color: var(--text-muted-raised); font-size: 12.5px; padding: 4px 0 12px; }
+.review-folder { border-top: 1px solid var(--line); min-width: 0; }
+.review-folder-head { display: flex; align-items: center; gap: 6px; position: relative; min-width: 0; }
+.review-folder-toggle { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 12px 0; border: 0; background: none; color: var(--text); font: inherit; font-weight: 650; text-align: left; cursor: pointer; }
+.review-folder-arrow { color: var(--text-muted-raised); flex: none; width: 12px; }
+.review-folder-toggle[aria-expanded="true"] .review-folder-arrow { transform: rotate(90deg); }
+.review-folder-name { min-width: 0; overflow-wrap: anywhere; }
+.review-folder-count { color: var(--text-muted-raised); font-size: 12.5px; font-weight: 400; white-space: nowrap; flex: none; }
+.review-folder-more { border: 0; background: none; color: var(--text-muted-raised); font-size: 22px; width: 40px; min-height: 40px; cursor: pointer; flex: none; }
+.review-folder-menu { position: absolute; right: 0; top: calc(100% - 3px); z-index: 10; width: 148px; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-raise); box-shadow: 0 4px 16px #0004; }
+.review-folder-menu button { display: block; width: 100%; border: 0; border-radius: 6px; padding: 10px 12px; font: inherit; text-align: left; color: var(--text); background: none; cursor: pointer; }
+.review-folder-menu button:hover { background: var(--bg-surface); }
+.review-folder-edit { flex: 1; min-width: 0; width: 100%; margin-block: 6px; border: 1px solid var(--accent); border-radius: 5px; padding: 8px; font: inherit; color: var(--text); background: var(--bg); }
+.review-groups .top-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; margin: 0; padding: 14px 2px; border: 0; border-top: 1px solid var(--line); border-radius: 0; position: relative; cursor: pointer; }
+.review-groups .top-row::before { display: none; }
+.review-groups .tr-main { min-width: 0; }
+.review-groups .tr-headline { font-size: 15px; line-height: 1.35; font-weight: 650; overflow-wrap: anywhere; }
+.review-groups .tr-title { font-size: 13.5px; color: var(--text-secondary); margin-top: 4px; white-space: normal; overflow-wrap: anywhere; }
+.review-groups .tr-line { margin-top: 4px; font-size: 12.5px; }
+.review-groups .tr-side { font-size: 12.5px; }
+.review-folder-body { padding-left: 22px; min-width: 0; }
+.review-folder-upload, .review-new { display: block; width: 100%; min-height: 44px; padding: 12px 2px; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 600; text-align: left; color: var(--accent); cursor: pointer; }
+.review-new { border-top: 1px solid var(--line); border-radius: 0; }
+@media (prefers-reduced-motion: reduce) { .review-groups * { transition: none !important; animation: none !important; } }
 .review-row-actions { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
 .review-folder-btn { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 180px; }
 .review-folder-btn > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
@@ -3184,10 +3206,9 @@ body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.au
 .review-choice:hover { background: var(--bg-hover); border-radius: 10px; }
 .review-cancel { width: 100%; min-height: 44px; margin-top: 8px; border-radius: 12px; border: 0; background: var(--bg-hover); color: var(--text); font: inherit; font-weight: 600; }
 @media (max-width: 600px) {
-  .review-groups .interest-group-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
-  .review-groups .lib-disc { grid-column: 1; min-width: 0; }
-  .review-groups .library-actions { grid-row: 2; grid-column: 1 / -1; justify-content: flex-end; }
-  .review-groups .chevron { grid-row: 1; grid-column: 2; }
+  .review-groups { padding-inline: 12px; }
+  .review-groups .top-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .review-groups .tr-side { margin-top: 4px; text-align: left; align-items: flex-start; }
   .review-sheet { align-items: flex-end; padding: 0; }
   .review-panel { width: 100%; max-height: 88dvh; border-radius: 18px 18px 0 0; padding: 12px 14px max(20px, env(safe-area-inset-bottom)); }
   .review-panel .dl-grip { display: block; }
@@ -12616,7 +12637,7 @@ function libBodyHTML(papers, key) {
     return paperListHTML(papers.slice(at, at + 60)) + `<div class="library-actions"><button type="button" onclick="libAllPage(-1)"${at ? '' : ' disabled'}>Previous papers</button><span>${at + 1}–${Math.min(at + 60, papers.length)} of ${papers.length}</span><button type="button" onclick="libAllPage(1)"${at + 60 < papers.length ? '' : ' disabled'}>More papers</button></div>`;
   }
   if (key === 'review') return reviewGroupsHTML(papers);   // REVIEW FOLDERS HOOK: grouped uploads
-  if (key.startsWith('review-folder-') || key === 'review-none' || key === 'review-done') return reviewFolderRowsHTML(papers);
+  if (key.startsWith('review-folder-') || key === 'review-done') return reviewFolderRowsHTML(papers);
   if (!papers.length) return '<div class="library-list-empty">No papers here yet</div>';
   const name = key.startsWith('list-') ? key.slice(5) : null, chosen = name !== null ? listInterest(name) : null;
   const menu = name !== null ? libIntHTML(name, chosen) : '', shown = chosen === null ? papers : papers.filter(p => feedInChip(p, chosen));
@@ -12648,7 +12669,7 @@ function uploadRowHTML(p) {
     <div class="tr-main">
       <div class="tr-headline">${esc(p.headline || p.title)}</div>
       ${p.headline ? `<div class="tr-title">${esc(p.title)}</div>` : ''}
-      <div class="upload-brief-state" data-upload-state="${ka}">${uploadBriefStateHTML(p.id)}</div>
+      <div class="upload-brief-state" data-upload-state="${ka}">${uploadBriefStateHTML(p.id, true)}</div>
       <div class="tr-line"><span class="tr-authors">${counts || 'No notes yet'}</span></div>
     </div>
     <div class="tr-side"><span>${added ? 'Added ' + esc(shortDate(added)) : ''}</span>${read ? '<span class="was-read">&#10003; Read</span>' : ''}</div>
@@ -13118,6 +13139,9 @@ function libNotesHint() {
   return `<div class="lib-hint"><strong>Notes &amp; highlights</strong> are locked. <button class="lib-hint-btn" onclick="vaultReady().then(ok => ok && renderLibrary())">Unlock notes</button> to list the papers you annotated.</div>`;
 }
 function renderLibrary() {
+  if (_reviewRename?.pointer) { _reviewRename.redraw = true; return; }   // finish the outside tap before replacing its target
+  const editor = document.activeElement, editing = editor?.classList.contains('review-folder-edit') && _reviewRename;
+  const selection = editing ? [editor.selectionStart, editor.selectionEnd] : null;
   _libPapers = {};
   updateSyncStatus();
   const groups = libraryGroups();
@@ -13141,8 +13165,10 @@ function renderLibrary() {
   close();
   if (!everyPaper().length) html += '<div class="library-empty">No papers yet</div>';
   if (hint && everyPaper().length) html += hint;
+  if (editing) editor.onblur = null;   // replacing the editor is a redraw, not a completed edit
   document.getElementById('libraryContent').innerHTML = html;
   libraryDrawn();
+  if (editing) { const input = document.querySelector('.review-folder-edit'); if (input) { input.focus({ preventScroll: true }); input.setSelectionRange(...selection); } }
 }
 /* After Library is drawn whole, every element in it is new: a picker opened from one of its rows finds its ☰ again by
    paper and group, or closes when that row is no longer there (saveDDSync); the Copy menu closes when its list can no
@@ -16082,7 +16108,7 @@ window.addEventListener('online', privateCallback(() => { if (document.querySele
    Merge upload fields separately: a title rename and a folder move on different devices both survive. */
 const REVIEW_FOLDERS_KEY = 'scholar_review_folders_v1';
 let _reviewFolders = {}, _reviewClock = 0, _reviewSaveTail = Promise.resolve();
-let _reviewRecordsWork = null, _reviewRecordsAgain = false;
+let _reviewRecordsWork = null, _reviewRecordsAgain = false, _reviewRename = null, _reviewMenu = null;
 const _reviewPendingRemovals = new Map();
 function reviewStamp() { _reviewClock = Math.max(Date.now(), _reviewClock + 1); return new Date(_reviewClock).toISOString(); }
 function mergeReviewFolders(a, b) {
@@ -16229,21 +16255,58 @@ async function createReviewFolder(uploadId = null) {
   _openLibGroups.add('review'); _openLibGroups.add('review-folder-' + id);
   if (uploadId) moveReviewUpload(uploadId, id); else reviewRefresh(); return id;
 }
-async function renameReviewFolder(id) {
-  requireOwner(); const epoch = capturePrivateEpoch(), generation = vaultGeneration(), r = _reviewFolders[id]; if (!r || r.deleted) return;
-  const raw = await privateAwait(showPrompt('Rename folder', null, 'Folder name', r.name), epoch), current = _reviewFolders[id];
-  if (!current || current.deleted) return;
-  checkVaultGeneration(generation); const name = reviewFolderName(raw, id); if (!name || name === current.name) return;
-  const at = reviewStamp(); await privateAwait(reviewSaveFolders({ [id]: { ...current, name, names: [...new Set(current.names.concat(name))], history: [...(current.history || []), { name, at }], at } }), epoch);
+function renameReviewFolder(id) {
+  requireOwner(); const r = _reviewFolders[id]; if (!r || r.deleted) return;
+  _reviewRename = { id, value: r.name, epoch: capturePrivateEpoch(), generation: vaultGeneration() };
+  _openLibGroups.add('review'); reviewRefresh();
+  const input = document.querySelector('.review-folder-edit'); if (input) { input.focus({ preventScroll: true }); input.select(); }
+}
+async function finishReviewFolderRename(input, cancel = false) {
+  const edit = _reviewRename; if (!edit || edit.id !== input.dataset.folder) return;
+  _reviewRename = null; input.onblur = null;
+  checkPrivateEpoch(edit.epoch); checkVaultGeneration(edit.generation); requireOwner();
+  const current = _reviewFolders[edit.id], name = !cancel && reviewFolderName(input.value, edit.id);
+  reviewRefresh(); if (!current || current.deleted || !name || name === current.name) return;
+  const at = reviewStamp();
+  await privateAwait(reviewSaveFolders({ [edit.id]: { ...current, name, names: [...new Set((current.names || [current.name]).concat(name))], history: [...(current.history || []), { name, at }], at } }), edit.epoch);
+}
+function reviewRenameBlur(input) {
+  if (!_reviewRename || _reviewRename.id !== input.dataset.folder) return;
+  if (_reviewRename.pointer) _reviewRename.blurInput = input;
+  else reviewRun(() => finishReviewFolderRename(input));
+}
+function reviewRenameAfterPointer() {
+  const edit = _reviewRename; if (!edit) return;
+  edit.pointer = false;
+  if (edit.blurInput) reviewRun(() => finishReviewFolderRename(edit.blurInput));
+  else if (edit.redraw) { edit.redraw = false; reviewRefresh(); }
+}
+function reviewRenameKey(event, input) {
+  event.stopPropagation(); if (event.isComposing || !['Enter', 'Escape'].includes(event.key)) return;
+  event.preventDefault(); reviewRun(() => finishReviewFolderRename(input, event.key === 'Escape'));
 }
 async function deleteReviewFolder(id) {
   requireOwner(); const epoch = capturePrivateEpoch(), generation = vaultGeneration(), r = _reviewFolders[id]; if (!r || r.deleted) return;
-  if (!await privateAwait(showConfirm('Delete folder?', 'Its papers move to No folder. Every paper, PDF and note stays.', 'Delete folder', true), epoch)) return;
+  if (!await privateAwait(showConfirm('Delete folder?', 'Its papers stay in To review. Every paper, PDF and note stays.', 'Delete folder', true), epoch)) return;
   checkVaultGeneration(generation); const current = _reviewFolders[id]; if (!current || current.deleted) return;
+  const members = Object.entries(_uploads).filter(([uid, u]) => !u.deleted && u.folderId === id).map(([uid, u]) => [uid, u.folderAt || '']);
   if (!await privateAwait(reviewSaveFolders({ [id]: { ...current, deleted: true, at: reviewStamp() } }), epoch)) return;
-  // Normalize this old placement without claiming a new move: a concurrent move into another live folder survives.
+  // Keep placement clocks: a move made on another device still wins over the deleted destination.
   for (const [uid, u] of Object.entries(_uploads)) if (!u.deleted && u.folderId === id) _uploads[uid] = { ...u, folderId: null, folderAt: u.folderAt || '' };
   saveUploads(); reviewRefresh();
+  toast('Folder deleted. Papers kept in To review.', () => reviewRun(async () => {
+    checkPrivateEpoch(epoch); checkVaultGeneration(generation);
+    // Deleted definitions stay tombstoned. Undo creates a live definition, as list deletion does.
+    const restored = 'folder-' + crypto.randomUUID(), at = reviewStamp(), names = new Set(reviewLiveFolders().map(([fid, row]) => row.name));
+    let name = current.name;
+    for (let n = 1; names.has(name); n++) name = current.name.slice(0, 180) + (n === 1 ? ' (restored)' : ` (restored ${n})`);
+    if (!await privateAwait(reviewSaveFolders({ [restored]: { ...current, name, names: [...new Set((current.names || [current.name]).concat(name))], history: [...(current.history || []), { name, at }], created: at, at, deleted: false } }), epoch)) return;
+    for (const [uid, stamp] of members) {
+      const u = _uploads[uid]; if (!u || u.deleted || (u.folderAt || '') !== stamp || u.folderId && u.folderId !== id) continue;
+      _uploads[uid] = { ...u, folderId: restored, folderAt: reviewStamp() };
+    }
+    _openLibGroups.add('review-folder-' + restored); saveUploads(); reviewRefresh();
+  }), { duration: 5000, fullTarget: true });
 }
 function reviewUpdateUpload(id, fields) {
   requireOwner(); capturePrivateEpoch(); const u = _uploads[id]; if (!u || u.deleted || _reviewPendingRemovals.has(id)) return false;
@@ -16266,7 +16329,7 @@ function reviewRemoveFromRead(id) {
    Upload rows retain their headline, title, counts and date. */
 function reviewFolderButtonHTML(id) {
   if (!isOwner() || !uploadById(id)) return '';
-  const folder = reviewFolderId(id), label = folder ? _reviewFolders[folder].name : 'No folder';
+  const folder = reviewFolderId(id), label = folder ? _reviewFolders[folder].name : 'Move to folder';
   return `<button type="button" class="btn-abs review-folder-btn" data-review-act="folder" aria-haspopup="dialog" title="${dataAttr(label)}" onclick="event.stopPropagation();openReviewFolderMenu('${escAttr(id)}')"><span>${esc(label)}</span><span aria-hidden="true">&#9662;</span></button>`;
 }
 function reviewDoneButtonHTML(id) { return isOwner() && uploadById(id) ? `<button type="button" class="btn-abs" data-review-act="done" aria-haspopup="dialog" onclick="event.stopPropagation();openReviewDone('${escAttr(id)}')">Done</button>` : ''; }
@@ -16275,17 +16338,42 @@ function reviewBarActionsHTML(id) { return reviewFolderButtonHTML(id) + reviewDo
 function reviewFolderRowsHTML(papers) { return `<div class="paper-list flat"><section class="tl-section">${papers.filter(p => !_reviewPendingRemovals.has(p.id)).map(p => uploadRowHTML(p)).join('')}</section></div>`; }
 function reviewGroupsHTML(papers) {
   papers = papers.filter(p => !_reviewPendingRemovals.has(p.id));
-  let html = '<div class="review-groups">';
-  const group = (key, label, members, folderId, manage) => {
-    const safeId = folderId ? escAttr(folderId) : '';
-    const extra = key === 'review-done' ? '' : `<span class="library-actions" onclick="event.stopPropagation()"><button data-act="upload" data-folder="${safeId}" onclick="pickUploadPdf(this.dataset.folder || null)">Upload PDF</button>${manage ? `<button class="lib-ico" aria-label="Rename folder" onclick="reviewRun(()=>renameReviewFolder('${safeId}'))">${ICON_EDIT}</button><button class="lib-ico danger" aria-label="Delete folder" onclick="reviewRun(()=>deleteReviewFolder('${safeId}'))">${ICON_TRASH}</button>` : ''}</span>`;
-    return libGroupHTML(key, '', label, members, extra).replace('data-lib=', `data-review-folder="${safeId}" data-lib=`);
+  const hint = !apiKey() && papers.some(p => !uploadBriefValue(_uploads[p.id])) ? '<p class="review-key-hint">Add your Claude API key on this device to get summaries</p>' : '';
+  const rows = members => members.map(uploadRowHTML).join('');
+  let html = '<div class="review-groups">' + hint + rows(papers.filter(p => !(_uploads[p.id] || {}).done && !reviewFolderId(p.id)));
+  const group = (key, label, members, id = null) => {
+    const open = _openLibGroups.has(key), safeId = dataAttr(id || ''), uid = listUid('review-' + key), edit = id && _reviewRename?.id === id, menuOpen = id && _reviewMenu === id;
+    const title = edit ? `<input class="review-folder-edit" data-folder="${safeId}" aria-label="Folder name" maxlength="200" value="${dataAttr(_reviewRename.value)}" oninput="if(_reviewRename)_reviewRename.value=this.value" onkeydown="reviewRenameKey(event,this)" onblur="reviewRenameBlur(this)">` : `<span class="review-folder-name">${esc(label)}</span>`;
+    const toggle = `<button type="button" class="review-folder-toggle" aria-expanded="${open}" aria-controls="reviewBody-${uid}" onclick="toggleReviewFolder(this)"><span class="review-folder-arrow" aria-hidden="true">&#9656;</span>${edit ? '' : title}<span class="review-folder-count">${members.length} ${members.length === 1 ? 'paper' : 'papers'}</span></button>`;
+    return `<section class="review-folder" data-lib="${dataAttr(key)}" data-review-folder="${safeId}"><div class="review-folder-head">${edit ? title : toggle}${id ? `<button type="button" class="review-folder-more" aria-label="Folder options for ${dataAttr(label)}" aria-haspopup="menu" aria-expanded="${!!menuOpen}" onclick="toggleReviewFolderMenu(this)">&#8943;</button><div class="review-folder-menu" role="menu"${menuOpen ? '' : ' hidden'}><button type="button" role="menuitem" data-folder-action="rename" onclick="reviewRun(()=>renameReviewFolder(this.closest('[data-review-folder]').dataset.reviewFolder))">Rename</button><button type="button" role="menuitem" data-folder-action="delete" onclick="reviewRun(()=>deleteReviewFolder(this.closest('[data-review-folder]').dataset.reviewFolder))">Delete</button></div>` : ''}</div><div class="review-folder-body" id="reviewBody-${uid}"${open ? '' : ' hidden'}>${rows(members)}${id ? `<button type="button" class="review-folder-upload" data-act="upload" data-folder="${safeId}" onclick="pickUploadPdf(this.dataset.folder)">Upload a PDF</button>` : ''}</div></section>`;
   };
-  for (const [id, r] of reviewLiveFolders()) html += group('review-folder-' + id, r.name, papers.filter(p => !(_uploads[p.id] || {}).done && reviewFolderId(p.id) === id), id, true);
-  html += group('review-none', 'No folder', papers.filter(p => !(_uploads[p.id] || {}).done && !reviewFolderId(p.id)), null, false);
-  html += group('review-done', 'Done', papers.filter(p => (_uploads[p.id] || {}).done), null, false);
-  return html + '<button type="button" class="lib-hint-btn review-new" onclick="reviewRun(()=>createReviewFolder())">+ New folder</button></div>';
+  for (const [id, r] of reviewLiveFolders()) html += group('review-folder-' + id, r.name, papers.filter(p => !(_uploads[p.id] || {}).done && reviewFolderId(p.id) === id), id);
+  html += group('review-done', 'Done', papers.filter(p => (_uploads[p.id] || {}).done));
+  return html + '<button type="button" class="review-new" onclick="reviewRun(()=>createReviewFolder())">+ New folder</button></div>';
 }
+function toggleReviewFolder(button) {
+  requireOwner(); const group = button.closest('.review-folder'), open = button.getAttribute('aria-expanded') !== 'true';
+  button.setAttribute('aria-expanded', String(open)); group.querySelector('.review-folder-body').hidden = !open;
+  if (open) _openLibGroups.add(group.dataset.lib); else _openLibGroups.delete(group.dataset.lib);
+}
+function closeReviewFolderMenus() {
+  _reviewMenu = null;
+  document.querySelectorAll('.review-folder-menu').forEach(menu => { menu.hidden = true; menu.previousElementSibling.setAttribute('aria-expanded', 'false'); });
+}
+function toggleReviewFolderMenu(button) {
+  requireOwner(); const menu = button.nextElementSibling, open = menu.hidden; closeReviewFolderMenus();
+  if (open) _reviewMenu = button.closest('[data-review-folder]').dataset.reviewFolder;
+  menu.hidden = !open; button.setAttribute('aria-expanded', String(open));
+}
+document.addEventListener('pointerdown', event => {
+  if (_reviewRename && document.activeElement?.classList.contains('review-folder-edit') && event.target !== document.activeElement) _reviewRename.pointer = true;
+}, true);
+document.addEventListener('click', event => { if (!event.target.closest('.review-folder-more')) closeReviewFolderMenus(); reviewRenameAfterPointer(); });
+document.addEventListener('pointerup', () => {
+  const edit = _reviewRename;
+  if (edit?.pointer) setTimeout(() => { if (_reviewRename === edit) { edit.pointer = false; reviewRenameAfterPointer(); } }, 0);
+});
+document.addEventListener('pointercancel', reviewRenameAfterPointer);
 function reviewRun(fn) { const epoch = capturePrivateEpoch(); Promise.resolve().then(() => { checkPrivateEpoch(epoch); return fn(); }).catch(e => { try { checkPrivateEpoch(epoch); } catch (x) { return; } if (!e.privateAuth && !e.target) toastError('Couldn’t save that change. Try again.'); }); }
 function closeReviewSheet() {
   const sheet = document.getElementById('reviewSheet'); if (!sheet) return;
@@ -16305,7 +16393,7 @@ function reviewSheet(id, title, body) {
 function openReviewFolderMenu(id) {
   const current = reviewFolderId(id), done = !!(_uploads[id] || {}).done;
   const button = (fid, label) => `<button type="button" class="review-choice" data-folder="${dataAttr(fid || '')}" aria-pressed="${!done && current === fid}" onclick="moveReviewUpload(this.closest('#reviewSheet').dataset.id, this.dataset.folder || null)"><b>${esc(label)}</b>${!done && current === fid ? '<span aria-hidden="true">&#10003;</span>' : ''}</button>`;
-  reviewSheet(id, 'Move to folder', reviewLiveFolders().map(([fid, r]) => button(fid, r.name)).join('') + button(null, 'No folder') + `<button type="button" class="review-choice" onclick="const id=this.closest('#reviewSheet').dataset.id;closeReviewSheet();reviewRun(()=>createReviewFolder(id))"><b>+ New folder</b></button>`);
+  reviewSheet(id, 'Move to folder', reviewLiveFolders().map(([fid, r]) => button(fid, r.name)).join('') + button(null, 'Move out of folder') + `<button type="button" class="review-choice" onclick="const id=this.closest('#reviewSheet').dataset.id;closeReviewSheet();reviewRun(()=>createReviewFolder(id))"><b>+ New folder</b></button>`);
 }
 function openReviewDone(id) {
   const option = (value, label, sub, danger) => `<button type="button" class="review-choice${danger ? ' danger' : ''}" data-choice="${value}" onclick="reviewDoneChoice(this.closest('#reviewSheet').dataset.id, this.dataset.choice)"><b>${label}</b><small>${sub}</small></button>`;
@@ -16349,7 +16437,7 @@ async function reviewCommitRemoval(id, pending) {
 }
 function reviewTeardown() {
   const pending = [..._reviewPendingRemovals.values()];
-  _reviewPendingRemovals.clear(); _reviewFolders = {}; _reviewClock = 0; _reviewSaveTail = Promise.resolve(); _reviewRecordsWork = null; _reviewRecordsAgain = false;
+  _reviewPendingRemovals.clear(); _reviewRename = _reviewMenu = null; _reviewFolders = {}; _reviewClock = 0; _reviewSaveTail = Promise.resolve(); _reviewRecordsWork = null; _reviewRecordsAgain = false;
   for (const p of pending) { try { clearTimeout(p.timer); } catch (e) { console.error(e); } }
   try { closeReviewSheet(); } catch (e) { console.error(e); }
 }
@@ -16541,11 +16629,11 @@ function uploadBriefAttempts() {
   try { const a = JSON.parse(localStorage.getItem(UPLOAD_BRIEF_TRIES_KEY) || '{}'); return a && typeof a === 'object' && !Array.isArray(a) ? a : {}; } catch (e) { return {}; }
 }
 function storeUploadBriefAttempts(a) { privateSet(UPLOAD_BRIEF_TRIES_KEY, JSON.stringify(a)); }
-function uploadBriefStateHTML(id) {
+function uploadBriefStateHTML(id, row = false) {
   if (!isOwner() || !uploadById(id) || uploadBriefValue(_uploads[id]) || !UploadBrief.here.has(id)) return '';
   const a = uploadBriefAttempts()[id];
   if (a?.running) return '<span class="upload-brief-writing"><i aria-hidden="true"></i>Writing a summary</span>';
-  if (!apiKey()) return 'Add your Claude API key on this device to get a summary';
+  if (!apiKey()) return row ? '' : 'Add your Claude API key on this device to get summaries';
   if (a?.failed || (a?.tries || 0) >= 3) return `Couldn't write a summary. <button type="button" onclick="event.stopPropagation();uploadBriefRetry('${escAttr(id)}')">Try again</button>`;
   return '';
 }
