@@ -11963,6 +11963,7 @@ function closeHideSheet(hidden) {
   const from = s._from;
   s.classList.remove('open', 'bottom'); s.innerHTML = ''; s._from = null;
   if (!hidden && from && from.isConnected && from.focus) from.focus();   // Cancel: back where the reader was
+  if (PaperMenu.step && PaperMenu.step.kind === 'hide') paperMenuStepEnd(PaperMenu.step);   // opened from ⋯: its step in history goes
 }
 
 function refresh() {
@@ -17510,7 +17511,7 @@ setInterval(privateCallback(() => { if (upPdfOn()) upPdfSoon(0); }), UP_PDF.tick
 
 
 /* Upload entry points own their errors, including sign-in checks before parsing. No upload fields are added to sync. */
-const UploadPdf = { busy: false, picker: null, ms: { auth: 15000, read: 30000, reader: 45000, title: 5000 } };
+const UploadPdf = { busy: false, picker: null, unlock: null, ms: { auth: 15000, read: 30000, reader: 45000, title: 5000 } };
 function uploadPdfJournal(id, clear = false) {
   try { if (clear) sessionStorage.removeItem('scholar_upload_pending_v1'); else sessionStorage.setItem('scholar_upload_pending_v1', JSON.stringify({ target: _acceptedTarget, id: id || null })); } catch (e) {}
 }
@@ -17554,9 +17555,54 @@ async function uploadPdfOwner(binding) {
     e.preventDefault(); depth = 0; sec.classList.remove('drop-over');
     const files = [...e.dataTransfer.files], group = e.target.closest && e.target.closest('[data-review-folder]');
     if (files.length > 1) { toastError('Choose one PDF at a time.'); return; }
-    uploadPdf(files[0], group && group.dataset.reviewFolder || null);
+    const folderId = group && group.dataset.reviewFolder || null;
+    // Notes locked: the dropped PDF waits in memory for the unlock (uploadUnlockFirst). Unlocked, signed out or busy: as before.
+    if (uploadNotesOpen() || UploadPdf.busy || !isOwner() && !(isPrivate() && (Private.verifying || Private.verificationBinding))) uploadPdf(files[0], folderId);
+    else uploadUnlockFirst({ file: files[0], folderId });
   });
 })();
+/* Upload PDF with notes locked (6 November 2026): the notes password comes first, so a picked file is never refused.
+   After the unlock the picker opens where the browser still allows it. Safari, on every device, opens a file picker
+   only inside the tap itself, so there the Upload PDF control is left ready for one more tap. A PDF dropped while
+   locked waits in memory until the unlock; Cancel or a sign-out lets it go. */
+function uploadNotesOpen() { return !!(Vault.ready && Vault.key && Vault.index); }
+function uploadPickerLive() {
+  const ua = navigator.userAgent || '';
+  if (dlIOS() || (/AppleWebKit/.test(ua) && !/Chrome\/|Chromium\/|Edg\//.test(ua))) return false;
+  return !!(navigator.userActivation && navigator.userActivation.isActive);
+}
+/* The tapped control's place, found again after the unlock redraws the Lists page */
+function uploadPickControl(folderId) {
+  const el = window.event && window.event.target && window.event.target.closest ? window.event.target.closest('button') : null;
+  if (el && el.closest('#libAdd')) return { sel: '#libAdd .la-go', label: el.textContent };
+  if (folderId) return { sel: `[data-review-folder="${CSS.escape(folderId)}"] .review-folder-upload`, label: el ? el.textContent : 'Upload a PDF' };
+  return { sel: '#libraryContent [data-lib="review"] .library-actions [data-act="upload"]', label: el ? el.textContent : 'Upload PDF' };
+}
+async function uploadUnlockFirst(ask) {
+  const asking = !!UploadPdf.unlock;
+  UploadPdf.unlock = ask;   // a second tap or drop while the prompt is open replaces the first
+  if (asking) return;
+  try {
+    requireTarget();
+    const binding = { target: _acceptedTarget, token: localStorage.getItem('gh_pat') };
+    await uploadPdfOwner(binding);   // a sign-in check under way finishes first
+    const epoch = capturePrivateEpoch(), ok = await privateAwait(vaultReady(), epoch);
+    requireOwner();
+    if (binding.target !== _acceptedTarget || binding.token !== localStorage.getItem('gh_pat')) throw privateError('Private authorization changed');
+    const now = UploadPdf.unlock; UploadPdf.unlock = null;
+    if (!ok || !now || !uploadNotesOpen()) return;   // Cancel: nothing is added and a dropped PDF is let go
+    if (now.file) { uploadPdf(now.file, now.folderId); return; }
+    if (uploadPickerLive()) { pickUploadPdf(now.folderId); return; }
+    const el = document.querySelector(now.control.sel);
+    if (el) { el.scrollIntoView({ block: 'nearest' }); el.focus({ preventScroll: true }); }
+    toast(`Notes unlocked. Tap ${esc(String(now.control.label || 'Upload PDF').trim())} again.`, null, { duration: 6000 });
+  } catch (e) {
+    UploadPdf.unlock = null;
+    let message;
+    try { if (!isOwner()) message = 'Sign in to add a PDF.'; } catch (ignored) { message = 'Sign in to add a PDF.'; }
+    toastError(message || pdfErrorText(e, true));
+  }
+}
 function pickUploadPdf(folderId = null) {
   let inp, active = true;
   const close = () => { active = false; if (inp) { inp.onchange = null; inp.value = ''; inp.remove(); } if (UploadPdf.picker === close) UploadPdf.picker = null; };
@@ -17565,6 +17611,7 @@ function pickUploadPdf(folderId = null) {
     requireTarget();
     if (!isOwner() && !(isPrivate() && (Private.verifying || Private.verificationBinding))) { toastError('Sign in to add a PDF.'); return; }
     if (UploadPdf.busy) { toastError('Another PDF is still being added. Try again in a moment.'); return; }
+    if (!uploadNotesOpen()) { uploadUnlockFirst({ folderId, control: uploadPickControl(folderId) }); return; }
     if (UploadPdf.picker) UploadPdf.picker();
     inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/pdf,.pdf';
     inp.hidden = true; inp.dataset.uploadPicker = '';
@@ -23934,7 +23981,7 @@ function relevanceCardHTML(p, ka) {
    The app's .sort-menu at its button (placePopover), as a list's ⋯. A library paper's holds Hide paper (or Restore
    paper); an upload's holds Edit title and Remove, each with Undo. A tap outside, Escape, Tab and Back close it and
    the focus goes back to ⋯. It closes when the page is drawn without its button. */
-const PaperMenu = { cur: null, seq: 0 };
+const PaperMenu = { cur: null, seq: 0, step: null };
 function paperMoreButton(p) {
   return `<button type="button" class="pd-act pd-more" id="paperMore" data-act="more" aria-label="More" title="More" aria-haspopup="menu" aria-expanded="false" onclick="event.stopPropagation();paperMenuOpen(this,'${escAttr(paperKey(p))}')">&#8943;</button>`;
 }
@@ -23997,15 +24044,33 @@ function paperMenuChoose(item) {
   const cur = PaperMenu.cur, m = item && item.closest ? item.closest('#paperMenu') : null;
   if (!cur || !m || Number(m.dataset.menu) !== cur.id) return;
   checkPrivateEpoch(cur.epoch);
-  const k = cur.k, v = item.dataset.v;
-  paperMenuClose(true, true);
-  const p = feedRow(k);
-  if (!p || p._goneRemote) return;
-  if (p.uploaded) { if (v === 'title') reviewRun(() => renameUpload(k)); else if (v === 'remove') reviewRun(() => removeUpload(k)); return; }
-  if (v === 'hide' && !isHiddenRow(p)) askHide(k);
+  const k = cur.k, v = item.dataset.v, p = feedRow(k), live = !!p && !p._goneRemote;
+  // Hide paper's sheet, Edit title's prompt and Remove's question keep the menu's step in history, so Back closes them
+  // on the same page, as it closes the menu. Closing them any other way takes the step back.
+  const asks = live && (p.uploaded ? v === 'title' || v === 'remove' : v === 'hide' && !isHiddenRow(p));
+  const step = asks && cur.pushed && history.state?.scoutPaperMenu === cur.id ? { id: cur.id, kind: v === 'hide' ? 'hide' : 'prompt' } : null;
+  paperMenuClose(!step, true);
+  if (!live) return;
+  PaperMenu.step = step;
+  if (p.uploaded) { reviewRun(() => (v === 'title' ? renameUpload(k) : removeUpload(k)).finally(() => paperMenuStepEnd(step))); return; }
+  if (v === 'hide' && !isHiddenRow(p)) { askHide(k); if (!document.querySelector('#hideSheet.open')) paperMenuStepEnd(step); }
   else if (v === 'restore' && isHiddenRow(p)) unhidePaper(k);
 }
-window.addEventListener('popstate', () => { if (PaperMenu.cur && history.state?.scoutPaperMenu !== PaperMenu.cur.id) paperMenuClose(false); });
+/* The sheet or prompt is closed: its step in history goes too, unless Back took it already */
+function paperMenuStepEnd(step) {
+  if (!step || PaperMenu.step !== step) return;
+  PaperMenu.step = null;
+  if (history.state?.scoutPaperMenu === step.id) history.back();
+}
+window.addEventListener('popstate', () => {
+  if (PaperMenu.cur && history.state?.scoutPaperMenu !== PaperMenu.cur.id) paperMenuClose(false);
+  const step = PaperMenu.step;   // Back with Hide paper's sheet or a ⋯ prompt open: it closes, as Cancel
+  if (step && history.state?.scoutPaperMenu !== step.id) {
+    PaperMenu.step = null;
+    if (step.kind === 'hide') closeHideSheet();
+    else if (_genericResolve && document.getElementById('genericOverlay').classList.contains('open')) _resolveGeneric(null);
+  }
+});
 window.addEventListener('resize', () => paperMenuPlace());
 document.addEventListener('scroll', () => paperMenuPlace(), true);
 
