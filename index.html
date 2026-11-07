@@ -1513,6 +1513,7 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 .reader-page .textLayer ::selection { background: rgba(84,98,122,0.3); }   /* neutral slate: a selection shouldn't look like a highlight already made */
 .reader.dark .reader-page .textLayer ::selection { background: rgba(170,182,204,0.32); }
 .reader-status { max-width: 560px; margin: 12vh auto 0; padding: 0 20px; text-align: center; color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
+.reader-status[data-up-pdf] p { margin: 0 0 14px; }   /* ENCRYPTED PDF SYNC: its one line above Try again */
 .reader-spin { width: 28px; height: 28px; margin: 0 auto 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: reader-spin 0.8s linear infinite; }
 @keyframes reader-spin { to { transform: rotate(360deg); } }
 .pdf-picker { max-width: 560px; margin: 8vh auto 40px; padding: 0 20px; color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
@@ -4310,6 +4311,7 @@ async function reverifyPrivate() {
 }
 function privatePathCap(path) {
   if (/^annotations\/chats\/[0-9a-f]{32}\/[A-Za-z0-9][A-Za-z0-9._-]{0,199}\/(?:catalog\.json|catalog\/[0-9a-f]{2}\.json|turns\/[0-9a-f]{32}\.json)$/.test(path) && !path.includes('..')) return path.includes('/turns/') ? 1048576 : 262144;
+  if (/^annotations\/uploads\/[0-9a-f]{32}\/up-[0-9a-f]{12}\/(?:manifest\.json|[0-9a-f]{32}\.bin)$/.test(path)) return path.endsWith('.bin') ? 16 * 1024 * 1024 + 28 : 262144;   // ENCRYPTED PDF SYNC: a part (UP_PDF.partCap), a manifest
   if (path === 'daily/current.json') return 1024 * 1024;
   if (path === 'daily_handled.json') return 4 * 1024 * 1024;
   if (path === 'papers_database.csv') return 16 * 1024 * 1024;
@@ -16214,6 +16216,7 @@ function reviewRefresh() {
   if (_paperViewActive && p) renderPaperDetail(p);
   else if (_paperViewActive && page && /^up-/.test(page.dataset.pid)) location.hash = '#lists';
   if (typeof copiesSoon === 'function') copiesSoon();
+  if (typeof upPdfSoon === 'function') upPdfSoon();   // ENCRYPTED PDF SYNC: To read, Undo of a removal
 }
 /* A folder edit waits for encryption before changing the device's saved definitions. Both authorization and the
    notes generation must still be the one that began the edit. A sign-out or Lock publishes nothing afterwards. */
@@ -16446,7 +16449,7 @@ function reviewTeardown() {
 /* ===== UPLOADED PAPERS (usually papers to review) =====
    They never enter the public database. Each record (a random id, title) lives in this browser and, once notes
    are unlocked, inside the encrypted notes index, so another device lists the paper with your notes on it; the
-   PDF stays in this browser only (on another device you drop it in again). Removed ones stay as tombstones so a
+   PDF goes to your other devices encrypted (ENCRYPTED PDF SYNC FOR UPLOADS). Removed ones stay as tombstones so a
    sync can't bring them back. */
 const UPLOADS_KEY = 'scholar_uploads_v1', UPLOAD_REMOVALS_KEY = 'scholar_upload_removals_v1';
 let _uploadRemovals = {}, _uploadRemovalBusy = false;
@@ -16487,7 +16490,8 @@ async function retryUploadRemovals(tell = false) { const epoch = capturePrivateE
         } catch (e) { checkPrivateEpoch(epoch); }
       }
       if (!job.chats) { try { await privateAwait(apiChatsForget(id), epoch); job.chats = true; storeUploadRemovals(); } catch (e) { checkPrivateEpoch(epoch); } }   // this device's API chats (4 November 2026)
-      if (job.pdf && job.notes && job.bridge && job.chats) { delete jobs[id]; storeUploadRemovals(); completed = true; }
+      if (!job.remote) { try { if (isPrivate()) await privateAwait(upPdfForget(id, epoch), epoch); job.remote = true; storeUploadRemovals(); } catch (e) { checkPrivateEpoch(epoch); } }   // ENCRYPTED PDF SYNC: its encrypted PDF
+      if (job.pdf && job.notes && job.bridge && job.chats && job.remote) { delete jobs[id]; storeUploadRemovals(); completed = true; }
     }
     if (completed && !Object.keys(jobs).length) toast('Removed');
     else if (tell && Object.keys(jobs).length) toast('Removal is waiting. Unlock notes and connect Chat on your computer to finish.', null, { duration: 8000 });
@@ -16658,6 +16662,7 @@ function uploadBriefRetry(id) {
 }
 function uploadBriefSoon() {
   if (!isOwner()) return;
+  upPdfSoon();   // ENCRYPTED PDF SYNC: an upload, a dropped-in PDF, an index sync, coming online
   clearTimeout(UploadBrief.timer);
   UploadBrief.timer = setTimeout(privateCallback(() => {
     if (UploadBrief.work) { UploadBrief.again = true; return; }
@@ -17024,6 +17029,259 @@ function similarAdd(id, index) {
 window.addEventListener('online', privateCallback(() => similarSoon()));
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') similarSoon(); });
 /* ===== END SIMILAR PAPERS ===== */
+/* ===== ENCRYPTED PDF SYNC FOR UPLOADS (6 November 2026, Dhruv's decision) =====
+   An uploaded paper's PDF reaches every device where the notes are unlocked. This browser encrypts it with the notes
+   key (AES-256-GCM, as the notes) before anything leaves the device, and publishes only ciphertext to the private data
+   repository, under the chat files' vault id (the first 32 hex digits of SHA-256 of the vault salt):
+     annotations/uploads/<vault id>/<upload id>/manifest.json  the notes envelope ({v, iv, ct, updated}) of
+         {v: 1, kind: 'upload-pdf', vaultId, upload, size, hash, nonce, parts: [{sha, size}]}; hash is the file's
+         SHA-256, the upload record's contentHash
+     annotations/uploads/<vault id>/<upload id>/<random>.bin    one part: a 12-byte IV, then the AES-GCM ciphertext of
+         up to UP_PDF.part bytes, bound (additional data) to the vault, the upload, the file's nonce, its index and count
+   Paths hold random ids only, and the commit message is always UP_PDF.message. Nothing new enters the upload record
+   or the notes index, so an older page's merges (whole records) neither lose nor need anything.
+   - Publication (upPdfScan, after UP_PDF.quiet, under a cross-tab lock): every upload whose PDF this device holds and
+     the repository lacks, one at a time. Each part goes up alone (POST git/blobs, checked against its Git SHA); then
+     one commit adds every part and the manifest, on the branch head where the upload's folder was seen absent (a
+     moved branch is checked again). A file above UP_PDF.max, or another version than the record names (Change PDF),
+     stays on this device; an upload of a too-large file says so in one line (UP_PDF_BIG_TEXT).
+   - Reading (upPdfGet): the manifest, then each part by its Git blob SHA (raw, checked against the SHA), decrypted
+     and checked; the total size and SHA-256 must match the manifest and the record's contentHash. Only then is the
+     file stored in scholar_pdfs. The reader shows its usual loading meanwhile; a failure, or no connection, one line
+     and Try again (data-kept-line: coming back online tries again by itself).
+   - Keep on this device: as for library papers, an upload in To read or In progress comes here in the background
+     (online, notes unlocked); a copy fetched here (its SHA-256 marked in UP_PDF.store) goes when it is no longer
+     wanted, unless the file was replaced since. A file uploaded or dropped in here never goes.
+   - Removal: retryUploadRemovals deletes the upload's files under every vault id (job.remote), after any publication
+     of it under way; a scan deletes the files of an upload whose record is a tombstone (removed on an older page).
+   - Fences: the private epoch, the notes generation, key and salt, and an abort on notes lock or sign-out
+     (invalidateVaultWork): after either nothing is committed or stored. */
+const UP_PDF = { part: 4 * 1024 * 1024, partCap: 16 * 1024 * 1024, max: 100 * 1024 * 1024, quiet: 6000, tick: 15 * 60000, store: 'scholar_upload_pdf_sync_v1', message: 'Update encrypted files' };
+const UP_PDF_BIG_TEXT = 'This PDF is too large to reach your other devices. It stays on this one.';
+const UP_PDF_PATH = /^annotations\/uploads\/[0-9a-f]{32}\/up-[0-9a-f]{12}\/(?:manifest\.json|[0-9a-f]{32}\.bin)$/;
+const UpPdf = { serial: 0, timer: 0, work: null, again: false, backoff: 0, caps: new Set(), fetching: new Map(), publishing: new Map(), skip: new Map(), full: false };
+function upPdfOn() { return isPrivate() && isOwner() && Private.state === 'verified' && navigator.onLine && hasPAT() && !!(Vault.ready && Vault.key && Vault.meta && Vault.index); }
+/* One piece of work under the notes key it began with: check() throws once the authorization, the notes (locked,
+   reset, another key) or this sync (upPdfCancel) changed; wait(p) is p, cut short by any of them, then check() */
+function upPdfCapture() {
+  requireOwner(); if (!Vault.ready || !Vault.key || !Vault.meta) throw new Error('Notes are locked');
+  const epoch = capturePrivateEpoch(), generation = Vault.generation, key = Vault.key, salt = Vault.meta.salt, serial = UpPdf.serial, ctl = new AbortController();
+  const c = { epoch, key, salt, signal: ctl.signal,
+    check() { checkPrivateEpoch(epoch); requireOwner(); if (ctl.signal.aborted || UpPdf.serial !== serial || Vault.generation !== generation || Vault.key !== key || !Vault.ready || Vault.meta?.salt !== salt) throw new Error('PDF sync stopped'); },
+    wait(promise) {
+      return privateAwait(new Promise((resolve, reject) => {
+        const stop = () => reject(new Error('PDF sync stopped'));
+        if (ctl.signal.aborted) { Promise.resolve(promise).catch(() => {}); stop(); return; }
+        ctl.signal.addEventListener('abort', stop, { once: true });
+        Promise.resolve(promise).then(resolve, reject).finally(() => ctl.signal.removeEventListener('abort', stop));
+      }), epoch).then(value => { c.check(); return value; });
+    },
+    abort() { ctl.abort(); },
+    done() { UpPdf.caps.delete(c); Private.controllers.delete(ctl); } };
+  UpPdf.caps.add(c); if (isPrivate()) Private.controllers.add(ctl);
+  return c;
+}
+function upPdfCancel() {   // notes locked or reset, or signed out (invalidateVaultWork)
+  UpPdf.serial++; clearTimeout(UpPdf.timer); UpPdf.timer = 0; UpPdf.work = null; UpPdf.again = false; UpPdf.backoff = 0;
+  for (const c of [...UpPdf.caps]) { try { c.abort(); c.done(); } catch (e) { console.error(e); } }
+  UpPdf.fetching.clear(); UpPdf.skip.clear();
+}
+const upPdfBase = (vault, id) => 'annotations/uploads/' + vault + '/' + id + '/';
+const upPdfAad = (vault, id, nonce, i, n) => new TextEncoder().encode(['scout-upload-pdf', 1, vault, id, nonce, i, n].join('/'));
+async function upPdfVault(c) { return (await c.wait(chatHash(b64d(c.salt)))).slice(0, 32); }
+function upPdfMarks(vault) { try { const s = JSON.parse(localStorage.getItem(UP_PDF.store) || 'null'); return s && s.vault === vault && vaultObject(s.ids) ? s.ids : {}; } catch (e) { return {}; } }
+function upPdfMark(vault, id, how) { const ids = { ...upPdfMarks(vault) }; if (how) ids[id] = how; else delete ids[id]; privateSet(UP_PDF.store, JSON.stringify({ vault, ids })); }
+async function upPdfHead(epoch, signal) {
+  const res = await privateAwait(ownerFetch(ghApiBase() + '/git/ref/heads/' + GH_BRANCH, { headers: ghHeaders(), cache: 'no-store', signal }), epoch);
+  if (!res.ok) throw new Error('Could not read the branch');
+  const sha = (await privateAwait(res.json(), epoch))?.object?.sha;
+  if (!/^[0-9a-f]{40}$/.test(sha || '')) throw new Error('Invalid branch');
+  return sha;
+}
+/* A folder's entries at ref; [] when it does not exist, once this authorization is checked again (as privateReadFile) */
+async function upPdfList(path, ref, epoch) {
+  const binding = { epoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token, superseded: null };
+  const url = ghApiBase() + '/contents/' + path.split('/').map(encodeURIComponent).join('/') + '?ref=' + encodeURIComponent(ref);
+  const list = await privateAwait(privateJSON(url, 1024 * 1024, binding, true, transferBudgetMs(1024 * 1024)), epoch);
+  if (list === null) {
+    if (!(await privateAwait(verifyPrivate(binding.token, false, true), epoch))) throw privateError('Private authorization is required');
+    return [];
+  }
+  if (!Array.isArray(list)) throw new Error('Invalid listing');
+  return list.filter(e => vaultObject(e) && typeof e.name === 'string' && e.path === path + '/' + e.name && (e.type === 'file' || e.type === 'dir'));
+}
+async function upPdfPublish(id, c, vault) {
+  const blob = await c.wait(localPdfGet(id));
+  if (!(blob instanceof Blob) || !uploadById(id)) return 'none';
+  if (blob.size > UP_PDF.max || UpPdf.skip.get(id) === blob.size) return 'kept';
+  const bytes = new Uint8Array(await c.wait(blob.arrayBuffer())), hash = await c.wait(briefSha(bytes)), named = _uploads[id]?.contentHash;
+  if (named && named !== hash) { UpPdf.skip.set(id, blob.size); return 'kept'; }   // another version than the record names (Change PDF): it stays here
+  const base = upPdfBase(vault, id), n = Math.max(1, Math.ceil(bytes.length / UP_PDF.part)), nonce = chatId(), parts = [], files = [];
+  for (let i = 0; i < n; i++) {
+    const plain = bytes.subarray(i * UP_PDF.part, Math.min(bytes.length, (i + 1) * UP_PDF.part)), iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await c.wait(crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: upPdfAad(vault, id, nonce, i, n) }, c.key, plain)));
+    const sealed = new Uint8Array(12 + ct.length); sealed.set(iv); sealed.set(ct, 12);
+    const sha = await c.wait(gitBlobSha(sealed));
+    const res = await c.wait(ownerFetch(ghApiBase() + '/git/blobs', { method: 'POST', headers: { ...ghHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ content: b64e(sealed), encoding: 'base64' }), signal: c.signal }));
+    if (!res.ok) throw _ghFail(res, 'save of an encrypted file');
+    if ((await c.wait(res.json()))?.sha !== sha) throw new Error('GitHub kept another file');
+    parts.push({ sha, size: plain.length }); files.push({ path: base + chatId() + '.bin', sha });
+  }
+  const env = await c.wait(vaultEncrypt({ v: 1, kind: 'upload-pdf', vaultId: vault, upload: id, size: bytes.length, hash, nonce, parts }, c.key));
+  files.push({ path: base + 'manifest.json', content: JSON.stringify(env) });
+  for (let attempt = 0; ; attempt++) {
+    const head = await c.wait(upPdfHead(c.epoch, c.signal));
+    if ((await c.wait(upPdfList(base.slice(0, -1), head, c.epoch))).length) return 'there';   // another device or tab published it meanwhile
+    if (!uploadById(id) || _reviewPendingRemovals.has(id)) return 'none';   // removed meanwhile: nothing is committed
+    // Not cut short by an abort: a removal waits for this commit to land or fail before it lists the files.
+    try { await privateAwait(ghCommitFiles(files, UP_PDF.message, head), c.epoch); c.check(); return 'done'; }
+    catch (e) { c.check(); if (!e.conflict || attempt >= 3) throw e; }
+  }
+}
+function upPdfPublishJob(id, vault) {
+  const c = upPdfCapture(), done = upPdfPublish(id, c, vault).finally(() => { c.done(); if (UpPdf.publishing.get(id)?.c === c) UpPdf.publishing.delete(id); });
+  UpPdf.publishing.set(id, { c, done });
+  return done;
+}
+/* The verified bytes of an upload's PDF from the repository, or null when it has none */
+async function upPdfFetch(id, c, vault) {
+  const base = upPdfBase(vault, id), rec = await c.wait(privateReadFile(base + 'manifest.json', true));
+  if (!rec) return null;
+  const m = await c.wait(vaultDecrypt(validateVaultEnvelope(JSON.parse(rec.text)), c.key));   // another vault's key fails here
+  const named = _uploads[id]?.contentHash, n = Array.isArray(m?.parts) ? m.parts.length : 0;
+  if (!(vaultObject(m) && m.v === 1 && m.kind === 'upload-pdf' && m.vaultId === vault && m.upload === id && Number.isSafeInteger(m.size) && m.size > 0 && m.size <= UP_PDF.max &&
+    /^[0-9a-f]{64}$/.test(m.hash) && (!named || named === m.hash) && /^[0-9a-f]{32}$/.test(m.nonce) && n > 0 && n <= 1024 &&
+    m.parts.every(x => vaultObject(x) && /^[0-9a-f]{40}$/.test(x.sha) && Number.isSafeInteger(x.size) && x.size > 0 && x.size <= UP_PDF.partCap) &&
+    m.parts.reduce((t, x) => t + x.size, 0) === m.size)) throw new Error('Invalid encrypted PDF');
+  const binding = { epoch: c.epoch, target: _acceptedTarget, storedToken: Private.token, token: Private.token, superseded: null };
+  const out = new Uint8Array(m.size); let at = 0;
+  for (let i = 0; i < n; i++) {
+    const x = m.parts[i], sealed = await c.wait(privateBytes(ghApiBase() + '/git/blobs/' + x.sha, x.size + 28, binding, false, transferBudgetMs(x.size + 4096), GH_RAW));
+    if (sealed.length !== x.size + 28 || await c.wait(gitBlobSha(sealed)) !== x.sha) throw new Error('Invalid encrypted PDF part');
+    const plain = new Uint8Array(await c.wait(crypto.subtle.decrypt({ name: 'AES-GCM', iv: sealed.subarray(0, 12), additionalData: upPdfAad(vault, id, m.nonce, i, n) }, c.key, sealed.subarray(12))));
+    if (plain.length !== x.size) throw new Error('Invalid encrypted PDF part');
+    out.set(plain, at); at += plain.length;
+  }
+  if (at !== m.size || await c.wait(briefSha(out)) !== m.hash) throw new Error('Invalid encrypted PDF');
+  return { bytes: out, hash: m.hash };
+}
+/* Fetched, checked and stored once per upload at a time (the reader and the background share it); null: none there */
+function upPdfGet(id) {
+  const busy = UpPdf.fetching.get(id); if (busy) return busy;
+  const c = upPdfCapture();
+  const job = (async () => {
+    try {
+      const vault = await upPdfVault(c), got = await upPdfFetch(id, c, vault), bytes = got && got.bytes;
+      if (!bytes) return null;
+      let put = false;
+      try { await privateAwait(pdfStore('readwrite', st => { c.check(); if (!uploadById(id)) throw new Error('Removed'); put = true; return st.put(new Blob([bytes], { type: 'application/pdf' }), id); }), c.epoch); c.check(); }
+      catch (e) { if (put) await localPdfDel(id).catch(() => {}); throw e; }   // locked while it was written: nothing stays
+      upPdfMark(vault, id, got.hash); copySourceChanged(id);   // fetched here: this file may go when no longer wanted
+      return bytes;
+    } finally { c.done(); }
+  })();
+  UpPdf.fetching.set(id, job);
+  job.catch(() => {}).finally(() => { if (UpPdf.fetching.get(id) === job) UpPdf.fetching.delete(id); });
+  return job;
+}
+/* The reader, for an upload with no PDF here: true when this takes over (notes unlocked), else the file chooser as before */
+function upPdfReader(p, visit) {
+  if (!p || !p.uploaded || !isPrivate() || !isOwner() || !Vault.ready || !Vault.key || !Vault.meta) return false;
+  const live = () => visit === _reader.visit && _reader.paper === p && document.getElementById('reader').classList.contains('open');
+  const notes = () => ensureReaderNotes().then(privateCallback(() => { if (live()) runPendingNotes(); })).catch(privateCallback(() => {}));   // with no PDF, as showReader does
+  upPdfOpen(p, visit, live, notes).catch(privateCallback(() => { if (live()) { upPdfLine(!navigator.onLine); notes(); } }));
+  return true;
+}
+/* The paper first, then its notes (loadIntoReader), as for a library PDF; a line or the file chooser, then the notes */
+async function upPdfOpen(p, visit, live, notes) {
+  if (!navigator.onLine || Private.state !== 'verified' || !hasPAT()) { upPdfLine(true); notes(); return; }
+  document.getElementById('reader').classList.add('no-doc');
+  document.getElementById('readerBody').innerHTML = '<div class="reader-skel" role="status" aria-label="Loading the PDF"><div></div><p>Loading the PDF…</p></div>';   // as for a library PDF
+  let bytes;
+  try { bytes = await upPdfGet(p.id); }
+  catch (e) {
+    if (!live()) return;
+    if (!Vault.ready || !Vault.key) showPdfPicker(p, 'none');   // locked meanwhile: as before the notes were unlocked
+    else upPdfLine(!navigator.onLine);
+    notes(); return;
+  }
+  if (!live()) return;
+  if (!bytes) { showPdfPicker(p, 'none'); notes(); return; }   // not in the repository (yet): the file chooser, as before
+  await loadIntoReader(p, { data: new Uint8Array(bytes) }, true, visit);
+}
+function upPdfLine(offline) {
+  document.getElementById('reader').classList.add('no-doc');
+  document.getElementById('readerBody').innerHTML = `<div class="reader-status" data-kept-line data-up-pdf><p>${offline ? 'This PDF isn’t on this device yet. It’ll be here when you’re back online.' : 'Couldn’t bring this PDF to this device.'}</p><button type="button" class="ui-btn ui-btn-secondary" onclick="upPdfRetry()">Try again</button></div>`;
+}
+function upPdfRetry() { const p = _reader.paper; if (p && p.uploaded && document.getElementById('reader').classList.contains('open')) showReader(p.id); }
+/* An upload this device should keep (liked: To read; or In progress), as keptWanted for library papers */
+function upPdfProgress() { return new Set(continueReadingList(false, true).filter(x => x.p.uploaded).map(x => x.p.id)); }
+function upPdfWanted(id, progress) { return !!uploadById(id) && !_reviewPendingRemovals.has(id) && (likedKey(id) || progress.has(id)); }
+function upPdfSoon(delay = UP_PDF.quiet) {
+  if (!isPrivate() || !isOwner()) return;
+  clearTimeout(UpPdf.timer);
+  UpPdf.timer = setTimeout(privateCallback(() => {
+    UpPdf.timer = 0;
+    if (UpPdf.work) { UpPdf.again = true; return; }
+    const work = upPdfScan(); UpPdf.work = work;
+    work.catch(() => {}).finally(() => { if (UpPdf.work !== work) return; UpPdf.work = null; if (UpPdf.again) { UpPdf.again = false; upPdfSoon(); } });
+  }), delay);
+}
+async function upPdfScan() {
+  if (!upPdfOn() || !navigator.locks || !Object.keys(_uploads).length) return;
+  const c = upPdfCapture();
+  try {
+    const vault = await upPdfVault(c);
+    await c.wait(navigator.locks.request('scout-upload-pdf:' + _acceptedTarget, { signal: c.signal }, () => upPdfRound(c, vault)));
+  } finally { c.done(); }
+}
+async function upPdfRound(c, vault) {
+  c.check();
+  const head = await c.wait(upPdfHead(c.epoch, c.signal));
+  const there = new Set((await c.wait(upPdfList('annotations/uploads/' + vault, head, c.epoch))).filter(e => e.type === 'dir' && /^up-[0-9a-f]{12}$/.test(e.name)).map(e => e.name));
+  let failed = false;
+  for (const id of there) if (_uploads[id]?.deleted && !_uploadRemovals[id]) {   // removed where this code did not run
+    try { await c.wait(upPdfForget(id, c.epoch)); there.delete(id); } catch (e) { c.check(); failed = true; }
+  }
+  for (const p of uploadedPapers()) {
+    if (there.has(p.id) || _reviewPendingRemovals.has(p.id)) continue;
+    try { if (['done', 'there'].includes(await c.wait(upPdfPublishJob(p.id, vault)))) there.add(p.id); } catch (e) { c.check(); failed = true; }
+  }
+  const progress = upPdfProgress();
+  for (const p of uploadedPapers()) {
+    if (!there.has(p.id)) continue;
+    const wanted = upPdfWanted(p.id, progress), local = (await c.wait(localPdfGet(p.id))) instanceof Blob;
+    if (wanted && !local && !UpPdf.full) {
+      if (keptReaderLoading()) { failed = true; continue; }   // never while the reader loads a PDF
+      try { await c.wait(upPdfGet(p.id)); }
+      catch (e) { c.check(); if (e && e.name === 'QuotaExceededError') { UpPdf.full = true; toastError(KEPT_FULL_TEXT); } else failed = true; }
+    } else if (!wanted && local && upPdfMarks(vault)[p.id] && _reader.paper?.id !== p.id) {   // a copy fetched here, unless replaced since
+      const mark = upPdfMarks(vault)[p.id], blob = await c.wait(localPdfGet(p.id));
+      const same = blob instanceof Blob && await c.wait(briefSha(new Uint8Array(await c.wait(blob.arrayBuffer())))) === mark;
+      if (same) { await c.wait(localPdfDel(p.id)); CopyState.uploads.delete(p.id); paperDownloadDot().catch(() => {}); }
+      upPdfMark(vault, p.id, null);
+    }
+  }
+  for (const id of Object.keys(upPdfMarks(vault))) if (!uploadById(id)) upPdfMark(vault, id, null);   // removed uploads
+  UpPdf.backoff = failed ? Math.min(30 * 60000, Math.max(60000, UpPdf.backoff * 2)) : 0;
+  if (failed) upPdfSoon(UpPdf.backoff);   // again later; any upload event sooner
+}
+/* Deletes the upload's files under every vault id, once any publication of it under way has landed or failed */
+async function upPdfForget(id, epoch = capturePrivateEpoch()) {
+  if (!/^up-[0-9a-f]{12}$/.test(id)) throw new Error('Invalid upload');
+  const busy = UpPdf.publishing.get(id);
+  if (busy) { busy.c.abort(); await privateAwait(busy.done.catch(() => {}), epoch); }
+  for (let attempt = 0; ; attempt++) {
+    const head = await upPdfHead(epoch), files = [];
+    for (const vault of (await upPdfList('annotations/uploads', head, epoch)).filter(e => e.type === 'dir' && /^[0-9a-f]{32}$/.test(e.name)))
+      for (const f of await upPdfList(vault.path + '/' + id, head, epoch)) if (f.type === 'file' && UP_PDF_PATH.test(f.path)) files.push({ path: f.path, content: null });
+    if (!files.length) return;
+    try { await privateAwait(ghCommitFiles(files, UP_PDF.message, head), epoch); return; }
+    catch (e) { checkPrivateEpoch(epoch); if (!e.conflict || attempt >= 3) throw e; }
+  }
+}
+setInterval(privateCallback(() => { if (upPdfOn()) upPdfSoon(0); }), UP_PDF.tick);
+/* ===== END ENCRYPTED PDF SYNC FOR UPLOADS ===== */
 
 /* Option B: the ordinary paper-page shell, with private upload actions and safe abstract math. */
 function uploadPageHTML(p) {
@@ -17089,7 +17347,7 @@ async function uploadPdfNow(file, folderId = null) { const _authEpoch = captureP
   _uploads[id] = { title, titleGuess: title, fp, contentHash, added: now, updated: now, folderId: folderId && _reviewFolders[folderId] && !_reviewFolders[folderId].deleted ? folderId : null, folderAt: reviewStamp() };   // destination captured before parsing
   saveUploads(); uploadBriefSoon();
   openPaper(id);
-  toast('Kept in To review on this device, separate from your library.', null, { duration: 5000 });
+  toast(isPrivate() && file.size > UP_PDF.max ? UP_PDF_BIG_TEXT : 'Kept in To review on this device, separate from your library.', null, { duration: 5000 });
 }
 /* The title from the PDF's own metadata when it looks like one, else the largest text at the top of page 1 */
 async function guessPdfTitle(doc) { const _authEpoch = capturePrivateEpoch();
@@ -17265,6 +17523,7 @@ async function showReader(id) { const _authEpoch = capturePrivateEpoch();
   const kept = local ? null : await privateAwait(keptCopy(p), _authEpoch); requireTarget();   // KEPT ON THIS DEVICE: a file dropped in, then a kept copy, then the network
   if (!live()) return;
   if (!local && !kept && !navigator.onLine && isOwner() && !p.uploaded) { keptOfflineLine(p); ensureReaderNotes().then(privateCallback(() => { if (live()) runPendingNotes(); })); return; }
+  if (!local && p.uploaded && upPdfReader(p, visit)) return;   // ENCRYPTED PDF SYNC: from the repository, else the file chooser below
   if (!local && !kept && !src) { showPdfPicker(p, 'none'); ensureReaderNotes().then(privateCallback(() => { if (live()) runPendingNotes(); })); return; }
   const source = local ? { data: await privateAwait(local.arrayBuffer(), _authEpoch) } : kept ? { data: new Uint8Array(await privateAwait(kept.arrayBuffer(), _authEpoch)), url: src } : { url: src };
   if (!live()) return;
@@ -17967,7 +18226,7 @@ async function showPdfPicker(p, why, detail) { const _authEpoch = capturePrivate
     <p class="pp-why">${why === 'none' ? 'Choose the PDF to read it here. Your notes are already here.' : why === 'failed' ? esc(detail || '') : 'A revised version, for example. Your notes stay with the paper.'}</p>
     <label class="pp-drop" id="ppDrop" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');usePdfFile(event.dataTransfer.files[0])">
       <input type="file" accept="application/pdf,.pdf" onchange="usePdfFile(this.files[0])">
-      ${TOUCH ? '<strong>Choose a PDF</strong> from your files.' : '<strong>Drop a PDF here</strong> or click to choose one.'}<br>Kept on this device only.
+      ${TOUCH ? '<strong>Choose a PDF</strong> from your files.' : '<strong>Drop a PDF here</strong> or click to choose one.'}<br>${inModal ? 'Kept on this device only.' : 'Encrypted before it leaves this device.'}
     </label>
     <div class="pp-msg" id="ppMsg"></div>
     ${inModal ? '<div class="pp-foot"><button onclick="closePdfModal()">Keep the current PDF</button></div>' : ''}
@@ -18223,6 +18482,7 @@ function invalidateVaultWork() {
   Vault.inflight = new Map(); Vault.loadFailed = new Set(); Vault.seen = {}; Vault.gen = {};
   clearTimeout(Vault.pushTimer); Vault.pushTimer = null; Vault.pushing = Vault.pushAgain = false;
   try { uploadBriefCancel(); } catch (e) { console.error(e); }
+  try { upPdfCancel(); } catch (e) { console.error(e); }   // ENCRYPTED PDF SYNC
   const go = document.getElementById('vaultGo'); if (go) go.disabled = false;
   closeVaultModal(false);
 }
@@ -18451,7 +18711,7 @@ async function ghCommitFiles(files, message, expectedHead = null) { const _authE
   if (expectedHead && ref.object.sha !== expectedHead) throw Object.assign(new Error('The branch moved'), { conflict: true });
   const head = await privateAwait(ok(await privateAwait(ownerFetch(`${api}/commits/${ref.object.sha}`, { headers: H, cache: 'no-store' }), _authEpoch), 'read of the last commit'), _authEpoch);
   checkVaultGeneration(generation);
-  const tree = await privateAwait(ok(await privateAwait(ownerFetch(`${api}/trees`, { method: 'POST', headers: HJ, body: JSON.stringify({ base_tree: head.tree.sha, tree: files.map(f => ({ path: f.path, mode: '100644', type: 'blob', ...(f.content === null ? { sha: null } : { content: f.content }) })) }) }), _authEpoch), 'save of the notes'), _authEpoch);
+  const tree = await privateAwait(ok(await privateAwait(ownerFetch(`${api}/trees`, { method: 'POST', headers: HJ, body: JSON.stringify({ base_tree: head.tree.sha, tree: files.map(f => ({ path: f.path, mode: '100644', type: 'blob', ...(f.content === null ? { sha: null } : f.sha ? { sha: f.sha } : { content: f.content }) })) }) }), _authEpoch), 'save of the notes'), _authEpoch);
   checkVaultGeneration(generation);
   const commit = await privateAwait(ok(await privateAwait(ownerFetch(`${api}/commits`, { method: 'POST', headers: HJ, body: JSON.stringify({ message, tree: tree.sha, parents: [ref.object.sha] }) }), _authEpoch), 'commit of the notes'), _authEpoch);
   checkVaultGeneration(generation);
