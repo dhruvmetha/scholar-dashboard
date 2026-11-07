@@ -267,7 +267,9 @@ html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(
 #skeleton .ls-link .sk-list-text .sk + .sk { height: 10px; }
 #skeleton .sk-search-input { flex: 1; min-height: 44px; display: flex; align-items: center; }
 #skeleton .sk-search-input .sk { width: 150px; }
-#skeleton .sk-search-sort { margin-left: auto; }
+#skeleton .sk-search-sort { margin-left: auto; max-width: 150px; pointer-events: none; }
+#skeleton .sk-search-status { width: auto; height: 12px; min-width: 0; overflow: hidden; color: transparent; white-space: nowrap; line-height: 12px; }   /* the count's slot (design fixes round 2, G11) */
+@media (max-width: 600px) { #skeleton .sk-search-status { font-size: 12px; } }
 #skeleton .sk-search-filters { display: none; }
 #skeleton .sk-search-rail-row { min-height: 44px; padding: 12px; border-top: 1px solid var(--line); }
 #skeleton .sk-search-card { padding: 12px 0; border-bottom: 1px solid var(--line); }
@@ -1957,6 +1959,14 @@ body.rp-splitting, body.rp-splitting * { user-select: none !important; -webkit-u
 .chat-send.stop { background: rgba(255,255,255,0.12); color: var(--text); }
 .chat-send svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .chat-send.stop svg { fill: currentColor; stroke: none; }
+/* Design fixes round 2 (G11): chat while it connects keeps the ready chat's frame: the suggestions and the message box
+   as shapes in the shared pulse (chatConnectingRender) */
+.sk-chat .chat-chips .sk { height: 25px; border-radius: 999px; }
+.sk-chat-box textarea { width: 46%; border-radius: 6px; background: var(--sk); animation: sk-pulse 1.8s ease-in-out infinite; }
+.sk-chat-box .chat-box-row .sk { flex: none; height: 28px; border-radius: 8px; }
+.sk-chat-box .sk-chat-ic, .sk-chat-box .sk-chat-send { width: 28px; }
+.sk-chat-box .chat-box-row .sk-chat-sel { width: 60px; height: 18px; border-radius: 6px; margin: 0 4px; }
+@container (max-width: 300px) { .sk-chat-box .chat-box-row .sk-chat-ic { width: 30px; height: 32px; } }   /* as the narrow composer's buttons */
 .rp-icon-btn.sm svg, .chat-box-row .rp-icon-btn svg { width: 16px; height: 16px; }
 .dd-sub { display: block; font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .chat-ask-sel { position: fixed; z-index: 345; display: inline-flex; align-items: center; gap: 5px; font: inherit; font-size: 12px; color: var(--text); background: var(--bg-raise); border: 1px solid var(--line); border-radius: 8px; padding: 4px 9px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); cursor: pointer; animation: ui-pop 0.16s ease-out; }
@@ -2615,6 +2625,13 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 .similar-more { border: 0; background: none; color: var(--accent); font: inherit; font-size: 13px; font-weight: 600; margin-top: 12px; padding: 6px 0; cursor: pointer; }
 .similar-state { display: flex; gap: 8px; align-items: center; color: var(--text-muted); font-size: 13px; }
 .similar-spinner { width: 12px; height: 12px; flex: none; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; }
+/* Design fixes round 2 (G11): Similar papers while it looks: the rows it will show, each a title, its closeness line and
+   + Reading list, in the shared pulse */
+.sk-similar .sk-similar-title { font-weight: 600; line-height: 1.4; }   /* a title's line (.similar-title), without its class: nothing counts it as a result */
+.sk-similar .sk-similar-title .sk { height: .7em; }
+.sk-similar .similar-meta { height: 1lh; }
+.sk-similar .similar-meta .sk { height: 9px; }
+.sk-similar .sk.sk-similar-add { flex: none; width: 93px; height: 44px; border-radius: 8px; }   /* + Reading list, a 44 px .pd-act */
 
 /* Private upload pages and their status lines, on phones as well as the desktop. */
 .upload-brief-state { color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-top: 7px; overflow-wrap: anywhere; }
@@ -3252,6 +3269,15 @@ html:not(.no-hover) .fp-acts .pact-read:hover,html:not(.no-hover) .daily-feed.tw
 .daily-row.done,.daily-row.done .dr-s{color:var(--text-muted)}
 html:not(.no-hover) .daily-row:hover{background:var(--bg-surface)}
 .daily-row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+/* Design fixes round 2: the notice shows above the right pane's pinned row (For you and Following, two panes), as
+   Daily's shows above its row, so it never covers Pass or Save. The row is 73 px (14 + 44 + 14 and its top line) and the
+   safe area; hidden, the notice slides fully below the screen. */
+body.feed-two:has(#feedPane:not([hidden]) .fp-acts) { --fp-acts-height: calc(73px + env(safe-area-inset-bottom, 0px)); }
+body.feed-two:has(#feedPane:not([hidden]) .fp-acts) #toast { bottom: calc(var(--fp-acts-height) + 12px); }
+body.feed-two:has(#feedPane:not([hidden]) .fp-acts) #toast:not(.show) { transform: translateX(round(nearest, -50%, 1px)) translateY(round(nearest, calc(100% + var(--fp-acts-height) + 20px), 1px)); }
+/* ...and while the lists open from that row (the popover over it), the notice that carries their Undo shows at the top,
+   clear of both, as a phone's does over its sheet */
+body.feed-two:has(#feedPane:not([hidden]) .fp-acts):has(#saveSheet.open.pop) #toast { top: calc(8px + env(safe-area-inset-top, 0px)); bottom: auto; z-index: 456; }
 /* Lists and the interest sheet open from a pinned row: the toast that carries their Undo shows above a phone's sheet */
 @media (max-width: 700px), (pointer: coarse) and (hover: none) and (max-height: 500px) {
   body:has(#saveSheet.open:not(.pop)) #toast{top:calc(8px + env(safe-area-inset-top,0px));bottom:auto;z-index:456}
@@ -6886,7 +6912,12 @@ function skeletonHTML(hash) {
       return `<div data-shape="lists"><div class="lib-head" data-sk="head"><h2 data-sk="heading">Lists</h2><div class="lib-head-actions sk-library-buttons" data-sk="buttons"><span class="sync-status sk-sync"><span class="sync-dot"></span>Saved automatically<button tabindex="-1" class="sync-btn quiet">Sign out</button></span>${['+ Add paper', 'Upload PDF', '+ New list'].map(t => `<button tabindex="-1" class="btn-new-list">${t}</button>`).join('')}</div></div><div class="library-wrap"><section class="ls-sec"><div class="lib-sec-head ip-sec-head" data-sk="section"><h3>Your lists</h3><span class="grow"></span><span class="lib-sort"><select tabindex="-1"><option>Created</option><option>Last updated</option><option>Name</option></select></span><span class="lib-sort-dir">Oldest first${chevron}</span></div><div class="ls-cards">${[70, 54].map(w => `<div class="ls-card" data-sk="card"><span class="ls-link"><i class="sk sk-list-avatar"></i><span class="sk-list-text">${bar(w)}${bar(30)}</span></span><span class="sk-icon">${bar()}</span></div>`).join('')}</div></section><div class="lib-sec-head ip-sec-head ls-reading" data-sk="reading"><h3>Reading</h3></div>${[55, 70, 48].map((w, i) => `<div class="interest-group collapsed" data-sk="readingCard"><div class="interest-group-inner"><div class="interest-group-header" data-sk="readingBar"><button tabindex="-1" class="lib-disc"><span class="lib-icon">☰</span><span style="width:150px">${bar(w)}</span><span class="interest-group-count">${bar(100)}</span></button>${i === 0 ? '<span class="library-actions sk-owner"><button tabindex="-1">Upload PDF</button></span>' : ''}<svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>`).join('')}</div></div>`;
     }
     if (/^search(?:\?.*)?$/.test(route)) {
-      return `<div class="search-results" data-shape="search"><div class="search-box-wrap"><div class="sf" data-sk="box"><div class="sk-search-input">${bar(60)}</div><span class="help">ⓘ</span></div><div class="res-bar" data-sk="bar"><span class="cp sk-search-filters">Filters ⌄</span>${bar(25)}<span class="cp sk-search-sort">Best match</span></div></div><div class="sb-page"><aside class="rail" data-sk="rail"><div><div class="seg">${lines(1, 60)}</div>${[64, 75, 55, 70, 68].map(w => `<div class="sk-search-rail-row">${bar(w)}</div>`).join('')}</div></aside><div class="search-body" data-sk="body"><div class="paper-list">${[80, 65, 90].map(w => `<div class="sk-search-card" data-sk="card"><div class="sk-search-title">${lines(2, w)}</div><div class="sk-search-meta">${bar(40)}</div><div class="sk-search-by">${bar(36)}</div><div class="sk-search-actions">${bar(25)}${bar(25)}</div></div>`).join('')}</div></div></div></div>`;
+      // Design fixes round 2 (G11): the result bar as the results draw it: its count's slot as wide as "N results for
+      // "the query"" (two digits for the unknown count) in the same type, and the same order control, so a phone wraps
+      // Best match to its own row exactly when the results do
+      let q = ''; try { q = route.startsWith('search?q=') ? decodeURIComponent(route.slice(9)) : ''; } catch (e) {}
+      const count = '00 results' + (q ? ` for "${q}"` : '');
+      return `<div class="search-results" data-shape="search"><div class="search-box-wrap"><div class="sf" data-sk="box"><div class="sk-search-input">${bar(60)}</div><span class="help">ⓘ</span></div><div class="res-bar" data-sk="bar"><span class="cp sk-search-filters">Filters ⌄</span><i class="sk sk-search-status">${esc(count)}</i><select class="cp sk-search-sort" tabindex="-1" aria-hidden="true"><option>Best match</option></select></div></div><div class="sb-page"><aside class="rail" data-sk="rail"><div><div class="seg">${lines(1, 60)}</div>${[64, 75, 55, 70, 68].map(w => `<div class="sk-search-rail-row">${bar(w)}</div>`).join('')}</div></aside><div class="search-body" data-sk="body"><div class="paper-list">${[80, 65, 90].map(w => `<div class="sk-search-card" data-sk="card"><div class="sk-search-title">${lines(2, w)}</div><div class="sk-search-meta">${bar(40)}</div><div class="sk-search-by">${bar(36)}</div><div class="sk-search-actions">${bar(25)}${bar(25)}</div></div>`).join('')}</div></div></div></div>`;
     }
     if (/^(interest|venue)\//.test(route) || route === 'top') {
       let name = 'Top Papers'; try { if (route !== 'top') name = decodeURIComponent(route.split('/').slice(1).join('/')); } catch (e) {}
@@ -9527,10 +9558,14 @@ function openSaveSheet(ev, btn, k) {
   if (Feed.sheet) { closeSaveSheet(); return; }   // 🔖 or b again: it closes
   k = k || Feed.focus;
   const out = btn && btn.closest && (!btn.closest('#feedList') || btn.closest('.daily-feed')) ? btn : null;   // opened outside the feed: its button is its place
-  if (!k || !feedLive(k) || (out ? !out.isConnected : !feedActive() || !postEl(k))) return;
+  // Design fixes round 2 (G10): a hidden paper too, from its page or its Library row, by its own row's lists
+  const row = k ? feedRow(k) : null, hidden = !!out && !!row && isHiddenRow(row);
+  if (!k || !(hidden ? !row._goneRemote : feedLive(k)) || (out ? !out.isConnected : !feedActive() || !postEl(k))) return;
   hideToast();
   const names = projectNames(), keyed = !ev || ev.detail === 0, from = document.activeElement;
-  Feed.sheet = { id: ++Feed.seq, key: k, names, dead: new Set(), from: keyed && from && from !== document.body ? from : null, edit: 0, btn: out };
+  if (hidden) rowLists(row).forEach(n => { if (isProjectName(n) && !names.includes(n)) names.push(n); });   // and the lists its row carries, as before
+  const lib = out && out.closest && out.closest('#libraryContent [data-lib]');   // a Library row's Save: its group, to find it again after a redraw
+  Feed.sheet = { id: ++Feed.seq, key: k, names, dead: new Set(), from: keyed && from && from !== document.body ? from : null, edit: 0, btn: out, hidden, lib: lib ? lib.dataset.lib : null };
   let s = document.getElementById('saveSheet');
   if (!s) {
     s = document.createElement('div'); s.id = 'saveSheet'; s.className = 'save-sheet';
@@ -9566,7 +9601,7 @@ function saveSheetSync() {
   const sh = Feed.sheet;
   if (!sh) return;
   const s = document.getElementById('saveSheet');
-  if (!s || !isOwner() || !sheetPlace(sh) || !feedLive(sh.key)) { closeSaveSheet(); return; }
+  if (!s || !isOwner() || !sheetPlace(sh) || !sheetLive(sh)) { closeSaveSheet(); return; }
   s.querySelectorAll('.sh-row').forEach(b => {
     if (b.dataset.guard !== 'row') return;
     const n = b.dataset.n, on = sheetHas(n, sh.key);
@@ -9577,11 +9612,17 @@ function saveSheetSync() {
   if (save) { if (!sh.btn) save.classList.toggle('on', paperInAnyList(sh.key)); save.setAttribute('aria-expanded', 'true'); }
   placeSheet();
 }
-function sheetHas(n, k) { return uploadById(k) ? listHolds(n, k) : hasList(n) && libraryLists[n].includes(k); }
+/* Design fixes round 2 (G10): the sheet's membership adapter. listHolds reads a paper that shows from the lists, an
+   upload from its private lists and a hidden paper from its own row; listSet writes each the same way. */
+function sheetHas(n, k) { return listHolds(n, k); }
+/* The sheet's paper is still one it saves: a paper that shows; or a hidden one, opened from its page or a Library row,
+   while it stays hidden (a paper hidden or restored under an open sheet closes it, as before) */
+function sheetLive(sh) { const p = feedRow(sh.key); return !!p && !p._goneRemote && (sh.hidden ? !!sh.btn && isHiddenRow(p) : !isHiddenRow(p)); }
 function sheetDestOK(n) {
   const sh = Feed.sheet;
   if (!sh || sh.dead.has(n)) return false;
   if (n === TO_READ) return true;   // made by its first add when it is not there yet
+  if (sh.hidden && sh.names.includes(n) && isProjectName(n) && listHolds(n, sh.key)) return true;   // a hidden paper's own lists stay editable while its row carries them
   return sh.names.includes(n) && isProjectName(n) && hasList(n) && !listGone(n);
 }
 /* A list the open sheet offers that went (listGone) or is gone from the page is off in this sheet for good, where it
@@ -9597,9 +9638,9 @@ function sheetTap(btn) { const s = btn.closest('#saveSheet'); sheetToggle(btn.da
 function sheetToggle(n, sid) {
   requireOwner();
   const sh = Feed.sheet;
-  if (!sh || sh.id !== sid || !sheetPlace(sh) || !feedLive(sh.key) || !sheetDestOK(n)) return false;
+  if (!sh || sh.id !== sid || !sheetPlace(sh) || !sheetLive(sh) || !sheetDestOK(n)) return false;
   const k = sh.key, on = !sheetHas(n, k), at = on ? undefined : (uploadById(k) ? uploadListAt(n, k) : listAddedAt(n)[k]) || '';   // when it was added, read before it goes
-  if (uploadById(k)) {   // an upload: its private lists (uploadListSet), never libraryLists
+  if (uploadById(k) || sh.hidden) {   // an upload: its private lists (uploadListSet), never libraryLists; a hidden paper: its own row (listSet)
     if (!listSet(n, k, on)) return false;
     updateLibraryBadge(); if (sh.btn) refreshPaper(k, { list: n }); saveSheetSync();
     listToast(n, k, on, at);   // Layout A: every add and remove has its Undo
@@ -9657,7 +9698,7 @@ function sheetNewSubmit() {
   const sh = Feed.sheet, s = document.getElementById('saveSheet'), wrap = s && s.querySelector('.sh-edit'), input = wrap && wrap.querySelector('.sh-input'), msg = s && s.querySelector('.sh-msg');
   if (!sh || !input || !s.classList.contains('open') || Number(s.dataset.sheet) !== sh.id || !sh.edit || Number(wrap.dataset.edit) !== sh.edit) return false;
   const say = m => { if (msg) msg.innerHTML = m; sheetReveal(msg); };
-  if (!sheetPlace(sh) || !feedLive(sh.key)) { say('That paper is no longer here, so nothing was made.'); return false; }
+  if (!sheetPlace(sh) || !sheetLive(sh)) { say('That paper is no longer here, so nothing was made.'); return false; }
   if (!input.value.trim()) { say('Type a name for the list.'); input.focus(); return false; }
   const typed = input.value.trim();
   if (listGone(typed) || sh.dead.has(typed)) { say(goneMessage(typed)); input.focus(); return false; }   // its old rows stay off, and so does the name
@@ -9665,13 +9706,13 @@ function sheetNewSubmit() {
   if (!name) { input.focus(); return false; }
   const dailyDelta = typeof Daily !== 'undefined' && Daily.sheet ? { fields: {}, lists: [dailyListDelta(name, sh.key, false, true)] } : null;
   if (dailyDelta && !dailyTrySheetChange(sh.key, dailyDelta)) return false;
-  const upload = !!uploadById(sh.key);
-  libraryLists[name] = upload ? [] : [sh.key];   // an upload joins it privately, below
+  const own = !!uploadById(sh.key) || !!sh.hidden;
+  libraryLists[name] = own ? [] : [sh.key];   // an upload joins it privately, a hidden paper by its own row, below
   sh.names.push(name);
   s.querySelector('.sh-list').insertAdjacentHTML('beforeend', sheetRowHTML(name));
   sheetEditEnd(false);
   persistLists(); updateLibraryBadge();
-  if (upload) listSet(name, sh.key, true);
+  if (own) listSet(name, sh.key, true);
   saveSheetSync();
   if (!dailyDelta) listToast(name, sh.key, true);   // Layout A: the new list's add has its Undo too
   const row = [...s.querySelectorAll('.sh-row')].find(b => b.dataset.n === name);
@@ -10811,7 +10852,11 @@ function listToast(n, k, on, at) {
    a save in flight included: Undo then does nothing (Sol's review #3). listOpsWatch runs on every change (viewsSync). */
 const ListOps = new Set();
 function listOpsWatch() {
-  ListOps.forEach(op => { if (listHolds(op.n, op.k) !== op.on) ListOps.delete(op); });
+  ListOps.forEach(op => {
+    if (!op.keys) { if (listHolds(op.n, op.k) !== op.on) ListOps.delete(op); return; }
+    op.keys.forEach(k => { if (listHolds(op.n, k) !== op.on) op.keys.delete(k); });   // a copy's papers (listCopyBack), each on its own
+    if (!op.keys.size) ListOps.delete(op);
+  });
   if (ListOps.size > 50) ListOps.delete(ListOps.values().next().value);
 }
 function listUndo(n, k, on, at) {
@@ -11874,9 +11919,8 @@ function readBtn(p, labelled) {
   return `<button class="btn-icon ${labelled?'btn-labelled':''} is-read-btn ${on?'done':''}" data-act="read" aria-pressed="${on}" onclick="event.preventDefault();event.stopPropagation();toggleRead('${escAttr(k)}',this)" title="${on?'Mark unread':'Mark as read'}" aria-label="${on?'Mark unread':'Mark as read'}">&#10003;${labelled ? btnLabel(on, 'Read', 'Mark read') : ''}</button>`;
 }
 /* Save on the paper page, a Library row or a search result (fix round #1): the bookmark's Save to sheet, as on a post.
-   A hidden paper keeps the picker, which saves to its own row. */
+   A hidden paper too (design fixes round 2, G10): the same sheet saves to its own row. */
 function openSaveTo(ev, btn, key) {
-  if (hiddenRowOf(key)) { openSaveDD(btn, key); return; }
   if (Feed.sheet && Feed.sheet.btn === btn) { closeSaveSheet(); return; }
   if (Feed.sheet) closeSaveSheet();
   closeSaveDD(); closeCopyDD();
@@ -11890,7 +11934,7 @@ function saveBtn(p, labelled) {
 }
 function deleteBtn(p) {
   const k = paperKey(p);
-  if (isHiddenRow(p)) return `<button class="btn-icon btn-restore" data-act="restore" onclick="event.preventDefault();event.stopPropagation();unhidePaper('${escAttr(k)}')" title="Restore paper" aria-label="Restore paper"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>`;
+  if (isHiddenRow(p)) return `<button class="btn-icon btn-restore" data-act="restore" onclick="event.preventDefault();event.stopPropagation();unhidePaper('${escAttr(k)}',true)" title="Restore paper" aria-label="Restore paper"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>`;
   return `<button class="btn-icon btn-delete" data-act="hide" onclick="event.preventDefault();event.stopPropagation();askHide('${escAttr(k)}')" title="Hide paper (you can restore it from Lists)" aria-label="Hide paper"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>`;
 }
 
@@ -12357,10 +12401,12 @@ function hidePaper(k, reason) {
   toast(`Hidden "${esc(p.headline || p.title)}"`, () => unhidePaper(k));
   refresh();
 }
-/* Library's Restore: the hide and its reason go; a pass stays (the paper stays out of For you) */
-function unhidePaper(k) {
+/* Library's Restore: the hide and its reason go; a pass stays (the paper stays out of For you). `undoable`: Restore
+   chosen by the person (Library's row, the paper's ⋯), which has Undo; the Undo of Hide calls it without. */
+function unhidePaper(k, undoable) {
   const p = _hiddenPapers.find(x => paperKey(x) === k);
   if (!p) return;
+  const reason = p.hide_reason || '';
   p.is_hidden = '';
   if (p.hide_reason) p.hide_reason = '';
   splitHidden();
@@ -12368,18 +12414,31 @@ function unhidePaper(k) {
   if (p.is_starred === 'true') starSet.add(k);
   (p.user_lists || '').split('|').filter(Boolean).forEach(name => { (libraryLists[name] = libraryLists[name] || []).includes(k) || libraryLists[name].push(k); });
   _stateDirty = true; showSaveBar();
-  toast(`Restored "${esc(p.headline || p.title)}"`);
+  // Design fixes round 2 (G6): Undo hides it again with its reason, while it is still restored (not hidden again since)
+  toast(`Restored "${esc(p.headline || p.title)}"`, undoable ? () => {
+    requireOwner(); const q = allPapers.find(x => paperKey(x) === k);
+    if (!q || q._goneRemote || q.uploaded || (q.is_hidden || '') !== '') return;
+    flushStateToCSV(); q.is_hidden = 'true'; if (hideReasonsKept()) q.hide_reason = reason;   // hidden again as Hide does, quietly
+    splitHidden(); _stateDirty = true; showSaveBar(); refresh();
+  } : null, undoable ? { duration: 5000, fullTarget: true } : undefined);
   refresh();
 }
-/* A passed paper back into For you (Library's Passed group, the paper page): only is_passed changes */
-function unpassPaper(k) {
+/* A passed paper back into For you (Library's Passed group, the paper page): only is_passed changes. `undoable`: put
+   back by the person (the paper's Passed), which has Undo; the Undo of a pass calls it without. */
+function unpassPaper(k, undoable) {
   requireOwner();
   const p = everyPaper().find(x => paperKey(x) === k);
   if (!isPassed(p)) return;
   flushStateToCSV();
   p.is_passed = '';
   _stateDirty = true; showSaveBar();
-  toast(`Put back "${esc(p.headline || p.title)}" in For you`);
+  // Design fixes round 2 (G6): Undo passes it again, while it has not been passed or hidden again since
+  toast(`Put back "${esc(p.headline || p.title)}" in For you`, undoable ? () => {
+    requireOwner(); const q = everyPaper().find(x => paperKey(x) === k);
+    if (!q || q._goneRemote || q.uploaded || isHiddenRow(q) || (q.is_passed || '') !== '') return;
+    flushStateToCSV(); q.is_passed = 'true';
+    _stateDirty = true; showSaveBar(); tasteSupersede(); refresh();
+  } : null, undoable ? { duration: 5000, fullTarget: true } : undefined);
   refresh();
 }
 /* The papers file's columns, as the last copy read or saved has them: a column the worker adds (hide_reason with
@@ -12528,7 +12587,7 @@ function rowsSync(root, k) {
     el.insertAdjacentHTML('beforebegin', h);
     const fresh = el.previousElementSibling;
     if (fresh && fresh.closest('#sec-search')) { fresh._html = h; highlightTokens(fresh, Search.job ? Search.job.tokens : []); }
-    const sh = search && Feed.sheet;
+    const sh = Feed.sheet;   // design fixes round 2: any row drawn again (search, Library, a page's related papers), not search alone
     if (fresh && sh && sh.btn && el.contains(sh.btn)) {
       const next = fresh.querySelector(sh.btn.classList.contains('chip') ? '.chip' : '[data-act="list"]');
       if (sh.from === sh.btn) sh.from = next;
@@ -13691,6 +13750,14 @@ function renderLibrary() {
    longer be copied from or its group is gone; a press on what went is dead for good. */
 function libraryDrawn() {
   if (_activeSaveDD && !_activeSaveDD.page) saveDDSync();
+  // design fixes round 2: the Save sheet opened from a Library row finds that paper's Save again in its group, as the
+  // picker did, and stays open; it closes (saveSheetSync) when the row is no longer there
+  const sh = Feed.sheet;
+  if (sh && sh.lib && sh.btn && !sh.btn.isConnected) {
+    const g = [...document.querySelectorAll('#libraryContent [data-lib]')].find(x => x.dataset.lib === sh.lib), row = g && [...g.querySelectorAll('.top-row[data-key]')].find(r => r.dataset.key === sh.key), next = row && row.querySelector('[data-act="list"]');
+    if (next) { if (sh.from === sh.btn) sh.from = next; sh.btn = next; next.setAttribute('aria-expanded', 'true'); }
+    saveSheetSync();
+  }
   const cd = _copyDD;
   if (cd && (!copySourceOK(cd.src) || ![...document.querySelectorAll('#libraryContent [data-lib]')].some(g => g.dataset.lib === libGroupKey(cd.src)))) closeCopyDD();
   listMenuSync();   // Phase 25: a list's menu whose button went with the redraw closes
@@ -13711,6 +13778,8 @@ function libraryRepaint(k, what) {
     if (keys.has(g.key)) { el.insertAdjacentHTML('beforebegin', libGroupHTML(g.key, g.icon, g.label, g.papers, g.extra)); el.remove(); }
     else { _libPapers[g.key] = g.papers; rowsSync(el, k); }
   });
+  const sh = Feed.sheet;
+  if (sh && sh.lib && sh.btn && !sh.btn.isConnected) libraryDrawn();   // design fixes round 2: a group drawn again under an open Save sheet: it finds its place, as after a whole draw
 }
 
 /* Library list management */
@@ -13778,9 +13847,10 @@ async function createNewList() { const _authEpoch = capturePrivateEpoch();
   let restored = null;
   _genericCheck = name => {
     back.hidden = true;
-    if (deleted(name)) {
+    const was = deleted(name);
+    if (was) {
       back.textContent = `Bring back ${name}`; back.hidden = false;
-      return 'You deleted this list. Bring it back, or pick another name.';
+      return was.undone ? 'You undid this list. Bring it back, or pick another name.' : 'You deleted this list. Bring it back, or pick another name.';   // design fixes round 2: Undo of a list made here
     }
     if (readingListTyped(name) && !hasList(TO_READ)) return null;
     if (isProjectName(name) && listGone(name) && !Object.values(ListDefs.rows).some(r => r.names.includes(name))) return null;
@@ -13823,7 +13893,8 @@ async function createNewList() { const _authEpoch = capturePrivateEpoch();
   listEvForget(trimmed);   // made again here: a list, even if a list of that name went elsewhere
   libraryLists[trimmed] = [];
   persistLists(); updateLibraryBadge();
-  toast(`Made ${esc(trimmed)}`);
+  const def = (listDefLive(trimmed) || [null])[0];
+  toast(`Made ${esc(trimmed)}`, () => deleteList(trimmed, def), { duration: 6000, fullTarget: true });   // Design fixes round 2 (G6): Undo, see deleteList
   renderLibrary();
 }
 /* Rename, from Library's pencil or a list's ⋯: the same name rules, then listRenameTo, with Undo */
@@ -13866,16 +13937,31 @@ function listRenameBack(now, back) {
   return true;
 }
 /* Delete, from Library's bin or a list's ⋯: asked first, then done with Undo. Its papers stay in the library. */
-async function deleteList(name) { const _authEpoch = capturePrivateEpoch();
+/* made (design fixes round 2, G6): the Undo of a list made here (New list, Copy to a new list), given its definition's
+   id (null without definitions). That list goes as Delete takes it (its definition tombstoned, so no device brings it
+   back), without asking and without a toast of its own, only while it is still the list made then: here under its
+   name, the same definition, no paper in it (hidden papers and uploads too) and no interest chosen for it. */
+async function deleteList(name, made) { const _authEpoch = capturePrivateEpoch();
   if (!isProjectName(name) || !hasList(name)) return;   // To read and the survey's lanes stay
-  const members = libListPapers(name), hid = members.filter(isHiddenRow).length, n = members.length;
-  const sub = n ? `${n === 1 ? 'Its paper stays' : `Its ${n} papers stay`} in your library${hid ? ` (${hid} of them hidden)` : ''}.` : 'It has no papers.';
-  const ok = await privateAwait(showConfirm(`Delete "${name}"?`, sub, 'Delete', true), _authEpoch);
-  if (!ok || !hasList(name)) return;
+  if (made === undefined) {
+    const members = libListPapers(name), hid = members.filter(isHiddenRow).length, n = members.length;
+    const sub = n ? `${n === 1 ? 'Its paper stays' : `Its ${n} papers stay`} in your library${hid ? ` (${hid} of them hidden)` : ''}.` : 'It has no papers.';
+    const ok = await privateAwait(showConfirm(`Delete "${name}"?`, sub, 'Delete', true), _authEpoch);
+    if (!ok || !hasList(name)) return;
+  } else if (listGone(name) || (made && (listDefLive(name) || [null])[0] !== made) || libraryLists[name].length || libListPapers(name).length || ListView.interest.get(name)) return;
   // its members by id, the hidden ones too, so Undo finds each in the rows as they are then (Sol's review #2: a refresh
   // replaces the row objects, and a hide or a restore moves a paper between the two)
   const kept = { ids: libraryLists[name].concat(_hiddenPapers.filter(h => rowLists(h).includes(name)).map(paperKey)), meta: listEntry(name),
     created: listDates(name).created, definition: (listDefLive(name) || [null])[0], interest: ListView.interest.get(name), tab: Feed.project === name && feedActive() };
+  if (made !== undefined) {
+    kept.undone = true;   // the New list prompt says it was undone, not deleted
+    // A definition that never reached GitHub (made here, in no save yet and none under way) goes without a tombstone,
+    // before the list changes are stamped: no device ever had it, so its name stays free everywhere. A saved one keeps
+    // its tombstone, as Delete leaves it, so no older page brings it back and its name stays reserved to it.
+    const edit = made && ListDefs.ready && !_pushing ? ListDefs.edits.get(made) : null;
+    let saved = true; try { saved = ListDefs.text !== null && hasOwn(listDefsParse(ListDefs.text), made); } catch (e) {}
+    if (edit && edit.was === null && !saved) { delete ListDefs.rows[made]; ListDefs.edits.delete(made); kept.definition = null; }
+  }
   delete libraryLists[name];
   renameInHidden(name, null);
   listEvForget(name);
@@ -13891,7 +13977,26 @@ async function deleteList(name) { const _authEpoch = capturePrivateEpoch();
     meta[name] = { ...meta[name], restore: kept };
     privateSet(LISTMETA_KEY, JSON.stringify(meta));
   }
-  toast(`Deleted ${esc(name)}`, () => listDeleteBack(name, kept), { duration: 6000, fullTarget: true });
+  if (made === undefined) toast(`Deleted ${esc(name)}`, () => listDeleteBack(name, kept), { duration: 6000, fullTarget: true });
+}
+/* Design fixes round 2 (G6): Undo of a copy into a list: each paper it put there comes out again, unless its place in
+   that list changed since, here or on another device (op.keys, kept by listOpsWatch) */
+function listCopyBack(op) {
+  requireOwner();
+  if (!ListOps.delete(op)) return false;
+  const n = op.n;
+  let changed = false;
+  op.keys.forEach(k => {
+    if (!listHolds(n, k)) return;
+    const h = hiddenRowOf(k);
+    if (h) { if (h._goneRemote) return; hiddenList(h, n, false); }
+    else libraryLists[n] = libraryLists[n].filter(x => x !== k);
+    changed = true;
+  });
+  if (!changed) return false;
+  persistLists(); updateLibraryBadge();
+  listViewsChanged();
+  return true;
 }
 /* Undo of a delete: the list again, with every paper it had that is still in the library (each where it was in it), its
    times and its interest. A list of that name made since takes them in: no paper is lost either way. */
@@ -13956,21 +14061,21 @@ function showCopyDD(btn, srcName) {
    target are checked at the commit (correction 2). Returns { copied, skipped }. */
 function copyMembers(srcName, targetName) {
   let copied = 0, skipped = 0;
-  const seen = new Set();
+  const seen = new Set(), keys = [];   // keys: the papers this copy put in the target, for its Undo (listCopyBack)
   libraryLists[srcName].forEach(k => {
     if (seen.has(k) || hiddenRowOf(k)) return;   // a hidden member is reached through its own row, below
     seen.add(k);
     if (libraryLists[targetName].includes(k)) return;   // there already
     const p = feedPaper(k);
     if (!p || p._goneRemote) { skipped++; return; }
-    libraryLists[targetName].push(k); copied++;
+    libraryLists[targetName].push(k); copied++; keys.push(k);
   });
   _hiddenPapers.forEach(h => {
     if (!rowLists(h).includes(srcName) || rowLists(h).includes(targetName)) return;
     if (h._goneRemote) { skipped++; return; }
-    hiddenList(h, targetName, true); copied++;
+    hiddenList(h, targetName, true); copied++; keys.push(paperKey(h));
   });
-  return { copied, skipped };
+  return { copied, skipped, keys };
 }
 function copiedMessage(r, targetName) {
   const done = `Copied ${r.copied} paper${r.copied !== 1 ? 's' : ''} to "${esc(listLabel(targetName))}"`;
@@ -13985,7 +14090,10 @@ function doCopyList(srcName, targetName) {
   const r = copyMembers(srcName, targetName);
   if (made && !r.copied) delete libraryLists[targetName];   // nothing went in: To read is not made empty
   persistLists();
-  toast(copiedMessage(r, targetName));
+  // Design fixes round 2 (G6): Undo takes out again the papers this copy put in, each while it is still there from it
+  const op = { n: targetName, keys: new Set(r.keys), on: true };
+  if (op.keys.size) ListOps.add(op);
+  toast(copiedMessage(r, targetName), op.keys.size ? () => listCopyBack(op) : null, op.keys.size ? { duration: 6000, fullTarget: true } : undefined);
   renderLibrary();
 }
 async function doCopyNew(srcName) { const _authEpoch = capturePrivateEpoch();
@@ -14001,7 +14109,10 @@ async function doCopyNew(srcName) { const _authEpoch = capturePrivateEpoch();
   libraryLists[trimmed] = [];
   const r = copyMembers(srcName, trimmed);
   persistLists(); updateLibraryBadge();
-  toast(copiedMessage(r, trimmed));
+  // Design fixes round 2 (G6): Undo takes the copied papers out and the new list away, as far as each still stands
+  const op = { n: trimmed, keys: new Set(r.keys), on: true }, def = (listDefLive(trimmed) || [null])[0];
+  if (op.keys.size) ListOps.add(op);
+  toast(copiedMessage(r, trimmed), () => { listCopyBack(op); deleteList(trimmed, def); }, { duration: 6000, fullTarget: true });
   renderLibrary();
 }
 document.addEventListener('click', () => closeCopyDD());
@@ -16557,8 +16668,10 @@ async function paperDownloadGo(kind) {
   const idle = () => { if (live()) { Dl.busy = ''; dlMenuSync(); } };
   try {
     if (kind === 'annotated') {
-      if (!copyNotesUnlocked()) keptPaperClose();   // the password step shows over the page
+      const locked = !copyNotesUnlocked();
+      if (locked) keptPaperClose();   // the password step shows over the page
       if (!await privateAwait(requireDeviceSetup('notes'), epoch)) { idle(); return; }
+      if (locked) dlReopen(id, epoch, gen, live);   // design fixes round 2 (finding 4): unlocked, the menu comes back
       await privateAwait(copyFlushEditors(), epoch);
     }
     const file = await privateAwait(dlPrepare(id, kind), epoch);
@@ -16581,6 +16694,17 @@ async function paperDownloadGo(kind) {
     if (kind === 'annotated' && !copyNotesUnlocked()) return;   // locked meanwhile: the password is asked again next time
     dlFail(live());
   }
+}
+/* Design fixes round 2 (finding 4): the Download menu closed for the notes password comes back once they are unlocked,
+   as it stays open when they already were: preparing, then the Save or Open that a second tap needs (an iPhone whose
+   tap expired while it prepared, or that cannot share files). Only for the same sign-in, the same Download (op) before
+   any lock or sign-out (Dl.gen), notes still unlocked, on that paper's page with no menu open; what it offers is checked
+   at every draw and tap as before (copySnapshotCurrent: the epoch, the vault and the paper's notes generation). */
+function dlReopen(id, epoch, gen, live) {
+  try { checkPrivateEpoch(epoch); requireOwner(); } catch (e) { return; }
+  const b = document.getElementById('paperDownload');
+  if (!live() || gen !== Dl.gen || Dl.id !== id || !copyNotesUnlocked() || !_paperViewActive || !b || !b.isConnected || b.dataset.pid !== id || document.getElementById('keptPaperMenu')) return;
+  paperDownloadMenu(b, id).catch(() => {});
 }
 /* The second tap: sharing needs a fresh one when preparing took long */
 function paperDownloadHandoff() {
@@ -17821,7 +17945,9 @@ function similarSection(id) {
       }).join('') + '</div>' : '<p class="similar-state">No similar papers found.</p>';
       if (papers.length > count) content += `<button type="button" class="similar-more" onclick="similarMore('${escAttr(id)}')">Show 10 more</button>`;
     }
-  } else content = `<p class="similar-state">${result?.state === 'failed' ? 'Couldn’t find similar papers.' : '<i class="similar-spinner" aria-hidden="true"></i>Looking for similar papers'}</p>`;
+  } else if (result?.state === 'failed') content = '<p class="similar-state">Couldn’t find similar papers.</p>';
+  // Design fixes round 2 (G11): while it looks, the rows it will show, in the shared pulse; the words are for a screen reader
+  else content = `<p class="sr-only">Looking for similar papers</p><div class="similar-list skeleton-wrap sk-similar" aria-hidden="true">${[78, 64, 86].map(w => `<div class="similar-row"><div class="similar-main"><span class="sk-line sk-similar-title"><i class="sk" style="width:${w}%"></i></span><div class="similar-meta"><i class="sk" style="width:64px"></i><i class="sk" style="width:84px"></i></div></div><i class="sk sk-similar-add"></i></div>`).join('')}</div>`;
   return `<section class="pd-section" data-similar="${dataAttr(id)}" aria-live="polite"><h2>Similar papers</h2>${content}</section>`;
 }
 function similarPaint() {
@@ -19302,17 +19428,40 @@ async function usePdfFileNow(file) { const _authEpoch = capturePrivateEpoch();
    pdf_removed hides the worker's link too; the arXiv PDF, if there is one, stays readable. */
 function clearPdfLink() {
   const p = _reader.paper; if (!p) return;
-  requireOwner(); setPaperPdf(p, '');
+  requireOwner(); const was = { url: p.pdf_url, removed: p.pdf_removed }; setPaperPdf(p, '');
+  const set = { url: p.pdf_url, removed: p.pdf_removed }, id = p.id;
   _stateDirty = true; showSaveBar();
-  toast('Removed the saved PDF link');
+  // Design fixes round 2 (G7): Undo puts the link back while the paper still has none chosen since, here or elsewhere
+  toast('Removed the saved PDF link', privateCallback(() => {
+    requireOwner(); const q = findPaper(id);
+    if (!q || q._goneRemote || q.uploaded || q.pdf_url !== set.url || q.pdf_removed !== set.removed) return;
+    q.pdf_url = was.url; if (q.pdf_removed !== undefined) q.pdf_removed = was.removed === undefined ? '' : was.removed;
+    _stateDirty = true; showSaveBar();
+    readerUndoShow(id);
+  }), { duration: 6000, fullTarget: true });
   if (pdfModalOpen()) closePdfModal();
   showReader(p.id);
 }
 async function removeLocalPdf() { const _authEpoch = capturePrivateEpoch();
-  await privateAwait(localPdfDel(_reader.paper.id), _authEpoch); requireOwner();
-  toast('Removed the copy stored on this device');
+  const p = _reader.paper, id = p.id, link = p.pdf_url, removed = p.pdf_removed;
+  const blob = await privateAwait(localPdfGet(id), _authEpoch); requireOwner();
+  await privateAwait(localPdfDel(id), _authEpoch); requireOwner();
+  // Design fixes round 2 (G7): Undo stores the same file again on this device, while none was stored and no other
+  // link chosen since
+  toast('Removed the copy stored on this device', blob ? privateCallback(() => (async () => { const _authEpoch = capturePrivateEpoch(); requireOwner();
+    const q = findPaper(id);
+    if (!q || q._goneRemote || q.pdf_url !== link || q.pdf_removed !== removed || await privateAwait(localPdfGet(id), _authEpoch)) return;
+    await privateAwait(localPdfPut(id, blob), _authEpoch); requireOwner();
+    readerUndoShow(id);
+  })().catch(e => { try { capturePrivateEpoch(); } catch (x) { return; } toastError('Couldn’t undo that. Try again.'); })) : null, { duration: 6000, fullTarget: true });
   if (pdfModalOpen()) closePdfModal();
   showReader(_reader.paper.id);
+}
+/* After a PDF Undo (design fixes round 2, G7): the reader draws the paper again only while it is open on that paper;
+   closed (its paper is kept after it closes), the link or file is back quietly and only the download dot follows */
+function readerUndoShow(id) {
+  if (document.getElementById('reader').classList.contains('open') && _reader.paper && _reader.paper.id === id) showReader(id);
+  else paperDownloadDot().catch(() => {});
 }
 /* "Change PDF" is a dialog over the open PDF, with its own history step, so Back just closes it */
 function pdfModalOpen() { return document.getElementById('pdfModal').classList.contains('open'); }
@@ -20631,6 +20780,31 @@ async function createAnno(kind, color, drawn) { const _authEpoch = capturePrivat
   if (!drawn) annoArrives(a.id);
   const item = document.querySelector(`.rp-item[data-id="${a.id}"]`); if (item) item.classList.add('fresh');
   if (kind === 'note') openAnnoCard(a.id, !drawn, drawn && pencilDevice());
+  // Design fixes round 2 (G7): Undo takes the new highlight off again while it is as it was made (no comment, colour or
+  // extent since), with a tombstone as Delete leaves
+  const stamp = a.updated;
+  toast('Highlight added', notesUndo(notes.id, async (now, epoch) => {
+    const x = (now.annos || []).find(y => y.id === a.id);
+    if (!x || x.updated !== stamp || x.kind !== 'hl' || annoHasComment(x) || _rnEditing === 'a:' + a.id || (_hw && _hw.id === 'a:' + a.id) || (Adj && Adj.id === a.id) || (_acId === a.id && _acTimer)) return;
+    if (_acId === a.id) { _acId = null; _acOrigin = null; fadeAway(document.getElementById('annoCard')); }
+    now.annos = now.annos.filter(y => y.id !== a.id);
+    now.deleted = { ...(now.deleted || {}), [a.id]: new Date().toISOString() };
+    await privateAwait(Promise.all([savePaperNotes(now), _rn === now ? annoLeaves(a.id) : null]), epoch);
+    if (_rn === now) { redrawAnnoLayers(); renderReaderPanel(); }
+  }));
+}
+/* Design fixes round 2 (G7): the Undo of a reader change to the encrypted notes, through the guards every notes write
+   has. It runs under the sign-in it was made in (privateCallback, capturePrivateEpoch), only while the notes are still
+   unlocked as they were (the vault generation), and on the paper's notes as they are now (Vault.cache: a sync may have
+   merged them since); the undo itself finds its own item there and acts only if that item is still as the change left
+   it, so a later edit here or on another device stands. A lock, a reset or a sign-out meanwhile: nothing. */
+function notesUndo(id, undo) {
+  const generation = vaultGeneration();
+  return privateCallback(() => (async () => { const _authEpoch = capturePrivateEpoch(); requireOwner();
+    const notes = Vault.cache.get(id);
+    if (vaultGeneration() !== generation || !Vault.key || !notes) return;
+    await privateAwait(undo(notes, _authEpoch), _authEpoch);
+  })().catch(e => { try { capturePrivateEpoch(); } catch (x) { return; } if (vaultGeneration() === generation && Vault.key) toastError('Couldn’t undo that. Try again.'); }));
 }
 /* A new (or restored) highlight sweeps on along its lines, one after another, like a marker; its comment marker pops */
 function annoArrives(id) {
@@ -21832,10 +22006,22 @@ async function renameHlColor(c) { const _authEpoch = capturePrivateEpoch();
   const generation = vaultGeneration(); await privateAwait(awaitVaultWritable(), _authEpoch); checkVaultGeneration(generation);
   const name = await privateAwait(showPrompt('Name this colour', 'What do highlights in this colour mean to you?', 'e.g. Key idea', hlLabel(c)), _authEpoch);   // current name, ready to edit
   checkVaultGeneration(generation); if (!name || !Vault.index) return;
-  Vault.index.colors = { ...(Vault.index.colors || {}), [c]: name.trim().slice(0, 30) };
+  const had = hasOwn(Vault.index.colors, c), old = had ? Vault.index.colors[c] : null, label = name.trim().slice(0, 30);
+  if (!label || label === hlLabel(c)) return;   // nothing renamed: nothing saved, no Undo
+  Vault.index.colors = { ...(Vault.index.colors || {}), [c]: label };
   Vault.index.colorsUpdated = new Date().toISOString();
   await privateAwait(nfSave('_index.json', Vault.index), _authEpoch);
   renderReaderPanel();
+  // Design fixes round 2 (G7): Undo gives the colour its earlier name back (its default when it had none), with a new
+  // time so the colour names merge to it on every device, while the colour still has this name; other colours stay
+  toast(`Renamed to ${esc(label)}`, privateCallback(() => (async () => { const _authEpoch = capturePrivateEpoch(); requireOwner();
+    if (vaultGeneration() !== generation || !Vault.key || !Vault.index || !hasOwn(Vault.index.colors, c) || Vault.index.colors[c] !== label) return;
+    const colors = { ...Vault.index.colors };
+    if (had) colors[c] = old; else delete colors[c];
+    Vault.index.colors = colors; Vault.index.colorsUpdated = new Date().toISOString();
+    await privateAwait(nfSave('_index.json', Vault.index), _authEpoch);
+    renderReaderPanel(); if (document.getElementById('selBar').classList.contains('open')) showSelBar();
+  })().catch(e => { try { capturePrivateEpoch(); } catch (x) { return; } if (vaultGeneration() === generation && Vault.key) toastError('Couldn’t undo that. Try again.'); })), { duration: 6000, fullTarget: true });
 }
 /* Uploaded papers (usually to review) offer a note laid out as a review */
 const REVIEW_TEMPLATE = '## Review\n\n**Summary**\n\n\n**Strengths**\n- \n\n**Weaknesses**\n- \n\n**Questions for the authors**\n- \n\n**Minor issues**\n- \n\n**Recommendation:** \n**Confidence:** ';
@@ -21916,12 +22102,13 @@ async function saveNoteEdit(quiet) { const _authEpoch = capturePrivateEpoch();
   const text = _rnDraft.trim(), now = new Date().toISOString(), editing = _rnEditing;
   endDraft('save', text);
   _rn.entries = _rn.entries || [];
+  let added = null;
   if (String(editing).startsWith('a:')) {
     const a = annoById(editing.slice(2));
     if (a && a.kind === 'note' && !text && !hasHand(a)) { if (!quiet) renderReaderPanel(); return deleteAnno(a.id, 'Empty comment removed'); }   // (a comment with writing keeps it)
     if (a && (a.note || '') !== text) { a.note = text; a.updated = now; _rnFresh = a.id; }
   } else if (editing === 'new') {
-    if (text) { const e = { id: newNoteId(), text, created: now, updated: now }; _rn.entries.push(e); _rnFresh = e.id; }
+    if (text) { const e = { id: newNoteId(), text, created: now, updated: now }; _rn.entries.push(e); _rnFresh = e.id; added = e; }
   } else {
     const e = _rn.entries.find(x => x.id === editing);
     if (e && !text && !hasHand(e)) { if (!quiet) renderReaderPanel(); return deleteGeneralNote(editing); }
@@ -21931,6 +22118,20 @@ async function saveNoteEdit(quiet) { const _authEpoch = capturePrivateEpoch();
   if (!owner.current()) return;
   redrawAnnoLayers();
   if (!quiet) renderReaderPanel();
+  if (added && !quiet) toast('Note added', noteAddUndo(notes.id, added));   // Design fixes round 2 (G7): Save of a new note has Undo
+}
+/* Design fixes round 2 (G7): Undo of a new note, typed or written: it goes again, with a tombstone as Delete leaves,
+   while it is as it was saved and not open to edit; the citation anchors only it cited go with it on the save */
+function noteAddUndo(id, e) {
+  const stamp = e.updated;
+  return notesUndo(id, async (now, epoch) => {
+    const x = (now.entries || []).find(y => y.id === e.id);
+    if (!x || x.updated !== stamp || _rnEditing === e.id || (_hw && (_hw.id === e.id || _hw.savedId === e.id))) return;
+    now.entries = now.entries.filter(y => y.id !== e.id);
+    now.deleted = { ...(now.deleted || {}), [e.id]: new Date().toISOString() };
+    await privateAwait(savePaperNotes(now), epoch);
+    if (_rn === now) { redrawAnnoLayers(); renderReaderPanel(); }
+  });
 }
 async function finishNotesEdit() { const _authEpoch = capturePrivateEpoch();
   if (_rnFinish) return privateAwait(_rnFinish, _authEpoch);
@@ -22115,11 +22316,12 @@ async function saveHandwritten(quiet) { const _authEpoch = capturePrivateEpoch()
     const before = JSON.parse(JSON.stringify(notes)), revision = hw.revision || 0, now = new Date().toISOString();
     const pad = document.querySelector('#notesPane .hw-pad'), hand = hwHandOf(hw, pad && pad.offsetWidth ? Math.round(pad.offsetWidth) : 0);
     notes.entries = notes.entries || [];
+    let added = null;
     try {
       if (hw.id === 'new') {
         if (hand) {
           const id = hw.savedId || (hw.savedId = newNoteId());   // the same id on retry, including a partial local save
-          notes.entries.push({ id, text: '', hand, created: now, updated: now }); _rnFresh = id;
+          notes.entries.push(added = { id, text: '', hand, created: now, updated: now }); _rnFresh = id;
         }
       } else if (hw.id.startsWith('a:')) {
         const a = annoById(hw.id.slice(2));
@@ -22151,6 +22353,7 @@ async function saveHandwritten(quiet) { const _authEpoch = capturePrivateEpoch()
       else if (hw.id === 'new' && hand) hw.id = hw.savedId;   // writing added during the save belongs to this entry
       if (!owner.current()) { if (_hw === hw) _hw = null; return; }
       if (!quiet) renderReaderPanel();
+      if (added && !quiet && _hw !== hw) toast('Note added', noteAddUndo(notes.id, added));   // Design fixes round 2 (G7): a new written note's Save has Undo
     } catch (e) { checkPrivateEpoch(_authEpoch);
       if (owner.current() && (!_hw || _hw === hw)) {
         Object.assign(notes, before); _hw = hw; hw.dirty = true;
@@ -22461,6 +22664,10 @@ function renderChatPanel(force) {
     api_blocked: `<p>Chat from this device isn’t allowed for this key.</p><button class="ui-btn ui-btn-secondary" onclick="chatForgetKey()">Forget the key</button>`,
     api_credits: `<p>Your Claude credits are used up for this month.</p><button class="ui-btn ui-btn-secondary" onclick="chatApiRetry()">Try again</button>`,
   };
+  // Design fixes round 2 (G11): connecting keeps the ready chat's frame, its suggestions and its message box as shapes
+  // in the shared pulse, and says Connecting only to a screen reader
+  const connecting = Chat.status === 'unknown' || Chat.status === 'checking';
+  if (connecting) return chatConnectingRender(panel, head, pid);
   const body = `<div class="chat-scroll" id="chatScroll"></div>` + (ready
     ? `<div class="chat-compose"><div class="chat-attach" id="chatAttach"></div>
          <div class="chat-box"><textarea id="chatInput" rows="1" placeholder="Ask about this paper…" oninput="chatInputChanged(this)" onkeydown="chatKey(event)"></textarea>
@@ -22473,6 +22680,16 @@ function renderChatPanel(force) {
      renderChatAttach(); updateChatSend();
     const i = document.getElementById('chatInput'); i.value = Chat.draftText; chatGrow(i);
   }
+}
+/* Design fixes round 2 (G11): the chat while it connects, in the ready chat's frame: the scroll area (its earlier
+   messages when they are here, else the suggestions' shapes) and the message box's shape at the foot */
+function chatConnectingRender(panel, head, pid) {
+  const shapes = `<div class="chat-empty skeleton-wrap sk-chat" aria-hidden="true"><p class="sk-line"><i class="sk" style="width:58%"></i></p><div class="chat-chips">${[113, 133, 75, 88, 156].map(w => `<i class="sk sk-chat-chip" style="width:${w}px"></i>`).join('')}</div></div>`;
+  // the message field is a field as the ready box has (disabled, out of reach), so its line sits exactly where it will
+  const compose = `<div class="chat-compose" aria-hidden="true"><div class="chat-box skeleton-wrap sk-chat-box"><textarea rows="1" disabled tabindex="-1"></textarea><div class="chat-box-row"><i class="sk sk-chat-ic"></i><i class="sk sk-chat-ic"></i><span class="grow"></span><i class="sk sk-chat-sel"></i><i class="sk sk-chat-sel"></i><i class="sk sk-chat-send"></i></div></div></div>`;
+  panel.innerHTML = head + `<div class="chat-root" id="chatRoot" data-paper="${dataAttr(pid)}" data-status="${Chat.status}" aria-busy="true"><div class="chat-scroll" id="chatScroll"><p class="sr-only" role="status">Connecting…</p>${shapes}</div>${compose}</div>`;
+  if (Chat.status === 'unknown') chatOpen();   // shown before anything asked the laptop (the reader opened on Chat): ask now
+  if (Chat.pid === pid && Chat.messages.length) renderChatMessages('bottom');
 }
 const CHAT_MODELS = [['opus', 'Thorough', 'Thorough answers'], ['sonnet', 'Balanced', 'Balanced answers'], ['haiku', 'Quick', 'Quick answers']];
 const CHAT_EFFORTS = [['', 'Default'], ['low', 'Low'], ['medium', 'Medium'], ['high', 'High'], ['xhigh', 'X-high'], ['max', 'Max']];
@@ -24653,7 +24870,7 @@ function paperMenuChoose(item) {
   PaperMenu.step = step;
   if (p.uploaded) { reviewRun(() => (v === 'title' ? renameUpload(k) : removeUpload(k)).finally(() => paperMenuStepEnd(step))); return; }
   if (v === 'hide' && !isHiddenRow(p)) { askHide(k); if (!document.querySelector('#hideSheet.open')) paperMenuStepEnd(step); }
-  else if (v === 'restore' && isHiddenRow(p)) unhidePaper(k);
+  else if (v === 'restore' && isHiddenRow(p)) unhidePaper(k, true);
 }
 /* The sheet or prompt is closed: its step in history goes too, unless Back took it already */
 function paperMenuStepEnd(step) {
@@ -24907,7 +25124,7 @@ function pagePass(k) {
   requireOwner();
   const p = feedPaper(k);
   if (!p || p._goneRemote || p.uploaded || isHiddenRow(p)) return false;
-  if (isPassed(p)) { unpassPaper(k); return true; }
+  if (isPassed(p)) { unpassPaper(k, true); return true; }
   if (likedKey(k)) return false;
   flushStateToCSV();
   p.is_passed = 'true';
