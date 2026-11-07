@@ -150,22 +150,17 @@ html.private-locked:has(#skeleton:not(.hidden)) #privateAccess[data-state="loadi
 .sk-daily-matches{margin-top:24px;border-top:1px solid var(--line)}
 .sk-daily-matches-label{margin-top:18px}
 .sk-daily-match{display:flex;align-items:baseline;gap:16px;justify-content:space-between;padding:7px 0;font-size:13px;color:var(--text-secondary)}
-.sk-daily-actions{position:absolute;z-index:3;bottom:0;left:0;right:0;display:flex;align-items:flex-start;justify-content:center;gap:53px;min-height:108px;padding:16px 16px calc(16px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--line);background:var(--bg)}
-.sk-daily-action{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:64px;max-width:35%;padding:0;border:0;background:none;color:var(--text-muted);font-size:12px;cursor:pointer}
+.sk-daily-actions{position:absolute;z-index:3;bottom:0;left:0;right:0;display:flex;align-items:flex-start;justify-content:center;gap:clamp(12px,6vw,44px);min-height:108px;padding:16px 16px calc(16px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--line);background:var(--bg)}
+.sk-daily-action{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:56px;max-width:25%;padding:0;border:0;background:none;color:var(--text-muted);font-size:12px;cursor:pointer}
 .sk-daily-action span{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border:1px solid var(--line);border-radius:50%;color:var(--text-secondary)}
 .sk-daily-action.save span{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line));background:var(--accent-dim)}
 .sk-daily-action b{font-weight:400;overflow-wrap:anywhere}
 .sk-daily-action svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:600px){.sk-daily-picker{padding:0 16px}
 .sk-daily-area{padding:16px 16px calc(var(--daily-footer-height) + 16px)}
-.sk-daily-card{padding:23px 20px 19px}
-.sk-daily-card h2{font-size:27px}
-.sk-daily-headline{margin-top:18px;padding:17px 0;font-size:15px}
-.sk-daily-summary,.sk-daily-abstract{font-size:13px;line-height:1.7}
-.sk-daily-authors{margin-top:13px;font-size:12px}
-.sk-daily-venue{font-size:11px}
-.sk-daily-actions{gap:clamp(15px,10vw,43px)}
-.sk-daily-action span{width:50px;height:50px}}
+.sk-daily-card{padding:20px 20px 19px}
+.sk-daily-actions{gap:clamp(8px,5vw,32px)}
+.sk-daily-action span{width:48px;height:48px}}
 @media(prefers-reduced-motion:reduce){.sk-daily-card,.sk-daily-action{transition:none!important;animation:none!important}}
 /* The verified loader reserves the owner's bar without enabling the locked controls. */
 #skeleton .sk-nav { display: none; }
@@ -184,9 +179,53 @@ html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(
 .skeleton-wrap .sk-dek { margin-top: 6px; font-size: 14.5px; line-height: 1.45; }
 .skeleton-wrap .sk-by { margin-top: 6px; }
 .skeleton-wrap .sk-dek .sk-line + .sk-line { display: none; }
-.skeleton-wrap .sk-icons { display: flex; align-items: center; justify-content: space-between; height: 44px; max-width: 380px; margin: 4px -12px 0; }
-.skeleton-wrap .sk-icon { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex: none; }
+.skeleton-wrap .sk-icons { display: flex; align-items: center; justify-content: space-between; gap: 2px; height: 44px; max-width: 420px; margin: 2px -10px 2px; }
+.skeleton-wrap .sk-icon { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; height: 44px; padding: 0 10px; flex: none; font-size: 13px; line-height: 1; white-space: nowrap; color: var(--text-muted); }
 .skeleton-wrap .sk-icon .sk { width: 18px; height: 18px; border-radius: 4px; }
+.skeleton-wrap .sk-icon b { font-weight: 400; }
+@media (max-width: 360px) { .skeleton-wrap .sk-icon { padding: 0 6px; gap: 4px; font-size: 12.5px; } }
+/* Layout A: the quiet line and the open paper show on a wide screen only (twoPane: not a phone, not a phone sideways) */
+.skeleton-wrap .sk-why, .skeleton-wrap .sk-pane, .skeleton-wrap .sk-daily-list { display: none; }
+@media (min-width: 820px) and (min-height: 501px), (min-width: 820px) and (hover: hover), (min-width: 820px) and (pointer: fine) {
+  #skeleton .sk-feed { display: grid; grid-template-columns: clamp(300px, 34vw, 400px) minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); grid-template-areas: "head pane" "list pane" "rest pane"; align-items: start; max-width: none; margin: 0; border-inline: none; }
+  #skeleton .sk-feed > .feed-head { grid-area: head; }
+  #skeleton .sk-feed > .sk-list { grid-area: list; }
+  #skeleton .sk-feed .skpost { padding: 14px 20px; }
+  #skeleton .sk-feed .sk-meta, #skeleton .sk-feed .sk-dek, #skeleton .sk-feed .sk-icons, #skeleton .sk-feed:not(.sk-following) .sk-by { display: none; }
+  #skeleton .sk-feed .sk-title { margin: 0; font-size: 14.5px; line-height: 1.4; }
+  #skeleton .sk-feed .sk-by { margin-top: 4px; font-size: 12px; }
+  #skeleton .sk-feed:not(.sk-following) .sk-why { display: block; margin-top: 4px; font-size: 12px; line-height: 1.5; }
+  #skeleton .sk-feed > .sk-pane { grid-area: pane; position: sticky; top: 0; display: flex; flex-direction: column; min-width: 0; height: calc(100dvh - 57px); border-left: 1px solid var(--line); }
+  #skeleton .sk-pane-body { flex: 1; min-height: 0; overflow: hidden; padding: 36px 56px 28px; }
+  #skeleton .sk-pane-body > * { max-width: 760px; }
+  #skeleton .sk-pane .sk-chip { width: 200px; }
+  #skeleton .sk-pane .fp-acts .pact { color: var(--text-muted); }
+  #skeleton .sk-daily-feed { max-width: none; margin: 0; border-inline: none; display: grid; grid-template-columns: clamp(300px, 34vw, 400px) minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto; grid-template-areas: "head area" "picker area" "list area" "list foot"; }
+  #skeleton .sk-daily-feed .sk-daily-body { display: contents; }
+  #skeleton .sk-daily-feed > .feed-head { grid-area: head; min-width: 0; }
+  #skeleton .sk-daily-feed .sk-daily-picker { grid-area: picker; padding: 0 20px; }
+  #skeleton .sk-daily-list { grid-area: list; display: block; min-height: 0; overflow: hidden; }
+  #skeleton .sk-daily-row { padding: 14px 20px; border-bottom: 1px solid var(--line); }
+  #skeleton .sk-daily-row .dr-h { font-size: 14px; line-height: 1.4; }
+  #skeleton .sk-daily-row .dr-s { margin-top: 4px; font-size: 12px; line-height: 1.5; }
+  #skeleton .sk-daily-area { grid-area: area; min-height: 0; padding: 0; border-left: 1px solid var(--line); }
+  #skeleton .sk-daily-card { max-width: 872px; padding: 36px 56px 28px; border: 0; border-radius: 0; box-shadow: none; }
+  /* the wider card wraps fewer lines: as many as the paper's own text takes there */
+  #skeleton .sk-daily-card .pv-headline .sk-line:nth-child(n+3), #skeleton .sk-daily-card .pv-title .sk-line:nth-child(n+2), #skeleton .sk-daily-card .pv-summary .sk-line:nth-child(n+3), #skeleton .sk-daily-card .pv-abstract .sk-line:nth-child(n+3) { display: none; }
+  #skeleton .sk-daily-actions { grid-area: foot; position: static; justify-content: flex-start; align-items: center; gap: 12px; min-height: 0; padding: 14px 56px calc(14px + env(safe-area-inset-bottom, 0px)); border-left: 1px solid var(--line); }
+  #skeleton .sk-daily-action { flex-direction: row; gap: 8px; max-width: none; height: 44px; padding: 0 18px; border: 1px solid var(--line); border-radius: 999px; font-size: 15px; color: var(--text); }
+  #skeleton .sk-daily-action span { width: 18px; height: 18px; border: 0; background: none; }
+  #skeleton .sk-daily-action.read { margin-left: auto; padding: 0 22px; }
+}
+@media (min-width: 820px) and (max-width: 1100px) {
+  #skeleton .sk-pane-body, #skeleton .sk-daily-card { padding: 28px 32px 24px; }
+  #skeleton .sk-pane .fp-acts, #skeleton .sk-daily-actions { gap: 8px; padding-left: 24px; padding-right: 24px; }
+  #skeleton .sk-pane .fp-acts .pact, #skeleton .sk-daily-action { padding: 0 14px; font-size: 14px; }
+  #skeleton .sk-pane .fp-acts .pact-read, #skeleton .sk-daily-action.read { padding: 0 18px; }
+}
+@media (min-width: 820px) and (max-width: 900px) { #skeleton .sk-pane .fp-acts .pact, #skeleton .sk-daily-action { padding: 0 12px; } }
+#skeleton .sk-chip { width: 200px; display: block; }
+@media (max-width: 600px) { #skeleton .sk-daily-card .pv-headline { font-size: 22px; line-height: 1.3; } #skeleton .sk-daily-card .pv-title { font-size: 15px; } #skeleton .sk-daily-card .pv-by, #skeleton .sk-daily-card .pv-venue { font-size: 13px; } #skeleton .sk-daily-card .pv-summary, #skeleton .sk-daily-card .pv-abstract { font-size: 15px; line-height: 1.55; } }
 .skeleton-wrap .sk-acts { display: flex; align-items: center; gap: 12px; height: 44px; margin: 4px 0; }
 .skeleton-wrap .sk-acts .sk { width: 72px; height: 16px; }
 .skeleton-wrap .feed-head { position: static; }
@@ -2926,8 +2965,8 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   .pd-actions::-webkit-scrollbar { display: none; }
   .pd-act { width: auto; min-width: 44px; height: 44px; padding: 0 10px; flex-shrink: 0; }
   .pd-act-label { display: inline; margin-left: 6px; font-size: 13px; white-space: nowrap; }
-  .pd-actions .pd-read { order: -2; flex-shrink: 0; margin-left: 0; margin-right: 6px; min-height: 44px; }
-  .pd-actions .pd-open { order: -1; margin-right: 6px; }
+  .pd-actions .pd-read { flex-shrink: 0; margin-left: 0; margin-right: 6px; min-height: 44px; }   /* Layout A: Read keeps its place after Pass, Save and Mark read */
+  .pd-actions .pd-open { margin-right: 6px; }
   .pd-actions .pd-open, .pd-nav-pos, .pd-nav-sep { flex-shrink: 0; }
 }
 .pd-act.pd-passed { color: #ef8a8a; }
@@ -3109,30 +3148,109 @@ body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.au
 .daily-card{touch-action:pan-y;position:relative;padding:26px 25px 23px;border:1px solid var(--line);border-radius:18px;background:var(--bg);min-height:100%;box-shadow:0 6px 24px rgba(0,0,0,.055);transform-origin:50% 88%;cursor:grab;overflow-wrap:anywhere}
 .daily-card.dragging{cursor:grabbing;user-select:none}
 .daily-card:focus-visible,.daily-action:focus-visible,.daily-picker:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-.daily-card h2{font-size:29px;font-weight:650;line-height:1.18;margin:0;letter-spacing:-.025em}
-.daily-card h2 a{color:var(--text);text-decoration:none}.daily-card h2 a:hover{text-decoration:underline;text-underline-offset:3px}
-.daily-authors{margin-top:15px;font-size:13px;color:var(--text-muted)}.daily-venue{margin-top:4px;font-size:12px;color:var(--text-secondary)}
-.daily-headline{font-size:16px;font-weight:500;line-height:1.45;letter-spacing:-.01em;padding:20px 0;margin:20px 0 0;border-top:1px solid var(--line)}
-.daily-summary,.daily-abstract{font-size:14px;line-height:1.75;color:var(--text-secondary)}
-.daily-abstract-label,.daily-matches-label{font-size:12px;font-weight:600;color:var(--text-muted);margin:24px 0 9px}
-.daily-abstract{white-space:pre-wrap;overflow-wrap:anywhere}
-.daily-abstract .katex-display{max-width:100%;overflow-x:auto;overflow-y:hidden}
-.daily-matches{margin-top:24px;border-top:1px solid var(--line)}
-.daily-matches-label{margin-top:18px}
-.daily-match{display:flex;align-items:baseline;gap:16px;justify-content:space-between;padding:7px 0;font-size:13px;color:var(--text-secondary)}
-.daily-match-name{min-width:0}.daily-match-strength{flex:none;color:var(--text-muted)}
 .daily-stamp{position:absolute;z-index:2;top:24px;max-width:80%;padding:6px 13px;border:2px solid currentColor;border-radius:7px;font-weight:650;font-size:21px;opacity:0;pointer-events:none;background:var(--bg)}
 .daily-stamp-save{left:18px;color:var(--accent);transform:rotate(-9deg)}.daily-stamp-pass{right:18px;color:var(--text-secondary);transform:rotate(9deg)}
 .daily-card.dragging .daily-stamp{opacity:var(--stamp-opacity,0)}.daily-card.dragging[data-direction=right] .daily-stamp-pass,.daily-card.dragging[data-direction=left] .daily-stamp-save{display:none}
-.daily-actions{position:absolute;z-index:3;bottom:0;left:0;right:0;display:flex;align-items:flex-start;justify-content:center;gap:53px;min-height:108px;padding:16px 16px calc(16px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--line);background:var(--bg)}
-.daily-action{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:64px;max-width:35%;padding:0;border:0;background:none;color:var(--text-muted);font-size:12px;cursor:pointer}
-.daily-action span{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border:1px solid var(--line);border-radius:50%;color:var(--text-secondary)}
-.daily-action.save span{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line));background:var(--accent-dim)}.daily-action:hover span{color:var(--accent);border-color:var(--accent)}
-.daily-action b{font-weight:400;overflow-wrap:anywhere}.daily-action svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.daily-actions{position:absolute;z-index:3;bottom:0;left:0;right:0;display:flex;align-items:flex-start;justify-content:center;gap:clamp(12px,6vw,44px);min-height:108px;padding:16px 16px calc(16px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--line);background:var(--bg)}
+.daily-action{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:56px;max-width:25%;padding:0;border:0;background:none;color:var(--text-muted);font:inherit;font-size:12px;cursor:pointer}
+.daily-action .pact-i{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border:1px solid var(--line);border-radius:50%;color:var(--text-secondary)}
+.daily-action.pact-save .pact-i{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line));background:var(--accent-dim)}html:not(.no-hover) .daily-action:hover .pact-i{color:var(--accent);border-color:var(--accent)}
+.daily-action .pact-l{font-weight:400;overflow-wrap:anywhere}.daily-action svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.daily-action .pact-chev{display:none}
 .daily-empty{display:flex;flex-direction:column;gap:15px;min-height:355px;align-items:center;justify-content:center;padding:40px;border:1px solid var(--line);border-radius:18px;text-align:center;font-size:14px;line-height:1.8;color:var(--text-muted)}
 .daily-empty button{border:0;background:none;color:var(--accent);cursor:pointer;min-height:44px}
-@media(max-width:600px){.daily-picker{padding:0 16px}.daily-area{padding:16px 16px calc(var(--daily-footer-height) + 16px)}.daily-card{padding:23px 20px 19px}.daily-card h2{font-size:27px}.daily-headline{margin-top:18px;padding:17px 0;font-size:15px}.daily-summary,.daily-abstract{font-size:13px;line-height:1.7}.daily-authors{margin-top:13px;font-size:12px}.daily-venue{font-size:11px}.daily-actions{gap:clamp(15px,10vw,43px)}.daily-action span{width:50px;height:50px}}
+@media(max-width:600px){.daily-picker{padding:0 16px}.daily-area{padding:16px 16px calc(var(--daily-footer-height) + 16px)}.daily-card{padding:20px 20px 19px}.daily-actions{gap:clamp(8px,5vw,32px)}.daily-action .pact-i{width:48px;height:48px}}
 @media(prefers-reduced-motion:reduce){.daily-card,.daily-action{transition:none!important;animation:none!important}}
+
+/* ===== LAYOUT A (7 November 2026): one action row, the open paper, two panes on a wide screen ===== */
+/* The open paper, as Daily's card and the right pane show it (paperViewHTML): the headline leads, the title follows */
+.pv-headline{margin:0;font-size:28px;font-weight:700;line-height:1.25;letter-spacing:-.02em;color:var(--text);text-wrap:pretty;overflow-wrap:anywhere}
+.pv-headline a{color:inherit;text-decoration:none}.pv-headline a:hover{text-decoration:underline;text-underline-offset:3px}
+.pv-title{margin:12px 0 0;font-size:17px;line-height:1.4;color:var(--text-secondary);overflow-wrap:anywhere}
+.pv-by{margin:12px 0 0;font-size:14px;line-height:1.5;color:var(--text-muted-raised);overflow-wrap:anywhere}
+.pv-by a{color:inherit;text-decoration:none}.pv-by a:hover{color:var(--text);text-decoration:underline;text-underline-offset:2px}.pv-by .by-f{color:var(--text);font-weight:700}
+.pv-venue{margin:4px 0 0;font-size:13px;line-height:1.45;color:var(--text-muted-raised)}
+.pv-matches{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0;padding:0;list-style:none}
+.pv-match{display:inline-flex;align-items:baseline;gap:6px;max-width:100%;padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:13px;line-height:1.35;color:var(--text);overflow-wrap:anywhere}
+.pv-match-strength{flex:none;color:var(--text-muted-raised)}.pv-match-strength::before{content:'\00b7';margin-right:6px}
+.pv-rule{height:1px;margin:20px 0 0;border:0;background:var(--line)}
+.pv-summary{margin:20px 0 0;font-size:16px;line-height:1.6;color:var(--text-secondary);overflow-wrap:anywhere}
+.pv-abstract-label{margin:22px 0 8px;font-size:13px;font-weight:600;color:var(--text-muted-raised)}
+.pv-abstract{margin:0;font-size:16px;line-height:1.6;color:var(--text-secondary);white-space:pre-wrap;overflow-wrap:anywhere}
+.pv-abstract .katex-display{max-width:100%;overflow-x:auto;overflow-y:hidden}
+@media(max-width:600px){.daily-card .pv-headline{font-size:22px;line-height:1.3}.daily-card .pv-title{font-size:15px}.daily-card .pv-by,.daily-card .pv-venue{font-size:13px}.daily-card .pv-summary,.daily-card .pv-abstract{font-size:15px;line-height:1.55}}
+/* The row on a post (one column): Pass, Save, Mark read, Read, each a 44 px target with its word */
+.post .icons.pacts{display:flex;justify-content:space-between;align-items:center;gap:2px;max-width:420px;margin:2px -10px 2px}
+.ic.pact{width:auto;min-width:44px;gap:6px;padding:0 10px;font:inherit;font-size:13px;line-height:1;white-space:nowrap}
+.pact{text-decoration:none}.pact-i{display:inline-flex;align-items:center;justify-content:center;flex:none}
+.ic.pact svg{width:18px;height:18px}
+.pact-chev{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.post .pact-chev{display:none}
+.ic.pact-save.on,.ic.pact-mark.on{color:var(--accent)}.ic.pact-save.on svg{fill:currentColor}
+html:not(.no-hover) .ic.pact-mark:hover,html:not(.no-hover) .ic.pact-read:hover{color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+@media(max-width:360px){.ic.pact{padding:0 6px;gap:4px;font-size:12.5px}}
+.pd-act.on-pass{color:var(--text)}
+.pd-act svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.pd-act.on-list svg{fill:currentColor}
+/* A wide screen: the list on the left, the open paper on the right with its row pinned at the pane's foot */
+body.feed-two{--pane-left:clamp(300px,34vw,400px)}
+body.feed-two .feed:not(.daily-feed){display:grid;grid-template-columns:var(--pane-left) minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"head pane" "list pane" "more pane" "end pane";align-items:start;max-width:none;margin:0;border-inline:none}
+body.feed-two .feed:not(.daily-feed)>.feed-head{grid-area:head}
+body.feed-two .feed:not(.daily-feed)>.feed-list{grid-area:list}
+body.feed-two .feed:not(.daily-feed)>.feed-more{grid-area:more}
+body.feed-two .feed:not(.daily-feed)>.feed-end{grid-area:end}
+body.feed-two .feed:not(.daily-feed)>.list-bar,body.feed-two .feed:not(.daily-feed)>.pull-hint{display:none}
+.feed-pane{display:none}
+body.feed-two .feed-pane:not([hidden]){grid-area:pane;position:sticky;top:0;display:flex;flex-direction:column;min-width:0;height:var(--ms-h,calc(100dvh - 57px));border-left:1px solid var(--line);background:var(--bg)}
+.fp-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:36px 56px 28px}
+.fp-body>*{max-width:760px}
+.fp-body:focus-visible{outline:none}
+body.feed-two .post{padding:14px 20px;contain-intrinsic-size:auto 76px}
+body.feed-two .post:not(.gone) .meta,body.feed-two .post:not(.gone) .dek,body.feed-two .post .icons,body.feed-two .post .near{display:none}
+body.feed-two .post:not(.gone) .post-t{margin:0;font-size:14.5px;font-weight:500;line-height:1.4;letter-spacing:0}
+body.feed-two .post .by{margin:4px 0 0;font-size:12px}
+body.feed-two .post:has(.post-why) .by{display:none}
+.post-why{margin:4px 0 0;font-size:12px;color:var(--text-muted-raised);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.feed-two .post.pane-on{background:var(--bg-surface);box-shadow:inset 3px 0 0 var(--accent)}   /* no change of weight: a row keeps its height, so the list does not move */
+/* The pinned row of the right pane and of Daily's right pane: pills, Read the filled one at the end */
+.fp-acts,.daily-feed.two .daily-actions{flex:none;display:flex;align-items:center;gap:12px;padding:14px 56px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--bg)}
+.fp-acts .pact,.daily-feed.two .daily-actions .pact{flex:none;display:inline-flex;flex-direction:row;align-items:center;gap:8px;min-width:44px;max-width:none;height:44px;padding:0 18px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--text);font:inherit;font-size:15px;font-weight:500;white-space:nowrap;cursor:pointer}
+.fp-acts .pact svg,.daily-feed.two .daily-actions .pact svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.daily-feed.two .daily-actions .pact .pact-i{width:auto;height:auto;border:0;border-radius:0;background:none;color:inherit}
+.fp-acts .pact-save,.daily-feed.two .daily-actions .pact-save{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
+.fp-acts .pact-save .pact-chev,.daily-feed.two .daily-actions .pact-save .pact-chev{display:block;transform:rotate(180deg)}
+.fp-acts .pact-save.on svg:not(.pact-chev){fill:currentColor}
+.fp-acts .pact-read,.daily-feed.two .daily-actions .pact-read{margin-left:auto;padding:0 22px;border-color:var(--accent);background:var(--accent);color:var(--accent-ink);font-weight:600}
+.fp-acts .pact.on.pact-mark{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 50%,var(--line))}
+html:not(.no-hover) .fp-acts .pact:not(.pact-read):not(:disabled):hover,html:not(.no-hover) .daily-feed.two .daily-actions .pact:not(.pact-read):hover{background:rgba(127,127,127,.12)}
+html:not(.no-hover) .fp-acts .pact-read:hover,html:not(.no-hover) .daily-feed.two .daily-actions .pact-read:hover{background:var(--accent-hover)}
+.fp-acts .pact:disabled{opacity:.4;cursor:default}
+.fp-acts .pact:focus-visible,.daily-feed.two .daily-actions .pact:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:1100px){.fp-body{padding:28px 32px 24px}.fp-acts,.daily-feed.two .daily-actions{gap:8px;padding-left:24px;padding-right:24px}.fp-acts .pact,.daily-feed.two .daily-actions .pact{padding:0 14px;font-size:14px}.fp-acts .pact-read,.daily-feed.two .daily-actions .pact-read{padding:0 18px}}
+@media(max-width:900px){.fp-acts .pact-chev,.daily-feed.two .daily-actions .pact-chev{display:none!important}.fp-acts .pact,.daily-feed.two .daily-actions .pact{padding:0 12px}}
+/* Daily on a wide screen: today's papers on the left under the interest picker, the card on the right */
+.daily-feed.two{max-width:none;margin:0;border-inline:none;display:grid;grid-template-columns:var(--pane-left) minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-areas:"head area" "picker area" "list area" "list foot"}
+.daily-feed.two>.feed-list,.daily-feed.two #dailyBody{display:contents}
+.daily-feed.two>.feed-head{grid-area:head;min-width:0}
+.daily-feed.two .daily-picker{grid-area:picker;padding:0 20px}
+.daily-feed.two .daily-list{grid-area:list;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.daily-feed.two .daily-area{grid-area:area;min-height:0;padding:0;border-left:1px solid var(--line)}
+.daily-feed.two .daily-actions{grid-area:foot;position:static;justify-content:flex-start;min-height:0;border-left:1px solid var(--line)}
+.daily-feed.two .daily-card{max-width:872px;padding:36px 56px 28px;border:0;border-radius:0;box-shadow:none}
+.daily-feed.two .daily-empty{margin:24px}
+@media(max-width:1100px){.daily-feed.two .daily-card{padding:28px 32px 24px}}
+.daily-row{display:flex;flex-direction:column;gap:4px;width:100%;padding:14px 20px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--text);font:inherit;text-align:left;text-decoration:none;cursor:pointer}
+.daily-row .dr-h{font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+.daily-row .dr-s{font-size:12px;color:var(--text-muted-raised);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.daily-row.on{background:var(--bg-surface);box-shadow:inset 3px 0 0 var(--accent)}
+.daily-row.done,.daily-row.done .dr-s{color:var(--text-muted)}
+html:not(.no-hover) .daily-row:hover{background:var(--bg-surface)}
+.daily-row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+/* Lists and the interest sheet open from a pinned row: the toast that carries their Undo shows above a phone's sheet */
+@media (max-width: 700px), (pointer: coarse) and (hover: none) and (max-height: 500px) {
+  body:has(#saveSheet.open:not(.pop)) #toast{top:calc(8px + env(safe-area-inset-top,0px));bottom:auto;z-index:456}
+}
+@media(prefers-reduced-motion:reduce){.fp-acts .pact,.daily-row,.post{transition:none!important;animation:none!important}}
 
 
 /* MYCOPY: approved setup, Settings and reader visibility. */
@@ -3496,7 +3614,7 @@ body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.au
       <dt class="owner-only"><kbd>x</kbd></dt><dd class="owner-only">Not for me: it leaves For you and stays in your library (on a list&rsquo;s page: not for this list)</dd>
       <dt class="owner-only"><kbd>1</kbd>&ndash;<kbd>4</kbd> <kbd>r</kbd></dt><dd class="owner-only">On a passed post: why (hides it, and teaches your recommendations); r to say it in your words</dd>
       <dt class="owner-only"><kbd>u</kbd></dt><dd class="owner-only">Undo the post&rsquo;s pass</dd>
-      <dt class="owner-only"><kbd>b</kbd></dt><dd class="owner-only">Save: tick To read and the lists the paper goes in</dd>
+      <dt class="owner-only"><kbd>b</kbd></dt><dd class="owner-only">Save: tick Reading list and the lists the paper goes in</dd>
       <dt class="owner-only"><kbd>[</kbd> <kbd>]</kbd></dt><dd class="owner-only">For you / Following</dd>
       <dt><kbd>o</kbd></dt><dd>Open the paper: its PDF, or its link</dd>
       <dt><kbd>Enter</kbd></dt><dd>The paper&rsquo;s page</dd>
@@ -6704,7 +6822,9 @@ function skeletonHTML(hash) {
     const back = `<span class="sk-back">${backIcon}</span>`;
     const picker = (label = 'All interests', key = 'picker') => `<div class="sk-daily-picker" data-sk="${key}"><span class="sk-daily-picker-name">${label}</span>${chevron}</div>`;
     const tabs = active => `<div class="feed-head" data-sk="head"><div class="feed-tabs home" data-sk="tabs"><div class="ft-tabs">${['For you', 'Following', 'Daily'].map((t, i) => `<span class="tab${i === active ? ' on' : ''}">${t}</span>`).join('')}</div></div>${active === 0 ? `<div class="feed-ctl"><span class="ctl-btn ctl-sort" data-sk="sort"><span class="ctl-pill">Best${chevron}</span></span>${picker()}</div>` : ''}</div>`;
-    const posts = (list = false) => [84, 72, 90].map(w => `<div class="skpost" data-sk="card"><div class="sk-meta" data-sk="meta">${lines(1, 38)}</div><div class="sk-title" data-sk="title">${lines(2, w)}</div><div class="sk-dek" data-sk="dek">${lines(2, 62)}</div><div class="sk-by" data-sk="authors">${lines(1, 48)}</div>${list ? `<div class="sk-acts" data-sk="actions">${bar(24)}${bar(24)}${bar(30)}</div>` : `<div class="sk-icons" data-sk="actions">${Array.from({ length: 4 }, () => `<span class="sk-icon">${bar()}</span>`).join('')}</div>`}</div>`).join('');
+    const posts = (list = false) => [84, 72, 90].map(w => `<div class="skpost" data-sk="card"><div class="sk-meta" data-sk="meta">${lines(1, 38)}</div><div class="sk-title" data-sk="title">${lines(2, w)}</div><div class="sk-dek" data-sk="dek">${lines(2, 62)}</div><div class="sk-by" data-sk="authors">${lines(1, 48)}</div>${list ? `<div class="sk-acts" data-sk="actions">${bar(24)}${bar(24)}${bar(30)}</div>` : `<div class="sk-why" data-sk="why">${lines(1, 40)}</div><div class="sk-icons" data-sk="actions">${['Pass', 'Save', 'Mark read', 'Read'].map(t => `<span class="sk-icon"><i class="sk"></i><b>${t}</b></span>`).join('')}</div>`}</div>`).join('');
+    // Layout A: on a wide screen For you and Following are the list and the open paper, its row at the pane's foot
+    const pane = () => `<aside class="sk-pane" data-sk="pane"><div class="sk-pane-body"><div class="pv-headline" data-sk="paneHeadline">${lines(2, 80)}</div><div class="pv-title">${lines(1, 72)}</div><div class="pv-by">${lines(1, 44)}</div><div class="pv-venue">${lines(1, 22)}</div><div class="pv-matches"><span class="pv-match sk-chip">${lines(1, 100)}</span></div><hr class="pv-rule"><div class="pv-summary">${lines(3, 70)}</div><div class="pv-abstract-label">Abstract</div><div class="pv-abstract">${lines(4, 76)}</div></div><div class="fp-acts" data-sk="paneActs">${['pass', 'save', 'mark', 'read'].map(k => `<span class="pact pact-${k}">${{ pass: 'Pass', save: 'Save', mark: 'Mark read', read: 'Read' }[k]}</span>`).join('')}</div></aside>`;
     if (route.startsWith('read/')) {
       const readerBar = document.querySelector('#reader > .reader-bar')?.cloneNode?.(true);
       if (readerBar) readerBar.dataset.sk = 'bar';
@@ -6742,7 +6862,7 @@ function skeletonHTML(hash) {
     if (route.startsWith('paper/')) {
       const act = (label, icon = '✓', extra = '', key = '') => `<span class="pd-act sk-owner ${extra}"${key ? ` data-sk="${key}"` : ''}>${icon}<span class="pd-act-label"><span>${label}</span></span></span>`;
       const icon = '<svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-6-4-6 4z"/></svg>';
-      return `<div class="pd" data-shape="paper"><div class="pd-bar" data-sk="bar"><div class="pd-bar-inner"><span class="pd-back" data-sk="back">${backIcon}<span class="pd-back-label">Back</span></span><div class="pd-bar-title"></div><div class="pd-actions has-dl" data-sk="actions">${act('Mark read')}${act('Save', icon)}${act('', '<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>', 'pd-dl', 'download')}${act('', '&#8943;', 'pd-more', 'more')}<span class="pd-read" data-sk="read"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Read</span><span class="pd-open" data-sk="open"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span></div></div></div><div class="pd-article" data-sk="article"><header class="pd-head"><div class="pd-kicker" data-sk="kicker">${bar(100)}</div><div class="pd-title" data-sk="title">${lines(3, 76)}</div><div class="pd-dek" data-sk="dek">${lines(2, 80)}</div><div class="pd-authors" data-sk="authors">${lines(1, 52)}</div><div class="pd-why"><span class="pd-why-label">${bar(14)}</span><div class="why">${lines(1, 38)}</div></div></header><div class="pd-body" data-sk="body"><div><h2>Summary</h2>${lines(4, 70)}<br><h2>Abstract</h2>${lines(7, 80)}</div><aside>${lines(5, 68)}</aside></div></div></div>`;
+      return `<div class="pd" data-shape="paper"><div class="pd-bar" data-sk="bar"><div class="pd-bar-inner"><span class="pd-back" data-sk="back">${backIcon}<span class="pd-back-label">Back</span></span><div class="pd-bar-title"></div><div class="pd-actions has-dl" data-sk="actions">${act('Pass', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>')}${act('Save', icon)}${act('Mark read', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>')}${act('', '<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>', 'pd-dl', 'download')}${act('', '&#8943;', 'pd-more', 'more')}<span class="pd-read" data-sk="read"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Read</span><span class="pd-open" data-sk="open"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span></div></div></div><div class="pd-article" data-sk="article"><header class="pd-head"><div class="pd-kicker" data-sk="kicker">${bar(100)}</div><div class="pd-title" data-sk="title">${lines(3, 76)}</div><div class="pd-dek" data-sk="dek">${lines(2, 80)}</div><div class="pd-authors" data-sk="authors">${lines(1, 52)}</div><div class="pd-why"><span class="pd-why-label">${bar(14)}</span><div class="why">${lines(1, 38)}</div></div></header><div class="pd-body" data-sk="body"><div><h2>Summary</h2>${lines(4, 70)}<br><h2>Abstract</h2>${lines(7, 80)}</div><aside>${lines(5, 68)}</aside></div></div></div>`;
     }
     if (route === 'settings') {
       const row = (label, sub = '', control = '') => `<div class="copy-item" data-sk="row"><div class="copy-label">${label}${sub ? `<small>${sub}</small>` : ''}</div>${control}</div>`;
@@ -6769,12 +6889,13 @@ function skeletonHTML(hash) {
     let name = null;
     if (route.startsWith('list/')) { try { name = decodeURIComponent(route.slice(5)); } catch (e) {} }
     if (name !== null) {
-      return `<div class="feed" data-shape="list"><div class="sk-list-head"></div><div class="list-bar" data-sk="bar"><div class="lb-row">${back}<span class="lb-name">${esc(name)}</span><span class="lb-more">⋯</span><span class="lb-grow"></span><span class="lb-add"><span class="lb-pill">+ Add a paper</span></span></div><div class="lb-int" data-sk="picker">${picker('All interests', 'list-picker')}</div></div><h3 class="list-sec mine" data-sk="section">In this list</h3>${posts(true)}</div>`;
+      return `<div class="feed" data-shape="list"><div class="sk-list-head"></div><div class="list-bar" data-sk="bar"><div class="lb-row">${back}<span class="lb-name">${esc(name === 'To read' ? 'Reading list' : name)}</span><span class="lb-more">⋯</span><span class="lb-grow"></span><span class="lb-add"><span class="lb-pill">+ Add a paper</span></span></div><div class="lb-int" data-sk="picker">${picker('All interests', 'list-picker')}</div></div><h3 class="list-sec mine" data-sk="section">In this list</h3>${posts(true)}</div>`;
     }
     if (route === 'daily') {
-      return `<div class="feed sk-daily-feed sk-daily" data-shape="daily">${tabs(2)}<div class="sk-daily-body">${picker(bar(48))}<div class="sk-daily-area" data-sk="area"><article class="sk-daily-card" data-sk="card"><h2 data-sk="title">${lines(3, 82)}</h2><div class="sk-daily-authors" data-sk="authors">${bar(56)}</div><div class="sk-daily-venue" data-sk="venue">${bar(30)}</div><div class="sk-daily-headline" data-sk="headline">${lines(2, 85)}</div><div class="sk-daily-summary" data-sk="summary">${lines(3, 80)}</div><h3 class="sk-daily-abstract-label">Abstract</h3><div class="sk-daily-abstract" data-sk="abstract">${lines(4, 76)}</div><div class="sk-daily-matches" data-sk="matches"><h3 class="sk-daily-matches-label">Matching interests</h3><div class="sk-daily-match">${bar(68)}</div></div></article></div><footer class="sk-daily-actions" data-sk="actions">${['Pass', 'To read', 'Mark read'].map((t, i) => `<div class="sk-daily-action${i === 1 ? ' save' : ''}"><span>${bar(35)}</span><b>${t}</b></div>`).join('')}</footer></div></div>`;
+      // Layout A: the headline leads the card, the title under it; on a wide screen today's papers on the left
+      return `<div class="feed sk-daily-feed sk-daily" data-shape="daily">${tabs(2)}<div class="sk-daily-body">${picker(bar(48))}<div class="sk-daily-list" data-sk="list">${[82, 64, 76, 58].map(w => `<div class="sk-daily-row"><div class="dr-h">${lines(2, w)}</div><div class="dr-s">${lines(1, 40)}</div></div>`).join('')}</div><div class="sk-daily-area" data-sk="area"><article class="sk-daily-card" data-sk="card"><div class="pv-headline" data-sk="headline">${lines(3, 85)}</div><div class="pv-title" data-sk="title">${lines(2, 80)}</div><div class="pv-by" data-sk="authors">${lines(1, 56)}</div><div class="pv-venue" data-sk="venue">${lines(1, 30)}</div><div class="pv-matches" data-sk="matches"><span class="pv-match sk-chip">${lines(1, 100)}</span></div><hr class="pv-rule"><div class="pv-summary" data-sk="summary">${lines(3, 80)}</div><div class="pv-abstract-label">Abstract</div><div class="pv-abstract" data-sk="abstract">${lines(5, 76)}</div></article></div><footer class="sk-daily-actions" data-sk="actions">${['Pass', 'Save', 'Mark read', 'Read'].map((t, i) => `<div class="sk-daily-action${i === 1 ? ' save' : ''}${i === 3 ? ' read' : ''}"><span>${bar(35)}</span><b>${t}</b></div>`).join('')}</footer></div></div>`;
     }
-    return `<div class="feed" data-shape="feed">${tabs(route === 'following' ? 1 : 0)}${posts()}</div>`;
+    return `<div class="feed sk-feed${route === 'following' ? ' sk-following' : ''}" data-shape="feed">${tabs(route === 'following' ? 1 : 0)}<div class="sk-list">${posts()}</div>${pane()}</div>`;
   })();
   if (route.startsWith('read/')) return content;
   const nav = `<div class="sk-nav"><div class="nav-inner"><span class="nav-menu">${document.getElementById('navMenuBtn')?.innerHTML || ''}</span><span class="nav-brand">${document.querySelector('.nav-brand')?.innerHTML || ''}</span><span class="sk-nav-search">${document.getElementById('navSearchToggle')?.innerHTML || ''}</span></div></div>`;
@@ -7310,7 +7431,7 @@ function sfControls(job) {
   document.getElementById('searchMode').innerHTML = segment('any',[[false,'All'],[true,'Any']]);
   const option = (f,v) => {
     const i = _sfOpts.push([f,v])-1, on = s[f].includes(v);
-    return `<button type="button" class="ri tc${on?' on':''}" data-sf-opt="${i}" data-search-filter="option-${i}" aria-pressed="${on}" onclick="sfOption(${i})"><span class="sf-label" data-sf-field="${f}">${esc(v)}</span><span class="n">${job.counts[f].get(v)||0}</span>${on ? '<span class="tick" aria-hidden="true">✓</span>' : ''}</button>`;
+    return `<button type="button" class="ri tc${on?' on':''}" data-sf-opt="${i}" data-search-filter="option-${i}" aria-pressed="${on}" onclick="sfOption(${i})"><span class="sf-label" data-sf-field="${f}">${esc(f === 'list' ? listLabel(v) : v)}</span><span class="n">${job.counts[f].get(v)||0}</span>${on ? '<span class="tick" aria-hidden="true">✓</span>' : ''}</button>`;
   };
   _sfOpts = [];
   const section = f => {
@@ -7325,7 +7446,7 @@ function sfControls(job) {
       }).join('');
     } else body = names.map(n=>option(f,n)).join('');
     const open = sfIsOpen(f), label = {interest:'Interests',venue:'Venue',year:'Year',list:'Lists'}[f];
-    return `<section class="sec${open?' open':''}"><button type="button" class="sec-h" data-search-filter="fold-${f}" aria-expanded="${open}" onclick="sfFold('${f}')">${label}<span class="sel">${esc(s[f].join(', '))}</span><span aria-hidden="true">${open?'⌃':'⌄'}</span></button><div${open?'':' hidden'}>${body}</div></section>`;
+    return `<section class="sec${open?' open':''}"><button type="button" class="sec-h" data-search-filter="fold-${f}" aria-expanded="${open}" onclick="sfFold('${f}')">${label}<span class="sel">${esc((f === 'list' ? s[f].map(listLabel) : s[f]).join(', '))}</span><span aria-hidden="true">${open?'⌃':'⌄'}</span></button><div${open?'':' hidden'}>${body}</div></section>`;
   };
   const html = segment('show',[['all','All'],['unread','Unread'],['read','Read']])+SF_MULTI.map(section).join('');
   document.getElementById('searchControls').innerHTML = html;
@@ -7886,6 +8007,15 @@ function topicGlow(groups) {
   return `linear-gradient(to right, ${cs.map((c, i) => `${c} ${((i + 0.5) / n * 100).toFixed(1)}%`).join(', ')})`;
 }
 const TO_READ = 'To read';
+/* Layout A (7 November 2026, his words "No more 'to read'. Lets just have a generic option as one of the reading list
+   for any paper"): the general list shows as Reading list. Its stored name stays To read in user_lists, the Daily ledger
+   (id to-read), reading_lists.json and every worker reader, so an older page still sees To read and the worker's rules
+   do not change. Only what the page shows goes through listLabel. The name is fixed: a display rename would need a
+   new field that older pages drop when they save reading_lists.json. */
+const READING_LIST = 'Reading list';
+function listLabel(n) { return n === TO_READ ? READING_LIST : n; }
+/* A typed name for the general list: its shown name, or its stored one */
+function readingListTyped(t) { const s = String(t || '').trim().toLowerCase(); return s === READING_LIST.toLowerCase() || s === TO_READ.toLowerCase(); }
 /* The lists that are not projects: the machine's three lanes and keep's own. Every other list is a project, by its
    exact name. The worker keeps the same four (ingest/ownership.NOT_PROJECTS), and a test compares them. */
 const NOT_PROJECTS = ['Starting set', 'Near misses', 'Random picks', 'To read'];
@@ -7908,7 +8038,7 @@ const FEED_SORT_KEY = 'scholar_feed_sort_v1';
 const Feed = { keys: [], shown: 0, project: null, ranked: null, near: null, switched: false, fresh: false, mounted: false,
   gen: 0, tabsGen: 0, tabNames: null, seq: 0, recs: new Map(), focus: null, sheet: null, edit: null, noted: false, layout: null, obs: null, more: 0,
   sort: 'best', interest: null, ctlGen: 0, menu: null, drawing: false, headObs: null, split: 0, chips: new Map(), ladd: null, lsig: null, pressDeferred: false,
-  mode: 'foryou' };   // Phase 31: the home's tab, For you or Following (a list's page is Feed.project)
+  mode: 'foryou', pane: null, paneGen: 0, paneAt: 0 };   // Phase 31: the home's tab, For you or Following (a list's page is Feed.project); Layout A: the paper the right pane shows
 function isPassed(p) { return !!p && p.is_passed === 'true'; }
 /* The feed holds For you's papers less the ones you like (Phase 25, F): in To read or one of your lists, or starred from
    before. Those are already liked examples, so a second look at them teaches nothing. The machine's lanes are not
@@ -7970,7 +8100,7 @@ function feedLeave() {
   if (hs && hs.classList.contains('open') && hs.dataset.rec) closeHideSheet();
 }
 function feedOff() {
-  document.body.classList.remove('feed-mode', 'feed-phone', 'feed-land', 'feed-laptop');
+  document.body.classList.remove('feed-mode', 'feed-phone', 'feed-land', 'feed-laptop', 'feed-two');
   feedLeave();
 }
 /* Someone is deciding: a decision can still be undone, or the save sheet, the new list's field or a list's + Add a
@@ -7989,7 +8119,7 @@ function postEl(k) {
   const list = document.getElementById('feedList');
   return k && list ? [...list.querySelectorAll('.post')].find(el => el.dataset.key === k) || null : null;
 }
-function postSaveBtn(k) { const el = postEl(k); return el ? el.querySelector('.ic.save') : null; }
+function postSaveBtn(k) { const el = postEl(k); return el ? el.querySelector('[data-act="save"]') : null; }   // Layout A: the post's Save
 /* The sheet's place still shows: its post in the feed, or the button outside the feed that opened it (fix round #1) */
 function sheetPlace(sh) { return sh.btn ? sh.btn.isConnected : feedActive() && !!postEl(sh.key); }
 function sheetBtn(sh) { return sh.btn || postSaveBtn(sh.key); }
@@ -8002,11 +8132,12 @@ function renderFeed() {
   const layout = feedLayout(), b = document.body.classList;
   b.add('feed-mode');
   ['phone', 'land', 'laptop'].forEach(l => b.toggle('feed-' + l, layout === l));
+  b.toggle('feed-two', feedTwo());   // Layout A: two panes on a wide screen
   Feed.layout = layout;
   const box = document.getElementById('topStories');
   let feed = document.getElementById('feed');
   if (!feed || !box.contains(feed) || feed.classList.contains('daily-feed')) {   // Daily's frame lacks the feed's controls: draw the feed's own
-    box.innerHTML = `<div class="feed" id="feed"><div class="pull-hint" id="pullHint" aria-hidden="true"><svg class="pull-arrow" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span class="pull-text"></span></div><div class="feed-head" id="feedHead"><div class="feed-tabs" id="feedTabs" role="tablist" aria-label="Feeds"><div class="ft-tabs" id="feedTabsIn"></div><div class="ft-add" id="feedAdd"></div></div><div class="feed-ctl" id="feedCtl" hidden></div><button type="button" class="feed-check" onclick="feedCheckNew('button')">Check for new papers</button><p class="tabs-msg" id="tabsMsg" role="status" aria-live="polite"></p></div><div class="list-bar" id="listBar" hidden></div><div class="feed-list" id="feedList"></div><div class="feed-more" id="feedMore"></div><div class="feed-end" id="feedEnd"></div></div>`;
+    box.innerHTML = `<div class="feed" id="feed"><div class="pull-hint" id="pullHint" aria-hidden="true"><svg class="pull-arrow" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span class="pull-text"></span></div><div class="feed-head" id="feedHead"><div class="feed-tabs" id="feedTabs" role="tablist" aria-label="Feeds"><div class="ft-tabs" id="feedTabsIn"></div><div class="ft-add" id="feedAdd"></div></div><div class="feed-ctl" id="feedCtl" hidden></div><button type="button" class="feed-check" onclick="feedCheckNew('button')">Check for new papers</button><p class="tabs-msg" id="tabsMsg" role="status" aria-live="polite"></p></div><div class="list-bar" id="listBar" hidden></div><div class="feed-list" id="feedList"></div><div class="feed-more" id="feedMore"></div><div class="feed-end" id="feedEnd"></div><aside class="feed-pane" id="feedPane" aria-label="The open paper" hidden></aside></div>`;
     feed = document.getElementById('feed');
     Feed.mounted = false; Feed.edit = null; Feed.tabNames = null;
     if (Feed.obs) { Feed.obs.disconnect(); Feed.obs = null; }   // it watched the old sentinel
@@ -8027,6 +8158,7 @@ function renderFeed() {
       const switched = Feed.switched;
       tastePromote();   // evaluate interaction safety before forgetting decisions or advancing their generation
       Feed.fresh = Feed.switched = false;
+      if (switched) { Feed.pane = null; Feed.paneAt = 0; }   // Layout A (Claude review): another tab, sort or interest starts from its top, and so does the right pane
       Feed.gen++;
       pullAbandon();   // a pull under way ends with the feed it began in
       Feed.recs = new Map();
@@ -8048,6 +8180,7 @@ function renderFeed() {
     feedHeadMeasure();
   } finally { Feed.drawing = was; }
   feedObserveMore();
+  paneSync();   // Layout A: the right pane follows the list as drawn
   returnOfferHeld();   // Phase 22: a return's result held while For you did not show
 }
 /* Phase 31: the home's tabs, For you and Following (a private library), as X's. A list is a page of its own now
@@ -8304,6 +8437,8 @@ function feedHeadMeasure() {
   if (!head || !feed || !feed.style) return;
   const h = Math.ceil(head.getBoundingClientRect().height || 0);
   if (feed._headH !== h) { feed._headH = h; feed.style.setProperty('--feed-head-h', h + 'px'); }
+  const ms = document.getElementById('mainScroll'), mh = ms ? ms.clientHeight : 0;   // Layout A: the right pane is as tall as what shows
+  if (mh && feed._msH !== mh) { feed._msH = mh; feed.style.setProperty('--ms-h', mh + 'px'); }
 }
 function feedHeadWatch() {
   if (Feed.headObs) { Feed.headObs.disconnect(); Feed.headObs = null; }
@@ -8392,25 +8527,59 @@ const FEED_ICON = {
   open: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
   read: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>',
   tick: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  chev: '<svg class="pact-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
 };
+/* ===== LAYOUT A: one action row for every paper (7 November 2026, his pick A and "Go with 1") =====
+   Pass, Save, Mark read and Read, in that order, wherever a paper shows: a post on For you and Following, Daily on
+   every width, the right pane of the two-pane layout and the paper page's bar. Save opens the lists (openSaveSheet:
+   the anchored popover on a wide screen, the bottom sheet on a phone); the bookmark and the list chip are gone. The
+   words and icons come from here; each place keeps its own handlers and guards. `s`: { pass, listed, read } for the
+   pressed states, { passOff, saveOff, readOff } for what is off, `attr(kind)` for each button's own attributes. */
+const PACT_KINDS = ['pass', 'save', 'mark', 'read'];
+function pactLabel(kind, s) {
+  if (kind === 'pass') return s.pass ? 'Passed' : 'Pass';
+  if (kind === 'save') return s.listed ? 'Saved' : 'Save';
+  if (kind === 'mark') return s.read ? 'Mark unread' : 'Mark read';
+  return 'Read';
+}
+function pactInner(kind, s, label) {
+  const icon = { pass: FEED_ICON.pass, save: FEED_ICON.save, mark: FEED_ICON.tick, read: FEED_ICON.read }[kind];
+  return `<span class="pact-i">${icon}</span><span class="pact-l">${label || pactLabel(kind, s)}</span>${kind === 'save' ? FEED_ICON.chev : ''}`;
+}
+function paperActsHTML(s, cls, attr) {
+  return PACT_KINDS.map(kind => {
+    const on = kind === 'pass' ? !!s.pass : kind === 'save' ? !!s.listed : kind === 'mark' ? !!s.read : false;
+    const off = kind === 'pass' ? s.passOff : kind === 'save' ? s.saveOff : kind === 'mark' ? s.readOff : s.openOff;
+    if (kind === 'read' && s.readHref) return `<a class="${cls} pact pact-read" href="${dataAttr(s.readHref)}" target="_blank" rel="noopener" aria-label="Open the paper" ${attr(kind)}>${pactInner(kind, s)}</a>`;   // no PDF here: the paper's own page, a real link
+    return `<button type="button" class="${cls} pact pact-${kind}${on ? ' on' : ''}"${kind === 'mark' || kind === 'pass' ? ` aria-pressed="${on}"` : ''}${kind === 'save' ? ' aria-haspopup="dialog" aria-expanded="false"' : ''} ${attr(kind)}${off ? ' disabled' : ''}>${pactInner(kind, s)}</button>`;
+  }).join('');
+}
+/* A post's row (For you and Following, one column; in two panes it is the pane's). Pass is off while the paper is
+   liked (a list of yours, or starred before), as ✕ was; Save is off once the paper is hidden. */
+function postActsHTML(k, p) {
+  const live = feedLive(k), act = { pass: 'pass', save: 'save', mark: 'markread', read: 'open' };
+  const on = { pass: "feedPass(this.closest('.post').dataset.key)", save: "openSaveSheet(event, this, this.closest('.post').dataset.key)", mark: "feedMarkRead(this.closest('.post').dataset.key)", read: "feedOpen(this.closest('.post').dataset.key)" };
+  const s = { listed: paperMarks(p).listed, read: readSet.has(k), passOff: likedKey(k), saveOff: !live, readOff: false, openOff: !(pdfSourceOf(p) || paperOpenUrl(p) || isOwner()), readHref: pdfSourceOf(p) ? '' : paperOpenUrl(p) || '' };
+  return `<div class="icons pacts">${paperActsHTML(s, 'ic', kind => kind === 'read' && s.readHref ? `data-act="open"` : `data-act="${act[kind]}" onclick="${on[kind]}"${kind === 'read' ? ` aria-label="${pdfSourceOf(p) ? 'Read the paper' : 'Add a PDF to read it'}"` : ''}`)}</div>`;
+}
 function postView(k) {
   const p = feedRow(k);
   if (!p || p._goneRemote) return null;
   if (listTabShown()) return listPostView(k, p);
   const rec = Feed.recs.get(k);
-  if (rec) return rec.stale ? 'changed' : rec.hide ? 'hidden' : 'passed';
+  if (rec) return rec.stale ? 'changed' : rec.hide ? 'hidden' : rec.kind === 'read' ? 'marked' : 'passed';
   return feedEligible(k) ? 'open' : null;
 }
 function postHTML(k) {
   const view = postView(k);
   if (!view) return '';
   const p = feedRow(k), rec = Feed.recs.get(k), sel = Feed.focus === k ? ' kb-sel' : '', title = (hasText(p.headline) ? p.headline : p.title) || '';   // the post's big line: Claude's headline, else the paper's title (2026-10-17)
-  if (view === 'passed' || view === 'hidden' || view === 'changed') {
-    const what = view === 'passed' ? 'Passed.' : view === 'hidden' ? `Hidden &middot; ${esc(rec.hide.after.hide_reason || 'no reason kept yet')}` : 'Changed since.';
+  if (view === 'passed' || view === 'hidden' || view === 'changed' || view === 'marked') {
+    const what = view === 'passed' ? 'Passed.' : view === 'marked' ? 'Marked read.' : view === 'hidden' ? `Hidden &middot; ${esc(rec.hide.after.hide_reason || 'no reason kept yet')}` : 'Changed since.';
     const row = view === 'changed' ? `<div class="gone-row"><span>It changed here or on another device, so there is nothing to undo.</span></div>`
-      : `<div class="gone-row"><span>${view === 'passed' ? 'You&rsquo;ll see fewer like this.' : 'It teaches your recommendations.'}</span><button type="button" class="gone-u" data-act="undo" onclick="feedUndo(this.closest('.post').dataset.key, Number(this.closest('.post').dataset.rec))" aria-label="Undo: put back ${dataAttr(title)}">Undo</button></div>`;
+      : `<div class="gone-row"><span>${view === 'passed' ? 'You&rsquo;ll see fewer like this.' : view === 'marked' ? 'It stays in your library.' : 'It teaches your recommendations.'}</span><button type="button" class="gone-u" data-act="undo" onclick="feedUndo(this.closest('.post').dataset.key, Number(this.closest('.post').dataset.rec))" aria-label="Undo: put back ${dataAttr(title)}">Undo</button></div>`;
     const why = view === 'passed' ? `<div class="gone-why" role="group" aria-label="Why you passed ${dataAttr(title)}">${HIDE_REASONS.map(r => `<button type="button" class="why-pill" data-act="reason" data-reason="${dataAttr(r)}" onclick="feedReason(Number(this.closest('.post').dataset.rec), this.dataset.reason)">${esc(r)}</button>`).join('')}<button type="button" class="why-pill" data-act="other" onclick="feedOther(Number(this.closest('.post').dataset.rec))">Other&hellip;</button></div>` : '';
-    return `<article class="post gone${sel}" data-key="${dataAttr(k)}" data-rec="${rec ? rec.id : 0}" tabindex="-1" aria-label="${view === 'changed' ? 'Changed' : view === 'passed' ? 'Passed' : 'Hidden'}: ${dataAttr(title)}" onclick="feedTap(event, this)">
+    return `<article class="post gone${sel}" data-key="${dataAttr(k)}" data-rec="${rec ? rec.id : 0}" tabindex="-1" aria-label="${view === 'changed' ? 'Changed' : view === 'passed' ? 'Passed' : view === 'marked' ? 'Marked read' : 'Hidden'}: ${dataAttr(title)}" onclick="feedTap(event, this)">
       <p class="gone-s">${what}</p><p class="gone-t">${esc(title)}</p>${row}${why}</article>`;
   }
   const venue = rowVenueLabel(p), date = displayDate(p), must = dynamicRelevance(p) === 'definitely';
@@ -8420,22 +8589,16 @@ function postHTML(k) {
   const member = view === 'member', read = (member || followingShown()) && readSet.has(k);   // Phase 31: Following keeps read papers, marked
   const meta = `<div class="meta">${venue ? `<span class="venue">${esc(venue)}</span>` : ''}${date ? `<span>${esc(date)}</span>` : ''}${added ? `<span class="added">${esc(added)}</span>` : ''}${read ? `<span class="was-read">&#10003; Read</span>` : ''}${must ? '<span class="must">Must Read</span>' : ''}${follow ? '<span class="following">Following</span>' : ''}</div>`;
   const elsewhere = view === 'suggest' ? heldLists(k).find(n => n !== Feed.project) : null;
-  const savedIn = elsewhere ? ` <span class="chip-t saved-in">In ${esc(elsewhere)}</span>` : '';
+  const savedIn = elsewhere ? ` <span class="chip-t saved-in">In ${esc(listLabel(elsewhere))}</span>` : '';
   const body = `${meta}
       <h2 class="post-t">${esc(title)}${savedIn}</h2>${dek ? `<p class="dek">${esc(dek)}</p>` : ''}${hasText(p.authors) ? `<p class="by">${follow ? followAuthorsHTML(p.authors, follow) : esc(p.authors)}</p>` : ''}`;
   if (member || view === 'suggest') return `<article class="post ${member ? 'mine' : 'sug'}${read ? ' read' : ''}${sel}" data-key="${dataAttr(k)}" data-rec="0" tabindex="-1" onclick="feedTap(event, this)">${view === 'suggest' ? postNearHTML(k) : ''}
       ${body}
       ${isOwner() ? listActsHTML(k, p, member) : ''}</article>`;
-  const url = paperOpenUrl(p) || '';
-  const open = url ? `<a class="ic open" data-act="open" href="${dataAttr(url)}" target="_blank" rel="noopener" aria-label="Open the paper">${FEED_ICON.open}</a>`
-    : pdfSourceOf(p) || isOwner() ? `<button type="button" class="ic open" data-act="open" onclick="feedOpen(this.closest('.post').dataset.key)" aria-label="${pdfSourceOf(p) ? 'Read the paper' : 'Add a PDF to read it'}">${FEED_ICON.open}</button>` : '';
-  const icons = isOwner() ? `<div class="icons">
-      <button type="button" class="ic pass" data-act="pass" onclick="feedPass(this.closest('.post').dataset.key)" aria-label="Not for me"${likedKey(k) ? ' disabled' : ''}>${FEED_ICON.pass}</button>
-      ${chipHTML(k)}
-      <button type="button" class="ic save${paperMarks(p).listed ? ' on' : ''}" data-act="save" onclick="openSaveSheet(event, this, this.closest('.post').dataset.key)" aria-haspopup="dialog" aria-expanded="${Feed.sheet && Feed.sheet.key === k ? 'true' : 'false'}" aria-label="Save to a list"${feedLive(k) ? '' : ' disabled'}>${FEED_ICON.save}</button>
-      ${open}</div>` : '';
-  return `<article class="post${sel}" data-key="${dataAttr(k)}" data-rec="${rec && !rec.stale ? rec.id : 0}" tabindex="-1" onclick="feedTap(event, this)">
-      ${body}
+  const icons = isOwner() ? postActsHTML(k, p) : '';
+  const two = feedTwo(), why = two ? postWhyHTML(p, follow) : '';   // two panes: one quiet line under the headline (mockup A)
+  return `<article class="post${sel}${two && Feed.pane === k ? ' pane-on' : ''}" data-key="${dataAttr(k)}" data-rec="${rec && !rec.stale ? rec.id : 0}" tabindex="-1" onclick="feedTap(event, this)"${two && Feed.pane === k ? ' aria-current="true"' : ''}>
+      ${body}${why}
       ${icons}</article>`;
 }
 /* The chip: the one list this paper fits best (chipList), "+ memory", or "✓ In memory" once it is there. Its name says
@@ -8451,9 +8614,152 @@ function chipHTML(k) {
 }
 /* His own lists that hold the paper: To read first, then his lists in their order */
 function heldLists(k) { return [TO_READ].concat(projectNames()).filter(n => listHolds(n, k)); }
+/* ===== LAYOUT A: two panes on a wide screen =====
+   His pick A (7 November 2026): on an iPad (portrait from 820 px) and a Mac, For you, Following and Daily are a list on
+   the left and the open paper on the right, its action row pinned at the pane's foot. A phone, a phone turned sideways
+   and a narrow window keep one column. The list is the feed as it is (postHTML, its order, paging, the new-papers
+   pill); a tap on a post opens it on the right and the list keeps its place. After Pass or Mark read, or a Save that
+   put the paper in a list, the next post opens, as Daily's next card does. The right pane is sticky inside the page's
+   own scroll, so paging, Back and the scroll kept on return work as they did. */
+const FEED_WIDE = '(min-width: 820px)';
+function twoPane() { return feedLayout() === 'laptop' && matchMedia(FEED_WIDE).matches; }
+function feedTwo() { return twoPane() && Feed.mode !== 'daily' && !projectMode(); }
+/* The quiet line under a post's headline in the left pane: its strongest interest and how strongly (mockup A) */
+function postWhyHTML(p, follow) {
+  if (followingShown() || p.uploaded) return '';
+  const m = relevanceMatches(scoreParts(p))[0];
+  return m ? `<p class="post-why">${esc(m.name)} &middot; ${esc(STRENGTH_NAME[m.strength])}</p>` : '';
+}
+/* Each author a link to the papers by that name (search's author:), a followed one in bold */
+function authorLinksHTML(text, on) {
+  return String(text).split(PEOPLE_AUTHORS).map((part, i) => {
+    if (i % 2 || !part.trim()) return esc(part);
+    const q = 'author:"' + part.trim().replace(/(["\\])/g, '\\$1') + '"', bold = on && on.has(peopleFold(part));
+    return `<a class="pv-author${bold ? ' by-f' : ''}" href="#search?q=${dataAttr(encodeURIComponent(q))}">${esc(part)}</a>`;
+  }).join('');
+}
+/* The open paper, as the right pane and Daily's card show it: the headline first, the paper's own title in a smaller
+   line, the linked authors, venue and month, its interests by strength (Strong, Moderate, Weak, in the Relevance
+   card's order), then the summary and the abstract. Every value escaped. */
+function paperViewHTML(p, o) {
+  o = o || {};
+  const k = paperKey(p), headline = hasText(p.headline) ? p.headline : (p.title || ''), title = hasText(p.title) && p.title.trim() !== String(headline).trim() ? p.title : '';
+  const venue = [hasText(p.venue) ? p.venue : '', dailyReleaseText(p)].filter(Boolean).join(' · '), matches = p.uploaded ? [] : relevanceMatches(scoreParts(p));
+  const follow = p.uploaded ? null : followMarks(p, true);
+  return `<h2 class="pv-headline">${o.link === false ? esc(headline) : `<a href="#paper/${encodeURIComponent(k)}">${esc(headline)}</a>`}</h2>`
+    + (title ? `<p class="pv-title">${esc(title)}</p>` : '')
+    + (hasText(p.authors) ? `<p class="pv-by">${authorLinksHTML(p.authors, follow)}</p>` : '')
+    + (venue ? `<p class="pv-venue">${esc(venue)}</p>` : '')
+    + (matches.length ? `<ul class="pv-matches" aria-label="Matching interests">${matches.map(m => `<li class="pv-match"><span class="pv-match-name">${esc(m.name)}</span><span class="pv-match-strength">${esc(STRENGTH_NAME[m.strength])}</span></li>`).join('')}</ul>` : '')
+    + '<hr class="pv-rule">'
+    + (hasText(p.summary) ? `<p class="pv-summary">${esc(p.summary)}</p>` : '')
+    + (hasText(p.abstract) ? `<h3 class="pv-abstract-label">Abstract</h3><p class="pv-abstract" data-abs-tex>${esc(p.abstract)}</p>` : '');
+}
+/* The post the right pane may show: still open in the list as drawn */
+function paneKeyOK(k) { return !!k && !!postEl(k) && postView(k) === 'open'; }
+/* After `from` in the list: the next open post (mounting the next page when the list ends there), else the nearest
+   one before it, else none */
+function paneNextKey(from) {
+  let i = from ? Feed.keys.indexOf(from) : -1;
+  if (i < 0) i = Math.min(Feed.paneAt, Feed.keys.length) - 1;
+  for (let j = i + 1; ; j++) {
+    if (j >= Feed.shown) { if (Feed.shown >= Feed.keys.length) break; const before = Feed.shown; feedMountMore(); if (Feed.shown === before) break; }
+    if (j >= Feed.keys.length) break;
+    if (Feed.keys[j] !== from && paneKeyOK(Feed.keys[j])) return Feed.keys[j];
+  }
+  for (let j = Math.min(i, Feed.shown - 1); j >= 0; j--) if (Feed.keys[j] !== from && paneKeyOK(Feed.keys[j])) return Feed.keys[j];
+  return null;
+}
+function paneState(k, p) {
+  return { pass: false, listed: paperMarks(p).listed, read: readSet.has(k), passOff: likedKey(k), saveOff: !feedLive(k), readOff: false, openOff: !(pdfSourceOf(p) || paperOpenUrl(p) || isOwner()), readHref: pdfSourceOf(p) ? '' : paperOpenUrl(p) || '' };
+}
+function paneActsHTML(k, p) {
+  const s = paneState(k, p);
+  return paperActsHTML(s, 'fp-act', kind => kind === 'read' && s.readHref ? `data-act="open"` : `data-act="${{ pass: 'pass', save: 'save', mark: 'markread', read: 'open' }[kind]}" onclick="paneAct('${kind}', this, event)"`);
+}
+/* The right pane follows the list: the chosen post while it is open, else the next one. Drawn again only when its
+   paper or what it shows changed; the footer's buttons change in place, so a Save popover stays at its button. */
+function paneSync() {
+  const pane = document.getElementById('feedPane');
+  if (!pane) return;
+  if (!feedTwo() || !feedActive()) { if (pane.dataset.key !== undefined || pane.innerHTML) { pane.innerHTML = ''; delete pane.dataset.key; pane._html = ''; } pane.hidden = !feedTwo(); return; }
+  pane.hidden = false;
+  let k = Feed.pane;
+  if (!paneKeyOK(k)) { k = paneNextKey(k); paneSelect(k, false); }
+  const p = k && feedRow(k);
+  if (!p) { if (pane.innerHTML) { pane.innerHTML = ''; pane._html = ''; } delete pane.dataset.key; return; }
+  const body = paperViewHTML(p), same = pane.dataset.key === k;
+  if (!same || pane._html !== body) {
+    const box = pane.querySelector('.fp-body'), y = same && box ? box.scrollTop : 0, held = Feed.sheet && Feed.sheet.btn && pane.contains(Feed.sheet.btn);
+    if (same && box) { box.innerHTML = body; }
+    else {
+      if (held) { Feed.sheet.pane = null; closeSaveSheet(); }   // its paper changed: the popover goes, and decides nothing
+      const ae = document.activeElement, kind = ae && pane.contains(ae) && ae.classList.contains('pact') ? PACT_KINDS.find(x => ae.classList.contains('pact-' + x)) : null;
+      pane.innerHTML = `<div class="fp-body" tabindex="-1" aria-label="${dataAttr(p.headline || p.title || '')}">${body}</div>${isOwner() ? `<footer class="fp-acts pacts" aria-label="Paper actions">${paneActsHTML(k, p)}</footer>` : ''}`;   // signed out: the paper, no actions
+      if (kind) { const b = pane.querySelector('.pact-' + kind); if (b) b.focus({ preventScroll: true }); }   // a key's focus stays on the same action
+    }
+    pane.dataset.key = k; pane._html = body;
+    const nb = pane.querySelector('.fp-body'); nb.scrollTop = y;
+    nb.querySelectorAll('[data-abs-tex]').forEach(el => renderAbstractText(el, p.abstract));
+  }
+  const s = paneState(k, p);
+  pane.querySelectorAll('.fp-acts .pact').forEach(b => {
+    const kind = PACT_KINDS.find(x => b.classList.contains('pact-' + x)), on = kind === 'save' ? s.listed : kind === 'mark' ? s.read : false;
+    const off = kind === 'pass' ? s.passOff : kind === 'save' ? s.saveOff : kind === 'read' ? s.openOff : s.readOff;
+    b.classList.toggle('on', on); b.disabled = !!off;
+    if (b.hasAttribute('aria-pressed')) b.setAttribute('aria-pressed', String(on));
+    const l = b.querySelector('.pact-l'), t = pactLabel(kind, s); if (l && l.textContent !== t) l.textContent = t;
+  });
+}
+/* A post chosen for the right pane: marked in the list (aria-current) without drawing the list again */
+function paneSelect(k, user) {
+  if (k === Feed.pane && !user) return;
+  Feed.pane = k || null; Feed.paneGen++;
+  if (k) { const i = Feed.keys.indexOf(k); if (i >= 0) Feed.paneAt = i; }
+  const list = document.getElementById('feedList');
+  if (list) list.querySelectorAll('.post.pane-on').forEach(el => { if (el.dataset.key !== k) { el.classList.remove('pane-on'); el.removeAttribute('aria-current'); el._html = null; } });
+  const el = k && postEl(k);
+  if (el && !el.classList.contains('pane-on')) { el.classList.add('pane-on'); el.setAttribute('aria-current', 'true'); el._html = null; }
+  const box = document.querySelector('#feedPane .fp-body'); if (box && user) box.scrollTop = 0;
+}
+/* A tap on a post in the left pane: it opens on the right; the list stays where it is */
+function paneOpen(k) {
+  if (!feedTwo() || !paneKeyOK(k)) return false;
+  paneSelect(k, true); paneSync();
+  const box = document.querySelector('#feedPane .fp-body'); if (box) box.scrollTop = 0;
+  return true;
+}
+/* The next post after an action, shown in the list too when it is out of view */
+function paneAdvance(from) {
+  if (!feedTwo() || !feedActive()) return;
+  if (Feed.pane === from) { paneSelect(paneNextKey(from), true); paneSync(); }   // the paper stayed open (Following's read mark)
+  const el = Feed.pane && postEl(Feed.pane); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' });
+}
+/* The pane's row acts on the paper the pane shows, through the post's own handlers and their guards */
+function paneAct(kind, btn, ev) {
+  requireOwner();
+  const pane = btn && btn.closest('#feedPane'), k = pane && pane.dataset.key;
+  if (!k || k !== Feed.pane || !feedTwo() || !paneKeyOK(k)) return false;
+  if (kind === 'pass') { if (feedPass(k)) { paneAdvance(k); return true; } return false; }
+  if (kind === 'mark') {
+    const was = readSet.has(k);
+    if (!feedMarkRead(k)) return false;
+    if (!was) paneAdvance(k); else paneSync();
+    return true;
+  }
+  if (kind === 'save') {
+    if (Feed.sheet && Feed.sheet.btn === btn) { closeSaveSheet(); return false; }
+    const listed = paperMarks(feedRow(k)).listed;
+    openSaveSheet(ev || null, btn, k);
+    if (Feed.sheet && Feed.sheet.key === k) Feed.sheet.pane = { key: k, listed };
+    return true;
+  }
+  feedOpen(k); return true;
+}
 /* A tap on a post opens its page, unless it was on one of its own controls */
 function feedTap(ev, el) {
   if (ev && ev.target && ev.target.closest && ev.target.closest('button, a, input')) return;
+  if (el && el.dataset.key && feedTwo() && paneOpen(el.dataset.key)) return;   // two panes: it opens on the right
   if (el && el.dataset.key) openPaper(el.dataset.key, ev);
 }
 /* The next posts of the order, 30 at a time (a sentinel near the end loads more; Show more without one). A key that
@@ -8523,7 +8829,7 @@ function feedEndHTML() {
     : Feed.keys.length ? 'You&rsquo;re through For you for now.'
     : 'Nothing unread matches a confirmed interest. Papers that match none are in Lists, under All papers.';
   const all = chip !== null && allPapers.length ? '<button type="button" class="ui-btn" onclick="feedShowAll()">Show all papers</button>' : '';
-  const open = !isOwner() || (chip !== null && !Feed.keys.length) ? '' : toRead ? `<button type="button" class="ui-btn" onclick="feedOpenToRead()">Open ${TO_READ} (${toRead})</button>` : '';
+  const open = !isOwner() || (chip !== null && !Feed.keys.length) ? '' : toRead ? `<button type="button" class="ui-btn" onclick="feedOpenToRead()">Open ${READING_LIST} (${toRead})</button>` : '';
   return `<p>${msg}</p>${all || open ? `<div class="feed-end-acts">${all}${open}</div>` : ''}`;
 }
 function feedOpenToRead() { openListPage(TO_READ); }   // Phase 31: To read's own page
@@ -8534,7 +8840,7 @@ function feedRepaintPost(k, el) {   // `el`: the post's element when the caller 
   if (!el) return;
   const h = postHTML(k);
   if (!h) { feedDropPost(el); return; }
-  if (el._html === h) return;
+  if (el._html === h) { if (!_paneHold && feedTwo()) paneSync(); return; }
   const ae = document.activeElement, had = ae && (ae === el || (el.contains && el.contains(ae)));
   const act = had && ae !== el && ae.dataset ? ae.dataset.act : null;
   el.insertAdjacentHTML('beforebegin', h);
@@ -8544,7 +8850,9 @@ function feedRepaintPost(k, el) {   // `el`: the post's element when the caller 
     fresh._html = h;
     if (had) ((act && fresh.querySelector(`[data-act="${act}"]`)) || fresh).focus({ preventScroll: true });
   }
+  if (!_paneHold && feedTwo()) paneSync();   // Layout A: the pane shows the paper as it is now, or the next one
 }
+let _paneHold = false;   // feedRepaintAll draws the pane once, after every post
 /* A post leaves the feed: its record, a sheet open for it and every press on it go with it */
 function feedDropPost(el) {
   const k = el.dataset.key, i = Feed.keys.indexOf(k);
@@ -8553,18 +8861,20 @@ function feedDropPost(el) {
   if (Feed.focus === k) Feed.focus = null;
   el.remove();
   pressReconcile();
-  if (Feed.sheet && Feed.sheet.key === k) closeSaveSheet();
+  if (Feed.sheet && Feed.sheet.key === k && !(Feed.sheet.btn && Feed.sheet.btn.closest && Feed.sheet.btn.closest('#feedPane'))) closeSaveSheet();
   else placeSheet();   // another post's sheet: its 🔖 moved up
   hideSheetSync();
+  if (!_paneHold && feedTwo()) paneSync();
 }
 function feedRepaintAll() {
   const list = document.getElementById('feedList');
   if (!list) return;
   const sc = listTabShown() ? document.getElementById('mainScroll') : null, y = sc ? sc.scrollTop : 0;
-  _listedPass = listedKeys();
+  _listedPass = listedKeys(); _paneHold = true;
   try { [...list.querySelectorAll('.post')].forEach(el => feedRepaintPost(el.dataset.key, el)); }   // each post once: no lookup per post
-  finally { _listedPass = null; if (sc) jumpScroll(sc, y); }
+  finally { _listedPass = null; _paneHold = false; if (sc) jumpScroll(sc, y); }
   feedMoreRender();
+  if (feedTwo()) paneSync();
   placeSheet();   // the save sheet's 🔖 may have moved: the popover goes with it
 }
 /* After an edit made elsewhere (the paper page, Library, another device): the tabs, the records and every mounted post,
@@ -8644,6 +8954,26 @@ function feedPass(k) {
   feedRepaintPost(k);
   return true;
 }
+/* Layout A: Mark read on a post. For you holds only unread papers, so the post collapses in place, still named, with
+   Undo, as a pass does (a record of kind 'read'); Following keeps read papers, so there it is the read mark, both
+   ways, in place. Never from a list's tab, as drawn. */
+function feedMarkRead(k) {
+  requireOwner();
+  if (!k || !feedActive() || !postEl(k) || Feed.ranked) return false;
+  const was = Feed.recs.get(k);
+  if (was) { if (was.stale) toast('That paper changed since. It shows as it is now next time For you opens.'); return false; }
+  const p = feedPaper(k);
+  if (!p || p._goneRemote || !feedLive(k)) return false;
+  if (followingShown()) { toggleRead(k, null); tasteSupersede(); return true; }
+  if (!feedEligible(k)) return false;
+  const rec = feedRecord('read', k, { is_read: p.is_read || '' }, { is_read: 'true' });
+  Feed.recs.set(k, rec);
+  flushStateToCSV();
+  readSet.add(k);
+  persistRead(); tasteSupersede();
+  feedRepaintPost(k);
+  return true;
+}
 /* A reason from the passed post's own pills (or its Other sheet): only for the pass that post records, while that pass
    is as it left it. The pass becomes a reasoned hide, which teaches the Judge, and they undo together. */
 function feedReason(id, reason) {
@@ -8675,6 +9005,7 @@ function feedOther(id) {
 /* The values a pass owns, as they are now, against the ones it left */
 function feedStillAsLeft(rec, p) {
   if (p._goneRemote) return false;   // deleted on GitHub since
+  if (rec.kind === 'read') return readSet.has(rec.key) && !isPassed(p) && !isHiddenRow(p);   // Layout A: a read mark owns only that
   const a = rec.after;
   if ((p.is_passed || '') !== a.is_passed) return false;
   return !rec.hide || ((p.is_hidden || '') === rec.hide.after.is_hidden && (p.hide_reason || '') === rec.hide.after.hide_reason);
@@ -8707,7 +9038,8 @@ function feedUndo(k, id) {
     return false;
   }
   flushStateToCSV();
-  p.is_passed = rec.before.is_passed;
+  if (rec.kind === 'read') readSet.delete(k);   // Layout A: Mark read's Undo takes the read mark off again
+  else p.is_passed = rec.before.is_passed;
   if (rec.hide) { p.is_hidden = rec.hide.before.is_hidden; if (rec.hide.before.hide_reason || 'hide_reason' in p) p.hide_reason = rec.hide.before.hide_reason; }
   if (rec.hide) {
     splitHidden();
@@ -8814,7 +9146,7 @@ document.addEventListener('keydown', e => {
 const Presses = new Map();
 function pressControl(t) {
   if (!t || !t.closest) return null;
-  return t.closest('.daily-action, .daily-picker, .daily-interest-row, .daily-interest-done, #dailyInterestSheet') || t.closest('#feedList .post .ic, #feedList .post .chip, #feedList .post .act, #feedList .post.gone button, #feedTabs .tab, #feedTabs .tab-add, #feedCtl button, #feedSortMenu button, #feedInterestMenu button, #listBar button, .list-menu button, #saveSheet [data-guard], #hideSheet [data-guard], #hideSheet .hide-own input')
+  return t.closest('.daily-action, .daily-picker, .daily-interest-row, .daily-interest-done, #dailyInterestSheet, button.daily-row') || t.closest('#feedPane .fp-act, #feedList .post .ic, #feedList .post .chip, #feedList .post .act, #feedList .post.gone button, #feedTabs .tab, #feedTabs .tab-add, #feedCtl button, #feedSortMenu button, #feedInterestMenu button, #listBar button, .list-menu button, #saveSheet [data-guard], #hideSheet [data-guard], #hideSheet .hide-own input')
     || t.closest('.sh-panel') || t.closest('#saveSheet') || t.closest('.hide-box') || t.closest('#hideSheet') || t.closest('#feedList .post')
     || t.closest('.save-dd .save-dd-item, .copy-dd .copy-dd-item, #paperDetail .pd-bar .pd-act[data-act], #libraryContent .top-row .p-actions [data-act]')   // Phase 13e: the picker, the Copy menu, the paper page's bar and Library's row icons
     || t.closest('#paperDetail .pd-related .feed-item [data-act], #libraryContent [data-lib] .library-actions button[data-act]')   // and a page's related papers, and a Library group's header actions
@@ -8835,13 +9167,15 @@ function markOf(k, act) {   // a control's value as it shows now: the paper's st
   const p = feedRow(k);
   if (!p) return null;
   const m = paperMarks(p);
-  return act === 'star' ? m.star : act === 'read' ? m.read : act === 'list' ? m.listed : act === 'hide' || act === 'restore' ? isHiddenRow(p) : act === 'unpass' ? isPassed(p) : false;
+  return act === 'star' ? m.star : act === 'read' ? m.read : act === 'list' ? m.listed : act === 'hide' || act === 'restore' ? isHiddenRow(p) : act === 'unpass' || act === 'pass' ? isPassed(p) : false;
 }
 function pressWhat(el) {
   if (!el || !el.closest) return null;
   const picker = el.closest('#dailyInterestSheet');
   if (picker) return { kind: 'ipicker', menu: Number(picker.dataset.picker), ident: `ipicker:${picker.dataset.picker}:${el.dataset.interest || el.className || ''}` };
-  if ((el.closest('.daily-feed') || el.closest('#dailyInterestSheet')) && el.matches('.daily-action, .daily-picker, .daily-interest-row, .daily-interest-done, #dailyInterestSheet')) return { kind: 'daily', dailyGen: Number(el.dataset.dailyGen), ident: 'daily:' + el.dataset.dailyGen + ':' + (el.dataset.dailyPaper || '') + ':' + (el.dataset.dailyAction || el.dataset.interest || el.className || '') };
+  if ((el.closest('.daily-feed') || el.closest('#dailyInterestSheet')) && el.matches('.daily-action, .daily-picker, .daily-interest-row, .daily-interest-done, #dailyInterestSheet, .daily-row')) return { kind: 'daily', dailyGen: Number(el.dataset.dailyGen), ident: 'daily:' + el.dataset.dailyGen + ':' + (el.dataset.dailyPaper || '') + ':' + (el.dataset.dailyAction || el.dataset.interest || el.className || '') };
+  const fpane = el.closest('#feedPane');   // Layout A: the right pane's row, bound to the paper it showed
+  if (fpane && el.classList.contains('fp-act')) return { kind: 'pane', act: el.dataset.act || '', key: fpane.dataset.key || '', ident: `pane:${fpane.dataset.key || ''}:${Feed.paneGen}:${el.dataset.act || ''}` };
   const post = el.closest('#feedList .post');
   if (post) { const act = el === post ? 'page' : el.dataset.act || ''; return { kind: 'post', act, key: post.dataset.key || '', n: act === 'chip' ? el.dataset.n || '' : undefined, ident: `post:${post.dataset.key || ''}:${act}:${el.dataset.reason || ''}:${act === 'chip' ? el.dataset.n || '' : ''}` }; }
   // Phase 25: a list's bar (its ⋯, + Add a paper, its interest), and a row of a list's menu, to that opening of it
@@ -8876,9 +9210,9 @@ function pressBegin(id, el) {
   const w = pressWhat(el);
   if (!w) { Presses.delete(id); return; }
   const hs = w.kind === 'hide' ? document.getElementById('hideSheet') : null;
-  const key = w.kind === 'post' || w.kind === 'dd' || w.kind === 'pd' || w.kind === 'lib' || w.kind === 'rel' ? w.key : w.kind === 'sheet' ? (Feed.sheet ? Feed.sheet.key : null) : hs ? hs.dataset.key || null : null;
+  const key = w.kind === 'post' || w.kind === 'pane' || w.kind === 'dd' || w.kind === 'pd' || w.kind === 'lib' || w.kind === 'rel' ? w.key : w.kind === 'sheet' ? (Feed.sheet ? Feed.sheet.key : null) : hs ? hs.dataset.key || null : null;
   const r = w.kind === 'post' ? Feed.recs.get(key) : null;
-  const on = w.kind === 'sheet' && w.n !== null && w.n !== undefined ? sheetHas(w.n, key) : w.kind === 'dd' && w.n ? ddHas(w.n, key) : w.kind === 'pd' || w.kind === 'lib' || w.kind === 'rel' ? markOf(key, w.act) : w.kind === 'libhead' ? libHeadMark(w.group) : w.kind === 'post' ? postMark(key, w.act, w.n) : null;
+  const on = w.kind === 'sheet' && w.n !== null && w.n !== undefined ? sheetHas(w.n, key) : w.kind === 'dd' && w.n ? ddHas(w.n, key) : w.kind === 'pd' || w.kind === 'lib' || w.kind === 'rel' ? markOf(key, w.act) : w.kind === 'libhead' ? libHeadMark(w.group) : w.kind === 'post' || w.kind === 'pane' ? postMark(key, w.act, w.n) : null;
   Presses.set(id, { ident: w.ident, dailyGen: w.dailyGen, kind: w.kind, act: w.act || '', key, n: w.n === undefined ? null : w.n, gen: Feed.gen, project: Feed.project,
     rec: r ? r.id : 0, tabsGen: Feed.tabsGen, edit: Feed.edit ? Feed.edit.id : 0, sheet: Feed.sheet ? Feed.sheet.id : 0, sedit: w.sedit || 0,
     hs: hs ? Number(hs.dataset.hs || 0) : 0, hrec: hs ? Number(hs.dataset.rec || 0) : 0,
@@ -8888,6 +9222,7 @@ function pressBegin(id, el) {
    list paper's read mark or membership, a suggestion still one */
 function postMark(k, act, n) {
   if (act === 'chip') return listHolds(n, k);
+  if (act === 'markread') return listTabShown() ? null : readSet.has(k);   // Layout A: For you's and Following's Mark read
   if (act === 'mark') return listTabShown() && postView(k) === 'member' ? (readSet.has(k) ? 'read' : 'unread') : null;
   if (act === 'remove' || act === 'read') return listTabShown() && postView(k) === 'member';
   if (act === 'add' || act === 'notfor') return listTabShown() && postView(k) === 'suggest';
@@ -8946,6 +9281,7 @@ function pressStill(pr) {
   }
   if (pr.kind === 'lmenu') return !!ListMenu.cur && ListMenu.cur.id === pr.menu;   // the same opening of a list's menu, still open
   if (pr.gen !== Feed.gen) return false;   // the feed was rebuilt, left or locked since
+  if (pr.kind === 'pane') return feedTwo() && Feed.pane === pr.key && paneKeyOK(pr.key) && (pr.act !== 'markread' || postMark(pr.key, 'markread') === pr.on) && (pr.act !== 'pass' || (feedEligible(pr.key) && !likedKey(pr.key)));   // Layout A: the same paper, still open, its value as it showed
   if (pr.kind === 'lbar') return listTabShown() && pr.project === Feed.project;   // the same list's bar
   if (pr.kind === 'ctl') return pr.ctlGen === Feed.ctlGen && feedCtlOn();   // the same row
   if (pr.kind === 'ctlmenu') return !!Feed.menu && Feed.menu.id === pr.menu && feedCtlOn();   // the same opening of the menu, still open
@@ -8956,6 +9292,7 @@ function pressStill(pr) {
   const r = Feed.recs.get(pr.key);
   if (!postEl(pr.key) || (r ? r.id : 0) !== pr.rec || pr.project !== Feed.project) return false;
   if (pr.act === 'pass') return !r && feedEligible(pr.key) && !likedKey(pr.key);
+  if (pr.act === 'markread') return !r && feedLive(pr.key) && postMark(pr.key, 'markread') === pr.on;   // Layout A: the read mark as it showed
   if (pr.act === 'chip') return !r && feedLive(pr.key) && chipList(pr.key) === pr.n && listDestOK(pr.n) && listHolds(pr.n, pr.key) === pr.on;   // the same list, the paper in it or not as it showed
   if (['mark', 'remove', 'read', 'add', 'notfor'].includes(pr.act)) { const now = postMark(pr.key, pr.act, pr.n); return now !== null && now !== false && now === pr.on; }   // still the list's paper (its read mark as it showed), or still a suggestion
   if (pr.act === 'undo') return !!r && !r.stale;
@@ -9111,7 +9448,7 @@ function saveSheetHTML() {
   </div>`;
 }
 function shortName(n, max) { n = String(n || ''); return n.length > max ? n.slice(0, max - 1) + '…' : n; }
-function sheetRowHTML(n) { return `<button type="button" class="sh-row" data-guard="row" data-n="${dataAttr(n)}" onclick="sheetTap(this)" aria-pressed="false"><i class="sh-tick" aria-hidden="true"></i><span class="sh-n">${esc(n)}</span></button>`; }
+function sheetRowHTML(n) { return `<button type="button" class="sh-row" data-guard="row" data-n="${dataAttr(n)}" onclick="sheetTap(this)" aria-pressed="false"><i class="sh-tick" aria-hidden="true"></i><span class="sh-n">${esc(listLabel(n))}</span></button>`; }
 function sheetNewRowHTML() { return `<button type="button" class="sh-row sh-new" data-guard="new" onclick="sheetEdit()"><i class="sh-tick" aria-hidden="true">+</i><span class="sh-n">New list&hellip;</span></button>`; }
 /* The marks, for the paper the sheet is for, changed in place; a list that cannot be saved to any more is off where it
    stands. The post gone from the feed, its paper hidden or deleted, or the feed left: the sheet closes. The 🔖 that
@@ -9153,10 +9490,11 @@ function sheetToggle(n, sid) {
   requireOwner();
   const sh = Feed.sheet;
   if (!sh || sh.id !== sid || !sheetPlace(sh) || !feedLive(sh.key) || !sheetDestOK(n)) return false;
-  const k = sh.key, on = !sheetHas(n, k);
+  const k = sh.key, on = !sheetHas(n, k), at = on ? undefined : (uploadById(k) ? uploadListAt(n, k) : listAddedAt(n)[k]) || '';   // when it was added, read before it goes
   if (uploadById(k)) {   // an upload: its private lists (uploadListSet), never libraryLists
     if (!listSet(n, k, on)) return false;
     updateLibraryBadge(); if (sh.btn) refreshPaper(k, { list: n }); saveSheetSync();
+    listToast(n, k, on, at);   // Layout A: every add and remove has its Undo
     return true;
   }
   const dailyDelta = typeof Daily !== 'undefined' && Daily.sheet ? { fields: {}, lists: [dailyListDelta(n, k, !on, on)] } : null;
@@ -9165,8 +9503,9 @@ function sheetToggle(n, sid) {
   else libraryLists[n] = libraryLists[n].filter(x => x !== k);
   persistLists(); updateLibraryBadge();
   if (sh.btn) refreshPaper(k, { list: n });   // the paper page's Save, a Library or search row
-  else feedRepaintPost(k);   // the chip and ✕ say whether the paper is in a list now
+  else feedRepaintPost(k);   // Save and Pass say whether the paper is in a list now
   saveSheetSync();
+  if (!dailyDelta) listToast(n, k, on, at);   // Layout A: every add and remove has its Undo; Daily's sheet is one decision, with its Undo when it closes
   return true;
 }
 /* + New list: the row becomes a field in place, below the sheet's scrolling list, so it and its message stay in reach
@@ -9226,6 +9565,7 @@ function sheetNewSubmit() {
   persistLists(); updateLibraryBadge();
   if (upload) listSet(name, sh.key, true);
   saveSheetSync();
+  if (!dailyDelta) listToast(name, sh.key, true);   // Layout A: the new list's add has its Undo too
   const row = [...s.querySelectorAll('.sh-row')].find(b => b.dataset.n === name);
   if (row) { row.focus({ preventScroll: true }); sheetReveal(row); }
   return true;
@@ -9290,6 +9630,7 @@ function closeSaveSheet() {
   if (inside) document.activeElement.blur();   // the feed's keys work again
   s.classList.remove('open', 'pop'); s.innerHTML = ''; delete s.dataset.sheet;
   if (typeof dailySheetClosed === 'function') dailySheetClosed();
+  if (sh && sh.pane && !sh.pane.listed && feedRow(sh.pane.key) && paperMarks(feedRow(sh.pane.key)).listed) paneAdvance(sh.pane.key);   // Layout A: saved from the right pane, the next post opens
   if (sh && sh.from && inside) { const to = sh.from.isConnected ? sh.from : save; if (to) to.focus(); }   // opened by a key: back where it was
 }
 /* The Other sheet of a passed post closes when its pass is no longer the post's live record */
@@ -9620,7 +9961,7 @@ function projectNear(seeds) {
 function postNearHTML(k) {
   const how = Feed.near && Feed.ranked && projectMode() ? Feed.near.get(k) : undefined;
   if (how === undefined) return '';
-  const name = esc(Feed.ranked), found = how === 'found' ? foundHTML(feedRow(k) || {}) : '';
+  const name = esc(listLabel(Feed.ranked)), found = how === 'found' ? foundHTML(feedRow(k) || {}) : '';
   return `<p class="near"><span aria-hidden="true">&#9670;</span> ${found ? found.charAt(0).toUpperCase() + found.slice(1) : `Similar to a paper in ${name}`}</p>`;
 }
 /* ===== DAILY: private recommendations and owner decisions =====
@@ -9631,7 +9972,7 @@ const DAILY_CURRENT = 'daily/current.json';
 const DAILY_HANDLED = 'daily_handled.json';
 const DAILY_CURRENT_CAP = 1024 * 1024;
 const DAILY_HANDLED_CAP = 4 * 1024 * 1024;
-const Daily = { timer: 0, generation: 0, seq: 0, pending: null, active: null, interest: null, press: null, undo: null, handled: { schema: 1, operations: {}, undone: [] }, edits: new Map(), status: 'waiting', destinations: new Map(), sheet: null, picker: null, footerObs: null };
+const Daily = { timer: 0, generation: 0, seq: 0, pending: null, active: null, interest: null, press: null, undo: null, handled: { schema: 1, operations: {}, undone: [] }, edits: new Map(), status: 'waiting', destinations: new Map(), sheet: null, picker: null, footerObs: null, sel: null, selPos: null };   // Layout A: sel, the card chosen in two panes; selPos, its place
 function dailyShown() { return SHOW_DAILY_TAB && isPrivate() && Private.authorized && isOwner(); }
 function dailyView() { return dailyShown() && Feed.mode === 'daily' && currentTab === 'all' && !_paperViewActive && !_listViewActive && !_searchActive; }
 function dailyCanonical(v) {
@@ -9723,7 +10064,7 @@ function dailyAdopt() {
   Daily.pending = null;
   const changed = !Daily.active || !current || Daily.active.generation !== current.generation;
   Daily.active = current; Daily.status = current ? 'ready' : 'waiting';
-  if (changed) { Daily.generation++; Daily.destinations = new Map(); }
+  if (changed) { Daily.generation++; Daily.destinations = new Map(); Daily.sel = Daily.selPos = null; }   // Layout A: a new manifest starts from its first card
   const sections = dailySections(); if (!sections.some(s => s.interest === Daily.interest)) { const available = dailyCards(); Daily.interest = sections.find(s => available.some(c => c.interest === s.interest))?.interest || sections[0]?.interest || null; }
   if (typeof dailyRender === 'function' && dailyView()) dailyRender(); return true;
 }
@@ -9737,7 +10078,7 @@ function dailyCards() {
 function dailySetInterest(name) {
   if (!dailyShown() || !dailySections().some(s => s.interest === name)) return false;
   dailyCancelPress(); if (Feed.sheet) closeSaveSheet(); dailyCloseInterestSheet(false);
-  Daily.interest = name; Daily.generation++; dailyResume();
+  Daily.interest = name; Daily.generation++; Daily.sel = Daily.selPos = null; dailyResume();
   if (typeof dailyRender === 'function') dailyRender(false, true); return true;
 }
 function dailyResume() {
@@ -9866,7 +10207,7 @@ function dailyTeardown() {
   cleanup(() => dailyCloseInterestSheet(false));
   if (Daily.footerObs) { cleanup(() => Daily.footerObs.disconnect()); Daily.footerObs = null; }
   clearTimeout(Daily.timer); Daily.timer = 0;
-  Daily.seq++; Daily.generation++; Daily.active = Daily.pending = Daily.interest = Daily.undo = Daily.sheet = null; Daily.status = 'waiting'; Daily.edits.clear(); Daily.destinations.clear(); Daily.handled = { schema: 1, operations: {}, undone: [] };
+  Daily.seq++; Daily.generation++; Daily.active = Daily.pending = Daily.interest = Daily.undo = Daily.sheet = Daily.sel = Daily.selPos = null; Daily.status = 'waiting'; Daily.edits.clear(); Daily.destinations.clear(); Daily.handled = { schema: 1, operations: {}, undone: [] };
   cleanup(() => dailyCancelPress()); document.body.classList.remove('daily-mode');
   const body = document.getElementById('dailyBody'); if (body) body.innerHTML = '';
 }
@@ -9937,6 +10278,7 @@ function dailyUndo(id) {
   _stateDirty = true; _editGen++; scheduleBackup(); showSaveBar(); tasteSupersede();
   if (Daily.sheet) closeSaveSheet(); dailyCancelPress();
   if (dailyCards().some(c => c.day === o.card.day && c.interest === o.card.interest && c.paper === o.paper && c.pool === o.pool && c.slot === o.card.slot) && Daily.interest !== o.card.interest) { Daily.interest = o.card.interest; Daily.generation++; }
+  if (Daily.interest === o.card.interest) { Daily.sel = { slot: o.card.slot, paper: o.paper }; Daily.selPos = o.card.position; }   // Layout A: the paper put back opens again
   if (typeof dailyRender === 'function' && dailyView()) dailyRender(true);
   return true;
 }
@@ -10119,7 +10461,7 @@ function dailyAct(kind, card, generation) {
   else { if (kind === 'read') readSet.add(card.paper); else p.is_passed = 'true'; persistRead(); }
   tasteSupersede(); dailyCancelPress();
   if (typeof dailyRender === 'function') dailyRender(true);
-  toast(kind === 'save' ? 'Saved to ' + esc(destination) : kind === 'read' ? 'Marked read' : 'Passed', privateCallback(() => dailyUndo(id)), { actionLabel: 'Undo', duration: 8000 });
+  toast(kind === 'save' ? 'Saved to ' + esc(listLabel(destination)) : kind === 'read' ? 'Marked read' : 'Passed', privateCallback(() => dailyUndo(id)), { actionLabel: 'Undo', duration: 8000 });
   dailyFocusUndo();
   return true;
 }
@@ -10177,54 +10519,94 @@ function dailyWatchFooter(root) {
   if (typeof ResizeObserver === 'function') { Daily.footerObs = new ResizeObserver(measure); Daily.footerObs.observe(footer); }
 }
 function dailyCardHTML(card, row) {
-  const headline = hasText(row.headline) ? row.headline : '', summary = hasText(row.summary) ? row.summary : '';
-  const venue = [hasText(row.venue) ? row.venue : '', dailyReleaseText(row)].filter(Boolean).join(' · '), matches = relevanceMatches(scoreParts(row));
-  return `<article class="daily-card" tabindex="0" aria-label="${dataAttr(row.title || headline)}">
-    <span class="daily-stamp daily-stamp-save" aria-hidden="true">${esc(dailyDestination(card.paper))}</span><span class="daily-stamp daily-stamp-pass" aria-hidden="true">Pass</span>
-    <h2><a href="#paper/${encodeURIComponent(card.paper)}">${esc(row.title || headline)}</a></h2>
-    ${hasText(row.authors) ? `<p class="daily-authors">${esc(row.authors)}</p>` : ''}${venue ? `<p class="daily-venue">${esc(venue)}</p>` : ''}
-    ${headline ? `<p class="daily-headline">${esc(headline)}</p>` : ''}${summary ? `<p class="daily-summary">${esc(summary)}</p>` : ''}
-    ${hasText(row.abstract) ? `<h3 class="daily-abstract-label">Abstract</h3><p class="daily-abstract" data-abs-tex>${esc(row.abstract)}</p>` : ''}
-    ${matches.length ? `<section class="daily-matches"><h3 class="daily-matches-label">Matching interests</h3>${matches.map(m => `<p class="daily-match"><span class="daily-match-name">${esc(m.name)}</span><span class="daily-match-strength">${esc(STRENGTH_NAME[m.strength])}</span></p>`).join('')}</section>` : ''}
+  // Layout A (Main.dc.html): the headline leads, the paper's own title is the smaller line under it
+  return `<article class="daily-card" tabindex="0" aria-label="${dataAttr(row.title || row.headline || '')}">
+    <span class="daily-stamp daily-stamp-save" aria-hidden="true">${esc(listLabel(dailyDestination(card.paper)))}</span><span class="daily-stamp daily-stamp-pass" aria-hidden="true">Pass</span>
+    ${paperViewHTML(row)}
   </article>`;
+}
+/* Layout A: Daily's row, Pass, Save, Mark read and Read, as every paper's (paperActsHTML). Save opens the lists. */
+function dailyActsHTML() {
+  const act = { pass: 'pass', save: 'save', mark: 'read', read: 'open' };
+  return paperActsHTML({ listed: false, read: false }, 'daily-action', kind => `data-daily-action="${act[kind]}"${kind === 'save' ? ' aria-label="Save: choose a list"' : ''}`);
+}
+/* Two panes: what a handled row says, in a plain word */
+function dailyRowWord(k, p) {
+  if (isHiddenRow(p)) return 'Hidden';
+  if (starSet.has(k) || Object.entries(libraryLists).some(([n, ids]) => !isMachineLane(n) && ids.includes(k))) return 'Saved';
+  if (p.is_passed === 'true') return 'Passed';
+  return readSet.has(k) ? 'Read' : '';
+}
+/* Two panes: today's papers for the chosen interest, in their order. One still to decide is a button that opens it on
+   the right; one handled is muted, with what happened to it, and opens its page. */
+function dailyListHTML(section, available, card) {
+  return `<div class="daily-list" role="list" aria-label="${dataAttr(`Today's papers in ${section.interest}`)}">${section.cards.map(c => {
+    const p = feedRow(c.paper); if (!p || p._goneRemote) return '';
+    const live = available.find(a => a.interest === section.interest && a.slot === c.slot && a.paper === c.paper), on = !!(live && card && live.slot === card.slot && live.paper === card.paper);
+    const head = esc(hasText(p.headline) ? p.headline : p.title || '');
+    if (!live) { const word = dailyRowWord(c.paper, p); return `<div role="listitem"><a class="daily-row done" href="#paper/${encodeURIComponent(c.paper)}"><span class="dr-h">${head}</span>${word ? `<span class="dr-s">${esc(word)}</span>` : ''}</a></div>`; }
+    return `<div role="listitem"><button type="button" class="daily-row${on ? ' on' : ''}" data-daily-action="row" data-daily-row="${dataAttr(c.slot)}" data-row-paper="${dataAttr(c.paper)}"${on ? ' aria-current="true"' : ''}><span class="dr-h">${head}</span>${hasText(p.authors) ? `<span class="dr-s">${esc(p.authors)}</span>` : ''}</button></div>`;
+  }).join('')}</div>`;
+}
+/* A row chosen in the left pane: that paper opens on the right, the list where it was */
+function dailySelect(slot, paper) {
+  requireOwner();
+  if (!dailyView() || !twoPane() || Daily.sheet || Daily.picker || Daily.press) return false;
+  const c = dailyCards().find(x => x.interest === Daily.interest && x.slot === slot && x.paper === paper);
+  if (!c) return false;
+  Daily.sel = { slot, paper }; Daily.selPos = c.position; Daily.generation++;
+  dailyRender(false, true);
+  const area = document.querySelector('#dailyBody .daily-area'); if (area) area.scrollTop = 0;
+  return true;
 }
 function dailyRender(focus, keepInterest) {
   if (!dailyView() || Daily.press || Daily.sheet || Daily.picker) return;
   dailyTick();
   const box = document.getElementById('topStories'); if (!box) return;
   const previousArea = box.querySelector('.daily-area'), previousPaper = box.querySelector('.daily-action')?.dataset.dailyPaper, previousScroll = previousArea?.scrollTop || 0;
-  const previousInterest = box.querySelector('#dailyBody .daily-picker-name')?.textContent;
+  const previousInterest = box.querySelector('#dailyBody .daily-picker-name')?.textContent, previousList = box.querySelector('.daily-list')?.scrollTop || 0;
   const old = box.querySelector('.daily-card'), hadFocus = !!focus || old && old.contains(document.activeElement);
   if (!box.querySelector('#dailyBody')) {
     box.innerHTML = `<div class="feed daily-feed" id="feed"><div class="feed-head" id="feedHead"><div class="feed-tabs home" id="feedTabs" role="tablist" aria-label="Feeds"><div class="ft-tabs" id="feedTabsIn"></div><div class="ft-add" id="feedAdd"></div></div><div id="feedCtl" hidden></div><p id="tabsMsg" role="status"></p></div><div id="listBar" hidden></div><div class="feed-list" id="feedList"><div id="dailyBody" role="tabpanel" aria-label="Daily"></div></div><div id="feedMore"></div><div id="feedEnd"></div></div>`;
   }
-  document.body.classList.add('feed-mode', 'daily-mode'); document.body.classList.toggle('feed-phone', feedLayout() === 'phone'); document.body.classList.toggle('feed-land', feedLayout() === 'land'); document.body.classList.toggle('feed-laptop', feedLayout() === 'laptop');
+  const two = twoPane();
+  document.body.classList.add('feed-mode', 'daily-mode'); document.body.classList.toggle('feed-phone', feedLayout() === 'phone'); document.body.classList.toggle('feed-land', feedLayout() === 'land'); document.body.classList.toggle('feed-laptop', feedLayout() === 'laptop'); document.body.classList.toggle('feed-two', two);
+  box.querySelector('.daily-feed').classList.toggle('two', two);
   Feed.mounted = true; Feed.fresh = Feed.switched = false; Feed.tabNames = feedTabNames(); feedTabsRender();
   const sections = dailySections(), available = dailyCards();
   if (!keepInterest && previousPaper && previousInterest === Daily.interest && !available.some(c => c.interest === Daily.interest)) {
     const start = sections.findIndex(s => s.interest === Daily.interest);
     const next = Array.from({ length: sections.length }, (_, i) => sections[(start + i + 1) % sections.length]).find(s => available.some(c => c.interest === s.interest));
-    if (next && next.interest !== Daily.interest) { Daily.interest = next.interest; Daily.generation++; }
+    if (next && next.interest !== Daily.interest) { Daily.interest = next.interest; Daily.generation++; Daily.sel = null; Daily.selPos = null; }
   }
-  const section = sections.find(s => s.interest === Daily.interest), card = available.find(c => c.interest === Daily.interest), row = card && feedRow(card.paper), root = box.querySelector('#dailyBody');
+  // The card shown: the one chosen while it is still to decide, else the next one after it, else the first
+  const here = available.filter(c => c.interest === Daily.interest), chosen = Daily.sel && here.find(c => c.slot === Daily.sel.slot && c.paper === Daily.sel.paper);
+  const card = chosen || (Daily.selPos !== null && Daily.selPos !== undefined && here.find(c => c.position > Daily.selPos)) || here[0], row = card && feedRow(card.paper), root = box.querySelector('#dailyBody');
+  if (card) { Daily.sel = { slot: card.slot, paper: card.paper }; Daily.selPos = card.position; } else Daily.sel = null;
+  const section = sections.find(s => s.interest === Daily.interest);
   const pools = new Set((section?.cards || []).map(c => c.pool)), undone = new Set(Daily.handled.undone);
   const handled = new Set(Object.entries(Daily.handled.operations).filter(([id, o]) => !undone.has(id) && o.card.day === Daily.active?.day && o.card.interest === section?.interest).map(([, o]) => o.pool));
   const removed = [...handled].filter(pool => !pools.has(pool)).length, total = pools.size + removed;
   const position = card ? removed + card.position + 1 : total;
   const empty = Daily.status === 'retry' ? `Couldn't load your picks. <button type="button" data-daily-retry>Try again</button>` : !Daily.active || !section || Daily.status === 'waiting' || !sections.some(s => s.cards.length) ? 'Your next picks are on the way.' : "That's all for today. More tomorrow.";
-  const icon = kind => kind === 'save' ? '<path d="M6 3h12v18l-6-4-6 4z"/>' : kind === 'pass' ? '<path d="m6 6 12 12M18 6 6 18"/>' : '<path d="m5 12 4 4L19 6"/>';
-  root.innerHTML = `${section ? interestPickerHTML(section.interest, '', `${position} of ${total}`) : ''}
-    <section class="daily-area">${card && row ? dailyCardHTML(card, row) + `</section><footer class="daily-actions" aria-label="Paper actions">${['pass', 'save', 'read'].map(kind => `<button type="button" class="daily-action ${kind}" data-daily-action="${kind}"${kind === 'save' ? ' aria-label="Choose a list" aria-haspopup="dialog" aria-expanded="false"' : ''}><span><svg viewBox="0 0 24 24" aria-hidden="true">${icon(kind)}</svg></span><b>${kind === 'pass' ? 'Pass' : kind === 'read' ? 'Mark read' : esc(dailyDestination(card.paper))}</b></button>`).join('')}</footer>` : `<div class="daily-empty" role="status">${empty}</div></section>`}`;
+  root.innerHTML = `${section ? interestPickerHTML(section.interest, '', `${position} of ${total}`) : ''}${two && section ? dailyListHTML(section, available, card) : ''}
+    <section class="daily-area">${card && row ? dailyCardHTML(card, row) + `</section><footer class="daily-actions pacts" aria-label="Paper actions">${dailyActsHTML()}</footer>` : `<div class="daily-empty" role="status">${empty}</div></section>`}`;
   dailyWatchFooter(root);
   root.querySelector('.daily-area').scrollTop = card && card.paper === previousPaper ? previousScroll : 0;
+  const list = root.querySelector('.daily-list'); if (list) list.scrollTop = previousList;
   root.querySelectorAll('.daily-action, .daily-picker').forEach(b => { b.dataset.dailyGen = String(Daily.generation); b.dataset.dailyPaper = card ? card.paper : ''; });
+  if (two) root.querySelectorAll('.daily-row').forEach(b => {
+    if (!b.dataset.dailyRow) return;   // a handled row is a link to its page
+    b.dataset.dailyGen = String(Daily.generation); b.dataset.dailyPaper = b.dataset.rowPaper;
+    const gen = Daily.generation; b.onclick = privateCallback(() => { if (gen === Daily.generation) dailySelect(b.dataset.dailyRow, b.dataset.rowPaper); });
+  });
   const picker = root.querySelector('.daily-picker'), pickerGeneration = Daily.generation;
   if (picker) picker.onclick = privateCallback(e => { if (pickerGeneration === Daily.generation) dailyOpenInterestSheet(e, picker); });
   const retry = root.querySelector('[data-daily-retry]'); if (retry) retry.onclick = privateCallback(dailyRefresh);
   if (card) {
     const generation = Daily.generation, el = root.querySelector('.daily-card'); dailyBindGestures(el, card, generation);
     const abstract = el.querySelector('[data-abs-tex]'); if (abstract) renderAbstractText(abstract, row.abstract);
-    root.querySelectorAll('[data-daily-action]').forEach(b => { b.onclick = privateCallback(e => { if (b.dataset.dailyAction === 'save') dailyOpenSaveSheet(e, b, card); else dailyAct(b.dataset.dailyAction, card, generation); }); });
+    root.querySelectorAll('.daily-action').forEach(b => { b.onclick = privateCallback(e => { const a = b.dataset.dailyAction; if (a === 'save') dailyOpenSaveSheet(e, b, card); else if (a === 'open') { if (generation === Daily.generation && dailyValidCard(card, generation)) feedOpen(card.paper); } else dailyAct(a, card, generation); }); });
     if (hadFocus) el.focus({ preventScroll: true });
   } else if (hadFocus) { const undo = document.querySelector('#toast button'); if (undo) undo.focus({ preventScroll: true }); }
 }
@@ -10299,7 +10681,7 @@ function listSet(n, k, on, at) {
 function listToast(n, k, on, at) {
   const op = { n, k, on };
   ListOps.add(op);
-  toast(on ? `Saved to ${esc(n)}` : `Removed from ${esc(n)}`, () => {
+  toast(on ? `Saved to ${esc(listLabel(n))}` : `Removed from ${esc(listLabel(n))}`, () => {
     const row = feedRow(k);
     if (!row || row._goneRemote) { ListOps.delete(op); toast('That paper is no longer in the library.'); return false; }
     if (!ListOps.delete(op)) { toast('That changed since, so there is nothing to undo.'); return false; }
@@ -10459,10 +10841,10 @@ function listActsHTML(k, p, member) {
     const canRead = !!(pdfSourceOf(p) || p.url || isOwner());
     return `<div class="acts">${canRead ? `<button type="button" class="act" data-act="read" onclick="feedOpen(this.closest('.post').dataset.key)" aria-label="${pdfSourceOf(p) ? 'Read the paper' : p.url ? 'Open the paper' : 'Add a PDF to read it'}">${FEED_ICON.read}<span>${!pdfSourceOf(p) && p.url ? 'Open' : 'Read'}</span></button>` : ''}`
       + `<button type="button" class="act" data-act="mark" aria-pressed="${read}" onclick="listMarkRead(this.closest('.post').dataset.key)">${FEED_ICON.tick}<span>${read ? 'Mark unread' : 'Mark read'}</span></button>`
-      + `<button type="button" class="act" data-act="remove" onclick="listRemove(this.closest('.post').dataset.key)" aria-label="Remove from ${dataAttr(n)}">Remove from list</button></div>`;
+      + `<button type="button" class="act" data-act="remove" onclick="listRemove(this.closest('.post').dataset.key)" aria-label="Remove from ${dataAttr(listLabel(n))}">Remove from list</button></div>`;
   }
-  return `<div class="acts"><button type="button" class="act add" data-act="add" data-n="${dataAttr(n)}" aria-label="Add to ${dataAttr(n)}" onclick="feedKeep(this.closest('.post').dataset.key)"><span class="act-pill">+ Add to ${esc(n)}</span></button>`
-    + `<button type="button" class="act" data-act="notfor" onclick="listNotForThis(this.closest('.post').dataset.key)" aria-label="Not for ${dataAttr(n)}">Not for this list</button></div>`;
+  return `<div class="acts"><button type="button" class="act add" data-act="add" data-n="${dataAttr(n)}" aria-label="Add to ${dataAttr(listLabel(n))}" onclick="feedKeep(this.closest('.post').dataset.key)"><span class="act-pill">+ Add to ${esc(listLabel(n))}</span></button>`
+    + `<button type="button" class="act" data-act="notfor" onclick="listNotForThis(this.closest('.post').dataset.key)" aria-label="Not for ${dataAttr(listLabel(n))}">Not for this list</button></div>`;
 }
 /* The headings: "In this list" over his papers (with what to do when the interest chosen leaves none), "Suggested for
    LIST" over the suggestions */
@@ -10470,13 +10852,13 @@ function listSections() {
   const list = document.getElementById('feedList'), n = Feed.project;
   if (!list || !listTabShown() || !listMembers(n).length) return;
   const chosen = listInterest(n);
-  list.insertAdjacentHTML('beforeend', `<h3 class="list-sec mine">In this list</h3>${!Feed.split && chosen !== null ? `<div class="list-none"><p>None of your papers in ${esc(n)} are about ${esc(chosen)}.</p><button type="button" class="ui-btn" onclick="setListInterest(Feed.project, null)">Show all papers</button></div>` : ''}`);
+  list.insertAdjacentHTML('beforeend', `<h3 class="list-sec mine">In this list</h3>${!Feed.split && chosen !== null ? `<div class="list-none"><p>None of your papers in ${esc(listLabel(n))} are about ${esc(chosen)}.</p><button type="button" class="ui-btn" onclick="setListInterest(Feed.project, null)">Show all papers</button></div>` : ''}`);
 }
-function listSugHeadHTML() { return `<h3 class="list-sec sug">Suggested for ${esc(Feed.project)}</h3>`; }
+function listSugHeadHTML() { return `<h3 class="list-sec sug">Suggested for ${esc(listLabel(Feed.project))}</h3>`; }
 /* The end of a list's tab: an empty list says how to fill it and offers no suggestions */
 function listEndHTML() {
   const n = Feed.project;
-  if (!listMembers(n).length) return `<div class="list-empty"><p class="le-t">Nothing in this list yet</p><p>Save a paper here with its bookmark, or add one by its link.</p></div>`;
+  if (!listMembers(n).length) return `<div class="list-empty"><p class="le-t">Nothing in this list yet</p><p>Save a paper here with Save, or add one by its link.</p></div>`;
   return Feed.keys.length > Feed.split ? `<p>That&rsquo;s every suggestion for now.</p>` : `<p>No suggestions yet.</p>`;
 }
 /* The tab drawn again from the list as it is now, where it was: as many posts as before and the scroll kept. A press
@@ -10537,7 +10919,7 @@ function listNotForThis(k) {
   if (!listTabShown() || postView(k) !== 'suggest') return false;
   if (!listNotForSet(n, k, true)) return false;
   listRelist();
-  toast(`It won&rsquo;t be suggested for ${esc(n)}`, () => { if (listNotForSet(n, k, false) && listTabShown() && Feed.project === n) listRelist(); }, { duration: 5000, fullTarget: true });
+  toast(`It won&rsquo;t be suggested for ${esc(listLabel(n))}`, () => { if (listNotForSet(n, k, false) && listTabShown() && Feed.project === n) listRelist(); }, { duration: 5000, fullTarget: true });
   return true;
 }
 
@@ -10556,20 +10938,20 @@ function listBarRender() {
 }
 function listBarHTML() {
   const n = Feed.project;
-  return `<div class="lb-row"><button type="button" class="lb-back" id="listBackBtn" aria-label="Back to lists" onclick="listPageBack()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><h2 class="lb-name" id="listName" title="${dataAttr(n)}">${esc(n)}</h2>${n === TO_READ ? '' : `<button type="button" class="lb-more" id="listMoreBtn" aria-haspopup="menu" aria-expanded="false" aria-label="More for ${dataAttr(n)}" onclick="openListMenu(this, Feed.project, 'more')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>`}<span class="lb-grow"></span><button type="button" class="lb-add" id="listAddBtn" aria-expanded="false" aria-controls="listAddBox" onclick="listAddOpen()"><span class="lb-pill">+ Add a paper</span></button></div>`
+  return `<div class="lb-row"><button type="button" class="lb-back" id="listBackBtn" aria-label="Back to lists" onclick="listPageBack()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><h2 class="lb-name" id="listName" title="${dataAttr(listLabel(n))}">${esc(listLabel(n))}</h2>${n === TO_READ ? '' : `<button type="button" class="lb-more" id="listMoreBtn" aria-haspopup="menu" aria-expanded="false" aria-label="More for ${dataAttr(n)}" onclick="openListMenu(this, Feed.project, 'more')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>`}<span class="lb-grow"></span><button type="button" class="lb-add" id="listAddBtn" aria-expanded="false" aria-controls="listAddBox" onclick="listAddOpen()"><span class="lb-pill">+ Add a paper</span></button></div>`
     + `<div class="lb-addbox" id="listAddBox" hidden></div><div class="lb-int" id="listIntRow" hidden>${interestPickerHTML('All interests', `id="listIntBtn" onclick="openListMenu(this, Feed.project, 'interest')"`)}</div>`;
 }
 function listBarSync() {
   const bar = document.getElementById('listBar');
   if (!bar || bar.hidden || !listTabShown()) return;
   const n = Feed.project, name = document.getElementById('listName'), more = document.getElementById('listMoreBtn'), row = document.getElementById('listIntRow'), int = document.getElementById('listIntBtn');
-  if (name && name.textContent !== n) { name.textContent = n; name.title = n; }
+  if (name && name.textContent !== listLabel(n)) { name.textContent = listLabel(n); name.title = listLabel(n); }
   if (more) more.setAttribute('aria-label', `More for ${n}`);
   if (row) row.hidden = !listMembers(n).length;
   if (int) {
     const chosen = listInterest(n), t = int.querySelector('.daily-picker-name'), label = chosen || 'All interests';
     if (t && t.textContent !== label) t.textContent = label;
-    int.setAttribute('aria-label', `Interests in ${n}: ${chosen || 'all'}`); int.setAttribute('title', label);
+    int.setAttribute('aria-label', `Interests in ${listLabel(n)}: ${chosen || 'all'}`); int.setAttribute('title', label);
   }
 }
 /* + Add a paper: a field under the bar for a link, DOI or arXiv id. A paper already in the library goes straight into
@@ -10581,7 +10963,7 @@ function listAddOpen() {
   if (Feed.ladd) { listAddEnd(true); return; }
   Feed.ladd = { id: ++Feed.seq, list: Feed.project };
   box.hidden = false;
-  box.innerHTML = `<form class="lb-edit" data-edit="${Feed.ladd.id}" onsubmit="event.preventDefault();listAddSubmit()"><input class="lb-input" id="listAddInput" type="text" maxlength="2000" enterkeyhint="go" autocomplete="off" spellcheck="false" placeholder="Link, DOI or arXiv id" aria-label="${dataAttr(`A paper for ${Feed.project}: its link, DOI or arXiv id`)}"><button type="submit" class="lb-go">Add</button></form><p class="lb-msg" id="listAddMsg" role="status" aria-live="polite"></p>`;
+  box.innerHTML = `<form class="lb-edit" data-edit="${Feed.ladd.id}" onsubmit="event.preventDefault();listAddSubmit()"><input class="lb-input" id="listAddInput" type="text" maxlength="2000" enterkeyhint="go" autocomplete="off" spellcheck="false" placeholder="Link, DOI or arXiv id" aria-label="${dataAttr(`A paper for ${listLabel(Feed.project)}: its link, DOI or arXiv id`)}"><button type="submit" class="lb-go">Add</button></form><p class="lb-msg" id="listAddMsg" role="status" aria-live="polite"></p>`;
   box.querySelector('.lb-edit').onkeydown = listAddKey;
   if (btn) btn.setAttribute('aria-expanded', 'true');
   const input = document.getElementById('listAddInput');
@@ -10626,7 +11008,7 @@ function listAddExisting(n, hit, say) {
   const k = paperKey(hit);
   if (!listDestOK(n)) { say(goneMessage(n)); return false; }
   if (isHiddenRow(hit)) { say('That paper is hidden. Restore it in Lists to read it here.'); return false; }
-  if (listHolds(n, k)) { say(`It is already in ${esc(n)}.`); return false; }
+  if (listHolds(n, k)) { say(`It is already in ${esc(listLabel(n))}.`); return false; }
   if (!listSet(n, k, true)) return false;
   listShowChange(k, n); listToast(n, k, true);
   return true;
@@ -10652,7 +11034,7 @@ async function listAddSubmit() { const _authEpoch = capturePrivateEpoch();
   const r = startAddPaper(n);
   if (!r) { say('Scout could not start adding it. Try again in a moment.'); return false; }
   ListAdd.pending = r.destination;
-  if (Feed.ladd === ed) { input.value = ''; say(`Adding it. It goes into ${esc(n)} once it is in your library.`); }
+  if (Feed.ladd === ed) { input.value = ''; say(`Adding it. It goes into ${esc(listLabel(n))} once it is in your library.`); }
   return true;
 }
 /* Destinations stay on their request until the refreshed library really has its rows. Several completed requests
@@ -10688,7 +11070,7 @@ function listAddSettle() {
       if (ListAdd.pending === pend) ListAdd.pending = null;
       requestsStore();
     };
-    if ((def && def.deleted) || !listDestOK(n)) { finish(); toast(`The list ${esc(n)} went meanwhile, so the paper is in your library only.`); continue; }
+    if ((def && def.deleted) || !listDestOK(n)) { finish(); toast(`The list ${esc(listLabel(n))} went meanwhile, so the paper is in your library only.`); continue; }
     if (pend.waiting) {
       const hit = listPaperFor(pend.input);
       if (!hit) continue;
@@ -10704,7 +11086,7 @@ function listAddSettle() {
       if (!here.some(id => listHolds(n, id))) continue;
       if (listTabShown() && Feed.project === n) listRelist();
       const ops = put.map(k => { const op = { n, k, on: true }; ListOps.add(op); return op; });
-      toast(`Added to ${esc(n)}`, ops.length ? () => {
+      toast(`Added to ${esc(listLabel(n))}`, ops.length ? () => {
         const left = ops.filter(op => ListOps.delete(op) && feedRow(op.k) && !feedRow(op.k)._goneRemote && listHolds(n, op.k));
         left.forEach(op => listSet(n, op.k, false));
         if (left.length) listShowChange(left[0].k, n);
@@ -10756,7 +11138,7 @@ function openListMenu(btn, n, kind) {
   const names = kind === 'interest' ? feedChipNames() : null, chosen = kind === 'interest' ? listInterest(n) : null;
   if (kind === 'interest') {
     const cur = ListMenu.cur = { id: ++ListMenu.seq, kind, list: n, btnId: btn.id, sig: JSON.stringify(names), where: btn.closest('#listBar') ? 'tab' : 'lib' };
-    cur.el = openInterestSheet({ button: btn, title: `Interests in ${n}`, chosen, rows: [null, ...names].map(x => ({ interest: x || '' })),
+    cur.el = openInterestSheet({ button: btn, title: `Interests in ${listLabel(n)}`, chosen, rows: [null, ...names].map(x => ({ interest: x || '' })),
       live: () => ListMenu.cur === cur && !!document.getElementById(cur.btnId) && hasList(n) && cur.sig === JSON.stringify(feedChipNames()),
       close: () => closeListMenu(true), choose: x => { closeListMenu(true); setListInterest(n, x || null); const b = document.getElementById(cur.btnId); if (b) b.focus({ preventScroll: true }); } });
     return;
@@ -10871,7 +11253,7 @@ function feedTeardown() {
   } finally {
     Object.assign(Feed, { keys: [], shown: 0, project: null, ranked: null, near: null, switched: false, fresh: false, mounted: false,
       gen: Feed.gen + 1, tabsGen: Feed.tabsGen + 1, tabNames: null, recs: new Map(), focus: null, sheet: null, edit: null, noted: false, layout: null, obs: null, more: 0,
-      sort: 'best', interest: null, ctlGen: Feed.ctlGen + 1, menu: null, drawing: false, headObs: null, split: 0, chips: new Map(), ladd: null, lsig: null, pressDeferred: false });   // the sort is read back at sign-in
+      sort: 'best', interest: null, ctlGen: Feed.ctlGen + 1, menu: null, drawing: false, headObs: null, split: 0, chips: new Map(), ladd: null, lsig: null, pressDeferred: false, pane: null, paneGen: Feed.paneGen + 1, paneAt: 0 });   // the sort is read back at sign-in
     _projectNear = { sig: null, rows: null, map: null }; _listEv = null; cleanup(() => rowIndexClear());
     _chipNear = { rows: null, gen: -1, map: new Map() }; _listAddAt = new Map(); ListAdd.pending = null; ListView.interest.clear(); ListView.ids.clear();   // Phase 25: each list's choice lasts the visit
   }
@@ -11046,7 +11428,7 @@ function closePopovers() {
 }
 document.addEventListener('pointerdown', e => {
   const open = [...document.querySelectorAll(POPOVERS)];
-  if (!open.length || open.some(el => el.contains(e.target))) { _dismissTap = null; return; }
+  if (!open.length || open.some(el => el.contains(e.target)) || (e.target.closest && e.target.closest('#toast'))) { _dismissTap = null; return; }   // Layout A: the toast's Undo belongs to what the open menu just did
   _dismissTap = { id: e.pointerId, t: e.timeStamp };
   e.stopPropagation();   // nothing underneath sees the start of this tap (no swipe, hold or hover begins)
 }, true);
@@ -11384,7 +11766,7 @@ function openSaveTo(ev, btn, key) {
 function saveBtn(p, labelled) {
   const k = paperKey(p), inAny = paperMarks(p).listed;
   return `<span class="save-anchor">
-    <button class="btn-icon ${labelled?'btn-labelled':''} ${inAny?'done':''}" data-act="list" aria-haspopup="true" aria-expanded="false" onclick="event.preventDefault();event.stopPropagation();openSaveTo(event,this,'${escAttr(k)}')" title="Save to a list or To read" aria-label="${inAny ? 'Saved. Change where' : 'Save to a list or To read'}" style="${inAny?'color:var(--list)':''}">${FEED_ICON.save}${labelled ? btnLabel(inAny, 'Saved', 'Save') : ''}</button>
+    <button class="btn-icon ${labelled?'btn-labelled':''} ${inAny?'done':''}" data-act="list" aria-haspopup="true" aria-expanded="false" onclick="event.preventDefault();event.stopPropagation();openSaveTo(event,this,'${escAttr(k)}')" title="Save to a list" aria-label="${inAny ? 'Saved. Change where' : 'Save to a list'}" style="${inAny?'color:var(--list)':''}">${FEED_ICON.save}${labelled ? btnLabel(inAny, 'Saved', 'Save') : ''}</button>
   </span>`;
 }
 function deleteBtn(p) {
@@ -11596,7 +11978,7 @@ function pickerNames(k) {
 }
 function ddRowHTML(n, k) {
   const on = ddHas(n, k), ok = ddDestOK(n, k);
-  return `<button type="button" class="save-dd-item${on ? ' on' : ''}" role="checkbox" aria-checked="${on}" data-n="${dataAttr(n)}"${ok ? '' : ' disabled'} onclick="event.stopPropagation();toggleListItem(this.dataset.n, this.closest('.save-dd').dataset.key)"><span class="dd-check${on ? ' on' : ''}" aria-hidden="true">${on ? '&#10003;' : ''}</span><span class="dd-n">${esc(n)}${ok ? '' : '<span class="dd-why">Unavailable</span>'}</span></button>`;
+  return `<button type="button" class="save-dd-item${on ? ' on' : ''}" role="checkbox" aria-checked="${on}" data-n="${dataAttr(n)}"${ok ? '' : ' disabled'} onclick="event.stopPropagation();toggleListItem(this.dataset.n, this.closest('.save-dd').dataset.key)"><span class="dd-check${on ? ' on' : ''}" aria-hidden="true">${on ? '&#10003;' : ''}</span><span class="dd-n">${esc(listLabel(n))}${ok ? '' : '<span class="dd-why">Unavailable</span>'}</span></button>`;
 }
 function buildDDItems(k, names) { return (names || (_activeSaveDD && _activeSaveDD.key === k ? _activeSaveDD.names : pickerNames(k))).map(n => ddRowHTML(n, k)).join(''); }
 function openSaveDD(btn, key) {
@@ -11729,7 +12111,8 @@ function createListFromDD(input, key) {
   if (isMachineLane(typed)) return refuse(laneMessage(typed));
   if (listGone(typed) || (dd && dd.dead.has(typed))) return refuse(goneMessage(typed));
   let name;
-  if (typed === TO_READ || (hasList(typed) && isProjectName(typed))) name = typed;   // there already: saved to as it is
+  if (readingListTyped(typed)) name = TO_READ;   // the general list, by its shown or stored name
+  else if (hasList(typed) && isProjectName(typed)) name = typed;   // there already: saved to as it is
   else { name = checkListName(typed); if (!name) { if (input.select) input.select(); return false; } }
   const h = hiddenRowOf(key), p = h || feedPaper(key);
   if (!p) return false;
@@ -11744,7 +12127,7 @@ function createListFromDD(input, key) {
     const list = dd.el.querySelector('.save-dd-list'), toRead = [...list.querySelectorAll('.save-dd-item')].find(b => b.dataset.n === TO_READ);
     if (toRead) toRead.insertAdjacentHTML('beforebegin', ddRowHTML(name, key)); else list.insertAdjacentHTML('beforeend', ddRowHTML(name, key));
   }
-  toast(`Saved to "${esc(name)}"`);
+  toast(`Saved to "${esc(listLabel(name))}"`);
   refreshPaper(key, { list: name });
   return true;
 }
@@ -12484,13 +12867,10 @@ function updateListBar() {
 }
 document.addEventListener('DOMContentLoaded', () => document.getElementById('mainScroll').addEventListener('scroll', () => updateListBar(), { passive: true }));
 
-/* Search uses the existing list choice, membership and Undo rules. The chip keeps the destination it showed. */
+/* Search uses the existing list choice, membership and Undo rules. Layout A ("Go with 1"): one Save button, which opens
+   the lists; the list chip is gone. searchKeep stays for a chip an older test drives. */
 function searchRowControls(p) {
-  const k = paperKey(p), held = heldLists(k), n = held.length === 1 ? held[0] : Search.chips.get(k) || TO_READ;
-  const on = listHolds(n, k), many = held.length > 1;
-  const label = many ? `In ${held.length} lists, change where` : on ? `In ${n}, remove` : `Add to ${n}`;
-  const chip = `<button type="button" class="chip${on || many ? ' in' : ''}" data-act="chip" data-n="${dataAttr(many ? '' : n)}" data-on="${on}" aria-label="${dataAttr(label)}" title="${dataAttr(label)}" onclick="event.preventDefault();event.stopPropagation();searchKeep(this)"${feedLive(k) && (many || listDestOK(n)) ? '' : ' disabled'}><span class="chip-t">${on || many ? FEED_ICON.tick : ''}<span class="chip-n">${many ? `In ${held.length} lists` : (on ? 'In ' : '+ ') + esc(n)}</span></span></button>`;
-  return `<div class="search-row-controls">${isOwner() ? chip + saveBtn(p) : ''}${linkBtn(p)}</div>`;
+  return `<div class="search-row-controls">${isOwner() ? saveBtn(p, true) : ''}${linkBtn(p)}</div>`;
 }
 function searchKeep(btn) {
   requireOwner();
@@ -12658,7 +13038,7 @@ function libBodyHTML(papers, key) {
   if (!papers.length) return '<div class="library-list-empty">No papers here yet</div>';
   const name = key.startsWith('list-') ? key.slice(5) : null, chosen = name !== null ? listInterest(name) : null;
   const menu = name !== null ? libIntHTML(name, chosen) : '', shown = chosen === null ? papers : papers.filter(p => feedInChip(p, chosen));
-  if (!shown.length) return menu + `<div class="library-list-empty">None of the papers in ${esc(name)} are about ${esc(chosen)}. <button type="button" class="lib-hint-btn" data-n="${dataAttr(name)}" onclick="setListInterest(this.dataset.n, null)">Show all papers</button></div>`;
+  if (!shown.length) return menu + `<div class="library-list-empty">None of the papers in ${esc(listLabel(name))} are about ${esc(chosen)}. <button type="button" class="lib-hint-btn" data-n="${dataAttr(name)}" onclick="setListInterest(this.dataset.n, null)">Show all papers</button></div>`;
   if (key === 'hidden' || !shown.some(isHiddenRow)) return menu + paperListHTML(shown);
   const vis = shown.filter(p => !isHiddenRow(p)), hid = shown.filter(isHiddenRow);
   return menu + (vis.length ? paperListHTML(vis) : '') + `<div class="lib-sub">Hidden (${hid.length})</div>${paperListHTML(hid)}`;
@@ -12703,9 +13083,9 @@ function listTint(name) { if (name === TO_READ) return 'var(--accent)'; let h = 
    nothing and offers Use as a list. */
 function libCardHTML(key, name, papers, extra) {
   _libPapers[key] = papers;
-  const n = listMembers(name).length, count = `${n} ${n === 1 ? 'paper' : 'papers'}`, letter = [...String(name).trim()][0] || '?', gone = name !== TO_READ && listGone(name);
-  const inner = `<span class="ls-av" style="--av:${listTint(name)}" aria-hidden="true">${esc(letter.toUpperCase())}</span><span class="ls-text"><span class="ls-name">${esc(name)}</span><span class="ls-count">${count}</span></span>`;
-  return `<div class="ls-card${gone ? ' gone' : ''}" data-lib="${dataAttr(key)}">${gone ? `<span class="ls-link">${inner}</span>` : `<a class="ls-link" href="#list/${encodeURIComponent(name)}" data-n="${dataAttr(name)}" onclick="return libCardGo(event, this)" aria-label="${dataAttr(name)}, ${count}">${inner}</a>`}${extra || ''}</div>`;
+  const n = listMembers(name).length, count = `${n} ${n === 1 ? 'paper' : 'papers'}`, letter = [...String(listLabel(name)).trim()][0] || '?', gone = name !== TO_READ && listGone(name);
+  const inner = `<span class="ls-av" style="--av:${listTint(name)}" aria-hidden="true">${esc(letter.toUpperCase())}</span><span class="ls-text"><span class="ls-name">${esc(listLabel(name))}</span><span class="ls-count">${count}</span></span>`;
+  return `<div class="ls-card${gone ? ' gone' : ''}" data-lib="${dataAttr(key)}">${gone ? `<span class="ls-link">${inner}</span>` : `<a class="ls-link" href="#list/${encodeURIComponent(name)}" data-n="${dataAttr(name)}" onclick="return libCardGo(event, this)" aria-label="${dataAttr(listLabel(name))}, ${count}">${inner}</a>`}${extra || ''}</div>`;
 }
 function libCardGo(e, a) {
   if (e && (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1)) return true;
@@ -12719,7 +13099,7 @@ function libGroupHTML(key, icon, label, papers, extra) {
   const collapsed = _openLibGroups.has(key) ? '' : ' collapsed', uid = listUid('\u0000' + key);
   /* data-lib holds the key as it is (dataAttr), so the presses, the picker and libraryRepaint find a group by its name (Phase 13e) */
   const body = collapsed ? '' : libBodyHTML(papers, key);
-  return `<div class="interest-group${collapsed}" data-lib="${dataAttr(key)}"><div class="interest-group-inner"><div class="interest-group-header" onclick="toggleLibGroup(this,'${escAttr(key)}')"><button type="button" class="lib-disc" id="libDisc-${uid}" aria-expanded="${!collapsed}" aria-controls="libBody-${uid}" onclick="event.stopPropagation();toggleLibGroup(this,'${escAttr(key)}')"><span class="lib-icon" aria-hidden="true">${icon}</span><span class="lib-name">${esc(label)}</span> <span class="interest-group-count">${papers.length}</span></button>${extra||''}<svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="interest-group-body" id="libBody-${uid}">${body}</div></div></div>`;
+  return `<div class="interest-group${collapsed}" data-lib="${dataAttr(key)}"><div class="interest-group-inner"><div class="interest-group-header" onclick="toggleLibGroup(this,'${escAttr(key)}')"><button type="button" class="lib-disc" id="libDisc-${uid}" aria-expanded="${!collapsed}" aria-controls="libBody-${uid}" onclick="event.stopPropagation();toggleLibGroup(this,'${escAttr(key)}')"><span class="lib-icon" aria-hidden="true">${icon}</span><span class="lib-name">${esc(listLabel(label))}</span> <span class="interest-group-count">${papers.length}</span></button>${extra||''}<svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="interest-group-body" id="libBody-${uid}">${body}</div></div></div>`;
 }
 /* One Library group drawn again in place (its list's interest changed): collapsed or open as it was */
 function libGroupRedraw(key) {
@@ -13100,7 +13480,7 @@ function libListPapers(name) {
   return vis.concat(_hiddenPapers.filter(h => rowLists(h).includes(name)));
 }
 function libActions(name) {
-  const copy = `<button class="lib-ico" data-act="copy" data-n="${dataAttr(name)}" onclick="showCopyDD(this,this.dataset.n)" title="Copy its papers to a list or To read" aria-label="Copy ${dataAttr(name)} to a list">${ICON_COPY}</button>`;
+  const copy = `<button class="lib-ico" data-act="copy" data-n="${dataAttr(name)}" onclick="showCopyDD(this,this.dataset.n)" title="Copy its papers to a list" aria-label="Copy ${dataAttr(listLabel(name))} to a list">${ICON_COPY}</button>`;
   if (!isProjectName(name)) return `<span class="library-actions" onclick="event.stopPropagation()">${copy}</span>`;
   const gone = listGone(name) ? `<span class="lib-gone">Not a list here</span><button class="lib-revive" data-act="revive" data-n="${dataAttr(name)}" onclick="listRevive(this.dataset.n)" title="Use as a list again">Use as a list</button>` : '';
   return `<span class="library-actions" onclick="event.stopPropagation()">${gone}<button class="lib-ico" data-act="rename" data-n="${dataAttr(name)}" onclick="renameList(this.dataset.n)" title="Rename" aria-label="Rename ${dataAttr(name)}">${ICON_EDIT}</button>${copy}<button class="lib-ico danger" data-act="delete" data-n="${dataAttr(name)}" onclick="deleteList(this.dataset.n)" title="Delete list (the papers stay)" aria-label="Delete ${dataAttr(name)}">${ICON_TRASH}</button></span>`;
@@ -13229,7 +13609,7 @@ function checkListName(raw, opts) {
   if (opts.except !== undefined && name === opts.except) return name;
   if (name === TO_READ && opts.existing) return name;
   if (isMachineLane(name)) { say(laneMessage(name)); return null; }
-  if (name === TO_READ) { say('To read is already one of your lists. Pick another name.'); return null; }   // rough edge #7
+  if (name === TO_READ || readingListTyped(name)) { say('Reading list is already one of your lists. Pick another name.'); return null; }   // rough edge #7
   if (NOT_PROJECTS.includes(name) || name in Object.prototype) { say(`"${esc(name)}" is kept for a list of the page's own; choose another name`); return null; }
   if (hasList(name)) { if (opts.existing) return name; say('A list with that name already exists'); return null; }
   const own = opts.except && listDefLive(opts.except);
@@ -13283,7 +13663,7 @@ async function createNewList() { const _authEpoch = capturePrivateEpoch();
       back.textContent = `Bring back ${name}`; back.hidden = false;
       return 'You deleted this list. Bring it back, or pick another name.';
     }
-    if (name === TO_READ && !hasList(name)) return null;
+    if (readingListTyped(name) && !hasList(TO_READ)) return null;
     if (isProjectName(name) && listGone(name) && !Object.values(ListDefs.rows).some(r => r.names.includes(name))) return null;
     let msg = null; checkListName(name, { say: m => { msg = m; } }); return msg;
   };
@@ -13310,11 +13690,11 @@ async function createNewList() { const _authEpoch = capturePrivateEpoch();
   if (restored) { listDeleteBack(restored.name, restored.kept); return; }
   const typed = String(raw == null ? '' : raw).trim();
   if (!typed) return;
-  if (typed === TO_READ) {
-    if (hasList(TO_READ)) { toast('"To read" is already here, with its papers'); return; }
+  if (readingListTyped(typed)) {
+    if (hasList(TO_READ)) { toast('"Reading list" is already here, with its papers'); return; }
     libraryLists[TO_READ] = [];
     persistLists(); updateLibraryBadge();
-    toast('Made "To read"');
+    toast('Made "Reading list"');
     renderLibrary();
     return;
   }
@@ -13435,7 +13815,7 @@ function copyDestOK(src, n) { return n !== src && !isMachineLane(n) && listDestO
 /* A list Copy can read from: here, and not gone elsewhere. The list times can keep a name that went (hasList but
    listGone): that is no source. Checked by the menu, a press on it, and both commits (after the prompt too). */
 function copySourceOK(src) { return hasList(src) && !listGone(src); }
-function copySourceGone(src) { toast(`"${esc(src)}" is no longer here, so nothing was copied`); }
+function copySourceGone(src) { toast(`"${esc(listLabel(src))}" is no longer here, so nothing was copied`); }
 function copyTargets(src) { return projectNames().concat(TO_READ).filter(n => copyDestOK(src, n)); }
 function showCopyDD(btn, srcName) {
   closeCopyDD();
@@ -13443,7 +13823,7 @@ function showCopyDD(btn, srcName) {
   const id = ++_copyDDSeq, dd = document.createElement('div');
   dd.className = 'copy-dd'; dd.dataset.copy = String(id); dd.dataset.src = srcName; dd.setAttribute('role', 'menu'); dd.setAttribute('aria-label', 'Copy to');
   dd.onclick = e => e.stopPropagation();
-  const rows = copyTargets(srcName).map(n => `<button type="button" class="copy-dd-item" role="menuitem" data-n="${dataAttr(n)}" onclick="event.stopPropagation();doCopyList(this.closest('.copy-dd').dataset.src, this.dataset.n)">${esc(n)}</button>`).join('');
+  const rows = copyTargets(srcName).map(n => `<button type="button" class="copy-dd-item" role="menuitem" data-n="${dataAttr(n)}" onclick="event.stopPropagation();doCopyList(this.closest('.copy-dd').dataset.src, this.dataset.n)">${esc(listLabel(n))}</button>`).join('');
   dd.innerHTML = `<div class="copy-dd-head">Copy to</div><div class="copy-dd-list">${rows}<button type="button" class="copy-dd-item copy-dd-new" role="menuitem" onclick="event.stopPropagation();doCopyNew(this.closest('.copy-dd').dataset.src)">+ New list&hellip;</button></div>`;
   document.body.appendChild(dd);
   const rect = btn.getBoundingClientRect(), place = () => placeFixedMenu(dd, btn.isConnected ? btn.getBoundingClientRect() : rect), vv = window.visualViewport;
@@ -13474,7 +13854,7 @@ function copyMembers(srcName, targetName) {
   return { copied, skipped };
 }
 function copiedMessage(r, targetName) {
-  const done = `Copied ${r.copied} paper${r.copied !== 1 ? 's' : ''} to "${esc(targetName)}"`;
+  const done = `Copied ${r.copied} paper${r.copied !== 1 ? 's' : ''} to "${esc(listLabel(targetName))}"`;
   return r.skipped ? `${done}. ${r.skipped} no longer in the library ${r.skipped !== 1 ? 'were' : 'was'} left out.` : done;
 }
 function doCopyList(srcName, targetName) {
@@ -16341,7 +16721,7 @@ function reviewSetToRead(id, on) {
 }
 function reviewRemoveFromRead(id) {
   requireOwner(); if (!reviewSetToRead(id, false)) return false;
-  toast('Removed from To read', () => reviewSetToRead(id, true), { duration: 5000, fullTarget: true }); return true;
+  toast('Removed from Reading list', () => reviewSetToRead(id, true), { duration: 5000, fullTarget: true }); return true;
 }
 /* An upload's private folder and Done on its paper page: list chips (.chip), as a post's list chip, under the
    authors. Not in a folder, the folder chip says Folder. */
@@ -16414,7 +16794,7 @@ function openReviewFolderMenu(id) {
 }
 function openReviewDone(id) {
   const option = (value, label, sub, danger) => `<button type="button" class="review-choice${danger ? ' danger' : ''}" data-choice="${value}" onclick="reviewDoneChoice(this.closest('#reviewSheet').dataset.id, this.dataset.choice)"><b>${label}</b><small>${sub}</small></button>`;
-  reviewSheet(id, 'Done reviewing', option('keep', 'Keep it in Done', 'Your review notes stay. The PDF stays on this device.') + option('read', 'Add it to To read', 'Keep this private paper in To read and Done, with its notes and PDF.') + option('remove', 'Remove it', 'Deletes the PDF, your notes and its chats on every device. You can undo for a few seconds.', true));
+  reviewSheet(id, 'Done reviewing', option('keep', 'Keep it in Done', 'Your review notes stay. The PDF stays on this device.') + option('read', 'Add it to Reading list', 'Keep this private paper in Reading list and Done, with its notes and PDF.') + option('remove', 'Remove it', 'Deletes the PDF, your notes and its chats on every device. You can undo for a few seconds.', true));
 }
 function reviewDoneChoice(id, choice) {
   requireOwner(); capturePrivateEpoch(); closeReviewSheet(); if (!uploadById(id)) return;
@@ -16422,7 +16802,7 @@ function reviewDoneChoice(id, choice) {
   if (!['keep', 'read'].includes(choice)) return;
   const at = reviewStamp(), fields = { done: true, doneAt: at };
   if (choice === 'read') Object.assign(fields, { toRead: true, toReadAt: at });
-  if (reviewUpdateUpload(id, fields)) toast(choice === 'read' ? 'Added to To read and Done' : 'Kept in Done');
+  if (reviewUpdateUpload(id, fields)) toast(choice === 'read' ? 'Added to Reading list and Done' : 'Kept in Done');
 }
 /* Undo keeps all persistent data and running work untouched. Only this tab's rows hide the pending removal.
    Closing the tab or signing out cancels the uncommitted action. At expiry the existing remover does all cleanup. */
@@ -17232,7 +17612,7 @@ function similarSection(id) {
         const hit = similarLibrary(p), inRead = !!hit && listHolds(TO_READ, paperKey(hit));
         const title = hit ? `<button type="button" class="similar-title" onclick="openPaper('${escAttr(paperKey(hit))}')">${esc(p.title)}</button>` : p.url ? `<a class="similar-title" href="${dataAttr(p.url)}" target="_blank" rel="noopener noreferrer">${esc(p.title)}</a>` : `<span class="similar-title">${esc(p.title)}</span>`;
         const pending = Requests.items.some(r => r.kind === 'add' && r.input === similarIdentifier(p.url) && (requestLive(r) || r.destination));
-        return `<div class="similar-row"><div class="similar-main">${title}<div class="similar-meta">${meta}${hit ? `<button type="button" class="similar-library" onclick="openPaper('${escAttr(paperKey(hit))}')">In your library</button>` : ''}</div></div>${similarIdentifier(p.url) ? `<button type="button" class="similar-add pd-act" onclick="similarAdd('${escAttr(id)}',${i})"${pending || inRead ? ' disabled' : ''}>${inRead ? 'In To read' : pending ? 'Adding' : '+ To read'}</button>` : ''}</div>`;
+        return `<div class="similar-row"><div class="similar-main">${title}<div class="similar-meta">${meta}${hit ? `<button type="button" class="similar-library" onclick="openPaper('${escAttr(paperKey(hit))}')">In your library</button>` : ''}</div></div>${similarIdentifier(p.url) ? `<button type="button" class="similar-add pd-act" onclick="similarAdd('${escAttr(id)}',${i})"${pending || inRead ? ' disabled' : ''}>${inRead ? 'In Reading list' : pending ? 'Adding' : '+ Reading list'}</button>` : ''}</div>`;
       }).join('') + '</div>' : '<p class="similar-state">No similar papers found.</p>';
       if (papers.length > count) content += `<button type="button" class="similar-more" onclick="similarMore('${escAttr(id)}')">Show 10 more</button>`;
     }
@@ -24304,6 +24684,33 @@ async function uploadQuestionsAsk(id) {
   }
 }
 
+/* Layout A: the paper page's bar starts with the row every paper has, Pass, Save and Mark read (Read is the bar's own
+   button, last before Open paper). Pass is off for a paper you like (a list of yours, or starred before), an upload or a
+   hidden paper; once passed it says Passed, and a tap puts the paper back in For you. */
+function pageActsHTML(p, ka, gone) {
+  const k = paperKey(p), m = paperMarks(p), passed = isPassed(p), passOff = gone || !isOwner() || !!p.uploaded || isHiddenRow(p) || (!passed && likedKey(k));
+  const act = { pass: 'pass', save: 'list', mark: 'read' }, title = { pass: passed ? 'Passed. Put it back in For you' : 'Pass: fewer like this in For you', save: m.listed ? 'Saved. Change where' : 'Save to a list', mark: m.read ? 'Mark unread' : 'Mark as read' };
+  const on = { pass: `pagePass('${ka}')`, save: `event.stopPropagation();openSaveTo(event,this,'${ka}')`, mark: `toggleRead('${ka}',this)` };
+  return ['pass', 'save', 'mark'].map(kind => {
+    const pressed = kind === 'pass' ? passed : kind === 'save' ? m.listed : m.read, label = pactLabel(kind, { pass: passed, listed: m.listed, read: m.read });
+    const btn = `<button class="pd-act pact pact-${kind}${kind === 'pass' && passed ? ' on-pass' : ''}${kind === 'save' && m.listed ? ' on-list' : ''}${kind === 'mark' && m.read ? ' on-read' : ''}" data-act="${act[kind]}"${kind === 'save' ? ' aria-haspopup="true" aria-expanded="false"' : ` aria-pressed="${pressed}"`} onclick="${on[kind]}" title="${title[kind]}" aria-label="${title[kind]}"${(kind === 'pass' ? passOff : gone) ? ' disabled' : ''}>${{ pass: FEED_ICON.pass, save: FEED_ICON.save, mark: FEED_ICON.tick }[kind]}<span class="pd-act-label"><span>${label}</span></span></button>`;
+    return kind === 'save' ? `<span class="save-anchor">${btn}</span>` : btn;
+  }).join('');
+}
+/* Pass from the paper page: is_passed, so it leaves For you on every device, with Undo; Passed again puts it back */
+function pagePass(k) {
+  requireOwner();
+  const p = feedPaper(k);
+  if (!p || p._goneRemote || p.uploaded || isHiddenRow(p)) return false;
+  if (isPassed(p)) { unpassPaper(k); return true; }
+  if (likedKey(k)) return false;
+  flushStateToCSV();
+  p.is_passed = 'true';
+  _stateDirty = true; showSaveBar(); tasteSupersede();
+  toast('Passed. You&rsquo;ll see fewer like this.', () => { const q = feedPaper(k); if (q && isPassed(q)) unpassPaper(k); }, { duration: 5000, fullTarget: true });
+  refresh();
+  return true;
+}
 /* The paper's page as HTML: { bar, article, glow }. Nothing here touches the document; paperPostRender does what needs
    the page in place. */
 function paperPageHTML(p, opts) {
@@ -24341,11 +24748,9 @@ function paperPageHTML(p, opts) {
     <div class="pd-bar-title" aria-hidden="true">${esc(p.title)}</div>
     <div class="pd-actions${isOwner() && !gone ? ' has-dl' : ''}">
       ${navHTML}
-      <button class="pd-act ${ir?'on-read':''}" data-act="read" aria-pressed="${ir}" onclick="toggleRead('${ka}',this)" title="${ir?'Mark unread':'Mark as read'}" aria-label="${ir?'Mark unread':'Mark as read'}"${gone ? ' disabled' : ''}>&#10003;<span class="pd-act-label"><span>${ir?'Read':'Mark read'}</span></span></button>
-      <span class="save-anchor"><button class="pd-act ${inAny?'on-list':''}" data-act="list" aria-haspopup="true" aria-expanded="false" onclick="event.stopPropagation();openSaveTo(event,this,'${ka}')" title="Save to a list or To read" aria-label="${inAny ? 'Saved. Change where' : 'Save to a list or To read'}"${gone ? ' disabled' : ''}>${FEED_ICON.save}<span class="pd-act-label"><span>${inAny?'Saved':'Save'}</span></span></button></span>
+      ${pageActsHTML(p, ka, gone)}
       ${isOwner() && !gone ? paperDownloadButton(p) : ''}
       ${isOwner() && !gone ? paperMoreButton(p) : ''}
-      ${isOwner() && isPassed(p) ? `<button class="pd-act pd-passed" data-act="unpass" onclick="unpassPaper('${ka}')" title="You passed on it in For you. Put it back there" aria-label="Passed. Put it back in For you"${gone ? ' disabled' : ''}>&#10005;<span class="pd-act-label"><span>Passed &middot; Put back</span></span></button>` : ''}
       ${isOwner() || pdfSourceOf(p) ? `<button class="pd-read" onclick="openReader('${ka}')" title="${pdfSourceOf(p) ? 'Read the PDF here' : conferenceCopyUrl(p) ? 'Read the free copy on the conference site' : 'Add a PDF to read it here'}"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>${readLabelHTML(p)}</button>` : ''}
       ${paperOpenUrl(p) ? `<a class="pd-open" href="${dataAttr(paperOpenUrl(p))}" target="_blank" rel="noopener" title="${dataAttr(paperOpenTitle(p))}" aria-label="Open paper"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}
     </div>
@@ -25225,9 +25630,11 @@ function paperBarSync() {
     b.classList.toggle(cls, on); b.setAttribute('aria-pressed', String(on)); b.setAttribute('title', title); b.setAttribute('aria-label', title);
     const t = b.querySelector('.pd-act-label span'); if (t) t.textContent = label;
   };
-  set('read', m.read, 'on-read', m.read ? 'Mark unread' : 'Mark as read', m.read ? 'Read' : 'Mark read');
+  set('read', m.read, 'on-read', m.read ? 'Mark unread' : 'Mark as read', m.read ? 'Mark unread' : 'Mark read');
+  const pass = bar.querySelector('[data-act="pass"]');   // Layout A: off while the paper is liked, as on For you
+  if (pass && !isPassed(p)) pass.disabled = !!p._goneRemote || !isOwner() || !!p.uploaded || isHiddenRow(p) || likedKey(k);
   const l = bar.querySelector('[data-act="list"]');
-  if (l) { l.classList.toggle('on-list', m.listed); l.setAttribute('aria-label', m.listed ? 'Saved. Change where' : 'Save to a list or To read'); const t = l.querySelector('.pd-act-label span'); if (t) t.textContent = m.listed ? 'Saved' : 'Save'; }
+  if (l) { l.classList.toggle('on-list', m.listed); l.setAttribute('aria-label', m.listed ? 'Saved. Change where' : 'Save to a list'); const t = l.querySelector('.pd-act-label span'); if (t) t.textContent = m.listed ? 'Saved' : 'Save'; }
 }
 function paperViewSync() {
   const page = document.querySelector('#paperDetail .pd-article[data-pid]');
@@ -25631,9 +26038,9 @@ window.addEventListener('hashchange', () => applyHash());
 
 /* Re-render when the feed's layout changes: the phone/desktop line, a phone turned sideways (height), a pointer or
    hover change (an iPad's keyboard attached): the feed is drawn afresh, and the sheets take their new place */
-let _wasLayout = feedLayout();
+let _wasLayout = feedLayout() + (twoPane() ? '-two' : '');
 function relayout() {
-  const layout = feedLayout();
+  const layout = feedLayout() + (twoPane() ? '-two' : '');   // Layout A: crossing 820 px redraws in two panes or one column
   if (layout === _wasLayout) return;
   _wasLayout = layout;
   if (['all','email'].includes(currentTab) && !_paperViewActive && !_listViewActive && !_searchActive) { Feed.fresh = true; applyFilters(); }
@@ -25641,7 +26048,7 @@ function relayout() {
 }
 // through privateCallback: a resize while the sign-in is still being checked (a page just loaded) does nothing, and locks nothing
 window.addEventListener('resize', privateCallback(() => relayout()), { passive: true });
-[FEED_PHONE, FEED_LAND].forEach(q => { const mq = matchMedia(q); if (mq.addEventListener) mq.addEventListener('change', privateCallback(() => relayout())); });
+[FEED_PHONE, FEED_LAND, FEED_WIDE].forEach(q => { const mq = matchMedia(q); if (mq.addEventListener) mq.addEventListener('change', privateCallback(() => relayout())); });
 
 function startApp() { requireTarget(); if (isPrivate()) return loadPrivateLibrary(); loadPapers(); loadInterests(); loadGroups(); }
 async function bootstrapApp() {
