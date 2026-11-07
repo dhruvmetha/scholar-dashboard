@@ -1442,7 +1442,7 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 .rt-group + .rt-group::before, .rt-more-wrap::before { content: ''; position: absolute; left: -8px; top: 7px; bottom: 7px; width: 1px; background: var(--border); }
 .rt-more-wrap { display: inline-flex; }
 .rt-more svg { width: 18px; height: 18px; fill: currentColor; }
-.reader-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; display: none; flex-direction: column; min-width: 240px; padding: 4px; background: var(--bg-raise); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.55); transform-origin: 100% 0; }
+.reader-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 350; display: none; flex-direction: column; min-width: 240px; padding: 4px; background: var(--bg-raise); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.55); transform-origin: 100% 0; }
 .reader-menu.open { display: flex; animation: ui-pop 0.14s ease-out; }
 .reader-menu.leaving { display: flex; pointer-events: none; animation: ui-out 0.12s ease-in forwards; }
 .reader-menu > * { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border: none; border-radius: 7px; background: none; color: var(--text); font: inherit; font-size: 13.5px; text-align: left; text-decoration: none; white-space: nowrap; cursor: pointer; transition: background var(--t-fast); }
@@ -2441,6 +2441,7 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 .fw-msg { flex-basis: 100%; font-size: 14px; color: var(--text-secondary); }
 .fw-msg:empty { display: none; }
 .fw-check { color: var(--text-secondary); }
+#skeleton .fw-av.sk, .sk-who .fw-av.sk { width: 40px; height: 40px; border-radius: 50%; } #skeleton .fw-name .sk, .sk-who .fw-name .sk { width: 9em; height: .65em; } #skeleton .fw-follow.sk, .sk-who .fw-follow.sk { width: 86px; height: 36px; border-radius: 999px; }
 .fw-list { list-style: none; background: var(--bg-surface); border: 1px solid var(--line); border-radius: 16px; }
 .fw-row { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 6px 10px 16px; }
 .fw-row + .fw-row { border-top: 1px solid var(--line); }
@@ -2689,7 +2690,7 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 /* [7] TOAST — dark glass + accent border
    Round both halves of centering: auto margins also leave intrinsic widths between pixels. Keep the same X
    offset in both states so only Y slides, and no backdrop layer resamples the text at rest (including WebKit). */
-.toast { position: fixed; bottom: 24px; left: round(nearest, 50%, 1px); width: max-content; max-width: calc(100vw - 32px); box-sizing: border-box; transform: translateX(round(nearest, -50%, 1px)) translateY(round(nearest, calc(100% + 32px + env(safe-area-inset-bottom, 0px)), 1px)); visibility: hidden; background: rgba(0,0,0,0.88); color: var(--text); padding: 10px 20px; border-radius: 8px; font-size: 13px; line-height: round(nearest, 1.5em, 1px); border: 1px solid var(--line); border-left: 3px solid var(--accent); box-shadow: 0 8px 32px rgba(0,0,0,0.55); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s 0.3s; z-index: 450; pointer-events: none; display: flex; align-items: center; gap: 12px; }
+.toast { position: fixed; bottom: 24px; left: round(nearest, 50%, 1px); width: max-content; max-width: calc(100vw - 32px); box-sizing: border-box; transform: translateX(round(nearest, -50%, 1px)) translateY(round(nearest, calc(100% + 32px + env(safe-area-inset-bottom, 0px)), 1px)); visibility: hidden; background: color-mix(in srgb, var(--bg) 88%, transparent); color: var(--text); padding: 10px 20px; border-radius: 8px; font-size: 13px; line-height: round(nearest, 1.5em, 1px); border: 1px solid var(--line); border-left: 3px solid var(--accent); box-shadow: 0 8px 32px rgba(0,0,0,0.55); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s 0.3s; z-index: 450; pointer-events: none; display: flex; align-items: center; gap: 12px; }
 .toast.show { transform: translateX(round(nearest, -50%, 1px)) translateY(0); pointer-events: auto; visibility: visible; transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s; }   /* hidden = invisible once it has slid away: nothing peeks above the home indicator */
 @media (prefers-reduced-motion: reduce) { .toast, .toast.show { transition: none; } }
 /* iPhone / iPad edges (the page uses viewport-fit=cover): the notch or Dynamic Island in landscape, and the
@@ -2701,7 +2702,7 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 .toast { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
 .toast.error { border-left-color: #e57373; }
 .toast-msg { flex: 1; min-width: 0; overflow-wrap: anywhere; }   /* it shrinks beside the action, and a name with no spaces breaks */
-.toast-undo { background: none; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+.toast-undo { background: none; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 4px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -12px -12px -12px 0; padding: 0 12px; }   /* every action a 44 px target, the toast no taller */
 .toast-undo:hover { text-decoration: underline; }
 .toast.full-target .toast-undo { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -10px -12px -10px 0; padding: 0 12px; }   /* Phase 19: an action that is a 44 px target of its own (Renew) */
 
@@ -2934,7 +2935,6 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   .hw-tools .sel-dot::after { content: ''; position: absolute; inset: -11px -8px; }
   .badge-editable { min-height: 30px; display: inline-flex; align-items: center; padding-left: 10px; padding-right: 10px; }
   .rp-add { height: 44px; }
-  .toast-undo { min-height: 36px; padding: 0 10px; margin: -8px -8px -8px 0; }
   .group-add-dd .group-opt, .copy-dd-item { padding: 11px 14px; font-size: 14px; }
   .badge-group-edit, .pd-topics .group-add-btn, .group-add-btn { height: 32px; }
   .anno-card textarea#acNote { min-height: 64px; }
@@ -6880,7 +6880,7 @@ function skeletonHTML(hash) {
     }
     if (route === 'interests' || route.startsWith('interests/') || route === 'people') {
       const people = route === 'people', title = people ? 'People' : 'Interests';
-      return `<div class="sk-profile" data-shape="${people ? 'people' : 'interests'}"><div class="interests-header"><div class="briefing" data-sk="head"><h2 data-sk="heading">${title}</h2><p class="ip-lede" data-sk="lede">${people ? 'Scout looks for new papers by the people you follow.' : 'Choose what you want to see in your recommendations.'}</p></div></div>${people ? '' : `<div class="ip-week"><div class="ip-week-head"><h3>This week</h3></div><div class="ip-week-line">${lines(1, 54)}</div></div>`}<div class="interests-scroll"><section class="ip-sec"><div class="ip-sec-head" data-sk="section"><h3>${people ? 'People you follow' : 'Your interests'}</h3></div>${people ? `<div class="fw-chips"><span class="fw-chip" data-sk="card">${bar(80)}</span><span class="fw-chip fw-add">+ Follow someone</span></div>` : `<div class="ip-list">${[68, 52, 74].map(w => `<div class="ip-card"><div class="ip-card-head" data-sk="card"><span class="ip-name">${lines(1, w)}</span><span class="ip-meta" data-sk="meta">${lines(1, 36)}</span>${chevron.replace('<svg', '<svg class="ip-chev"')}</div></div>`).join('')}</div><button tabindex="-1" class="ip-add">+ Add an interest</button>`}</section><section class="ip-sec"><div class="ip-sec-head"><h3>${people ? 'Who to follow' : 'Suggested'}</h3></div><div class="ip-card">${lines(2, 66)}</div></section></div></div>`;
+      return `<div class="sk-profile" data-shape="${people ? 'people' : 'interests'}"><div class="interests-header"><div class="briefing" data-sk="head"><h2 data-sk="heading">${title}</h2><p class="ip-lede" data-sk="lede">${people ? 'Scout looks for new papers by the people you follow.' : 'Choose what you want to see in your recommendations.'}</p></div></div>${people ? '' : `<div class="ip-week"><div class="ip-week-head"><h3>This week</h3></div><div class="ip-week-line">${lines(1, 54)}</div></div>`}<div class="interests-scroll"><section class="ip-sec"><div class="ip-sec-head" data-sk="section"><h3>${people ? 'People you follow' : 'Your interests'}</h3></div>${people ? `<div class="fw-chips"><span class="fw-chip" data-sk="card">${bar(80)}</span><span class="fw-chip fw-add">+ Follow someone</span></div>` : `<div class="ip-list">${[68, 52, 74].map(w => `<div class="ip-card"><div class="ip-card-head" data-sk="card"><span class="ip-name">${lines(1, w)}</span><span class="ip-meta" data-sk="meta">${lines(1, 36)}</span>${chevron.replace('<svg', '<svg class="ip-chev"')}</div></div>`).join('')}</div><button tabindex="-1" class="ip-add">+ Add an interest</button>`}</section><section class="ip-sec"><div class="ip-sec-head"><h3>${people ? 'Who to follow' : 'Suggested'}</h3></div>${people ? '<ul class="fw-list">' + '<li class="fw-row"><span class="fw-av sk"></span><span class="fw-name"><span class="sk"></span></span><span class="fw-follow sk"></span><span class="fw-x"></span></li>'.repeat(3) + '</ul>' : `<div class="ip-card">${lines(2, 66)}</div>`}</section></div></div>`;
     }
     if (route === 'lists' || route === 'library') {
       return `<div data-shape="lists"><div class="lib-head" data-sk="head"><h2 data-sk="heading">Lists</h2><div class="lib-head-actions sk-library-buttons" data-sk="buttons"><span class="sync-status sk-sync"><span class="sync-dot"></span>Saved automatically<button tabindex="-1" class="sync-btn quiet">Sign out</button></span>${['+ Add paper', 'Upload PDF', '+ New list'].map(t => `<button tabindex="-1" class="btn-new-list">${t}</button>`).join('')}</div></div><div class="library-wrap"><section class="ls-sec"><div class="lib-sec-head ip-sec-head" data-sk="section"><h3>Your lists</h3><span class="grow"></span><span class="lib-sort"><select tabindex="-1"><option>Created</option><option>Last updated</option><option>Name</option></select></span><span class="lib-sort-dir">Oldest first${chevron}</span></div><div class="ls-cards">${[70, 54].map(w => `<div class="ls-card" data-sk="card"><span class="ls-link"><i class="sk sk-list-avatar"></i><span class="sk-list-text">${bar(w)}${bar(30)}</span></span><span class="sk-icon">${bar()}</span></div>`).join('')}</div></section><div class="lib-sec-head ip-sec-head ls-reading" data-sk="reading"><h3>Reading</h3></div>${[55, 70, 48].map((w, i) => `<div class="interest-group collapsed" data-sk="readingCard"><div class="interest-group-inner"><div class="interest-group-header" data-sk="readingBar"><button tabindex="-1" class="lib-disc"><span class="lib-icon">☰</span><span style="width:150px">${bar(w)}</span><span class="interest-group-count">${bar(100)}</span></button>${i === 0 ? '<span class="library-actions sk-owner"><button tabindex="-1">Upload PDF</button></span>' : ''}<svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>`).join('')}</div></div>`;
@@ -10218,6 +10218,16 @@ function openInterestSheet(options) {
   opening.viewport = privateCallback(() => { const v = window.visualViewport; if (!v) return; Object.assign(s.style, { top: v.offsetTop + 'px', left: v.offsetLeft + 'px', width: v.width + 'px', height: v.height + 'px', right: 'auto', bottom: 'auto' }); s.querySelector('.sh-panel').style.maxHeight = (v.height * .9) + 'px'; });
   if (window.visualViewport) { window.visualViewport.addEventListener('resize', opening.viewport); window.visualViewport.addEventListener('scroll', opening.viewport); }
   document.body.appendChild(s); opening.viewport(); popIn(s);
+  // A modal, as the review sheet: the page under it is inert until it closes, and Tab stays inside it
+  opening.inert = [...document.body.children].filter(el => el !== s && !el.inert && el.tagName !== 'SCRIPT');
+  opening.inert.forEach(el => { el.inert = true; });
+  s.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const items = [...s.querySelectorAll('button:not([disabled])')]; if (!items.length) return;
+    if (e.shiftKey && document.activeElement === items[0]) { e.preventDefault(); items.at(-1).focus(); }
+    else if (!e.shiftKey && document.activeElement === items.at(-1)) { e.preventDefault(); items[0].focus(); }
+    else if (!s.contains(document.activeElement)) { e.preventDefault(); items[0].focus(); }
+  });
   if (options.button) options.button.setAttribute('aria-expanded', 'true');
   if (!InterestPicker.back) interestSheetStep(opening);
   const first = s.querySelector('[aria-current="true"]') || s.querySelector('.daily-interest-row');
@@ -10229,6 +10239,7 @@ function closeInterestSheet() {
   InterestPicker.cur = null;
   if (window.visualViewport) { window.visualViewport.removeEventListener('resize', opening.viewport); window.visualViewport.removeEventListener('scroll', opening.viewport); }
   const s = document.getElementById('dailyInterestSheet'); if (s) s.remove();
+  (opening.inert || []).forEach(el => { el.inert = false; });
   if (opening.button) opening.button.setAttribute('aria-expanded', 'false');
   if (typeof history !== 'undefined' && history.state?.scoutInterestPicker === opening.id) {
     InterestPicker.back = { address: location.href, id: opening.id, state: opening.historyState };
@@ -10569,7 +10580,7 @@ function dailyAct(kind, card, generation) {
   else { if (kind === 'read') readSet.add(card.paper); else p.is_passed = 'true'; persistRead(); }
   tasteSupersede(); dailyCancelPress();
   if (typeof dailyRender === 'function') dailyRender(true);
-  toast(kind === 'save' ? 'Saved to ' + esc(listLabel(destination)) : kind === 'read' ? 'Marked read' : 'Passed', privateCallback(() => dailyUndo(id)), { actionLabel: 'Undo', duration: 8000 });
+  toast(kind === 'save' ? 'Saved to ' + esc(listLabel(destination)) : kind === 'read' ? 'Marked read' : 'Passed', privateCallback(() => dailyUndo(id)), { duration: 8000 });
   dailyFocusUndo();
   return true;
 }
@@ -10599,7 +10610,7 @@ function dailySheetClosed() {
   if (!sh) return;
   dailyCancelPress(); dailyAdopt();
   if (dailyView() && typeof dailyRender === 'function') dailyRender(true);
-  if (sh.operation) { scheduleAutoPush(); const id = sh.operation; toast('Saved', privateCallback(() => dailyUndo(id)), { actionLabel: 'Undo', duration: 8000 }); dailyFocusUndo(); }
+  if (sh.operation) { scheduleAutoPush(); const id = sh.operation; toast('Saved', privateCallback(() => dailyUndo(id)), { duration: 8000 }); dailyFocusUndo(); }
 }
 
 function dailyTick() {
@@ -14820,7 +14831,8 @@ function whoShown() {
 function whoHTML() {
   const d = Activity.doc, st = Activity.state, own = isOwner();
   if (st === 'error') return '<p class="ip-empty">Suggestions couldn’t be loaded.</p><button class="ip-btn fw-again" onclick="activityRetry()">Try again</button>';
-  if (st === 'idle' || st === 'loading') return '<p class="ip-empty">Loading…</p>';
+  // Loading: its own rows (.fw-row: picture, name, Follow, dismiss) as .sk fills, as the other loading pages are drawn
+  if (st === 'idle' || st === 'loading') return `<div class="skeleton-wrap sk-who" aria-hidden="true"><ul class="fw-list">${'<li class="fw-row"><span class="fw-av sk"></span><span class="fw-name"><span class="sk"></span></span><span class="fw-follow sk"></span><span class="fw-x"></span></li>'.repeat(3)}</ul></div>`;
   if (st !== 'ready' || !d || !d.people) return '<p class="ip-empty">No suggestions yet.</p>';
   const shown = whoShown();
   if (!shown.length) return `<p class="ip-empty">${d.people.suggested.length ? 'No more suggestions today.' : 'No one to suggest yet.'}</p>`;
@@ -16437,9 +16449,27 @@ function keptPaperClose() {
   const mq = Dl.mq; Dl.mq = null;
   try { if (mq) mq.removeEventListener('change', keptPaperClose); }
   finally {
-    const menu = document.getElementById('keptPaperMenu'); if (menu) menu.remove();
-    const button = document.getElementById('paperDownload'); if (button) button.setAttribute('aria-expanded', 'false');
+    const menu = document.getElementById('keptPaperMenu'), inside = !!menu && menu.contains(document.activeElement);
+    if (menu) { menu.remove(); (menu._inert || []).forEach(el => { el.inert = false; }); }
+    const button = document.getElementById('paperDownload'); if (button) { button.setAttribute('aria-expanded', 'false'); if (inside && button.isConnected) button.focus({ preventScroll: true }); }
   }
+}
+/* Focus in the Download menu, as in the list menu and the review sheet: it starts on the first choice, arrows move,
+   Escape closes and the ↓ button takes focus back; Tab stays inside the phone's sheet and closes the wide dropdown */
+function dlMenuFocus(menu, kind) {
+  const items = [...menu.querySelectorAll('button:not([disabled])')];
+  const to = (kind && items.find(b => b.dataset.kind === kind)) || items.find(b => b.classList.contains('dl-item')) || items[0];
+  if (to) to.focus({ preventScroll: true });
+}
+function dlMenuKey(e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.isComposing) return;
+  const menu = e.currentTarget, items = [...menu.querySelectorAll('button:not([disabled])')], i = items.indexOf(document.activeElement), k = e.key;
+  if (k === 'Escape') { keptPaperClose(); const b = document.getElementById('paperDownload'); if (b) b.focus({ preventScroll: true }); }
+  else if (k === 'Tab' && menu.classList.contains('dl-sheet')) { if (!items.length) return; const d = e.shiftKey ? -1 : 1; items[(Math.max(i, d > 0 ? -1 : 0) + d + items.length) % items.length].focus(); }
+  else if (k === 'Tab') { keptPaperClose(); const b = document.getElementById('paperDownload'); if (b) b.focus({ preventScroll: true }); }
+  else if ((k === 'ArrowDown' || k === 'ArrowUp') && items.length) { const d = k === 'ArrowDown' ? 1 : -1; items[(Math.max(i, d > 0 ? -1 : 0) + d + items.length) % items.length].focus(); }
+  else return;
+  e.preventDefault(); e.stopPropagation();
 }
 function dlMenuHTML(p) {
   const info = Dl.info || { has: false, here: false }, ios = dlIOS(), off = !info.has || !!Dl.busy;
@@ -16460,7 +16490,11 @@ function dlMenuSync() {
   if (!p || !body) { keptPaperClose(); return; }
   if (Dl.ready && !copySnapshotCurrent(Dl.ready.file._copySnapshot)) Dl.ready = null;   // the notes changed or were locked since
   const html = dlMenuHTML(p);
-  if (m._html !== html) { m._html = html; body.innerHTML = html; }
+  if (m._html !== html) {
+    const had = body.contains(document.activeElement) ? document.activeElement.dataset.kind || '' : null;   // a repaint keeps focus on its choice
+    m._html = html; body.innerHTML = html;
+    if (had !== null) dlMenuFocus(m, had);
+  }
 }
 async function paperDownloadMenu(button, id) {
   const open = document.getElementById('keptPaperMenu');
@@ -16481,9 +16515,12 @@ async function paperDownloadMenu(button, id) {
     menu.innerHTML = '<div class="dl-panel"><span class="dl-grip" aria-hidden="true"></span><div class="dl-body"></div><button type="button" class="dl-cancel" onclick="keptPaperClose()">Cancel</button></div>';
     menu.onclick = e => { if (e.target === menu) keptPaperClose(); };
   } else { menu.className = 'dl-menu'; menu.setAttribute('role', 'menu'); menu.innerHTML = '<div class="dl-body"></div>'; }
+  menu.onkeydown = dlMenuKey;
+  if (phone) { menu._inert = [...document.body.children].filter(el => !el.inert && el.tagName !== 'SCRIPT'); menu._inert.forEach(el => { el.inert = true; }); }   // the page under the sheet
   document.body.appendChild(menu); dlMenuSync(); button.setAttribute('aria-expanded', 'true');
   Dl.mq = window.matchMedia('(max-width: 600px)'); Dl.mq.addEventListener('change', keptPaperClose);   // crossing the phone line closes it: it has the other layout
   if (!phone) placeFixedMenu(menu, button.getBoundingClientRect());
+  dlMenuFocus(menu);
 }
 async function keptPaperAction(id) {
   keptPaperClose();
@@ -16759,7 +16796,15 @@ async function createReviewFolder(uploadId = null) {
   const id = 'folder-' + crypto.randomUUID(), at = reviewStamp(), order = Math.max(-1, ...reviewLiveFolders().map(([id, r]) => r.order || 0)) + 1;
   if (!await privateAwait(reviewSaveFolders({ [id]: { name, names: [name], history: [{ name, at }], order, created: at, at, deleted: false } }), epoch)) return null;
   _openLibGroups.add('review'); _openLibGroups.add('review-folder-' + id);
-  if (uploadId) moveReviewUpload(uploadId, id); else reviewRefresh(); return id;
+  if (uploadId) { moveReviewUpload(uploadId, id); return id; }
+  reviewRefresh();
+  // Undo of a new folder: it goes (tombstoned, as Delete) while nothing was put in it or renamed since
+  toast(`Folder ${esc(name)} made`, () => reviewRun(async () => {
+    checkPrivateEpoch(epoch); checkVaultGeneration(generation); requireOwner();
+    const now = _reviewFolders[id]; if (!now || now.deleted || now.name !== name || Object.values(_uploads).some(u => !u.deleted && u.folderId === id)) return;
+    if (await privateAwait(reviewSaveFolders({ [id]: { ...now, deleted: true, at: reviewStamp() } }), epoch)) reviewRefresh();
+  }), { duration: 5000, fullTarget: true });
+  return id;
 }
 function renameReviewFolder(id) {
   requireOwner(); const r = _reviewFolders[id]; if (!r || r.deleted) return;
@@ -16773,8 +16818,18 @@ async function finishReviewFolderRename(input, cancel = false) {
   checkPrivateEpoch(edit.epoch); checkVaultGeneration(edit.generation); requireOwner();
   const current = _reviewFolders[edit.id], name = !cancel && reviewFolderName(input.value, edit.id);
   reviewRefresh(); if (!current || current.deleted || !name || name === current.name) return;
+  if (!await privateAwait(reviewSaveFolderName(edit.id, current, name), edit.epoch)) return;
+  const old = current.name;
+  toast(`Renamed to ${esc(name)}`, () => reviewRun(async () => {
+    checkPrivateEpoch(edit.epoch); checkVaultGeneration(edit.generation); requireOwner();
+    const now = _reviewFolders[edit.id]; if (!now || now.deleted || now.name !== name) return;   // a later rename or delete stands
+    const back = reviewFolderName(old, edit.id); if (!back) return;
+    if (await privateAwait(reviewSaveFolderName(edit.id, now, back), edit.epoch)) toast(`Renamed back to ${esc(back)}`);
+  }), { duration: 6000, fullTarget: true });
+}
+function reviewSaveFolderName(id, row, name) {
   const at = reviewStamp();
-  await privateAwait(reviewSaveFolders({ [edit.id]: { ...current, name, names: [...new Set((current.names || [current.name]).concat(name))], history: [...(current.history || []), { name, at }], at } }), edit.epoch);
+  return reviewSaveFolders({ [id]: { ...row, name, names: [...new Set((row.names || [row.name]).concat(name))], history: [...(row.history || []), { name, at }], at } });
 }
 function reviewRenameBlur(input) {
   if (!_reviewRename || _reviewRename.id !== input.dataset.folder) return;
@@ -16821,7 +16876,16 @@ function reviewUpdateUpload(id, fields) {
 function moveReviewUpload(id, folderId) {
   requireOwner(); capturePrivateEpoch();
   if (folderId !== null && (!_reviewFolders[folderId] || _reviewFolders[folderId].deleted)) return false;
-  const at = reviewStamp(); closeReviewSheet(); return reviewUpdateUpload(id, { folderId, folderAt: at, done: false, doneAt: at });
+  const at = reviewStamp(), before = _uploads[id] || {}; closeReviewSheet();
+  if (!reviewUpdateUpload(id, { folderId, folderAt: at, done: false, doneAt: at })) return false;
+  if ((before.folderId || null) === folderId && !before.done) return true;   // it was there already: nothing to undo
+  // Undo puts back where it was, with new clocks, unless it moved again since
+  toast(folderId ? `Moved to ${esc(_reviewFolders[folderId].name)}` : 'Moved out of the folder', () => reviewRun(() => {
+    const now = _uploads[id]; if (!now || now.deleted || now.folderAt !== at || now.doneAt !== at) return;
+    const back = reviewStamp(), was = before.folderId && _reviewFolders[before.folderId] && !_reviewFolders[before.folderId].deleted ? before.folderId : null;
+    reviewUpdateUpload(id, { folderId: was, folderAt: back, done: !!before.done, doneAt: back });
+  }), { duration: 5000, fullTarget: true });
+  return true;
 }
 function reviewSetToRead(id, on) {
   if (reviewToRead(id) === on) return false;
@@ -16850,7 +16914,7 @@ function reviewGroupsHTML(papers) {
     const open = _openLibGroups.has(key), safeId = dataAttr(id || ''), uid = listUid('review-' + key), edit = id && _reviewRename?.id === id, menuOpen = id && _reviewMenu === id;
     const title = edit ? `<input class="review-folder-edit" data-folder="${safeId}" aria-label="Folder name" maxlength="200" value="${dataAttr(_reviewRename.value)}" oninput="if(_reviewRename)_reviewRename.value=this.value" onkeydown="reviewRenameKey(event,this)" onblur="reviewRenameBlur(this)">` : `<span class="review-folder-name">${esc(label)}</span>`;
     const toggle = `<button type="button" class="review-folder-toggle" aria-expanded="${open}" aria-controls="reviewBody-${uid}" onclick="toggleReviewFolder(this)"><span class="review-folder-arrow" aria-hidden="true">&#9656;</span>${edit ? '' : title}<span class="review-folder-count">${members.length} ${members.length === 1 ? 'paper' : 'papers'}</span></button>`;
-    return `<section class="review-folder" data-lib="${dataAttr(key)}" data-review-folder="${safeId}"><div class="review-folder-head">${edit ? title : toggle}${id ? `<button type="button" class="review-folder-more" aria-label="Folder options for ${dataAttr(label)}" aria-haspopup="menu" aria-expanded="${!!menuOpen}" onclick="toggleReviewFolderMenu(this)">&#8943;</button><div class="review-folder-menu" role="menu"${menuOpen ? '' : ' hidden'}><button type="button" role="menuitem" data-folder-action="rename" onclick="reviewRun(()=>renameReviewFolder(this.closest('[data-review-folder]').dataset.reviewFolder))">Rename</button><button type="button" role="menuitem" data-folder-action="delete" onclick="reviewRun(()=>deleteReviewFolder(this.closest('[data-review-folder]').dataset.reviewFolder))">Delete</button></div>` : ''}</div><div class="review-folder-body" id="reviewBody-${uid}"${open ? '' : ' hidden'}>${rows(members)}${id ? `<button type="button" class="review-folder-upload" data-act="upload" data-folder="${safeId}" onclick="pickUploadPdf(this.dataset.folder)">Upload a PDF</button>` : ''}</div></section>`;
+    return `<section class="review-folder" data-lib="${dataAttr(key)}" data-review-folder="${safeId}"><div class="review-folder-head">${edit ? title : toggle}${id ? `<button type="button" class="review-folder-more" aria-label="Folder options for ${dataAttr(label)}" aria-haspopup="menu" aria-expanded="${!!menuOpen}" onclick="toggleReviewFolderMenu(this)">&#8943;</button><div class="review-folder-menu" role="menu" onkeydown="reviewFolderMenuKey(event)"${menuOpen ? '' : ' hidden'}><button type="button" role="menuitem" data-folder-action="rename" onclick="reviewRun(()=>renameReviewFolder(this.closest('[data-review-folder]').dataset.reviewFolder))">Rename</button><button type="button" role="menuitem" data-folder-action="delete" onclick="reviewRun(()=>deleteReviewFolder(this.closest('[data-review-folder]').dataset.reviewFolder))">Delete</button></div>` : ''}</div><div class="review-folder-body" id="reviewBody-${uid}"${open ? '' : ' hidden'}>${rows(members)}${id ? `<button type="button" class="review-folder-upload" data-act="upload" data-folder="${safeId}" onclick="pickUploadPdf(this.dataset.folder)">Upload a PDF</button>` : ''}</div></section>`;
   };
   for (const [id, r] of reviewLiveFolders()) html += group('review-folder-' + id, r.name, papers.filter(p => !(_uploads[p.id] || {}).done && reviewFolderId(p.id) === id), id);
   html += group('review-done', 'Done', papers.filter(p => (_uploads[p.id] || {}).done));
@@ -16869,6 +16933,17 @@ function toggleReviewFolderMenu(button) {
   requireOwner(); const menu = button.nextElementSibling, open = menu.hidden; closeReviewFolderMenus();
   if (open) _reviewMenu = button.closest('[data-review-folder]').dataset.reviewFolder;
   menu.hidden = !open; button.setAttribute('aria-expanded', String(open));
+  if (open) { const first = menu.querySelector('[role=menuitem]'); if (first) first.focus({ preventScroll: true }); }
+}
+/* As listMenuKey: arrows move, Escape or Tab closes and the ⋯ button takes focus back */
+function reviewFolderMenuKey(e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.isComposing) return;
+  const menu = e.currentTarget, items = [...menu.querySelectorAll('[role=menuitem]')], i = items.indexOf(document.activeElement), k = e.key;
+  if (k === 'ArrowDown' || k === 'ArrowUp') { const d = k === 'ArrowDown' ? 1 : -1; items[(Math.max(i, d > 0 ? -1 : 0) + d + items.length) % items.length].focus(); }
+  else if (k === 'Home' || k === 'End') items[k === 'Home' ? 0 : items.length - 1].focus();
+  else if (k === 'Escape' || k === 'Tab') { const button = menu.previousElementSibling; closeReviewFolderMenus(); if (button && button.isConnected) button.focus({ preventScroll: true }); }
+  else return;
+  e.preventDefault(); e.stopPropagation();
 }
 document.addEventListener('pointerdown', event => {
   if (_reviewRename && document.activeElement?.classList.contains('review-folder-edit') && event.target !== document.activeElement) _reviewRename.pointer = true;
@@ -16880,20 +16955,37 @@ document.addEventListener('pointerup', () => {
 });
 document.addEventListener('pointercancel', reviewRenameAfterPointer);
 function reviewRun(fn) { const epoch = capturePrivateEpoch(); Promise.resolve().then(() => { checkPrivateEpoch(epoch); return fn(); }).catch(e => { try { checkPrivateEpoch(epoch); } catch (x) { return; } if (!e.privateAuth && !e.target) toastError('Couldn’t save that change. Try again.'); }); }
-function closeReviewSheet() {
+const ReviewSheet = { seq: 0, backing: false, listening: false };
+function closeReviewSheet(back = true) {
   const sheet = document.getElementById('reviewSheet'); if (!sheet) return;
   const restore = sheet._restore || []; sheet.remove(); restore.forEach(([el, inert]) => { el.inert = inert; });
   if (sheet._from && sheet._from.isConnected) sheet._from.focus({ preventScroll: true });
+  if (back && sheet._step && history.state?.scoutReviewSheet === sheet._step) { ReviewSheet.backing = true; history.back(); }
+}
+/* Back with the sheet open closes it, and so does any other route change. Its own step going back is not a Back:
+   a sheet opened while that step went takes its step now. */
+function reviewSheetPop() {
+  const sheet = document.getElementById('reviewSheet');
+  if (ReviewSheet.backing) { ReviewSheet.backing = false; if (sheet && !sheet._step) reviewSheetStep(sheet, false); return; }
+  if (sheet && history.state?.scoutReviewSheet !== sheet._step) closeReviewSheet(false);
+}
+function reviewSheetStep(sheet, reuse) {
+  sheet._step = ++ReviewSheet.seq;
+  try { if (reuse) history.replaceState({ scoutReviewSheet: sheet._step }, '', location.href); else history.pushState({ scoutReviewSheet: sheet._step }, '', location.href); } catch (e) { sheet._step = 0; }
 }
 function reviewSheet(id, title, body) {
-  requireOwner(); capturePrivateEpoch(); closeReviewSheet(); if (!uploadById(id)) return;
+  requireOwner(); capturePrivateEpoch();
+  const prior = document.getElementById('reviewSheet'), reuse = !!(prior && prior._step && history.state?.scoutReviewSheet === prior._step);
+  closeReviewSheet(!reuse); if (!uploadById(id)) { if (reuse) history.back(); return; }
   const sheet = document.createElement('div'); sheet.id = 'reviewSheet'; sheet.className = 'review-sheet'; sheet.dataset.id = id;
   sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-modal', 'true'); sheet.setAttribute('aria-label', title);
   sheet.innerHTML = `<div class="review-panel" tabindex="-1"><span class="dl-grip" aria-hidden="true"></span><h2>${esc(title)}</h2>${body}<button type="button" class="review-cancel" onclick="closeReviewSheet()">Cancel</button></div>`;
   sheet._from = document.activeElement; sheet._restore = [...document.body.children].filter(el => ['mainScroll', 'appBar'].includes(el.id) || el.classList.contains('navbar')).map(el => [el, el.inert]);
   sheet._restore.forEach(([el]) => { el.inert = true; }); sheet.onclick = e => { if (e.target === sheet) closeReviewSheet(); };
-  sheet.onkeydown = e => { if (e.key !== 'Tab') return; const buttons = [...sheet.querySelectorAll('button:not([disabled])')]; if (!buttons.length) return; if (e.shiftKey && (document.activeElement === buttons[0] || document.activeElement === sheet.querySelector('.review-panel'))) { e.preventDefault(); buttons.at(-1).focus(); } else if (!e.shiftKey && document.activeElement === buttons.at(-1)) { e.preventDefault(); buttons[0].focus(); } };
+  sheet.onkeydown = e => { if (e.key === 'Escape' && !e.isComposing) { e.preventDefault(); e.stopPropagation(); closeReviewSheet(); return; } if (e.key !== 'Tab') return; const buttons = [...sheet.querySelectorAll('button:not([disabled])')]; if (!buttons.length) return; if (e.shiftKey && (document.activeElement === buttons[0] || document.activeElement === sheet.querySelector('.review-panel'))) { e.preventDefault(); buttons.at(-1).focus(); } else if (!e.shiftKey && document.activeElement === buttons.at(-1)) { e.preventDefault(); buttons[0].focus(); } };
   document.body.appendChild(sheet); sheet.querySelector('.review-panel').focus({ preventScroll: true });
+  if (!ReviewSheet.listening) { ReviewSheet.listening = true; window.addEventListener('popstate', reviewSheetPop); }
+  sheet._step = 0; if (!ReviewSheet.backing) reviewSheetStep(sheet, reuse);
 }
 function openReviewFolderMenu(id) {
   const current = reviewFolderId(id), done = !!(_uploads[id] || {}).done;
@@ -16908,9 +17000,14 @@ function reviewDoneChoice(id, choice) {
   requireOwner(); capturePrivateEpoch(); closeReviewSheet(); if (!uploadById(id)) return;
   if (choice === 'remove') { reviewQueueRemoval(id); return; }
   if (!['keep', 'read'].includes(choice)) return;
-  const at = reviewStamp(), fields = { done: true, doneAt: at };
+  const at = reviewStamp(), fields = { done: true, doneAt: at }, before = _uploads[id] || {};
   if (choice === 'read') Object.assign(fields, { toRead: true, toReadAt: at });
-  if (reviewUpdateUpload(id, fields)) toast(choice === 'read' ? 'Added to Reading list and Done' : 'Kept in Done');
+  const undo = {}; for (const f of Object.keys(fields)) undo[f] = before[f];
+  if (reviewUpdateUpload(id, fields)) toast(choice === 'read' ? 'Added to Reading list and Done' : 'Kept in Done', () => {
+    const now = _uploads[id]; if (!now || now.deleted || Object.keys(fields).some(f => now[f] !== fields[f])) return;   // a later change stands
+    const back = reviewStamp(), put = { ...undo, doneAt: back }; if ('toRead' in fields) put.toReadAt = back;
+    reviewUpdateUpload(id, put);
+  }, { duration: 5000, fullTarget: true });
 }
 /* Undo keeps all persistent data and running work untouched. Only this tab's rows hide the pending removal.
    Closing the tab or signing out cancels the uncommitted action. At expiry the existing remover does all cleanup. */
@@ -24852,7 +24949,7 @@ function paperPageHTML(p, opts) {
 
   // Sticky bar: back, title (appears once the heading scrolls away), actions
   const bar = `<div class="pd-bar"><div class="pd-bar-inner">
-    ${showBack ? `<button class="pd-back" onclick="paperBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg><span class="pd-back-label">Back</span></button>` : ''}
+    ${showBack ? `<button class="pd-back" onclick="paperBack()" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg><span class="pd-back-label">Back</span></button>` : ''}
     <div class="pd-bar-title" aria-hidden="true">${esc(p.title)}</div>
     <div class="pd-actions${isOwner() && !gone ? ' has-dl' : ''}">
       ${navHTML}
@@ -25757,7 +25854,7 @@ function paperUnavailable(k) {
   closeSaveDD();
   const box = document.getElementById('paperDetail');
   if (!box) return;
-  box.innerHTML = `<div class="pd"><div class="pd-bar"><div class="pd-bar-inner">${history.length > 1 ? `<button class="pd-back" onclick="paperBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg><span class="pd-back-label">Back</span></button>` : ''}</div></div>
+  box.innerHTML = `<div class="pd"><div class="pd-bar"><div class="pd-bar-inner">${history.length > 1 ? `<button class="pd-back" onclick="paperBack()" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg><span class="pd-back-label">Back</span></button>` : ''}</div></div>
     <article class="pd-article pd-unavailable" data-pid="${dataAttr(k)}" data-gone="true" data-hidden="false" data-passed="false"><header class="pd-head"><h1 class="pd-title">This paper is no longer in the library</h1><p class="pd-dek">It was removed from your library. Changes to it cannot be saved.</p></header></article></div>`;
   pressReconcile();
 }
