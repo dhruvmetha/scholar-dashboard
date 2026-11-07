@@ -1432,7 +1432,7 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 .pencil-mode::before { content: ''; position: absolute; top: 2px; left: 2px; width: 36px; height: 30px; border-radius: 6px; background: color-mix(in srgb, var(--accent) 14%, transparent); transition: transform var(--t-slow) var(--ease); }
 .pencil-mode[data-mode="hl"]::before { transform: translateX(38px); }
 .pencil-mode[data-mode="write"]::before { transform: translateX(76px); }
-.pencil-mode svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pencil-mode svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 .inkLayer { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: visible; }
 .inkLayer path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
@@ -2881,15 +2881,26 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   .lp-controls .tl-sort, .lp-pills .pill, .lp-filter { height: 38px; }
   .anno-mark { width: 26px; height: 26px; margin-top: -13px; border-radius: 7px; }
   .anno-mark svg { width: 15px; height: 15px; }
-  .ink-bar .sel-dot { width: 28px; height: 28px; margin: 0 4px; }
+  .ink-bar .sel-dot { width: 28px; height: 28px; margin: 0 6px; }
+  /* the Pencil's tools and the pad's: 44 px to tap, at the size they were drawn; a dot's tap area reaches 44 px round it,
+     and dots sit 44 apart, so no two areas overlap. The strip keeps its 53 px (the panel header's) */
+  .ink-bar { padding-top: 4px; padding-bottom: 4px; }
+  .ink-bar .sel-icon, .ink-bar .ink-size, .hw-tools .sel-icon { width: 44px; height: 44px; }
+  .ink-bar .sel-dot, .hw-tools .sel-dot { position: relative; }
+  .ink-bar .sel-dot::after { content: ''; position: absolute; inset: -10px; }
+  .ink-bar .ink-tools { padding: 0 2px; }   /* (the scroller would clip the first dot's area by 2 px) */
+  /* the pad's row has to fit the 280 px panel (251 px inside) in one line: its pens are 44 tall and 38 apart, side by side */
+  .hw-tools { gap: 0; }
+  .hw-tools .sel-dot { width: 26px; height: 26px; margin: 0 6px; }   /* as big as the card's colour dots above it */
+  .hw-tools .sel-dot::after { content: ''; position: absolute; inset: -11px -8px; }
   .badge-editable { min-height: 30px; display: inline-flex; align-items: center; padding-left: 10px; padding-right: 10px; }
-  .rp-add { height: 36px; }
+  .rp-add { height: 44px; }
   .toast-undo { min-height: 36px; padding: 0 10px; margin: -8px -8px -8px 0; }
   .group-add-dd .group-opt, .copy-dd-item { padding: 11px 14px; font-size: 14px; }
   .badge-group-edit, .pd-topics .group-add-btn, .group-add-btn { height: 32px; }
   .anno-card textarea#acNote { min-height: 64px; }
   .anno-card.writing textarea#acNote:placeholder-shown { min-height: 0; }   /* writing: the typed box stays one line until it has words */
-  .ac-write { width: 36px; height: 36px; }
+  .anno-card .ac-write { width: 44px; height: 44px; }
   .anno-card { width: max-content; min-width: 300px; }   /* room to write a comment by hand (Scribble turns it into text) */
   .ac-row { height: auto; gap: 4px; }
   .ac-row .sel-dot { width: 26px; height: 26px; margin: 0 4px; }
@@ -2948,6 +2959,9 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   .btn-approve, .btn-reject { min-height: 44px; padding: 0 18px; font-size: 13px; }
   .hide-foot button { min-height: 44px; padding: 0 4px; }
   .pencil-mode button { width: 44px; height: 44px; }
+  .pencil-mode::before { width: 44px; height: 44px; }   /* the tint covers the chosen 44 px button, not a desktop-sized box beside it */
+  .pencil-mode[data-mode="hl"]::before { transform: translateX(46px); }
+  .pencil-mode[data-mode="write"]::before { transform: translateX(92px); }
   .save-dd { width: 240px; }
   .save-dd-input { font-size: 16px; min-height: 44px; }
   .save-dd-item { min-height: 44px; }
@@ -20246,7 +20260,7 @@ function positionAnnoCard(a) {
   let x = Math.min(window.innerWidth - cw - 12, Math.max(12, r.left)), y = r.bottom + 10;
   const tools = document.getElementById('inkBar'), ceil = tools.classList.contains('open') ? tools.getBoundingClientRect().bottom + 8 : 64;
   if (y + ch > window.innerHeight - 12) y = Math.max(ceil, r.top - ch - 10);
-  card.style.left = x + 'px'; card.style.top = y + 'px';
+  card.style.left = Math.round(x) + 'px'; card.style.top = Math.round(y) + 'px';   // whole pixels: its icons stay sharp
 }
 function closeAnnoCard() {
   const id = _acId, t = document.getElementById('acNote'), text = t && document.getElementById('annoCard').classList.contains('open') ? t.value : null;
@@ -20484,7 +20498,7 @@ function pencilHl() { return Pencil.hl || lastHlColor(); }   // a colour, or 'no
 const pencilDevice = () => navigator.maxTouchPoints > 1 && !readerPhone();
 const PENCIL_MODES = [
   { m: 'read', label: 'Read', title: 'Read: the Pencil scrolls and selects, like a finger', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 5h6a4 4 0 0 1 4 4v11a3 3 0 0 0-3-3H2z"/><path d="M22 5h-6a4 4 0 0 0-4 4v11a3 3 0 0 1 3-3h7z"/></svg>' },
-  { m: 'hl', label: 'Highlight', title: 'Highlight: strokes highlight or underline the text', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l-5 5v4h4l5-5"/><path d="M9 11l6-6 4 4-6 6z"/><path d="M13 20h8"/></svg>' },
+  { m: 'hl', label: 'Highlight', title: 'Highlight: strokes highlight or underline the text', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.9 2.9l4.2 4.2-8 8-4.2-4.2z"/><path d="M9.6 11.6L6 15.5l2.5 2.5 3.9-3.6"/><rect x="3" y="19.2" width="9" height="2.6" rx="1" fill="currentColor" stroke="none"/></svg>' },
   { m: 'write', label: 'Write', title: 'Write: the Pencil writes and draws on the page', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.2-4.6L15.6 5a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/><path d="M13.8 6.8l3.4 3.4"/></svg>' }
 ];
 
@@ -20516,7 +20530,7 @@ function endInk() {   // leaving the paper: save what was drawn, nothing left to
   bar.classList.remove('open');
 }
 const ICON_ERASER = '<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M8 20h12M5.5 14.5l8-8a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L11 19H8.5l-3-3a1 1 0 0 1 0-1.5z"/><path d="M9 11l5 5"/></svg>';
-const ICON_ERASE_PART = '<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M3 7c3-3 5 3 8 0s5-3 8 0"/><circle cx="12" cy="15" r="4.5" stroke-dasharray="2.2 2.2"/><path d="M5 21h14"/></svg>';
+const ICON_ERASE_PART = '<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M3 18h7"/><path d="M10 18h11" stroke-dasharray="1.4 2.6"/><path d="M8.5 13.5l6-6a1.8 1.8 0 0 1 2.5 0l1.5 1.5a1.8 1.8 0 0 1 0 2.5l-6 6"/><path d="M8.5 13.5l4 4"/></svg>';   // an eraser on a line it has partly rubbed out
 const ICON_UNDO = '<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>';
 function setPencilHl(v) { if (!ReaderNotesVisible) setReaderNotesVisible(true); Pencil.hl = v; if (v !== 'note') rememberHlColor(v); savePencil(); renderInkBar(); }
 /* The erasers are toggles: tapping the one that's on puts the pen back in your hand, as does tapping a colour or size */
@@ -21142,7 +21156,7 @@ function renderReaderPanel() {
   const filtering = f.colors.size || f.comments || f.notes || f.q;
   const showFilters = total >= 6 || filtering;
   const kept = keepLiveEditor(() => { panel.innerHTML = head + `<div class="rp-scroll">
-    <div class="rp-toolbar">${_rnEditing === 'new' || (_hw && _hw.id === 'new') ? '<span class="rp-count-l">New note</span>' : `${pencilDevice() ? `<button class="rp-add" onclick="startNewNote()" title="Type a note">${ICON_PLUS}Type</button><button class="rp-add" onclick="startHandwritten()" title="Write or draw a note with the Pencil">${ICON_WRITE}Write</button>` : `<button class="rp-add" onclick="startNewNote()">${ICON_PLUS}Add note</button>`}${_reader.paper && _reader.paper.uploaded && !(n.entries || []).some(e => REVIEW_MARK.test(e.text)) ? '<button class="rp-text-btn" onclick="startReview()" title="A note laid out as a review">Start review</button>' : ''}`}<span class="grow"></span>
+    <div class="rp-toolbar">${_rnEditing === 'new' || (_hw && _hw.id === 'new') ? '<span class="rp-count-l">New note</span>' : `${pencilDevice() ? `<button class="rp-add" onclick="startNewNote()" title="Type a note">${ICON_PLUS}Type</button><button class="rp-add" onclick="startHandwritten()" title="Write or draw a note with the Pencil">${ICON_PLUS}Write</button>` : `<button class="rp-add" onclick="startNewNote()">${ICON_PLUS}Add note</button>`}${_reader.paper && _reader.paper.uploaded && !(n.entries || []).some(e => REVIEW_MARK.test(e.text)) ? '<button class="rp-text-btn" onclick="startReview()" title="A note laid out as a review">Start review</button>' : ''}`}<span class="grow"></span>
       ${total >= 3 ? `<div class="rp-seg" role="group" aria-label="Order"><button class="${_rnSort === 'page' ? 'on' : ''}" onclick="setRnSort('page')" title="Notes first, then in page order">Page</button><button class="${_rnSort === 'recent' ? 'on' : ''}" onclick="setRnSort('recent')" title="Newest first">Recent</button></div>` : ''}</div>
     ${showFilters ? `<div class="rp-filters">${HL_COLORS.filter(c => used.has(c) || f.colors.has(c)).map(c => `<button class="sel-dot ${f.colors.has(c) ? 'on' : ''}" style="--hc:var(--hl-${c})" title="${dataAttr(hlLabel(c))}" aria-pressed="${f.colors.has(c)}" onclick="toggleRnColor('${c}')"></button>`).join('')}${hasComments || f.comments ? chip(f.comments, 'Comments', "_rnFilter.comments=!_rnFilter.comments;renderReaderPanel()") : ''}${hasNotes || f.notes ? chip(f.notes, 'Notes', "_rnFilter.notes=!_rnFilter.notes;renderReaderPanel()") : ''}<input class="rp-search" id="rpSearch" placeholder="Search" value="${dataAttr(f.q)}" oninput="_rnFilter.q=this.value;keepLiveEditor(() => renderRnList())"></div>` : ''}
     ${_rnEditing === 'new' ? noteEditorHTML() : _hw && _hw.id === 'new' ? hwEditorHTML() : ''}
