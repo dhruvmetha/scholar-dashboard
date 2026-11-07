@@ -18,12 +18,12 @@
    The worker never reloads a page, never tells a page about a new version, and has no controllerchange handler: Phase
    22's return check decides when the page reloads. When this file's caching changes, bump VERSION, which names the
    caches; activation deletes the caches of every other version. */
-const VERSION = 4;
+const VERSION = 5;
 const SHELL = 'scout-shell-v' + VERSION, LIBS = 'scout-libs-v' + VERSION;
 const ROOT = new URL('./', self.location).href;   // APP_ROOT: where index.html lives
 const ROOT_PATH = new URL(ROOT).pathname;
 const NET_WAIT = 4000;
-const APP_FILES = ['scholar_config.js', 'instance.json', 'scholar.config.json', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'mycopy.js', 'mycopy-pdf.js'];
+const APP_FILES = ['brief_recipe.json', 'scholar_config.js', 'instance.json', 'scholar.config.json', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'mycopy.js', 'mycopy-pdf.js'];
 const COPY_LIBS = new Set(['https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js', 'https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js', 'https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@v20201206-phase3/hinted/ttf/NotoSans/NotoSans-Regular.ttf']);
 const LIB_URL = url => COPY_LIBS.has(url) || /^https:\/\/(?:cdnjs\.cloudflare\.com\/ajax\/libs\/PapaParse\/|cdn\.jsdelivr\.net\/npm\/(?:pdfjs-dist|marked|dompurify|katex)@[0-9][^/]*\/|fonts\.googleapis\.com\/css2\?|fonts\.gstatic\.com\/)/.test(url);
 

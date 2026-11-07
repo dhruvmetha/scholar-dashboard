@@ -294,7 +294,6 @@ html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(
   #skeleton .sk-search-title .sk-line + .sk-line, #skeleton .lp-h .sk-line + .sk-line { display: flex; }
   #skeleton .lp-meta { min-height: 40px; }
   #skeleton .search-results .rail { display: none; }
-  #skeleton .pd-actions .sk-hide { display: none !important; }
   #skeleton [data-shape="paper"] .pd-title .sk-line:last-child { display: flex; }
   #skeleton .sk-daily-card h2 .sk-line:last-child { display: flex; }
   #skeleton .sk-daily-headline .sk-line:last-child { display: flex; }
@@ -2583,13 +2582,16 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 .upload-brief-state button { background: none; border: 0; color: var(--accent); font: inherit; cursor: pointer; padding: 4px; min-height: 32px; }
 .upload-brief-writing { display: inline-flex; align-items: center; gap: 7px; }
 .upload-brief-writing i { width: 12px; height: 12px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: chat-spin .8s linear infinite; }
-.upload-tag { color: var(--accent); font-weight: 600; }
-#paperDetail:has(.pd-upload) .pd-actions .pd-read { order: 0; margin-right: 0; }
-.pd-upload .pd-body { grid-template-columns: minmax(0, 1fr); max-width: 720px; }
-.pd-upload .pd-title, .pd-upload .pd-dek, .pd-upload .pd-authors, .pd-upload .pd-prose { overflow-wrap: anywhere; }
 [data-upload] .tr-title { white-space: normal; }
 @media (prefers-reduced-motion: reduce) { .upload-brief-writing i { animation: none; } }
-@media (max-width: 600px) { #paperDetail:has(.pd-upload) .pd-bar-title { display: none; } #paperDetail:has(.pd-upload) .pd-bar-inner { flex-wrap: nowrap; gap: 4px; } #paperDetail:has(.pd-upload) .pd-actions { margin-left: auto; gap: 4px; flex-wrap: nowrap; } #paperDetail:has(.pd-upload) .pd-act { padding: 0 9px; } }
+/* Uploads share the paper page (6 November 2026). Their private folder and Done are list chips (.chip) under the
+   authors; a long title or folder name wraps or ends in an ellipsis instead of widening the page. */
+.pd-title, .pd-dek, .pd-authors, .pd-prose { overflow-wrap: anywhere; }
+.pd-kicker:empty { display: none; }
+.pd-org { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; margin-top: 10px; min-width: 0; }
+.pd-org .chip { flex: 0 1 auto; max-width: 100%; justify-content: flex-start; }
+.pd-org .chip-t svg { width: 12px; height: 12px; }
+.pd-act.pd-more { font-size: 20px; line-height: 1; }
 
 /* [12] COPY-TO DROPDOWN (library) — animated entrance */
 @keyframes dropdown-in { 0% { opacity: 0; transform: translateY(-4px); } 100% { opacity: 1; transform: translateY(0); } }
@@ -2619,13 +2621,11 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 .dl-foot::before { content: ''; flex: none; width: 18px; height: 18px; background: radial-gradient(circle, var(--green) 0 3.5px, transparent 4px); }
 .dl-note { margin: 0; padding: 8px 11px 8px 40px; color: var(--text-muted-raised); font-size: 12.5px; }
 .dl-note.dl-bad { color: #ef8a8a; }
-.dl-hide, .dl-hidesep { display: none; }
 .dl-sheet { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.45); }
 .dl-sheet .dl-panel { position: absolute; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 560px; max-height: 80vh; overflow-y: auto; background: var(--bg-surface); border: 1px solid var(--line); border-bottom: none; border-radius: 18px 18px 0 0; padding: 10px 12px calc(14px + env(safe-area-inset-bottom, 0px)); }
 .dl-grip { display: block; width: 36px; height: 4px; margin: 0 auto 8px; border-radius: 2px; background: rgba(255,255,255,0.25); }
 .dl-sheet .dl-item { min-height: 48px; padding: 12px 11px; font-size: 15px; }
 .dl-cancel { margin-top: 8px; width: 100%; min-height: 44px; border: none; border-radius: 12px; background: var(--bg-raise); color: var(--text); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
-@media (max-width: 600px) { .dl-hide { display: flex; } .dl-hidesep { display: block; } .pd-actions.has-dl .pd-act[data-act="hide"], .pd-actions.has-dl .pd-act[data-act="restore"] { display: none; } }   /* the bar is full on a phone: Hide moves into the sheet */
 .copy-dd-item.copy-dd-new { border-top: 1px solid var(--border); color: var(--accent); }
 .copy-dd-item:disabled { opacity: 0.45; cursor: default; }
 
@@ -3189,13 +3189,6 @@ body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.au
 .review-row-actions { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
 .review-folder-btn { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 180px; }
 .review-folder-btn > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.review-page-bar { display: flex; gap: 8px; min-width: 0; }
-.review-page-bar .pd-back { flex: 0 0 36px; min-width: 36px; }
-.review-bar-actions { display: flex; gap: 6px; align-items: center; margin-left: auto; min-width: 0; }
-.review-bar-actions > button { flex-shrink: 0; min-height: 36px; }
-.review-bar-actions .review-folder-btn { flex: 0 1 180px; }
-.review-read { background: var(--accent); color: var(--bg); border-color: var(--accent); }
-.review-more { font-size: 20px; min-width: 36px; padding-inline: 8px; }
 .review-sheet { position: fixed; inset: 0; z-index: 2100; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; padding: 16px; }
 .review-panel { outline: none; width: min(430px, 100%); max-height: min(90dvh, 700px); overflow-y: auto; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 18px; padding: 16px; min-width: 0; box-sizing: border-box; }
 .review-panel h2 { font-size: 17px; padding: 2px 8px 10px; }
@@ -3213,9 +3206,6 @@ body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.au
   .review-sheet { align-items: flex-end; padding: 0; }
   .review-panel { width: 100%; max-height: 88dvh; border-radius: 18px 18px 0 0; padding: 12px 14px max(20px, env(safe-area-inset-bottom)); }
   .review-panel .dl-grip { display: block; }
-  .review-page-bar { padding-inline: 10px; }
-  .review-bar-actions { flex: 1; }
-  .review-bar-actions .review-folder-btn { flex: 1 1 0; max-width: 180px; }
   .review-row-actions .review-folder-btn { max-width: 160px; }
 }
 
@@ -3873,7 +3863,7 @@ async function acceptTarget(instance) {
       try {
         const databases = await Promise.race([indexedDB.databases(), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Database enumeration timed out')), 3000); })]);
         cleanDatabases = Array.isArray(databases);
-        if (cleanDatabases && databases.some(db => db.name === 'scholar_notes' || db.name === 'scholar_pdfs' || db.name === 'scholar_chats' || db.name === 'scholar_mycopy' || db.name === KEPT_DB || db.name === LIBCACHE_DB)) historical = true;
+        if (cleanDatabases && databases.some(db => db.name === 'scholar_notes' || db.name === 'scholar_pdfs' || db.name === 'scholar_chats' || db.name === 'scholar_mycopy' || db.name === 'scholar_upload_state' || db.name === KEPT_DB || db.name === LIBCACHE_DB)) historical = true;
       } finally { clearTimeout(timer); }
     }
   } catch (e) { cleanDatabases = false; }
@@ -6064,7 +6054,7 @@ function paperKey(p) { return p.id; }
    the answer comes from a set made once for that pass: nothing changes the lists while it runs. */
 let _listedPass = null;
 function listedKeys() { const s = new Set(); Object.keys(libraryLists).forEach(n => { if (!isMachineLane(n)) libraryLists[n].forEach(k => s.add(k)); }); return s; }
-function paperInAnyList(k) { return _listedPass ? _listedPass.has(k) : Object.keys(libraryLists).some(n => !isMachineLane(n) && libraryLists[n].includes(k)); }
+function paperInAnyList(k) { if (uploadById(k)) return heldLists(k).length > 0; return _listedPass ? _listedPass.has(k) : Object.keys(libraryLists).some(n => !isMachineLane(n) && libraryLists[n].includes(k)); }
 function listCount() { return Object.values(libraryLists).reduce((n, arr) => n + arr.length, 0); }
 
 /* ===== LOAD ===== */
@@ -6738,7 +6728,7 @@ function skeletonHTML(hash) {
     if (route.startsWith('paper/')) {
       const act = (label, icon = '✓', extra = '', key = '') => `<span class="pd-act sk-owner ${extra}"${key ? ` data-sk="${key}"` : ''}>${icon}<span class="pd-act-label"><span>${label}</span></span></span>`;
       const icon = '<svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-6-4-6 4z"/></svg>';
-      return `<div class="pd" data-shape="paper"><div class="pd-bar" data-sk="bar"><div class="pd-bar-inner"><span class="pd-back" data-sk="back">${backIcon}<span class="pd-back-label">Back</span></span><div class="pd-bar-title"></div><div class="pd-actions has-dl" data-sk="actions">${act('Mark read')}${act('Save', icon)}${act('Hide', icon, 'sk-hide')}${act('', '<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>', 'pd-dl', 'download')}<span class="pd-read" data-sk="read"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Read</span><span class="pd-open" data-sk="open"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span></div></div></div><div class="pd-article" data-sk="article"><header class="pd-head"><div class="pd-kicker" data-sk="kicker">${bar(100)}</div><div class="pd-title" data-sk="title">${lines(3, 76)}</div><div class="pd-dek" data-sk="dek">${lines(2, 80)}</div><div class="pd-authors" data-sk="authors">${lines(1, 52)}</div><div class="pd-why"><span class="pd-why-label">${bar(14)}</span><div class="why">${lines(1, 38)}</div></div></header><div class="pd-body" data-sk="body"><div><h2>Summary</h2>${lines(4, 70)}<br><h2>Abstract</h2>${lines(7, 80)}</div><aside>${lines(5, 68)}</aside></div></div></div>`;
+      return `<div class="pd" data-shape="paper"><div class="pd-bar" data-sk="bar"><div class="pd-bar-inner"><span class="pd-back" data-sk="back">${backIcon}<span class="pd-back-label">Back</span></span><div class="pd-bar-title"></div><div class="pd-actions has-dl" data-sk="actions">${act('Mark read')}${act('Save', icon)}${act('', '<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>', 'pd-dl', 'download')}${act('', '&#8943;', 'pd-more', 'more')}<span class="pd-read" data-sk="read"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Read</span><span class="pd-open" data-sk="open"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span></div></div></div><div class="pd-article" data-sk="article"><header class="pd-head"><div class="pd-kicker" data-sk="kicker">${bar(100)}</div><div class="pd-title" data-sk="title">${lines(3, 76)}</div><div class="pd-dek" data-sk="dek">${lines(2, 80)}</div><div class="pd-authors" data-sk="authors">${lines(1, 52)}</div><div class="pd-why"><span class="pd-why-label">${bar(14)}</span><div class="why">${lines(1, 38)}</div></div></header><div class="pd-body" data-sk="body"><div><h2>Summary</h2>${lines(4, 70)}<br><h2>Abstract</h2>${lines(7, 80)}</div><aside>${lines(5, 68)}</aside></div></div></div>`;
     }
     if (route === 'settings') {
       const row = (label, sub = '', control = '') => `<div class="copy-item" data-sk="row"><div class="copy-label">${label}${sub ? `<small>${sub}</small>` : ''}</div>${control}</div>`;
@@ -9128,7 +9118,7 @@ function saveSheetSync() {
   if (save) { if (!sh.btn) save.classList.toggle('on', paperInAnyList(sh.key)); save.setAttribute('aria-expanded', 'true'); }
   placeSheet();
 }
-function sheetHas(n, k) { return hasList(n) && libraryLists[n].includes(k); }
+function sheetHas(n, k) { return uploadById(k) ? listHolds(n, k) : hasList(n) && libraryLists[n].includes(k); }
 function sheetDestOK(n) {
   const sh = Feed.sheet;
   if (!sh || sh.dead.has(n)) return false;
@@ -9149,7 +9139,12 @@ function sheetToggle(n, sid) {
   requireOwner();
   const sh = Feed.sheet;
   if (!sh || sh.id !== sid || !sheetPlace(sh) || !feedLive(sh.key) || !sheetDestOK(n)) return false;
-  const k = sh.key, on = !(hasList(n) && libraryLists[n].includes(k));
+  const k = sh.key, on = !sheetHas(n, k);
+  if (uploadById(k)) {   // an upload: its private lists (uploadListSet), never libraryLists
+    if (!listSet(n, k, on)) return false;
+    updateLibraryBadge(); if (sh.btn) refreshPaper(k, { list: n }); saveSheetSync();
+    return true;
+  }
   const dailyDelta = typeof Daily !== 'undefined' && Daily.sheet ? { fields: {}, lists: [dailyListDelta(n, k, !on, on)] } : null;
   if (dailyDelta && !dailyTrySheetChange(k, dailyDelta)) return false;
   if (on) (hasList(n) ? libraryLists[n] : (libraryLists[n] = [])).push(k);
@@ -9209,11 +9204,13 @@ function sheetNewSubmit() {
   if (!name) { input.focus(); return false; }
   const dailyDelta = typeof Daily !== 'undefined' && Daily.sheet ? { fields: {}, lists: [dailyListDelta(name, sh.key, false, true)] } : null;
   if (dailyDelta && !dailyTrySheetChange(sh.key, dailyDelta)) return false;
-  libraryLists[name] = [sh.key];
+  const upload = !!uploadById(sh.key);
+  libraryLists[name] = upload ? [] : [sh.key];   // an upload joins it privately, below
   sh.names.push(name);
   s.querySelector('.sh-list').insertAdjacentHTML('beforeend', sheetRowHTML(name));
   sheetEditEnd(false);
   persistLists(); updateLibraryBadge();
+  if (upload) listSet(name, sh.key, true);
   saveSheetSync();
   const row = [...s.querySelectorAll('.sh-row')].find(b => b.dataset.n === name);
   if (row) { row.focus({ preventScroll: true }); sheetReveal(row); }
@@ -10268,12 +10265,12 @@ window.addEventListener('pagehide', dailyCancelPress);
    unlocked, in the encrypted notes index; the papers file holds only the membership. */
 function listTabShown() { return projectMode() && Feed.ranked === Feed.project && !!Feed.project; }
 /* Whether a paper is in a list now: a hidden paper by its own row */
-function listHolds(n, k) { if (uploadById(k)) return n === TO_READ && reviewToRead(k); const h = hiddenRowOf(k); return h ? rowLists(h).includes(n) : hasList(n) && libraryLists[n].includes(k); }
+function listHolds(n, k) { if (uploadById(k)) return n === TO_READ ? reviewToRead(k) : !!uploadListEntry(k, n)?.on && !listGone(n); const h = hiddenRowOf(k); return h ? rowLists(h).includes(n) : hasList(n) && libraryLists[n].includes(k); }
 /* Puts the paper in the list or takes it out (on), and saves. To read is made by its first add; a hidden paper's own row
    carries it. `at`, from an Undo: when it was first added (or '' when that is not known), so it goes back where it
    was. Returns whether it changed. */
 function listSet(n, k, on, at) {
-  if (uploadById(k)) return n === TO_READ ? reviewSetToRead(k, on) : false;   // review folders: never put upload ids in libraryLists
+  if (uploadById(k)) return n === TO_READ ? reviewSetToRead(k, on) : uploadListSet(k, n, on);   // an upload: never in libraryLists
   if (listHolds(n, k) === on) return false;
   const h = hiddenRowOf(k);
   if (on && at !== undefined) _listAddAt.set(n + '\u0000' + k, at || '');
@@ -10335,7 +10332,8 @@ function listNotFor(n) { const m = listEntry(n); return new Set(m && Array.isArr
 function listMembers(n) {
   const vis = rowIndex().vis, at = listAddedAt(n);
   const out = [...new Set(hasList(n) ? libraryLists[n] : [])].map(k => vis.get(k)).filter(p => p && !p._goneRemote);
-  if (n === TO_READ && typeof reviewReadPapers === 'function') out.push(...reviewReadPapers());   // review folders: encrypted membership only
+  out.push(...uploadedPapers().filter(p => listHolds(n, p.id) && !_reviewPendingRemovals.has(p.id)));   // uploads: their private lists
+  uploadedPapers().forEach(p => { if (!at[p.id]) at[p.id] = uploadListAt(n, p.id); });
   return out.sort((a, b) => cmpStr(at[paperKey(b)] || '', at[paperKey(a)] || '') || cmpStr(b.date_found || '', a.date_found || '') || cmpStr(paperKey(a), paperKey(b)));
 }
 /* Not for this list: the suggestion leaves this list's tab for good (or until Undo), and nowhere else; it teaches
@@ -10504,7 +10502,7 @@ function listRemove(k) {
   requireOwner();
   const n = Feed.project;
   if (!listTabShown() || postView(k) !== 'member') return false;
-  if (uploadById(k)) return n === TO_READ ? reviewRemoveFromRead(k) : false;   // review folders hook
+  if (uploadById(k) && n === TO_READ) return reviewRemoveFromRead(k);   // its private To read, with Undo
   const at = listAddedAt(n)[k] || '';
   if (!listSet(n, k, false)) return false;
   listRelist();
@@ -11024,9 +11022,10 @@ pullBind();
    button underneath (as on iOS). Scrolling outside still closes it and scrolls. Short-lived hints don't count: the venue
    tooltip, and the score breakdown while it's only hovered (counted, a mouse click on its (i) closed it instead of
    keeping it open). */
-const POPOVERS = '#dailyInterestSheet.open, #saveSheet.open, #feedSortMenu, #feedInterestMenu, .list-menu, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup[data-pinned], #chatHist, #keptPaperMenu';
+const POPOVERS = '#dailyInterestSheet.open, #saveSheet.open, #feedSortMenu, #feedInterestMenu, .list-menu, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup[data-pinned], #chatHist, #keptPaperMenu, #paperMenu';
 let _dismissTap = null;
 function closePopovers() {
+  paperMenuClose();
   dailyCloseInterestSheet();
   closeSaveSheet(); closeFeedMenu(); closeListMenu(); toggleReaderMenu(false); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeAbsPopup(); closeRelevancePopup();
   const h = document.getElementById('chatHist'); if (h) { if (h._close) h._close(); else h.remove(); }
@@ -13082,7 +13081,7 @@ function libGroupKey(n) { return (isMachineLane(n) ? 'lane-' : 'list-') + n; }
 /* The members of a list for Library: the papers that show, then the hidden ones whose own row names it (each once) */
 function libListPapers(name) {
   const vis = hasList(name) ? allPapers.filter(p => libraryLists[name].includes(paperKey(p))) : [];
-  if (name === TO_READ && typeof reviewReadPapers === 'function') vis.push(...reviewReadPapers());   // review folders hook
+  vis.push(...uploadedPapers().filter(p => listHolds(name, p.id) && !_reviewPendingRemovals.has(p.id)));   // uploads: their private lists
   return vis.concat(_hiddenPapers.filter(h => rowLists(h).includes(name)));
 }
 function libActions(name) {
@@ -15949,10 +15948,7 @@ function dlMenuHTML(p) {
   if (!info.has) h += `<p class="dl-note">${p.uploaded ? 'Add its PDF on this device to read or download it.' : 'This paper has no open PDF'}</p>`;
   if (Dl.failed) h += "<p class=\"dl-note dl-bad\" role=\"status\">Couldn't download this paper. Try again.</p>";
   const keep = keptActionLabel(p), foot = (info.here ? `<div class="dl-foot">On this ${esc(copyDeviceName())}, opens offline</div>` : '') + (keep ? `<button type="button" class="dl-item dl-noico dl-keep" role="menuitem" onclick="event.stopPropagation();keptPaperAction(this.closest('#keptPaperMenu').dataset.id)"><span>${esc(keep)}</span></button>` : '');
-  h += (foot ? '<div class="dl-sep"></div>' + foot : '<div class="dl-sep dl-hidesep"></div>');
-  if (p.uploaded) return h;   // review folders: upload removal lives in its own menu
-  const hid = isHiddenRow(p);
-  if (!p.uploaded) h += `<button type="button" class="dl-item dl-noico dl-hide" role="menuitem" onclick="event.stopPropagation();keptPaperClose();${hid ? 'unhidePaper' : 'askHide'}('${escAttr(paperKey(p))}')"><span>${hid ? 'Restore paper' : 'Hide paper'}</span></button>`;
+  if (foot) h += '<div class="dl-sep"></div>' + foot;
   return h;
 }
 function dlMenuSync() {
@@ -16149,9 +16145,8 @@ function mergeUploadReview(a, b, chosen) {
   }
   return out;
 }
-/* Like uploadBrief, organization has a durable copy outside the index rebuilt by live clients.
-   Definitions have their own encrypted notes record; each upload keeps only its own review fields.
-   Old notes writers preserve these top-level fields. Modern writers merge their independent clocks. */
+/* Folder definitions have their own encrypted notes record, merged by their own clocks. An upload's own fields
+   (folder, Done, To read, read) live in its protected record (UPLOAD STATE). */
 async function reviewRecord(id, field, value, merge) {
   requireOwner(); const epoch = capturePrivateEpoch(), generation = vaultGeneration();
   const rec = await privateAwait(navigator.onLine ? nfLoad(id + '.json', undefined, { background: true }) : nfGet(id + '.json'), epoch);
@@ -16171,13 +16166,6 @@ async function reviewRecord(id, field, value, merge) {
 async function reviewFolderRecord(rows) {
   return reviewRecord('up-review-folders-v1', 'reviewFolders', rows, mergeReviewFolders);
 }
-async function reviewUploadRecord(id) {
-  if (!uploadById(id)) return;
-  const fields = mergeUploadReview(_uploads[id], {}, {});
-  const saved = await reviewRecord(id, 'uploadReview', fields, (a, b) => mergeUploadReview(a, b, {}));
-  if (!uploadById(id)) return;   // removal overtakes a load or encryption
-  _uploads[id] = mergeUploadReview(_uploads[id], saved, _uploads[id]);
-}
 function reviewRestoreRead() {
   if (!isOwner()) return;
   for (const [id, u] of Object.entries(_uploads)) {
@@ -16188,7 +16176,8 @@ async function reviewRecordsSync() {
   requireOwner(); const epoch = capturePrivateEpoch(), generation = vaultGeneration();
   const folders = await privateAwait(reviewFolderRecord(_reviewFolders), epoch); checkVaultGeneration(generation);
   _reviewFolders = mergeReviewFolders(_reviewFolders, folders); reviewStoreFolders();
-  for (const id of Object.keys(_uploads)) { await privateAwait(reviewUploadRecord(id), epoch); checkVaultGeneration(generation); await privateAwait(similarRecord(id), epoch); checkVaultGeneration(generation); }
+  // Every live upload's protected record (UPLOAD STATE): joined with its copies, saved, and the row repaired from it
+  for (const id of Object.keys(_uploads)) { if (_uploads[id].deleted) continue; await privateAwait(uploadStateSync(id), epoch); checkVaultGeneration(generation); }
   storeUploads(); reviewRestoreRead(); reviewRefresh();
   const index = Vault.index;
   if (index) {
@@ -16339,16 +16328,15 @@ function reviewRemoveFromRead(id) {
   requireOwner(); if (!reviewSetToRead(id, false)) return false;
   toast('Removed from To read', () => reviewSetToRead(id, true), { duration: 5000, fullTarget: true }); return true;
 }
-/* Small rendering hooks. The upload page calls the three button functions or reviewBarActionsHTML(id).
-   Upload rows retain their headline, title, counts and date. */
-function reviewFolderButtonHTML(id) {
+/* An upload's private folder and Done on its paper page: list chips (.chip), as a post's list chip, under the
+   authors. Not in a folder, the folder chip says Folder. */
+function reviewChipsHTML(id) {
   if (!isOwner() || !uploadById(id)) return '';
-  const folder = reviewFolderId(id), label = folder ? _reviewFolders[folder].name : 'Move to folder';
-  return `<button type="button" class="btn-abs review-folder-btn" data-review-act="folder" aria-haspopup="dialog" title="${dataAttr(label)}" onclick="event.stopPropagation();openReviewFolderMenu('${escAttr(id)}')"><span>${esc(label)}</span><span aria-hidden="true">&#9662;</span></button>`;
+  const ka = escAttr(id), done = !!(_uploads[id] || {}).done, folder = done ? null : reviewFolderId(id), name = folder ? _reviewFolders[folder].name : 'Folder';
+  const caret = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  return `<div class="pd-org"><button type="button" class="chip${folder ? ' in' : ''}" data-review-act="folder" aria-haspopup="dialog" aria-label="${dataAttr(folder ? 'In folder ' + name + ', move' : 'Move to a folder')}" title="${dataAttr(name)}" onclick="event.stopPropagation();openReviewFolderMenu('${ka}')"><span class="chip-t"><span class="chip-n">${esc(name)}</span>${caret}</span></button>`
+    + `<button type="button" class="chip${done ? ' in' : ''}" data-review-act="done" aria-haspopup="dialog" aria-label="${done ? 'Done, change' : 'Done reviewing'}" onclick="event.stopPropagation();openReviewDone('${ka}')"><span class="chip-t">${done ? FEED_ICON.tick : ''}<span class="chip-n">Done</span></span></button></div>`;
 }
-function reviewDoneButtonHTML(id) { return isOwner() && uploadById(id) ? `<button type="button" class="btn-abs" data-review-act="done" aria-haspopup="dialog" onclick="event.stopPropagation();openReviewDone('${escAttr(id)}')">Done</button>` : ''; }
-function reviewMoreButtonHTML(id) { return isOwner() && uploadById(id) ? `<button type="button" class="btn-abs review-more" data-review-act="more" aria-label="More options" aria-haspopup="dialog" onclick="event.stopPropagation();openReviewMore('${escAttr(id)}')">&#8943;</button>` : ''; }
-function reviewBarActionsHTML(id) { return reviewFolderButtonHTML(id) + reviewDoneButtonHTML(id) + reviewMoreButtonHTML(id) + `<button type="button" class="btn-abs review-read pd-read" onclick="event.stopPropagation();openReader('${escAttr(id)}')">Read</button>`; }
 function reviewFolderRowsHTML(papers) { return `<div class="paper-list flat"><section class="tl-section">${papers.filter(p => !_reviewPendingRemovals.has(p.id)).map(p => uploadRowHTML(p)).join('')}</section></div>`; }
 function reviewGroupsHTML(papers) {
   papers = papers.filter(p => !_reviewPendingRemovals.has(p.id));
@@ -16421,20 +16409,6 @@ function reviewDoneChoice(id, choice) {
   if (choice === 'read') Object.assign(fields, { toRead: true, toReadAt: at });
   if (reviewUpdateUpload(id, fields)) toast(choice === 'read' ? 'Added to To read and Done' : 'Kept in Done');
 }
-function openReviewMore(id) {
-  const ka = escAttr(id);
-  reviewSheet(id, 'Paper options', `<button type="button" class="review-choice" onclick="closeReviewSheet();reviewRun(()=>renameUpload('${ka}'))"><b>Rename</b></button><button type="button" class="review-choice" onclick="reviewRun(()=>reviewDownloadMenu(this,'${ka}'))"><b>Download</b><small>PDF or your copy</small></button><button type="button" class="review-choice danger" onclick="closeReviewSheet();reviewRun(()=>removeUpload('${ka}'))"><b>Remove</b></button>`);
-}
-/* Reuse the actual download machinery and its epoch/notes guards, including the second Save tap on iOS.
-   The upload page opens this from its More menu. */
-async function reviewDownloadMenu(button, id) {
-  requireOwner(); const epoch = capturePrivateEpoch(), generation = vaultGeneration(), info = await privateAwait(dlInfo(findPaper(id)), epoch); checkVaultGeneration(generation);
-  if (!button.isConnected || !uploadById(id)) return;
-  closeReviewSheet(); keptPaperClose(); Dl.id = id; Dl.op++; Dl.busy = ''; Dl.ready = null; Dl.failed = false; Dl.info = info;
-  const menu = document.createElement('div'); menu.id = 'keptPaperMenu'; menu.dataset.id = id; menu.className = 'dl-sheet'; menu.setAttribute('role', 'dialog'); menu.setAttribute('aria-label', 'Download');
-  menu.innerHTML = '<div class="dl-panel"><span class="dl-grip" aria-hidden="true"></span><div class="dl-body"></div><button type="button" class="dl-cancel" onclick="keptPaperClose()">Cancel</button></div>';
-  menu.onclick = e => { if (e.target === menu) keptPaperClose(); }; document.body.appendChild(menu); dlMenuSync();
-}
 /* Undo keeps all persistent data and running work untouched. Only this tab's rows hide the pending removal.
    Closing the tab or signing out cancels the uncommitted action. At expiry the existing remover does all cleanup. */
 function reviewQueueRemoval(id) {
@@ -16456,6 +16430,232 @@ function reviewTeardown() {
   try { closeReviewSheet(); } catch (e) { console.error(e); }
 }
 /* ===== END REVIEW FOLDERS AND DONE ===== */
+
+/* ===== UPLOAD STATE: one protected encrypted record per upload (6 November 2026) =====
+   An upload's features (its summary, folder, Done, To read, read mark, Similar papers, lists and Ten questions) have
+   one authoritative copy: annotations/upload-state-<id>.json, encrypted with the notes key. This browser keeps it in a
+   database of its own (scholar_upload_state), apart from the notes files, so a tab of an older page never sees it,
+   never sends it and never merges it. The upload's row (here and in the notes index) and three fields of its
+   paper-notes record are copies that an older page may overwrite with stale values. Every sync joins those copies
+   into the protected record through each feature's own merge and clock, so a stale copy adds nothing, then repairs
+   the copies from it. UPLOAD_FEATURES is the one rule for every feature: a feature added later adds one line there.
+   A removal wins over every feature. A row's updated time or an envelope's time is never a feature's clock. */
+const UPLOAD_STATE_DB = 'scholar_upload_state';
+const UPLOAD_STATE_NAME = /^upload-state-(up-[0-9a-f]{12})\.json$/;
+function uploadStateName(id) { return 'upload-state-' + id + '.json'; }
+function uploadReviewOf(u) { const r = mergeUploadReview(u, {}, {}); return Object.keys(r).length ? r : null; }
+function uploadStateBad() { throw new Error('Invalid upload state'); }
+/* A feature: `notes`, the paper-notes field older pages read (null: none); `row`, its value on the upload's row;
+   `merge`, a join of two copies (a newer clock wins, an older or equal copy never replaces it); `valid`, its check. */
+const UPLOAD_FEATURES = {
+  review: { notes: 'uploadReview', row: u => uploadReviewOf(u), merge: (a, b) => uploadReviewOf(mergeUploadReview(a, b, {})),
+    valid: (v, id) => validateVaultPlain('_index.json', { v: 1, papers: {}, uploads: { [id]: v } }) },
+  brief: { notes: 'uploadBrief', row: u => uploadBriefValue(u) ? u.brief : null, merge: (a, b) => mergeUploadBrief(a, b) || null,
+    valid: v => { if (!uploadBriefValue({ brief: v })) uploadStateBad(); } },
+  similar: { notes: 'uploadSimilar', row: u => vaultObject(u.similar) ? u.similar : null, merge: (a, b) => similarMerge(a, b) || null,
+    valid: v => { if (!['waiting', 'done', 'failed'].includes(v.state) || !Number.isSafeInteger(v.attempts || 0) || (v.at !== undefined && typeof v.at !== 'string')) uploadStateBad(); } },
+  lists: { notes: null, row: u => vaultObject(u.lists) ? u.lists : null, merge: mergeUploadLists,
+    valid: v => { if (Object.keys(mergeUploadLists(v, null) || {}).length !== Object.keys(v).length) uploadStateBad(); } },
+  questions: { notes: null, row: () => null, merge: (a, b) => mergeUploadBrief(a, b) || null,
+    valid: (v, id) => { if (v.v !== 1 || typeof v.at !== 'string' || !Number.isFinite(Date.parse(v.at))) uploadStateBad(); briefFileOK(v.data, id, true); } },
+};
+/* An upload's lists, by name: { on, at, listId }. The newest `at` of a list wins; a name no list has any more stays,
+   and the lookup (uploadListEntry) finds a renamed list's entries by its definition. */
+function mergeUploadLists(a, b) {
+  const out = new Map();
+  for (const src of [a, b]) for (const [n, e] of Object.entries(vaultObject(src) ? src : {})) {
+    if (!n || n.length > 200 || !vaultObject(e) || typeof e.on !== 'boolean' || typeof e.at !== 'string' || !Number.isFinite(Date.parse(e.at))
+      || (e.listId !== undefined && (typeof e.listId !== 'string' || !e.listId || e.listId.length > 1000))) continue;
+    out.set(n, out.has(n) ? mergeUploadBrief(out.get(n), e) : e);
+  }
+  return out.size ? Object.fromEntries([...out].sort(([x], [y]) => cmpStr(x, y))) : null;
+}
+function validateUploadState(name, obj) {
+  const m = UPLOAD_STATE_NAME.exec(name);
+  if (!m || !vaultObject(obj) || obj.v !== 1 || obj.id !== name.slice(0, -5) || obj.upload !== m[1]) uploadStateBad();
+  if (obj.removed !== undefined && (typeof obj.removed !== 'string' || !Number.isFinite(Date.parse(obj.removed)))) uploadStateBad();
+  if (obj.state !== undefined) {
+    if (!vaultObject(obj.state)) uploadStateBad();
+    for (const [k, v] of Object.entries(obj.state)) {
+      if (!/^[a-z][A-Za-z0-9]{0,39}$/.test(k) || !vaultObject(v)) uploadStateBad();
+      if (hasOwn(UPLOAD_FEATURES, k)) UPLOAD_FEATURES[k].valid(v, m[1]);
+    }
+  }
+  return obj;
+}
+/* Two copies of one record. A feature a later page added is kept, the newest by its own `at`. */
+function mergeUploadState(a, b) {
+  if (!a || !b) return a || b || null;
+  const removed = [a.removed, b.removed].filter(Boolean).sort().pop();
+  if (removed) return { v: 1, id: a.id, upload: a.upload, removed };
+  const x = a.state || {}, y = b.state || {}, state = {};
+  for (const k of [...new Set([...Object.keys(x), ...Object.keys(y)])].sort()) {
+    const f = hasOwn(UPLOAD_FEATURES, k) ? UPLOAD_FEATURES[k] : null, l = hasOwn(x, k) ? x[k] : null, r = hasOwn(y, k) ? y[k] : null;
+    const v = f ? f.merge(l, r) : mergeUploadBrief(l, r);
+    if (v) state[k] = v;
+  }
+  return { v: 1, id: a.id, upload: a.upload, state };
+}
+/* JSON with every object's keys in order, to tell whether two copies hold the same */
+function uploadStateCanon(v) { return JSON.stringify(v === undefined ? null : v, (k, x) => x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map(n => [n, x[n]])) : x); }
+/* The record's features on a row: each joined with what the row has */
+function uploadStateApply(u, state) {
+  let out = { ...u };
+  if (state.review) out = mergeUploadReview(out, state.review, out);
+  if (state.brief) { const b = mergeUploadBrief(uploadBriefValue(out) ? out.brief : null, state.brief); if (b) out.brief = b; }
+  if (state.similar) out.similar = similarMerge(vaultObject(out.similar) ? out.similar : null, state.similar);
+  if (state.lists) out.lists = mergeUploadLists(out.lists, state.lists);
+  return out;
+}
+
+/* ---- the protected records in this browser: scholar_upload_state, store 'files', as the notes' 'files' ---- */
+function usDB(mode, fn) { requireOwner(); const epoch = capturePrivateEpoch();
+  const work = new Promise((resolve, reject) => {
+    const req = indexedDB.open(UPLOAD_STATE_DB, 1);
+    req.onupgradeneeded = () => { try { checkPrivateEpoch(epoch); requireOwner(); req.result.createObjectStore('files'); } catch (e) { req.transaction.abort(); req.result.close(); reject(e); } };
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      const db = req.result; let tx, r, failure, settled = false;
+      const finish = error => { if (settled) return; settled = true; if (tx) Private.transactions.delete(tx); db.close(); if (error) reject(error); else resolve(r && r.result); };
+      const abort = error => { failure = error; try { tx.abort(); } catch (e) {} finish(error); };
+      try {
+        requireOwner(); checkPrivateEpoch(epoch); tx = db.transaction('files', mode); if (isPrivate()) Private.transactions.add(tx);
+        tx.oncomplete = () => { try { checkPrivateEpoch(epoch); requireOwner(); finish(); } catch (e) { finish(e); } };
+        tx.onerror = () => finish(failure || tx.error || new Error('Private database transaction failed'));
+        tx.onabort = () => finish(failure || tx.error || new Error('Private database transaction aborted'));
+        r = fn(tx.objectStore('files'), abort);
+      } catch (e) { if (tx) abort(e); else finish(e); }
+    };
+  });
+  return mode === 'readonly' ? work : localWork(work);
+}
+const usGet = name => usDB('readonly', st => st.get(name));
+const usUpdate = (name, fn) => usDB('readwrite', (st, abort) => {
+  const epoch = capturePrivateEpoch(), out = { result: null }, g = st.get(name);
+  g.onsuccess = () => { try { checkPrivateEpoch(epoch); requireOwner(); const next = fn(g.result); out.result = next === undefined ? g.result : next; if (next !== undefined) st.put(next, name); } catch (e) { abort(e); } };
+  return out;
+});
+/* Every record here, as nfAll reads the notes: done when the cursor ends */
+const usAll = () => { requireOwner(); const epoch = capturePrivateEpoch(); return new Promise((resolve, reject) => {
+  const out = [], req = indexedDB.open(UPLOAD_STATE_DB, 1);
+  req.onupgradeneeded = () => { try { checkPrivateEpoch(epoch); requireOwner(); req.result.createObjectStore('files'); } catch (e) { req.transaction.abort(); req.result.close(); reject(e); } };
+  req.onerror = () => reject(req.error);
+  req.onsuccess = () => {
+    const db = req.result; let tx, cur, failure, settled = false;
+    const finish = error => { if (settled) return; settled = true; if (tx) Private.transactions.delete(tx); db.close(); error ? reject(error) : resolve(out); };
+    const abort = error => { failure = error; try { tx.abort(); } catch (e) {} finish(error); };
+    try {
+      requireOwner(); checkPrivateEpoch(epoch); tx = db.transaction('files'); if (isPrivate()) Private.transactions.add(tx);
+      tx.onabort = () => finish(failure || tx.error || new Error('Private database transaction aborted'));
+      tx.onerror = () => finish(failure || tx.error || new Error('Private database transaction failed'));
+      cur = tx.objectStore('files').openCursor();
+      cur.onsuccess = e => { try { checkPrivateEpoch(epoch); requireOwner(); const c = e.target.result; if (c) { out.push([c.key, c.value]); c.continue(); } else finish(); } catch (error) { abort(error); } };
+      cur.onerror = () => abort(cur.error || new Error('Could not read private database cursor'));
+    } catch (e) { if (tx) abort(e); else finish(e); }
+  };
+}); };
+/* The newest copy: this browser's unsent edit, else the newer of this browser's and GitHub's. A GitHub copy is
+   decrypted and checked before it replaces anything. Offline: this browser's. */
+async function usLoad(name) { const epoch = capturePrivateEpoch(); requireOwner();
+  const generation = vaultGeneration(), key = Vault.key;
+  const local = await privateAwait(usGet(name), epoch); checkVaultGeneration(generation);
+  if ((local && local.dirty) || !navigator.onLine) return local || null;
+  const remote = await privateAwait(ghNoteRead(name), epoch); checkVaultGeneration(generation);
+  if (!remote) return local || null;
+  validateVaultEnvelope(remote.env);
+  validateUploadState(name, await privateAwait(vaultDecrypt(remote.env, key), epoch)); checkVaultGeneration(generation);
+  if (local && (remote.env.updated || '') < (local.env.updated || '')) return local;
+  const rec = { env: remote.env, sha: remote.sha, base: remote.env.updated, dirty: false };
+  return privateAwait(usUpdate(name, cur => { checkVaultGeneration(generation); return uploadStateCanon(cur || null) === uploadStateCanon(local || null) ? rec : undefined; }), epoch);
+}
+/* Saves a record joined with this browser's copy, as unsent; another tab's save meanwhile is joined too. The push sends
+   it, joined with GitHub's copy when that moved. Returns what is saved. */
+async function usSave(name, obj, current = () => {}) { const epoch = capturePrivateEpoch(); requireOwner();
+  LocalWork.n++;
+  try {
+    const generation = vaultGeneration(); await privateAwait(awaitVaultWritable(), epoch); checkVaultGeneration(generation); current();
+    validateUploadState(name, obj);
+    const before = await privateAwait(usGet(name), epoch); checkVaultGeneration(generation);
+    const saved = before ? validateUploadState(name, await privateAwait(vaultDecrypt(before.env), epoch)) : null;
+    checkVaultGeneration(generation); current();
+    const candidate = mergeUploadState(saved, obj);
+    if (saved && uploadStateCanon(candidate) === uploadStateCanon(saved)) return saved;
+    const env = await privateAwait(vaultEncrypt(candidate), epoch); requireOwner(); checkVaultGeneration(generation); assertVaultWritable(); current();
+    let collided = false;
+    await privateAwait(usUpdate(name, cur => {
+      checkVaultGeneration(generation); assertVaultWritable(); current();
+      if ((cur?.env.ct || null) !== (before?.env.ct || null)) { collided = true; return undefined; }
+      return { env, sha: cur ? cur.sha : null, base: cur ? cur.base : null, dirty: true };
+    }), epoch);
+    if (collided) { checkVaultGeneration(generation); current(); return await privateAwait(usSave(name, obj, current), epoch); }
+    requireOwner(); checkVaultGeneration(generation);
+    scheduleNotesPush();
+    return candidate;
+  } finally { LocalWork.n--; }
+}
+/* The removal's record: no features, only when it was removed */
+async function uploadStateRemove(id) {
+  const name = uploadStateName(id), u = _uploads[id];
+  return usSave(name, { v: 1, id: name.slice(0, -5), upload: id, removed: (u && u.deleted && u.updated) || new Date().toISOString() });
+}
+/* Another device removed it: the row follows and this device's removal runs */
+function uploadStateRemoved(id, at) {
+  const u = _uploads[id];
+  if (!u || u.deleted) return false;
+  uploadBriefCancel(id);
+  _uploads[id] = { deleted: true, updated: at };
+  if (!_uploadRemovals[id]) { _uploadRemovals[id] = { pdf: false, notes: false, bridge: false, chats: false }; storeUploadRemovals(); setTimeout(privateCallback(() => retryUploadRemovals()), 0); }
+  return true;
+}
+/* One upload's record joined with its copies (the row, the paper-notes fields) and `extra` (features this device
+   has just made, { questions }), saved when it gained anything; then the copies repaired from it. An unreadable
+   GitHub copy is never taken as none: this browser's copy is joined and saved, and the push joins GitHub's later.
+   Returns { record, changed } (changed: the row in memory changed; the caller saves it), or null. */
+async function uploadStateSync(id, extra = null, current = () => {}) {
+  requireOwner(); const epoch = capturePrivateEpoch(), generation = vaultGeneration();
+  if (!/^up-[0-9a-f]{12}$/.test(id) || !Vault.key || !Vault.index || !_uploads[id] || _uploads[id].deleted) return null;
+  const name = uploadStateName(id), check = () => { checkPrivateEpoch(epoch); checkVaultGeneration(generation); current(); };
+  let rec;
+  try { rec = await privateAwait(usLoad(name), epoch); }
+  catch (e) { check(); if (e && (e.privateAuth || e.target)) throw e; rec = await privateAwait(usGet(name), epoch); }
+  check();
+  const saved = rec ? validateUploadState(name, await privateAwait(vaultDecrypt(rec.env), epoch)) : null;
+  check();
+  let notes = null;
+  try {
+    const nrec = await privateAwait(navigator.onLine ? nfLoad(id + '.json', undefined, { background: true }) : nfGet(id + '.json'), epoch); check();
+    if (nrec) { notes = await privateAwait(vaultDecrypt(nrec.env), epoch); check(); if (isPrivate()) validateVaultPlain(id + '.json', notes); }
+  } catch (e) { check(); if (e && (e.privateAuth || e.target)) throw e; notes = null; }
+  storeUploads();
+  const u = _uploads[id];
+  if (!u || u.deleted) return null;   // removed meanwhile: the removal writes its own record
+  const state = {};
+  for (const [k, f] of Object.entries(UPLOAD_FEATURES)) {
+    let v = null;
+    for (const c of [f.row(u), f.notes && notes ? notes[f.notes] : null, extra && hasOwn(extra, k) ? extra[k] : null]) {
+      if (!vaultObject(c)) continue;
+      try { f.valid(c, id); v = f.merge(v, c); } catch (e) {}   // a copy that fails its check adds nothing
+    }
+    if (v) state[k] = v;
+  }
+  let record = mergeUploadState(saved, { v: 1, id: name.slice(0, -5), upload: id, state });
+  if (!saved || uploadStateCanon(record) !== uploadStateCanon(saved)) { record = await privateAwait(usSave(name, record, check), epoch); check(); }
+  if (record.removed) return { record, changed: uploadStateRemoved(id, record.removed) };
+  const row = uploadStateApply(_uploads[id], record.state || {}), changed = uploadStateCanon(row) !== uploadStateCanon(_uploads[id]);
+  if (changed) _uploads[id] = row;
+  uploadQuestionsSeen(id, (record.state || {}).questions);
+  const fields = {};
+  for (const [k, f] of Object.entries(UPLOAD_FEATURES)) {
+    const v = (record.state || {})[k];
+    if (f.notes && v && uploadStateCanon(v) !== uploadStateCanon(notes ? notes[f.notes] : null)) fields[f.notes] = v;
+  }
+  if (Object.keys(fields).length && uploadById(id)) {
+    bumpNotesGen(id);
+    await privateAwait(nfSave(id + '.json', { ...(notes || emptyPaperNotes(id)), ...fields }), epoch); check();
+  }
+  return { record, changed };
+}
+/* ===== END UPLOAD STATE ===== */
 
 /* ===== UPLOADED PAPERS (usually papers to review) =====
    They never enter the public database. Each record (a random id, title) lives in this browser and, once notes
@@ -16485,13 +16685,15 @@ async function retryUploadRemovals(tell = false) { const epoch = capturePrivateE
       if (!job.notes && Vault.key) {
         try {
           if (!job.notesQueued) { await privateAwait(clearPaperNotes(id), epoch); job.notesQueued = true; storeUploadRemovals(); }
+          await privateAwait(uploadStateRemove(id), epoch);   // UPLOAD STATE: its removal wins over every feature, on every device
           await privateAwait(pushNotes(), epoch);
           const rec = await privateAwait(nfGet(id + '.json'), epoch);
           const indexRec = await privateAwait(nfGet('_index.json'), epoch);
+          const stateRec = await privateAwait(usGet(uploadStateName(id)), epoch);
           const remaining = await privateAwait(paperNotes(id), epoch);
           const empty = remaining && !['annos', 'entries', 'ink'].some(k => (remaining[k] || []).length);
           if (!empty) { job.notesQueued = false; storeUploadRemovals(); }
-          else if (rec && !rec.dirty && indexRec && !indexRec.dirty) { job.notes = true; storeUploadRemovals(); }
+          else if (rec && !rec.dirty && indexRec && !indexRec.dirty && stateRec && !stateRec.dirty) { job.notes = true; storeUploadRemovals(); }
         } catch (e) { checkPrivateEpoch(epoch); }
       }
       if (!job.bridge && Chat.token) {
@@ -16539,7 +16741,7 @@ function mergeUploads(a, b) {
     const newer = (u.updated || '') > (old.updated || '') ? u : old;
     const older = newer === u ? old : u;
     const similar = similarMerge(old.similar, u.similar);
-    const brief = mergeUploadBrief(old.brief, u.brief);
+    const brief = mergeUploadBrief(old.brief, u.brief), lists = old.lists || u.lists ? mergeUploadLists(old.lists, u.lists) : null;
     // Live Rename carries titleAt unchanged and advances updated, even on a row carrying a brief.
     // A summary's own timestamp is never a title clock. New summaries retain the previous title clock;
     // pre-migration summary rows fall back to added. Equal clocks resolve independently and deterministically.
@@ -16548,7 +16750,7 @@ function mergeUploads(a, b) {
     const named = [old, u].filter(x => x.title).sort((a, b) =>
       titleClock(b).localeCompare(titleClock(a)) || (b.updated || '').localeCompare(a.updated || '') ||
       (b.title || '').localeCompare(a.title || ''))[0];
-    out[id] = mergeUploadReview(old, u, { ...older, ...newer, ...(similar ? { similar } : {}), ...(brief ? { brief } : {}), ...(named ? { title: named.title, titleAt: titleClock(named), ...((old.renamed || u.renamed) ? { renamed: true } : {}) } : {}) });
+    out[id] = mergeUploadReview(old, u, { ...older, ...newer, ...(similar ? { similar } : {}), ...(brief ? { brief } : {}), ...(lists ? { lists } : {}), ...(named ? { title: named.title, titleAt: titleClock(named), ...((old.renamed || u.renamed) ? { renamed: true } : {}) } : {}) });
   });
   return out;
 }
@@ -16573,28 +16775,16 @@ function saveUploads() {
   reviewRestoreRead(); reviewRecordsSoon();
   reviewRefresh();   // REVIEW FOLDERS HOOK: page, private To read and copy queue follow edits
 }
-/* The durable copy lives in the upload's encrypted paper-notes record. Live mergeUploads replaces rows,
-   but live mergePaperNotes carries unknown top-level fields through both merge directions. Old Rename/sync
-   cannot erase this copy; Remove already clears this same record. The row remains a local/index cache. */
+/* The summary's durable copy is the upload's protected record (UPLOAD STATE); the row and the paper-notes field are
+   copies repaired from it, so an older page's Rename or sync cannot erase it. */
 async function uploadBriefRecord(id, current = () => {}) {
   if (!Vault.key || !Vault.index || !uploadById(id)) return;
-  const epoch = capturePrivateEpoch(), generation = vaultGeneration();
-  const notes = await privateAwait(paperNotes(id, { background: true }), epoch);
+  const epoch = capturePrivateEpoch(), generation = vaultGeneration(), before = uploadStateCanon(_uploads[id].brief);
+  const out = await privateAwait(uploadStateSync(id, null, current), epoch);
   checkVaultGeneration(generation); current();
-  if (!notes || !uploadById(id)) return;
-  storeUploads();
-  const row = _uploads[id], mine = uploadBriefValue(row) ? row.brief : null;
-  const saved = uploadBriefValue({ brief: notes.uploadBrief }) ? notes.uploadBrief : null;
-  const brief = mergeUploadBrief(mine, saved);
-  if (!brief) return;
-  if (JSON.stringify(notes.uploadBrief) !== JSON.stringify(brief)) {
-    notes.uploadBrief = brief; bumpNotesGen(id);
-    await privateAwait(nfSave(id + '.json', notes), epoch); checkVaultGeneration(generation); current();
-  }
-  if (!uploadById(id)) return;
-  if (JSON.stringify(_uploads[id].brief) !== JSON.stringify(brief)) {
-    _uploads[id] = { ..._uploads[id], brief }; saveUploads(); uploadBriefPaint();
-  }
+  if (!out || !out.changed || !uploadById(id)) return;
+  saveUploads();
+  if (uploadStateCanon(_uploads[id].brief) !== before) uploadBriefPaint();
 }
 /* The encrypted index changed (unlocked, or synced from another device): take in its records, give it ours */
 function syncUploadsWithIndex() {
@@ -16659,6 +16849,7 @@ function uploadBriefPaint() {
   if (id?.startsWith('up-') && _paperViewActive) { const p = uploadById(id); if (p) renderPaperDetail(p); else { homeGo('#lists', true); listsShowReview(); } }
 }
 function uploadBriefCancel(id) {
+  try { uploadQuestionsCancel(id); } catch (e) { console.error(e); }
   try { similarCancel(id); } catch (e) { console.error(e); }
   const jobs = [...UploadBrief.jobs].filter(([pid]) => !id || pid === id), queue = !id && UploadBrief.queue;
   if (!id) { UploadBrief.serial++; const timer = UploadBrief.timer; UploadBrief.timer = 0; UploadBrief.here.clear(); UploadBrief.queue = null; try { clearTimeout(timer); } catch (e) { console.error(e); } }
@@ -16894,19 +17085,15 @@ function similarStatus(text, request) {
   if (s.sealed && (Object.keys(s.sealed).sort().join() !== 'ciphertext,key_id,nonce' || s.sealed.key_id !== request.key_id)) throw Error('Invalid sealed reply');
   return s;
 }
-/* Like uploadBrief, the durable state lives outside the upload row in encrypted paper notes.
-   The existing notes CAS merges concurrent ordinary edits; old clients retain this top-level field. */
+/* Like the summary, Similar's durable state is the upload's protected record (UPLOAD STATE) */
 async function similarRecord(id, check = () => {}) {
   if (!Vault.key || !Vault.index || !uploadById(id)) return;
   const epoch = capturePrivateEpoch(), generation = vaultGeneration();
   check(); storeUploads();
-  const result = await privateAwait(reviewRecord(id, 'uploadSimilar', _uploads[id].similar, (a, b) => similarMerge(a, b) || {}), epoch);
+  const out = await privateAwait(uploadStateSync(id, null, check), epoch);
   checkVaultGeneration(generation); check();
-  if (!uploadById(id) || !result.state) return;
-  const merged = similarMerge(_uploads[id].similar, result);
-  if (JSON.stringify(_uploads[id].similar) !== JSON.stringify(merged)) {
-    _uploads[id] = { ..._uploads[id], similar: merged }; saveUploads(); similarPaint();
-  }
+  if (!out || !out.changed || !uploadById(id)) return;
+  saveUploads(); similarPaint();
 }
 async function similarSave(id, result, check) {
   check(); _uploads = mergeUploads(_uploads, JSON.parse(localStorage.getItem(UPLOADS_KEY) || '{}')); check();
@@ -17321,16 +17508,6 @@ async function upPdfForget(id, epoch = capturePrivateEpoch()) {
 setInterval(privateCallback(() => { if (upPdfOn()) upPdfSoon(0); }), UP_PDF.tick);
 /* ===== END ENCRYPTED PDF SYNC FOR UPLOADS ===== */
 
-/* Option B: the ordinary paper-page shell, with private upload actions and safe abstract math. */
-function uploadPageHTML(p) {
-  requireOwner();
-  const ka = escAttr(p.id), u = _uploads[p.id], ix = Vault.index?.papers?.[p.id];
-  const counts = ix ? [ix.g && `${ix.g} note${ix.g === 1 ? '' : 's'}`, ix.h && `${ix.h} highlight${ix.h === 1 ? '' : 's'}`, ix.c && `${ix.c} comment${ix.c === 1 ? '' : 's'}`, ix.d && 'handwriting'].filter(Boolean).join(' · ') : '';
-  const bar = '<div class="pd-bar"><div class="pd-bar-inner review-page-bar"><button class="pd-back" onclick="paperBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg><span class="pd-back-label">Back</span></button><div class="review-bar-actions">' + reviewBarActionsHTML(p.id) + '</div></div></div>';
-  const summary = p.summary ? `<section class="pd-section"><h2>Summary</h2><p class="pd-prose">${esc(p.summary)}</p></section>` : '';
-  const abstract = p.abstract ? `<section class="pd-section"><h2>Abstract</h2><p class="pd-prose" data-abs-tex>${esc(p.abstract)}</p></section>` : '';
-  return { bar, glow: 'transparent', article: `<article class="pd-article pd-upload" data-pid="${dataAttr(p.id)}"><header class="pd-head"><div class="pd-kicker"><span class="upload-tag">To review</span>${u.added ? `<span>Added ${esc(shortDate(u.added.slice(0, 10)))}</span>` : ''}<span>${esc(counts || 'No notes yet')}</span></div><h1 class="pd-title">${esc(p.headline || p.title)}</h1>${p.headline ? `<p class="pd-dek">${esc(p.title)}</p>` : ''}<div class="upload-brief-state" data-upload-state="${ka}">${uploadBriefStateHTML(p.id)}</div>${p.authors ? `<div class="pd-authors">${esc(p.authors)}</div>` : ''}</header><div class="pd-body"><div class="pd-main">${summary}${abstract}${similarSection(p.id)}</div></div></article>` };
-}
 
 /* Upload entry points own their errors, including sign-in checks before parsing. No upload fields are added to sync. */
 const UploadPdf = { busy: false, picker: null, ms: { auth: 15000, read: 30000, reader: 45000, title: 5000 } };
@@ -17509,15 +17686,22 @@ async function guessPdfTitle(doc) { const _authEpoch = capturePrivateEpoch();
     return t.length >= 8 && t.length <= 250 ? t : '';
   } catch (e) { checkPrivateEpoch(_authEpoch); return ''; }
 }
+/* Edit title, from the paper page's ⋯: the new title on every device, with Undo while it is still the one set here */
 async function renameUpload(id) { const _authEpoch = capturePrivateEpoch();
   const u = _uploads[id];
   if (!u || u.deleted) return;
-  const name = await privateAwait(showPrompt('Rename', null, 'Title', u.title), _authEpoch); requireOwner();
+  const name = await privateAwait(showPrompt('Edit title', null, 'Title', u.title), _authEpoch); requireOwner();
   const current = _uploads[id];
   if (!current || current.deleted || !name || !name.trim() || name.trim() === current.title) return;
-  _uploads[id] = { ...current, title: name.trim().slice(0, 300), renamed: true, titleAt: new Date().toISOString(), updated: new Date().toISOString() };
-  saveUploads(); uploadBriefPaint();
-  if (_reader.paper && _reader.paper.id === id) document.getElementById('readerTitle').textContent = uploadById(id).title;
+  const title = name.trim().slice(0, 300), before = current.title;
+  const set = to => { const at = new Date().toISOString(); _uploads[id] = { ..._uploads[id], title: to, renamed: true, titleAt: at, updated: at }; saveUploads(); uploadBriefPaint(); if (_reader.paper && _reader.paper.id === id) document.getElementById('readerTitle').textContent = uploadById(id).title; };
+  set(title);
+  toast('Title changed', () => {
+    checkPrivateEpoch(_authEpoch); requireOwner();
+    const now = _uploads[id];
+    if (!now || now.deleted || now.title !== title) { toast('That changed since, so there is nothing to undo.'); return false; }
+    set(before); return true;
+  }, { duration: 5000, fullTarget: true });
 }
 async function removeUpload(id) { const _authEpoch = capturePrivateEpoch();
   const u = _uploads[id];
@@ -18886,9 +19070,21 @@ async function pushNotes() { const _authEpoch = capturePrivateEpoch();
       // Publish the durable organization records with the index cache, including an edit made during sync.
       if (_reviewRecordsWork || Object.keys(_uploads).length || Object.keys(_reviewFolders).length) await privateAwait(reviewRecordsSoon(), _authEpoch);
       requireOwner(); checkVaultGeneration(generation); const dirty = (await privateAwait(nfAll(), _authEpoch)).filter(([, rec]) => rec && rec.dirty);
+      const states = (await privateAwait(usAll(), _authEpoch)).filter(([name, rec]) => UPLOAD_STATE_NAME.test(name) && rec && rec.dirty);   // UPLOAD STATE: its own database
       if (_reviewRecordsWork) { await privateAwait(_reviewRecordsWork, _authEpoch); attempt--; continue; }
-      if (!dirty.length) break;
+      if (!dirty.length && !states.length) break;
       const out = [];
+      for (const [name, rec] of states) {   // joined with GitHub's copy by the features' own merges, never mergePaperNotes
+        const remote = await privateAwait(ghNoteRead(name), _authEpoch); requireOwner(); checkVaultGeneration(generation);
+        let env = rec.env;
+        if (remote && remote.env.updated !== rec.base) {
+          validateVaultEnvelope(remote.env);
+          const mine = validateUploadState(name, await privateAwait(vaultDecrypt(rec.env, key), _authEpoch)), theirs = validateUploadState(name, await privateAwait(vaultDecrypt(remote.env, key), _authEpoch));
+          checkVaultGeneration(generation);
+          env = await privateAwait(vaultEncrypt(mergeUploadState(theirs, mine), key), _authEpoch); requireOwner(); checkVaultGeneration(generation);
+        }
+        out.push({ name, rec, env, state: true });
+      }
       for (const [name, rec] of dirty) {
         const remote = await privateAwait(ghNoteRead(name), _authEpoch); requireOwner(); checkVaultGeneration(generation);
         let env = rec.env;
@@ -18910,7 +19106,7 @@ async function pushNotes() { const _authEpoch = capturePrivateEpoch();
         out.push({ name, rec, env });
       }
       checkVaultGeneration(generation);
-      const papers = out.filter(o => !o.name.startsWith('_')).length;
+      const papers = out.filter(o => !o.state && !o.name.startsWith('_')).length;
       try {
         await privateAwait(ghCommitFiles(out.map(o => ({ path: VAULT_DIR + o.name, content: JSON.stringify(o.env) })), `Update encrypted notes (${papers} paper${papers === 1 ? '' : 's'})`), _authEpoch);
       } catch (e) { checkPrivateEpoch(_authEpoch); checkVaultGeneration(generation);
@@ -18921,13 +19117,14 @@ async function pushNotes() { const _authEpoch = capturePrivateEpoch();
       for (const o of out) {
         let changedMeanwhile = false;
         // edited while we pushed: keep it dirty, and with no base so the next round merges with what we just sent
-        await privateAwait(nfUpdate(o.name, cur => {
+        await privateAwait((o.state ? usUpdate : nfUpdate)(o.name, cur => {
           checkVaultGeneration(generation);
           changedMeanwhile = !!cur && cur.env.ct !== o.rec.env.ct;
           return changedMeanwhile ? { ...cur, base: null, dirty: true } : { env: o.env, sha: null, base: o.env.updated, dirty: false };
         }), _authEpoch);
         requireOwner(); checkVaultGeneration(generation); sent = true;
         if (changedMeanwhile) Vault.pushAgain = true;
+        else if (o.state) continue;
         else if (o.env !== o.rec.env && noteSeen(o.name) === o.rec.env.ct) noteSeen(o.name, o.env);   // memory holds the merged copy just sent
       }
       break;
@@ -19141,6 +19338,7 @@ async function resetLocalVault(newMeta) { const _authEpoch = capturePrivateEpoch
   Vault.key = null; Vault.index = null; Vault.cache.clear(); Vault.meta = newMeta || null; _rn = null;
   await privateAwait(notesDB('files', 'readwrite', st => { checkVaultGeneration(generation); return st.clear(); }), _authEpoch); requireOwner(); checkVaultGeneration(generation);
   await privateAwait(notesDB('keys', 'readwrite', st => { checkVaultGeneration(generation); return st.clear(); }), _authEpoch); requireOwner(); checkVaultGeneration(generation);
+  await privateAwait(usDB('readwrite', st => { checkVaultGeneration(generation); return st.clear(); }), _authEpoch); requireOwner(); checkVaultGeneration(generation);   // UPLOAD STATE
   if (newMeta) await privateAwait(nfPut('_vault.json', { env: newMeta, sha: null, base: newMeta.updated, dirty: false }), _authEpoch);
   hideSelBar();
   if (_reader.paper) { redrawAnnoLayers(); setRnState('ready'); }
@@ -23732,6 +23930,301 @@ function relevanceCardHTML(p, ka) {
       <span class="rv-tick" style="left:${SCORE_CUTS.probably / 4 * 100}%"><span>Interesting</span></span><span class="rv-tick" style="left:${SCORE_CUTS.definitely / 4 * 100}%"><span>Must Read</span></span>
     </div>${groups}${former}</div>`;
 }
+/* ---- the paper page's ⋯ (6 November 2026): one anchored dropdown on every paper page ----
+   The app's .sort-menu at its button (placePopover), as a list's ⋯. A library paper's holds Hide paper (or Restore
+   paper); an upload's holds Edit title and Remove, each with Undo. A tap outside, Escape, Tab and Back close it and
+   the focus goes back to ⋯. It closes when the page is drawn without its button. */
+const PaperMenu = { cur: null, seq: 0 };
+function paperMoreButton(p) {
+  return `<button type="button" class="pd-act pd-more" id="paperMore" data-act="more" aria-label="More" title="More" aria-haspopup="menu" aria-expanded="false" onclick="event.stopPropagation();paperMenuOpen(this,'${escAttr(paperKey(p))}')">&#8943;</button>`;
+}
+function paperMenuItems(p) {
+  if (p.uploaded) return [['title', 'Edit title'], ['remove', 'Remove', true]];
+  return [isHiddenRow(p) ? ['restore', 'Restore paper'] : ['hide', 'Hide paper']];
+}
+function paperMenuOpen(btn, k) {
+  requireOwner();
+  if (PaperMenu.cur) { const same = PaperMenu.cur.k === k; paperMenuClose(true, same); if (same) return; }
+  const p = feedRow(k);
+  if (!p || p._goneRemote || !btn || !btn.isConnected || !_paperViewActive) return;
+  closePopovers(); keptPaperClose();
+  const id = ++PaperMenu.seq, m = document.createElement('div');
+  m.id = 'paperMenu'; m.className = 'sort-menu paper-menu'; m.dataset.menu = String(id);
+  m.setAttribute('role', 'menu'); m.setAttribute('aria-label', 'More');
+  m.innerHTML = paperMenuItems(p).map(([v, label, danger]) => `<button type="button" class="sort-item${danger ? ' danger' : ''}" role="menuitem" data-v="${v}" onclick="paperMenuChoose(this)"><span class="sort-text"><span class="sort-name">${esc(label)}</span></span></button>`).join('');
+  m.onkeydown = paperMenuKey;
+  document.body.appendChild(m);
+  const cur = PaperMenu.cur = { id, k, el: m, epoch: capturePrivateEpoch(), pushed: false };
+  try { history.pushState({ scoutPaperMenu: id }, '', location.href); cur.pushed = true; } catch (e) {}
+  btn.setAttribute('aria-expanded', 'true'); btn.setAttribute('aria-controls', m.id);
+  placePopover(m, btn);
+  if (window.visualViewport) { m._vv = () => paperMenuPlace(); window.visualViewport.addEventListener('resize', m._vv); window.visualViewport.addEventListener('scroll', m._vv); }
+  const first = m.querySelector('.sort-item'); if (first) first.focus({ preventScroll: true });
+}
+function paperMenuPlace() {
+  const cur = PaperMenu.cur; if (!cur) return;
+  const btn = document.getElementById('paperMore');
+  if (!btn || !btn.isConnected || !_paperViewActive || (document.querySelector('#paperDetail .pd-article[data-pid]') || {}).dataset?.pid !== cur.k) { paperMenuClose(); return; }
+  btn.setAttribute('aria-expanded', 'true'); btn.setAttribute('aria-controls', cur.el.id);
+  placePopover(cur.el, btn);
+}
+/* Never guarded: a lock closes it after the sign-in is gone. back: its step in history goes too (a tap outside,
+   Escape, a choice); Back itself has taken it already. */
+function paperMenuClose(back = true, focusBack = false) {
+  const cur = PaperMenu.cur; if (!cur) return;
+  PaperMenu.cur = null;
+  const inside = !!document.activeElement && cur.el.contains(document.activeElement);
+  if (cur.el._vv && window.visualViewport) { window.visualViewport.removeEventListener('resize', cur.el._vv); window.visualViewport.removeEventListener('scroll', cur.el._vv); }
+  cur.el.onkeydown = null; cur.el.remove();
+  const btn = document.getElementById('paperMore');
+  if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.removeAttribute('aria-controls'); if (btn.isConnected && (focusBack || inside)) btn.focus({ preventScroll: true }); }
+  if (back && cur.pushed && history.state && history.state.scoutPaperMenu === cur.id) history.back();
+}
+function paperMenuKey(e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.isComposing) return;
+  const cur = PaperMenu.cur; if (!cur) return;
+  const items = [...cur.el.querySelectorAll('.sort-item')], i = items.indexOf(document.activeElement), k = e.key;
+  if (k === 'ArrowDown' || k === 'ArrowUp') { const d = k === 'ArrowDown' ? 1 : -1; items[(Math.max(i, d > 0 ? -1 : 0) + d + items.length) % items.length].focus(); }
+  else if (k === 'Home' || k === 'End') items[k === 'Home' ? 0 : items.length - 1].focus();
+  else if (k === 'Enter' || k === ' ') { if (!e.repeat && i >= 0) paperMenuChoose(items[i]); }
+  else if (k === 'Escape' || k === 'Tab') paperMenuClose(true, true);
+  else return;
+  e.preventDefault(); e.stopPropagation();
+}
+/* A row chosen in the opening it was drawn in */
+function paperMenuChoose(item) {
+  requireOwner();
+  const cur = PaperMenu.cur, m = item && item.closest ? item.closest('#paperMenu') : null;
+  if (!cur || !m || Number(m.dataset.menu) !== cur.id) return;
+  checkPrivateEpoch(cur.epoch);
+  const k = cur.k, v = item.dataset.v;
+  paperMenuClose(true, true);
+  const p = feedRow(k);
+  if (!p || p._goneRemote) return;
+  if (p.uploaded) { if (v === 'title') reviewRun(() => renameUpload(k)); else if (v === 'remove') reviewRun(() => removeUpload(k)); return; }
+  if (v === 'hide' && !isHiddenRow(p)) askHide(k);
+  else if (v === 'restore' && isHiddenRow(p)) unhidePaper(k);
+}
+window.addEventListener('popstate', () => { if (PaperMenu.cur && history.state?.scoutPaperMenu !== PaperMenu.cur.id) paperMenuClose(false); });
+window.addEventListener('resize', () => paperMenuPlace());
+document.addEventListener('scroll', () => paperMenuPlace(), true);
+
+/* ---- an upload's lists (6 November 2026) ----
+   An upload goes to To read and to the person's lists from the same Save sheet as a library paper. Its To read is
+   its private review field toRead; each other list is an entry { on, at, listId } on its row and in its protected
+   record (UPLOAD STATE), never in libraryLists, the papers file, a request or a list definition. listId follows a
+   renamed list, and through `restores` the list an Undo of a delete brings back. */
+function uploadListEntry(id, name) {
+  const lists = (_uploads[id] || {}).lists;
+  if (!vaultObject(lists)) return null;
+  const def = ListDefs.ready ? listDefLive(name) : null, ids = def ? listDefAncestors(def[0]) : null;
+  let entry = null;
+  for (const [stored, value] of Object.entries(lists)) {
+    if (!vaultObject(value) || typeof value.on !== 'boolean' || typeof value.at !== 'string') continue;
+    const same = value.listId && ListDefs.ready ? !!ids && ids.has(value.listId) : listDefName(stored) === name;
+    if (same) entry = mergeUploadBrief(entry, value);
+  }
+  return entry;
+}
+function uploadListSet(id, name, on) {
+  requireOwner();
+  if (!uploadById(id) || !isProjectName(name) || (on && listGone(name))) return false;
+  if (!!uploadListEntry(id, name)?.on === on) return false;
+  if (on && ListDefs.ready && !listDefLive(name)) listDefsChange({ [name]: { created: listDates(name).created || new Date().toISOString() } });
+  const def = ListDefs.ready ? listDefLive(name) : null;
+  return reviewUpdateUpload(id, { lists: { ...(vaultObject(_uploads[id].lists) ? _uploads[id].lists : {}), [name]: { on, at: reviewStamp(), ...(def ? { listId: def[0] } : {}) } } });
+}
+/* When an upload was put in a list, for the list's order */
+function uploadListAt(n, id) { return (n === TO_READ ? (_uploads[id] || {}).toReadAt : uploadListEntry(id, n)?.at) || ''; }
+
+/* ---- Ten questions for an upload (6 November 2026) ----
+   The same chip and sheet as a library paper's. Only a tap asks: once, from this page, on this device's Claude API
+   key, with the library's ten questions and instructions. brief_recipe.json beside the page holds them, written from
+   ingest/brief.py and ingest/brief_instructions.md by tools/export_brief_recipe.py; the message is built as
+   ingest/brief.py message() builds it. The answers are checked as the worker checks them and kept, with the
+   questions' version, in the upload's protected record (UPLOAD STATE), so every device shows them without asking
+   again. A lock, a sign-out or a removal while it runs saves nothing. */
+const UploadQuestions = { jobs: new Map(), serial: 0, recipe: null };
+const UPLOAD_QUESTIONS_SPACE = /(?:[^\S\ufeff]|[\x1c-\x1f\x85])+/;   // Python's str.split() whitespace
+function uploadQuestionsCancel(id) {
+  if (!id) UploadQuestions.serial++;
+  for (const [pid, job] of UploadQuestions.jobs) if (!id || id === pid) { job.stopped = true; try { job.ctl.abort(); } catch (e) {} }
+  // Decrypted answers leave memory and the screen with the key (a lock, a reset) or with the paper (a removal)
+  for (const pid of [...Brief.files.keys(), ...Brief.loading.keys()]) if (/^up-/.test(pid) && (!id || id === pid)) { Brief.files.delete(pid); Brief.loading.delete(pid); }
+  if (Brief.sheet && /^up-/.test(Brief.sheet.pid) && (!id || id === Brief.sheet.pid)) briefSheetHide();
+}
+async function uploadQuestionsRecipe(epoch) {
+  if (UploadQuestions.recipe) return UploadQuestions.recipe;
+  const res = await privateAwait(fetch(APP_ROOT + 'brief_recipe.json', { credentials: 'same-origin', cache: 'no-cache' }), epoch);
+  if (!res.ok) throw Error('The questions could not be read');
+  const r = await privateAwait(res.json(), epoch), int = v => Number.isSafeInteger(v) && v > 0;
+  const ok = vaultObject(r) && r.schema === 1 && r.version === BRIEF_RECIPE && r.model === API_MODELS.opus && API_EFFORTS.includes(r.effort)
+    && typeof r.instructions === 'string' && r.instructions.length > 0 && Array.isArray(r.questions) && r.questions.length === 10
+    && r.questions.every((q, i) => vaultObject(q) && Object.keys(q).length === 3 && q.n === i + 1 && q.key === BRIEF_QUESTIONS[i].key && q.label === BRIEF_QUESTIONS[i].label)
+    && vaultObject(r.rules) && int(r.rules.answer_cap) && int(r.rules.long_answer_cap) && Array.isArray(r.rules.long_answers) && r.rules.long_answers.every(int)
+    && int(r.rules.quotes_max) && int(r.rules.max_chars) && int(r.rules.min_chars) && r.rules.sentinel_full === BRIEF_SENTINELS[0] && r.rules.sentinel_cut === BRIEF_SENTINELS[1]
+    && Array.isArray(r.rules.hype_words) && r.rules.hype_words.every(w => typeof w === 'string');
+  if (!ok) throw Error('The questions could not be read');
+  UploadQuestions.recipe = r; return r;
+}
+/* The public facts the worker sends (ingest/brief.py public_facts): an upload has its summary's title, authors and
+   abstract, and nothing else */
+function uploadQuestionsFacts(p) {
+  const caps = { title: 1000, authors: 2000, venue: 300, publishing_date: 40, arxiv_id: 40, doi: 200, abstract: 6000 }, out = {};
+  for (const k of Object.keys(caps)) out[k] = [...String(p[k] || '').split(UPLOAD_QUESTIONS_SPACE).filter(Boolean).join(' ')].slice(0, caps[k]).join('');
+  return out;
+}
+/* ingest/brief.py message(facts, text), character for character (tests/upregular/recipe.cjs compares them) */
+function uploadQuestionsMessage(facts, pages, total, fence, rules) {
+  const blocks = pages.map((page, i) => `[p.${i + 1}]\n${page}\n\n`).join('');
+  const note = pages.length < total ? `\nThe text was cut short at a page boundary: pages ${pages.length + 1} to ${total} of ${total} were left out. Answer from the pages given, and where they do not say, write exactly: ${rules.sentinel_cut}\n` : '';
+  return '<paper-facts>\n' + JSON.stringify(facts, null, 1).replace(/</g, '\\u003c') + '\n</paper-facts>\n\n'
+    + `<paper-text id="${fence}">\n${blocks}</paper-text id="${fence}">\n` + note
+    + '\nAnswer the ten questions by the instructions and reply with the JSON block only.';
+}
+/* One page's text as ingest/fulltext.py _clean leaves it: stray controls a space, runs of spaces and tabs one space,
+   line ends trimmed, blank lines at the edges gone */
+function uploadQuestionsPage(items) {
+  const raw = items.map(t => (t.str || '') + (t.hasEOL ? '\n' : '')).join('').replace(/[\x00-\x08\x0b\x0d-\x1f\x7f-\x9f]/g, ' ');
+  const lines = raw.split('\n').map(l => l.replace(/[ \t]+/g, ' ').replace(/\s+$/, ''));
+  while (lines.length && !lines[0]) lines.shift();
+  while (lines.length && !lines[lines.length - 1]) lines.pop();
+  return lines.join('\n');
+}
+function uploadQuestionsTextLength(pages) { return pages.reduce((n, p) => n + p.split(/\s+/).filter(Boolean).join(' ').length, 0); }
+/* The ten answers checked as ingest/brief.py validate checks them: a string each, within its cap, exactly the
+   sentinel with no citation, or one to three citations found on their page (or repaired to the one other page that
+   has them). Throws on the first failure; the whole brief is then refused. */
+function uploadQuestionsCheck(answers, pages, truncated, rules) {
+  const layers = pages.map(t => { const d = document.createElement('div'); d.textContent = t; return briefPageText(d); });
+  const sentinel = truncated ? rules.sentinel_cut : rules.sentinel_full, hype = new Set(rules.hype_words), out = [];
+  const checks = { quotes_kept: 0, quotes_repaired: 0, em_dashes: 0, hype_words: 0, html_tags: 0 };
+  const typo = /\[\[p\. ?(\d+)(\s+)[\u201c\u201d"]([^"\]\n]*)[\u201c\u201d"]\]\]/g;
+  if (!Array.isArray(answers) || answers.length !== 10) throw Error('Invalid answers');
+  answers.forEach((entry, i) => {
+    const n = i + 1, q = BRIEF_QUESTIONS[i];
+    if (!vaultObject(entry) || entry.n !== n || typeof entry.answer !== 'string' || BRIEF_CONTROLS.test(entry.answer)) throw Error('Invalid answer ' + n);
+    let value = entry.answer.trim().replace(typo, (m, page, sp, words) => `[[p.${page}${sp}"${words}"]]`);
+    const cap = rules.long_answers.includes(n) ? rules.long_answer_cap : rules.answer_cap;
+    if (!value || [...value].length > cap) throw Error('Invalid answer ' + n);
+    const found = [...value.matchAll(QUOTE_RE)];
+    if (value.split('[[').length - 1 !== found.length) throw Error('Invalid citation ' + n);
+    if (value === sentinel) { out.push({ n, key: q.key, label: q.label, answer: value, quotes: 0, says: false }); return; }
+    if (BRIEF_SENTINELS.some(s => value.startsWith(s)) || !found.length || found.length > rules.quotes_max) throw Error('Invalid answer ' + n);
+    let text = '', at = 0;
+    for (const m of found) {
+      const page = +m[1], words = m[2];
+      let to = page >= 1 && page <= layers.length && briefMatch(layers[page - 1], words) ? page : 0;
+      if (to) checks.quotes_kept++;
+      else {
+        const others = layers.map((l, j) => j + 1 !== page && briefMatch(l, words) ? j + 1 : 0).filter(Boolean);
+        if (others.length !== 1) throw Error('Passage not found ' + n);
+        to = others[0]; checks.quotes_repaired++;
+      }
+      text += value.slice(at, m.index) + (to === page ? m[0] : `[[p.${to} "${words}"]]`); at = m.index + m[0].length;
+    }
+    value = text + value.slice(at);
+    if ([...value].length > cap) throw Error('Invalid answer ' + n);
+    checks.em_dashes += value.split('\u2014').length - 1;
+    checks.hype_words += (value.match(/[A-Za-z][A-Za-z'-]*/g) || []).filter(w => hype.has(w.toLowerCase())).length;
+    checks.html_tags += (value.match(/<[A-Za-z/!?]/g) || []).length;
+    out.push({ n, key: q.key, label: q.label, answer: value, quotes: found.length, says: true });
+  });
+  return { answers: out, checks };
+}
+/* This device's protected copy of the answers. Locked notes: nothing is decided (the chip still asks). */
+async function uploadQuestionsLoad(id) {
+  const epoch = capturePrivateEpoch(), gen = Brief.gen, generation = vaultGeneration(), name = uploadStateName(id);
+  if (!Vault.key || !uploadById(id)) throw briefStale();
+  const rec = await privateAwait(usGet(name), epoch); checkVaultGeneration(generation);
+  if (gen !== Brief.gen || !uploadById(id)) throw briefStale();
+  if (!rec) return { state: 'none' };
+  const st = validateUploadState(name, await privateAwait(vaultDecrypt(rec.env), epoch)); checkVaultGeneration(generation);
+  if (gen !== Brief.gen) throw briefStale();
+  const q = st.state && st.state.questions;
+  return q ? { state: 'answered', data: q.data, old: q.data.recipe === BRIEF_RECIPE ? null : 'recipe', md: new Map() } : { state: 'none' };
+}
+/* Answers that arrived in a sync, from another device or tab: the chip and an open sheet show them */
+function uploadQuestionsSeen(id, q) {
+  if (!q) return;
+  const r = Brief.files.get(id);
+  if (r && r.state === 'answered' && r.data.answered_at === q.data.answered_at && r.data.recipe === q.data.recipe) return;
+  try { briefFileOK(q.data, id, true); } catch (e) { return; }
+  Brief.loading.delete(id);
+  briefKeep(id, { state: 'answered', data: q.data, old: q.data.recipe === BRIEF_RECIPE ? null : 'recipe', md: new Map() }); briefRedraw(id);
+}
+async function uploadQuestionsAsk(id) {
+  requireOwner();
+  if (!uploadById(id) || UploadQuestions.jobs.has(id) || !navigator.locks) return;
+  const have = Brief.files.get(id);
+  if (have && have.state === 'answered') { briefSheetOpen(id); return; }
+  if (!apiKey()) { briefChipSync(id); return; }
+  const epoch = capturePrivateEpoch(), serial = UploadQuestions.serial;
+  const live = { ctl: new AbortController(), requests: new Set(), stopped: false };
+  UploadQuestions.jobs.set(id, live); Private.controllers.add(live.ctl); briefChipSync(id);
+  let generation = vaultGeneration(), doc = null, timer = 0, result = null, opened = false;
+  const wait = x => uploadBriefWait(x, live.ctl.signal, epoch);
+  const check = () => { checkPrivateEpoch(epoch); checkVaultGeneration(generation); if (serial !== UploadQuestions.serial || live.stopped || live.ctl.signal.aborted || !uploadById(id) || _reviewPendingRemovals.has(id)) throw briefStale(); };
+  try {
+    await localWork((async () => {
+      if (!Vault.key && !await wait(vaultReady())) throw briefStale();
+      generation = vaultGeneration(); check();
+      timer = setTimeout(() => live.ctl.abort(), API_LIMIT.turnMs);
+      // One ask at a time for this paper across tabs. The protected record first, GitHub's copy too: answers made on
+      // another device or tab open without a second call.
+      await wait(navigator.locks.request('scout-upload-questions:' + _acceptedTarget + ':' + id, { signal: live.ctl.signal }, async () => {
+        check();
+        await wait(uploadStateSync(id, null, check)); check();
+        const prior = await wait(uploadQuestionsLoad(id)); check();
+        if (prior.state === 'answered') { result = prior; opened = true; return; }
+        const recipe = await wait(uploadQuestionsRecipe(epoch)); check();
+        const blob = await wait(localPdfGet(id)); check();
+        if (!(blob instanceof Blob)) throw Object.assign(Error('No PDF here'), { why: 'pdf' });
+        const bytes = new Uint8Array(await wait(blob.arrayBuffer())); check();
+        const sha = await wait(briefSha(bytes)), lib = await wait(loadPdfJs()); check();
+        doc = await wait(privatePdfDocument(lib, { data: bytes.slice(), isEvalSupported: false, verbosity: 0 }, live.ctl.signal)); check();
+        const all = [];
+        for (let i = 1; i <= doc.numPages; i++) { const pg = await wait(doc.getPage(i)), tc = await wait(pg.getTextContent()); check(); all.push(uploadQuestionsPage(tc.items)); }
+        // ingest/fulltext.py text_record: whole pages under the cap, and enough text to answer from
+        const pages = []; let chars = 0;
+        for (const page of all) { if (chars + page.length > recipe.rules.max_chars) break; pages.push(page); chars += page.length; }
+        if (uploadQuestionsTextLength(all) < recipe.rules.min_chars || !pages.length || uploadQuestionsTextLength(pages) < recipe.rules.min_chars) throw Object.assign(Error('Too little text'), { why: 'text' });
+        const truncated = pages.length < all.length, p = uploadById(id), facts = uploadQuestionsFacts(p);
+        const fence = [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
+        const message = uploadQuestionsMessage(facts, pages, all.length, fence, recipe.rules);
+        const payload = { model: recipe.model, max_tokens: 16000, stream: true, system: recipe.instructions, messages: [{ role: 'user', content: message }], output_config: { effort: recipe.effort } };
+        const { res, ctl } = await wait(apiFetch(payload, 'opus', false, apiKey(), live)); check();
+        if (!res.ok || !res.body) throw Error('The answers failed');
+        const reply = await wait(apiReadStream(res, ctl, { start() {}, text() {} })); check();
+        const raw = reply.content.filter(b => b && b.type === 'text').map(b => b.text || '').join('');
+        if (reply.stop_reason !== 'end_turn' || raw.length > 262144) throw Error('The answers were cut short');
+        const match = /```(?:json)?\s*(\{[\s\S]*\})\s*```/.exec(raw) || /(\{[\s\S]*\})/.exec(raw);
+        if (!match) throw Error('No answers');
+        const parsed = JSON.parse(match[1]), list = vaultObject(parsed) && Array.isArray(parsed.answers) ? parsed.answers : null;
+        if (!list || list.length !== 10 || list.map(a => vaultObject(a) ? a.n : null).sort((a, b) => a - b).join() !== '1,2,3,4,5,6,7,8,9,10') throw Error('Invalid answers');
+        const checked = uploadQuestionsCheck(list.slice().sort((a, b) => a.n - b.n), pages, truncated, recipe.rules);
+        const data = { schema: 1, paper: id, recipe: recipe.version, model: recipe.model, effort: recipe.effort, instructions_sha256: await wait(briefSha(recipe.instructions)),
+          answered_at: new Date().toISOString().slice(0, 19) + 'Z', title: facts.title,
+          source: { url: 'this device', sha256: sha, bytes: blob.size, pages_total: all.length, pages_supplied: pages.length, chars, truncated }, answers: checked.answers, checks: checked.checks };
+        check(); briefFileOK(data, id, true);
+        await wait(uploadStateSync(id, { questions: { v: 1, at: new Date().toISOString(), data } }, check)); check();
+        result = await wait(uploadQuestionsLoad(id)); check();
+        if (result.state !== 'answered') throw Error('The answers were not kept');
+      }));
+    })());
+    check();
+    if (result) { briefKeep(id, result); briefRedraw(id); if (opened) briefSheetOpen(id); }
+  } catch (e) {
+    try { check(); if (!(e && e.briefStale)) briefKeep(id, { state: 'none', failed: e && e.why === 'pdf' ? 'pdf' : e && e.why === 'text' ? 'text' : 'ask' }); } catch (stale) {}   // a lock, a sign-out or a removal: nothing kept
+  } finally {
+    clearTimeout(timer); if (doc) destroyPdfDocument(doc);
+    for (const ctl of live.requests) { try { ctl.abort(); } catch (e) {} Private.controllers.delete(ctl); }
+    Private.controllers.delete(live.ctl);
+    if (UploadQuestions.jobs.get(id) === live) UploadQuestions.jobs.delete(id);
+    try { checkPrivateEpoch(epoch); briefChipSync(id); } catch (e) {}
+  }
+}
+
 /* The paper's page as HTML: { bar, article, glow }. Nothing here touches the document; paperPostRender does what needs
    the page in place. */
 function paperPageHTML(p, opts) {
@@ -23739,7 +24232,7 @@ function paperPageHTML(p, opts) {
   const k = paperKey(p), ka = escAttr(k);
   const marks = paperMarks(p), ir = marks.read, inAny = marks.listed;   // a hidden paper's from its row
   const vn = Vault.key && Vault.cache.get(p.id);
-  const ix = Vault.index && Vault.index.papers[p.id];
+  const ix = Vault.index && Vault.index.papers && Vault.index.papers[p.id];
   const hasNotes = !!(vn && (vn.entries || []).length);
   const rel = dynamicRelevance(p);
   const v = venueOf(p);
@@ -23750,7 +24243,7 @@ function paperPageHTML(p, opts) {
   const nav = _navList && _navList.keys.includes(k) ? _navList : null;
   const ni = nav ? nav.keys.indexOf(k) : -1;
   const prevK = ni > 0 ? nav.keys[ni - 1] : null, nextK = nav && ni < nav.keys.length - 1 ? nav.keys[ni + 1] : null;
-  const nextP = nextK ? allPapers.find(pp => paperKey(pp) === nextK) : null;
+  const nextP = nextK ? findPaper(nextK) : null;
   const navHTML = nav ? `
       <button class="pd-act pd-nav-prev" ${prevK ? `onclick="goPaper('${escAttr(prevK)}')"` : 'disabled'} title="Previous in ${dataAttr(nav.label)} (k)" aria-label="Previous paper">&#8249;</button>
       <span class="pd-nav-pos">${ni + 1} / ${nav.keys.length}</span>
@@ -23771,8 +24264,8 @@ function paperPageHTML(p, opts) {
       ${navHTML}
       <button class="pd-act ${ir?'on-read':''}" data-act="read" aria-pressed="${ir}" onclick="toggleRead('${ka}',this)" title="${ir?'Mark unread':'Mark as read'}" aria-label="${ir?'Mark unread':'Mark as read'}"${gone ? ' disabled' : ''}>&#10003;<span class="pd-act-label"><span>${ir?'Read':'Mark read'}</span></span></button>
       <span class="save-anchor"><button class="pd-act ${inAny?'on-list':''}" data-act="list" aria-haspopup="true" aria-expanded="false" onclick="event.stopPropagation();openSaveTo(event,this,'${ka}')" title="Save to a list or To read" aria-label="${inAny ? 'Saved. Change where' : 'Save to a list or To read'}"${gone ? ' disabled' : ''}>${FEED_ICON.save}<span class="pd-act-label"><span>${inAny?'Saved':'Save'}</span></span></button></span>
-      <button class="pd-act" data-act="${isHiddenRow(p) ? 'restore' : 'hide'}" onclick="${isHiddenRow(p) ? 'unhidePaper' : 'askHide'}('${ka}')" title="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper (restore it from Lists)'}" aria-label="${isHiddenRow(p) ? 'Restore paper' : 'Hide paper'}"${gone ? ' disabled' : ''}><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${isHiddenRow(p) ? '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg><span class="pd-act-label"><span>${isHiddenRow(p) ? 'Restore' : 'Hide'}</span></span></button>
       ${isOwner() && !gone ? paperDownloadButton(p) : ''}
+      ${isOwner() && !gone ? paperMoreButton(p) : ''}
       ${isOwner() && isPassed(p) ? `<button class="pd-act pd-passed" data-act="unpass" onclick="unpassPaper('${ka}')" title="You passed on it in For you. Put it back there" aria-label="Passed. Put it back in For you"${gone ? ' disabled' : ''}>&#10005;<span class="pd-act-label"><span>Passed &middot; Put back</span></span></button>` : ''}
       ${isOwner() || pdfSourceOf(p) ? `<button class="pd-read" onclick="openReader('${ka}')" title="${pdfSourceOf(p) ? 'Read the PDF here' : conferenceCopyUrl(p) ? 'Read the free copy on the conference site' : 'Add a PDF to read it here'}"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>${readLabelHTML(p)}</button>` : ''}
       ${paperOpenUrl(p) ? `<a class="pd-open" href="${dataAttr(paperOpenUrl(p))}" target="_blank" rel="noopener" title="${dataAttr(paperOpenTitle(p))}" aria-label="Open paper"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}
@@ -23786,23 +24279,21 @@ function paperPageHTML(p, opts) {
   const head = `<header class="pd-head">
     ${gone ? '<p class="pd-gone" role="status">This paper was removed from your library. Changes to it can’t be saved.</p>' : ''}
     ${glowGroups.length ? `<div class="pd-topicline">${glowGroups.map(g => `<button class="pd-topic-chip" onclick="openGroup('${escAttr(g)}')" title="All ${dataAttr(g)} papers">${gdot(g)}${esc(g)}</button>`).join('')}</div>` : ''}
-    <div class="pd-kicker">
-      ${hasText(p.venue) ? venueLinkHTML(p, 'pd-venue') : ''}
-      ${displayDate(p) ? `<span>${esc(displayDate(p))}</span>` : ''}
-      <span class="f-rel rel-${rel}"><i></i>${relLabel(rel)}</span>
-    </div>
+    <div class="pd-kicker">${[hasText(p.venue) ? venueLinkHTML(p, 'pd-venue') : '', displayDate(p) ? `<span>${esc(displayDate(p))}</span>` : '', p.uploaded ? '' : `<span class="f-rel rel-${rel}"><i></i>${relLabel(rel)}</span>`].join('')}</div>
     <h1 class="pd-title">${esc(headline)}</h1>
     ${dek}
     ${hasText(p.authors) ? `<div class="pd-authors">${esc(p.authors)}</div>` : ''}
+    ${p.uploaded ? `<div class="upload-brief-state" data-upload-state="${dataAttr(p.id)}">${uploadBriefStateHTML(p.id)}</div>` : ''}
     ${briefChipBoxHTML(p)}
+    ${p.uploaded ? reviewChipsHTML(p.id) : ''}
     ${parseWhy(p) ? `<div class="pd-why"><span class="pd-why-label">Why it's here</span>${whyHTML(p)}</div>` : ''}
   </header>`;
 
   // Reading column
   let main = '';
   if (hasText(p.summary)) main += `<section class="pd-section"><h2>Summary</h2><p class="pd-prose">${esc(p.summary)}</p></section>`;
-  else if (!hasText(p.abstract) && !(hasNotes || (ix && ix.h + ix.c))) main = `<p class="pd-empty">No summary or abstract yet. Open the paper to read it at the source.</p>`;
-  if (hasText(p.abstract)) main += `<section class="pd-section"><h2>Abstract</h2><p class="pd-prose" data-abs-tex>${esc(p.abstract)}</p><p class="pd-attribution">Some abstracts are provided by Semantic Scholar and OpenAlex.</p></section>`;
+  else if (!hasText(p.abstract) && !(hasNotes || (ix && ix.h + ix.c))) main = `<p class="pd-empty">${p.uploaded ? 'No summary or abstract yet.' : 'No summary or abstract yet. Open the paper to read it at the source.'}</p>`;
+  if (hasText(p.abstract)) main += `<section class="pd-section"><h2>Abstract</h2><p class="pd-prose" data-abs-tex>${esc(p.abstract)}</p>${p.uploaded ? '' : '<p class="pd-attribution">Some abstracts are provided by Semantic Scholar and OpenAlex.</p>'}</section>`;
   if (hasNotes || (ix && ix.h + ix.c)) main += `<section class="pd-section pd-notes"><h2>Your notes ${pencilDevice() ? `<button class="pd-edit" onclick="openReader('${ka}', 'new')">+ Type</button><button class="pd-edit" onclick="openReader('${ka}', 'write')" title="Write or draw a note with the Pencil">+ Write</button>` : `<button class="pd-edit" onclick="openReader('${ka}', 'new')">+ Add note</button>`}</h2>${hasNotes ? vn.entries.map(e => `<div class="pd-note"><div class="pd-note-top"><span>${esc(noteDate(e))}</span>${e.hand && !e.text.trim() && !(pencilDevice() || !matchMedia('(pointer: coarse)').matches) ? '' : `<button class="rp-icon-btn sm" onclick="openReader('${ka}', '${escAttr(e.id)}')" title="Edit note" aria-label="Edit note">${ICON_EDIT}</button>`}</div>${e.hand ? hwViewHTML(e) : ''}${e.text.trim() || !e.hand ? `<div class="pd-prose md" data-pdnote="${dataAttr(e.id)}"></div>` : ''}</div>`).join('') : ''}${ix && ix.h + ix.c ? `<div class="pd-notes-meta">${[ix.h && `${ix.h} highlight${ix.h === 1 ? '' : 's'}`, ix.c && `${ix.c} comment${ix.c === 1 ? '' : 's'}`].filter(Boolean).join(', ')} · <button onclick="openReader('${ka}', 'panel')">Open in the reader</button></div>` : ''}</section>`;
 
   // Side panel: facts + editable topics
@@ -23823,12 +24314,14 @@ function paperPageHTML(p, opts) {
 
   const aside = `<aside class="pd-aside">
     <div class="pd-card"><dl class="pd-facts">${facts.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join('')}</dl></div>
-    ${relevanceCardHTML(p, ka)}
-    ${SHOW_TOPICS ? `<div class="pd-card"><h3>Topics</h3><div class="pd-topics paper-detail-tags">${topics}${addBtn}</div></div>` : ''}
+    ${p.uploaded ? '' : relevanceCardHTML(p, ka)}
+    ${SHOW_TOPICS && !p.uploaded ? `<div class="pd-card"><h3>Topics</h3><div class="pd-topics paper-detail-tags">${topics}${addBtn}</div></div>` : ''}
   </aside>`;
 
-  // Related: the papers closest to this one (shared authors, title words, interests), then links to its topics
-  const rel6 = relatedTo(p, 6);
+  // Related: the papers closest to this one (shared authors, title words, interests), then links to its topics. An
+  // upload's own section is Similar papers, its private sealed lookup.
+  if (p.uploaded) main += similarSection(p.id);
+  const rel6 = p.uploaded ? [] : relatedTo(p, 6);
   let related = '';
   if (rel6.length) related += `<div class="pd-rel-group"><div class="pd-rel-grid">${rel6.map(feedItemHTML).join('')}</div></div>`;
   const topicLinks = [...new Set(glowGroups)].map(g => {   // confirmed topics only, as the chips
@@ -23846,11 +24339,14 @@ function paperPageHTML(p, opts) {
 }
 function renderPaperDetail(p) {
   if (p.uploaded) requireOwner();
-  const page = p.uploaded ? uploadPageHTML(p) : paperPageHTML(p), box = document.getElementById('paperDetail');
+  const page = paperPageHTML(p), box = document.getElementById('paperDetail');
+  const sh = Feed.sheet, held = !!(sh && sh.btn && box.contains(sh.btn));   // the Save sheet opened from this page's Save
   box.innerHTML = `<div class="pd" style="--gbg:${page.glow}">${page.bar}
     ${page.article}
   </div>`;
+  if (held && Feed.sheet === sh) { const next = box.querySelector('[data-act="list"]'); if (sh.from === sh.btn) sh.from = next; sh.btn = next; if (next) next.setAttribute('aria-expanded', 'true'); }   // stays at the Save drawn now
   paperPostRender(box, p);
+  paperMenuPlace();   // an open ⋯ stays at its button, or closes with a page drawn without it
   if (p.uploaded) similarSoon();
   box.querySelectorAll('[data-abs-tex]').forEach(el => renderAbstractText(el, p.abstract));   // its TeX, once KaTeX is here
   if (!renderPaperDetail._scrollHooked) {
@@ -23865,7 +24361,7 @@ function renderPaperDetail(p) {
 function paperPostRender(root, p) {
   if (!root || !p) return;
   briefMount(root, p);   // before the notes' early return: the answers do not wait on notes
-  const vn = Vault.key && Vault.cache.get(p.id), ix = Vault.index && Vault.index.papers[p.id];
+  const vn = Vault.key && Vault.cache.get(p.id), ix = Vault.index && Vault.index.papers && Vault.index.papers[p.id];
   if (Vault.key && !Vault.cache.has(p.id) && ix) paperNotes(p.id).then(privateCallback(() => repaintPaper(p)));
   if (!vn || !(vn.entries || []).length) return;
   root.querySelectorAll('[data-pdnote]').forEach(el => {
@@ -23933,7 +24429,7 @@ const BRIEF_SIGNS = '+-±~<>=≤≥';
 const Brief = { gen: 0, index: null, questions: null, files: new Map(), loading: new Map(), visit: { pid: null, open: new Set() }, focus: null, jump: null, sheet: null, pushed: null, lostFocus: null };
 
 function briefEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-function briefEligible(p) { return !!p && !p.uploaded && typeof p.id === 'string' && BRIEF_ID.test(p.id) && !p.id.startsWith('up-'); }
+function briefEligible(p) { return !!p && typeof p.id === 'string' && (p.uploaded ? /^up-[0-9a-f]{12}$/.test(p.id) && !!uploadById(p.id) : BRIEF_ID.test(p.id) && !p.id.startsWith('up-')); }
 function briefPath(pid) {
   if (typeof pid !== 'string' || !BRIEF_ID.test(pid) || pid.startsWith('up-')) throw new Error('Not a library paper id');
   return 'briefs/' + pid + '.json';
@@ -24046,11 +24542,11 @@ async function briefFile(pid, gen) { const _authEpoch = capturePrivateEpoch();
 /* A brief file checked as the worker's validate_file checks it (no PDF needed): schema, paper id, recipe, the source
    and its coverage, ten answers in order with their caps, well-formed citations to supplied pages, `quotes` and `says`
    agreeing with them, and the citation counts. */
-function briefFileOK(d, pid) {
+function briefFileOK(d, pid, upload = false) {   // upload: an upload's own answers (UPLOAD STATE)
   const int = v => Number.isSafeInteger(v) && v >= 0, hex = v => typeof v === 'string' && /^[0-9a-f]{64}$/.test(v), len = s => [...s].length;
   const bad = why => { const e = new Error('The brief file is malformed: ' + why); e.briefWhy = 'invalid'; throw e; };
   if (!d || typeof d !== 'object' || Array.isArray(d) || d.schema !== 1) bad('schema');
-  if (d.paper !== pid || !BRIEF_ID.test(pid) || pid.startsWith('up-')) bad('paper');
+  if (d.paper !== pid || (upload ? !/^up-[0-9a-f]{12}$/.test(pid) : !BRIEF_ID.test(pid) || pid.startsWith('up-'))) bad('paper');
   if (typeof d.recipe !== 'string' || !/^brief-v[0-9]{1,4}$/.test(d.recipe)) bad('recipe');
   for (const k of ['model', 'effort', 'instructions_sha256', 'answered_at', 'title']) if (typeof d[k] !== 'string') bad(k);
   if (!briefStamp(d.answered_at)) bad('answered_at');
@@ -24119,7 +24615,7 @@ function briefKeep(pid, r) {   // the newest BRIEF_CACHE results, the oldest out
 function briefStart(pid) {
   if (Brief.files.has(pid) || Brief.loading.has(pid)) return;
   const gen = Brief.gen;
-  const work = briefLoad(pid).catch(e => e && (e.briefStale || e.privateAuth) ? null : { state: 'error', why: (e && e.briefWhy) || 'load' });
+  const work = (/^up-[0-9a-f]{12}$/.test(pid) ? uploadQuestionsLoad(pid) : briefLoad(pid)).catch(e => e && (e.briefStale || e.privateAuth) ? null : { state: 'error', why: (e && e.briefWhy) || 'load' });
   Brief.loading.set(pid, work);
   work.then(r => {
     if (gen !== Brief.gen || Brief.loading.get(pid) !== work) return;   // a lock, a pull or a Retry since: nothing goes back
@@ -24292,6 +24788,17 @@ function briefCanAsk(p) { return isPrivate() && isOwner() && briefEligible(p) &&
    (a request that could not start), limit, refused, error, or '' (nothing to show) */
 function briefChipState(p) {
   if (!briefEligible(p)) return '';
+  if (p.uploaded) {   // an upload: answers kept privately, asked on a tap on this device's key
+    const r = Brief.files.get(p.id);
+    if (r && r.state === 'answered') return 'answered';
+    if (UploadQuestions.jobs.has(p.id)) return 'working';
+    if (r && (r.state === 'error' || r.state === 'offline')) return 'error';
+    if (Vault.key && !r) return 'loading';
+    if (!apiKey()) return 'key';
+    if (r && r.failed === 'pdf') return 'pdf';
+    if (r && r.failed === 'text') return 'text';
+    return r && r.failed ? 'again' : 'ask';
+  }
   const pid = p.id, r = Brief.files.get(pid);
   if (r && r.state === 'answered') return 'answered';
   if (r && (r.state === 'error' || r.state === 'offline')) return 'error';
@@ -24317,6 +24824,9 @@ function briefChipHTML(p) {
   const st = briefChipState(p), pid = escAttr(p.id);
   if (!st) return '';
   if (st === 'answered') return `<button type="button" class="pd-tq-chip done" aria-haspopup="dialog" onclick="briefSheetOpen('${pid}')">Ten questions</button>`;
+  if (st === 'key') return '<span class="pd-tq-note">Add your Claude API key on this device to get the ten questions.</span>';
+  if (st === 'pdf') return `<span class="pd-tq-note">Add this paper's PDF on this device to get the ten questions.</span>`;
+  if (st === 'text') return `<span class="pd-tq-note">There isn't enough text in this PDF to answer the ten questions.</span>`;
   if (st === 'ask') return `<button type="button" class="pd-tq-chip" aria-label="Get answers to the ten questions" onclick="briefAsk('${pid}')">Ten questions</button>`;
   if (st === 'again') return `<button type="button" class="pd-tq-chip" aria-label="Try the ten questions again" onclick="briefAsk('${pid}')">Couldn’t ask. Try again</button>`;
   if (st === 'loading') return `<button type="button" class="pd-tq-chip" disabled aria-busy="true">Ten questions</button>`;
@@ -24337,6 +24847,7 @@ function briefChipSync(pid) {
    is already under way */
 function briefAsk(pid) {
   const p = findPaper(pid);
+  if (p && p.uploaded) { uploadQuestionsAsk(pid).catch(briefQuiet); return; }   // an upload: on this device's key
   if (!p || !briefCanAsk(p)) return;
   const r = Brief.files.get(pid), q = requestFor('brief', pid);
   if (r && r.state === 'answered') { briefSheetOpen(pid); return; }
@@ -24455,7 +24966,7 @@ function briefExpandAll(btn) {
 function briefVisit(pid) {
   Brief.visit = { pid, open: new Set() }; Brief.focus = null;
   const r = Brief.files.get(pid);
-  if (r && (r.state === 'error' || r.state === 'offline')) Brief.files.delete(pid);
+  if (r && (r.state === 'error' || r.state === 'offline' || r.failed)) Brief.files.delete(pid);   // r.failed: an upload's ask that could not finish
 }
 function briefFocusKey(el) {
   if (!el || !el.classList) return null;
@@ -24624,7 +25135,7 @@ function paperBarSync() {
   const page = document.querySelector('#paperDetail .pd-article[data-pid]');
   if (!page) return;
   const k = page.dataset.pid, p = feedRow(k) || uploadById(k);
-  if (p?.uploaded) { paperDownloadDot(); return; }
+  if (p?.uploaded) paperDownloadDot().catch(() => {});
   if (!p) { paperUnavailable(k); return; }
   if (String(!!p._goneRemote) !== page.dataset.gone || String(isHiddenRow(p)) !== page.dataset.hidden || String(isPassed(p)) !== page.dataset.passed) { renderPaperDetail(p); saveDDSync(); return; }
   const m = paperMarks(p), bar = document.querySelector('#paperDetail .pd-bar');
@@ -25425,7 +25936,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
     };
   };
   ALWAYS.push('requireDeviceSetup', 'submitDeviceSetup', 'copySettingsBack', 'copySetSwitch', 'copyChangeFolder', 'copyHelperSetup', 'copyHelperRetry', 'copyHelperConnect', 'copyTryAgain', 'copySettingsUnlock', 'copySettingsLock', 'saveMyCopy', 'copyShareStart', 'copyShareHandoff', 'copyShareCancel', 'copyOpenPDF', 'toggleReaderNotesVisible', 'setReaderNotesVisible');
-  ALWAYS.push('createReviewFolder', 'renameReviewFolder', 'deleteReviewFolder', 'moveReviewUpload', 'reviewSetToRead', 'reviewRemoveFromRead', 'reviewDoneChoice', 'reviewQueueRemoval', 'openReviewFolderMenu', 'openReviewDone', 'openReviewMore', 'reviewDownloadMenu');
+  ALWAYS.push('createReviewFolder', 'renameReviewFolder', 'deleteReviewFolder', 'moveReviewUpload', 'reviewSetToRead', 'reviewRemoveFromRead', 'reviewDoneChoice', 'reviewQueueRemoval', 'openReviewFolderMenu', 'openReviewDone', 'paperMenuOpen', 'paperMenuChoose', 'uploadQuestionsAsk');
   ALWAYS.push('keptToggle', 'keptKeep', 'keptRemove', 'keptReconcile', 'paperDownloadMenu', 'paperDownloadGo', 'paperDownloadHandoff', 'keptPaperAction');   // PDFs kept on this device (offline reading)
   ALWAYS.forEach(n => wrap(n));
   Object.entries(WHEN).forEach(([n, ok]) => wrap(n, ok));
