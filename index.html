@@ -3043,6 +3043,12 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
 .app-menu[hidden], .app-menu-scrim[hidden], .am-item[hidden] { display: none; }
 @keyframes am-in { from { transform: translateX(-100%); } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .app-menu { animation: none; } }
+/* A finger drags the drawer (appMenuSwipe): am-held stops the slide-in from replaying until it closes, am-settle
+   carries it the rest of the way when the finger lifts. Sideways moves on it are the page's to handle. */
+.app-menu, .app-menu-scrim { touch-action: pan-y pinch-zoom; }
+.app-menu.am-held { animation: none; }
+.app-menu.am-settle { transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) { .app-menu.am-settle { transition: none; } }
 .am-head { padding: 0 20px 20px; margin-bottom: 8px; border-bottom: 1px solid var(--line); font-size: 20px; font-weight: 700; }
 .am-item { display: flex; align-items: center; gap: 16px; min-height: 56px; padding: 0 20px; color: var(--text); font-size: 20px; font-weight: 700; text-decoration: none; -webkit-tap-highlight-color: transparent; }
 .am-item:hover, .am-item:focus-visible { background: rgba(255,255,255,0.06); color: var(--text); }
@@ -7780,6 +7786,7 @@ function closeAppMenu(back = true, focusBack = true) {
   AppMenu.open = false;
   AppMenu.edge = null;
   if (menu) menu.hidden = true;
+  appMenuSwipeClear();
   if (scrim) scrim.hidden = true;
   for (const el of [document.querySelector('.navbar'), document.getElementById('mainScroll')]) if (el) el.inert = false;
   if (btn) { btn.setAttribute('aria-expanded', 'false'); if (focusBack) btn.focus({ preventScroll: true }); }
@@ -7788,6 +7795,16 @@ function closeAppMenu(back = true, focusBack = true) {
   if (back && pushed && history.state && history.state.scoutMenu) history.back();
 }
 window.addEventListener('popstate', () => { if (AppMenu.open) closeAppMenu(false); });   // Back closes the menu
+/* What both edge openings (a resting mouse, a finger swiping in) ask first: the menu is closed, the page shown and
+   unlocked, no field being edited, and no reader, sheet, dialog, menu or popover showing */
+function appMenuEdgeAllowed() {
+  if (AppMenu.open || document.visibilityState === 'hidden' || document.documentElement.classList.contains('private-locked')) return false;
+  const a = document.activeElement;
+  if (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return false;
+  const surfaces = POPOVERS + ', dialog[open], [role="dialog"], [role="menu"], [popover]:popover-open, '
+    + '.auth-overlay.open, .hide-sheet.open, .keys-help.open, #briefSheet:not([hidden])';
+  return ![...document.querySelectorAll(surfaces)].some(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden');
+}
 /* A fine mouse resting at the left edge opens the same drawer. A click inside keeps it open; otherwise leaving
    right closes this visit. Defer while editing: making the page inert would interrupt the field even without focus(). */
 (() => {
@@ -7795,15 +7812,7 @@ window.addEventListener('popstate', () => { if (AppMenu.open) closeAppMenu(false
   let opening = 0, closing = 0, point = null, buttons = 0;
   const clear = () => { clearTimeout(opening); clearTimeout(closing); opening = closing = 0; };
   const reset = () => { clear(); point = null; buttons = 0; };
-  const eligible = () => {
-    if (!fine.matches || buttons || AppMenu.open || document.visibilityState === 'hidden'
-        || document.documentElement.classList.contains('private-locked')) return false;
-    const a = document.activeElement;
-    if (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return false;
-    const surfaces = POPOVERS + ', dialog[open], [role="dialog"], [role="menu"], [popover]:popover-open, '
-      + '.auth-overlay.open, .hide-sheet.open, .keys-help.open, #briefSheet:not([hidden])';
-    return ![...document.querySelectorAll(surfaces)].some(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden');
-  };
+  const eligible = () => fine.matches && !buttons && appMenuEdgeAllowed();
   const move = e => {
     if (e.pointerType !== 'mouse') { reset(); return; }
     point = { x: e.clientX, y: e.clientY }; buttons = e.buttons;
@@ -7844,6 +7853,105 @@ window.addEventListener('popstate', () => { if (AppMenu.open) closeAppMenu(false
   fine.addEventListener('change', reset);
   window.addEventListener('blur', reset);
   document.addEventListener('visibilitychange', reset);
+})();
+/* Touch screens: the drawer follows a finger. Swiping it back to the left closes it, and a swipe in from just inside
+   the left edge opens it. Past a third of its width, or on a quick flick, it goes the rest of the way when the finger
+   lifts; short of that it springs back. The swipe in starts 24 px from the edge: the outer strip is the system's or the
+   browser's own Back (iPhone Safari, Android), which is left alone. It asks what the mouse edge asks, and never starts
+   on something that moves sideways itself (a Daily card, a scroller, the reader's panes, a field). With reduced motion
+   the drawer does not follow; the lift opens or closes it. Opening and closing are openAppMenu() and closeAppMenu(), so
+   history, focus and the inert page are the button's. */
+const MENU_SWIPE_EDGE = [24, 48];   // px from the left edge where a swipe in may start
+const AppMenuSwipe = { drag: null, timer: 0 };
+function appMenuSwipeClear() {
+  const menu = document.getElementById('appMenu');
+  clearTimeout(AppMenuSwipe.timer); AppMenuSwipe.timer = 0; AppMenuSwipe.drag = null;
+  if (menu) { menu.classList.remove('am-held', 'am-settle'); menu.style.transform = ''; }
+}
+(() => {
+  const still = matchMedia('(prefers-reduced-motion: reduce)');
+  const SLOP = 10, FLICK = 0.4;   // px before the swipe is the drawer's; px/ms over the last 100 ms or more that is a flick
+  const menuEl = () => document.getElementById('appMenu');
+  const ownsSideways = el => {
+    for (; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+      if (el.matches('input, textarea, select, [contenteditable]:not([contenteditable="false"]), .daily-card')) return true;
+      const cs = getComputedStyle(el);
+      if (!/^(auto|manipulation)$/.test(cs.touchAction)) return true;
+      if (/(auto|scroll)/.test(cs.overflowX) && el.scrollWidth > el.clientWidth + 1) return true;
+    }
+    return false;
+  };
+  const touchOf = (list, id) => [...list].find(t => t.identifier === id);
+  const place = (d, x) => {   // closed is -w, open is 0
+    const dx = x - d.x0, at = d.mode === 'open' ? Math.min(0, -d.w + dx) : Math.max(-d.w, Math.min(0, dx));
+    if (!still.matches) menuEl().style.transform = `translateX(${at}px)`;
+  };
+  const begin = d => {
+    const m = menuEl();
+    clearTimeout(AppMenuSwipe.timer); AppMenuSwipe.timer = 0;
+    m.classList.remove('am-settle'); m.classList.add('am-held');
+    if (d.mode === 'open') { appMenuSync(); markNavTabs(currentTab); }   // the same items the opened menu shows
+    if (d.mode === 'open' && !still.matches) { m.style.transform = 'translateX(-100%)'; m.hidden = false; }
+    d.w = m.hidden ? Math.min(290, innerWidth * 0.85) : m.getBoundingClientRect().width;   // .app-menu's width
+  };
+  const slide = (to, then) => {   // the rest of the way to `to` ('' is open), then `then`
+    const m = menuEl();
+    if (still.matches || m.hidden) { m.style.transform = to; if (then) then(); return; }
+    m.classList.add('am-settle'); void m.offsetWidth; m.style.transform = to;
+    AppMenuSwipe.timer = setTimeout(() => { AppMenuSwipe.timer = 0; m.classList.remove('am-settle'); if (then) then(); }, 220);
+  };
+  const unshow = () => { if (!AppMenu.open) { menuEl().hidden = true; appMenuSwipeClear(); } };
+  const settle = (d, go) => {
+    AppMenuSwipe.drag = null;
+    if (d.mode === 'open' && go) { openAppMenu(); if (AppMenu.open) slide('', null); else unshow(); }   // openAppMenu may say not now
+    else if (d.mode === 'open') slide('translateX(-100%)', unshow);
+    else if (go) slide('translateX(-100%)', () => closeAppMenu());
+    else slide('', null);
+  };
+  const abort = () => { const d = AppMenuSwipe.drag; AppMenuSwipe.drag = null; if (d && d.on) settle(d, false); };
+  document.addEventListener('touchstart', e => {
+    if (AppMenuSwipe.drag) { abort(); if (e.touches.length > 1) return; }   // a second finger puts the drawer back
+    const t = e.changedTouches[0], tgt = e.target && (e.target.nodeType === 1 ? e.target : e.target.parentElement);
+    if (e.touches.length !== 1 || !t || t.touchType === 'stylus' || AppMenuSwipe.timer || !tgt) return;
+    let mode = null;
+    if (AppMenu.open) { if (tgt.closest('#appMenu, #appMenuScrim')) mode = 'close'; }
+    else if (t.clientX >= MENU_SWIPE_EDGE[0] && t.clientX <= MENU_SWIPE_EDGE[1] && appMenuEdgeAllowed() && !ownsSideways(tgt)) mode = 'open';
+    if (mode) AppMenuSwipe.drag = { mode, id: t.identifier, x0: t.clientX, y0: t.clientY, on: false, w: 0, pts: [[e.timeStamp, t.clientX]] };
+  }, { capture: true, passive: true });
+  document.addEventListener('touchmove', e => {
+    const d = AppMenuSwipe.drag;
+    if (!d) return;
+    const t = touchOf(e.touches, d.id);
+    if (!t || e.touches.length > 1) { abort(); return; }
+    const dx = t.clientX - d.x0, dy = t.clientY - d.y0, way = d.mode === 'open' ? dx : -dx;
+    if (!d.on) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 3) return;   // a tap's wobble
+      if (Math.abs(dy) >= Math.abs(dx) || way <= 0 || !e.cancelable) { AppMenuSwipe.drag = null; return; }   // a scroll, or the other way
+      e.preventDefault();   // leaning the right way: the browser does not take it meanwhile
+      if (way < SLOP) return;
+      if (d.mode === 'open' ? !appMenuEdgeAllowed() : !AppMenu.open) { AppMenuSwipe.drag = null; return; }
+      d.on = true; begin(d);
+    }
+    if (e.cancelable) e.preventDefault();
+    d.pts.push([e.timeStamp, t.clientX]);
+    while (d.pts.length > 1 && d.pts[1][0] <= e.timeStamp - 100) d.pts.shift();   // keeps one from 100 ms ago or more
+    place(d, t.clientX);
+  }, { capture: true, passive: false });
+  const lift = e => {
+    const d = AppMenuSwipe.drag, t = d && touchOf(e.changedTouches, d.id);
+    if (!t) return;
+    AppMenuSwipe.drag = null;
+    if (!d.on) return;
+    if (e.cancelable) e.preventDefault();   // no click after a drag
+    if (e.type === 'touchcancel') { settle(d, false); return; }
+    let ref = d.pts[0];
+    for (const q of d.pts) if (q[0] <= e.timeStamp - 100) ref = q;   // the newest from 100 ms ago or more
+    const sign = d.mode === 'open' ? 1 : -1, v = e.timeStamp > ref[0] ? sign * (t.clientX - ref[1]) / (e.timeStamp - ref[0]) : 0;
+    settle(d, v >= FLICK || (v > -FLICK && sign * (t.clientX - d.x0) >= d.w / 3));
+  };
+  document.addEventListener('touchend', lift, { capture: true, passive: false });
+  document.addEventListener('touchcancel', lift, { capture: true, passive: false });
+  for (const [on, type] of [[window, 'blur'], [document, 'visibilitychange'], [window, 'popstate'], [window, 'hashchange']]) on.addEventListener(type, abort);
 })();
 function appMenuKey(e) {
   if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeAppMenu(); return; }
