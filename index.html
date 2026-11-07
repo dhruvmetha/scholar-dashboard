@@ -3783,6 +3783,7 @@ async function ownerFetch(url, options = {}) {
   if (github && !parsed.pathname.startsWith('/repos/' + GH_OWNER + '/' + GH_REPO + '/')) throw new Error('Private API target mismatch');
   if ((options.method || 'GET') !== 'GET' && !await reverifyPrivate()) throw privateError('Private mutation verification failed');
   checkPrivateEpoch(epoch);
+  if (options.signal?.aborted) throw privateError('Private request aborted');
   if (github) ghWaitGate();   // Phase 19: nothing goes to GitHub while it asked Scout to wait
   const ctl = new AbortController(); Private.controllers.add(ctl);
   if (options.signal) { if (options.signal.aborted) ctl.abort(); else options.signal.addEventListener('abort', () => ctl.abort(), { once: true }); }
@@ -4125,7 +4126,7 @@ function lockPrivate(state = 'required', detail) {
   _libPanel = null; _lastSearchQ = ''; _searchFilters = { rel: 'all', unread: false, topic: null, year: null }; Pinch.active = false; Pinch.anchor = null;
   _collapsedGroups.clear(); _venuesOpen.clear(); _ipOpen.clear(); _ipDismissedOpen = false;
   for (const task of Private.renderTasks) { try { task.cancel(); } catch (e) {} } Private.renderTasks.clear();
-  for (const task of Private.pdfTasks) { try { Promise.resolve(task.destroy()).catch(() => {}); } catch (e) {} } Private.pdfTasks.clear();
+  for (const task of Private.pdfTasks) disposePdf(task); Private.pdfTasks.clear();
   cleanup(() => readerReleaseFocus());
   _reader.visit++; _reader.token++; if (_reader.obs) cleanup(() => _reader.obs.disconnect()); if (_reader.far) cleanup(() => _reader.far.disconnect());
   if (_reader.leaveClear) { try { _reader.leaveClear(); } catch (e) {} }
@@ -5030,7 +5031,7 @@ function restoreOwnerState() {
   _reviewFolders = mergeReviewFolders({}, JSON.parse(localStorage.getItem(REVIEW_FOLDERS_KEY) || '{}'));   // review folders: private local restore
   _openLibGroups.add('review-none');
   _uploadRemovals = JSON.parse(localStorage.getItem(UPLOAD_REMOVALS_KEY) || '{}') || {};
-  setTimeout(privateCallback(() => { retryUploadRemovals(); uploadBriefSoon(); }), 0);
+  setTimeout(privateCallback(() => { retryUploadRemovals(); uploadBriefSoon(); uploadPdfRecover(); }), 0);
   Chat.token = localStorage.getItem('claude_bridge_token') || '';
   Chat.status = chatBaseStatus();
   _lastSeen = localStorage.getItem(LAST_SEEN_KEY); migrateReading(); restorePencil();
@@ -12827,10 +12828,10 @@ function requestStart(what) {
 }
 /* One request file written: created only, never replaced. A 422 means a file is already there, from an earlier try
    whose answer was lost: it counts only when it holds these very bytes. */
-async function requestPut(path, body, message) { const _authEpoch = capturePrivateEpoch(); requireOwner();
+async function requestPut(path, body, message, signal) { const _authEpoch = capturePrivateEpoch(); requireOwner();
   pageMayWrite(path);
   const content = btoa(unescape(encodeURIComponent(body)));
-  const res = await privateAwait(ownerFetch(_ghFileUrl(path), { method: 'PUT', headers: { ...ghHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ message, content, branch: GH_BRANCH }) }), _authEpoch);
+  const res = await privateAwait(ownerFetch(_ghFileUrl(path), { method: 'PUT', headers: { ...ghHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ message, content, branch: GH_BRANCH }), signal }), _authEpoch);
   try { if (res.body && !res.body.locked) Promise.resolve(res.body.cancel()).catch(() => {}); } catch (e) {}
   if (res.status === 201 || res.status === 200) return true;
   if (res.status === 422) {
@@ -15544,6 +15545,7 @@ const PDFJS_VER = '4.10.38';
 const PDFJS_SRI = { lib: 'sha384-+0ti2moQlmLN7WZHE2RHIf5lV8hHxhxEalN0il3YZceG26fUPyOkR0hp9daxk1i7', worker: 'sha384-ToeVvShCxKc6CEvhHeMt0Q8A06pSPDbAlngO9nokrDmh914gk/pYd0N7D0a4Lz2o' };
 const READER_POS_KEY = 'scholar_reader_pos_v1', READER_DARK_KEY = 'scholar_reader_dark';
 let _pdfjs = null;
+const _pdfDisposals = new Set(), _pdfDisposing = new WeakMap();
 async function loadPdfJs() { const _authEpoch = capturePrivateEpoch();
   requireTarget();
   if (_pdfjs) return _pdfjs;
@@ -15577,30 +15579,39 @@ function pdfLinkOnRecord(p) { return hasText(p.pdf_url) ? p.pdf_url.trim() : has
 /* Files dropped in stay in this browser only */
 function pdfStore(mode, fn) { requireOwner(); const epoch = capturePrivateEpoch();
   const work = new Promise((resolve, reject) => {
-    const req = indexedDB.open('scholar_pdfs', 1);
-    req.onupgradeneeded = () => { try { checkPrivateEpoch(epoch); requireOwner(); req.result.createObjectStore('files'); } catch (e) { req.transaction.abort(); req.result.close(); reject(e); } };
-    req.onerror = () => reject(req.error);
+    let req, db, tx, r, timer, settled = false;
+    const revoked = () => { try { requireOwner(); checkPrivateEpoch(epoch); } catch (e) { abort(e); } };
+    window.addEventListener('storage', revoked);
+    const finish = error => {
+      if (settled) return;
+      settled = true; clearTimeout(timer); window.removeEventListener('storage', revoked); if (tx) Private.transactions.delete(tx); if (db) db.close();
+      if (error) reject(error); else resolve(r && r.result);
+    };
+    const abort = error => { try { if (tx) tx.abort(); } catch (e) {} finish(error); };
+    timer = setTimeout(() => abort(new Error('PDF storage timed out')), 20000);
+    try { req = indexedDB.open('scholar_pdfs', 1); } catch (e) { finish(e); return; }
+    req.onblocked = () => abort(new Error('PDF storage is blocked'));
+    req.onupgradeneeded = () => {
+      try { if (settled) { req.transaction.abort(); req.result.close(); return; } checkPrivateEpoch(epoch); requireOwner(); req.result.createObjectStore('files'); }
+      catch (e) { try { req.transaction.abort(); } catch (ignored) {} finish(e); }
+    };
+    req.onerror = () => finish(req.error || new Error('PDF storage could not open'));
     req.onsuccess = () => {
-      const db = req.result; let tx, r, failure, settled = false;
-      const finish = error => {
-        if (settled) return;
-        settled = true; if (tx) Private.transactions.delete(tx); db.close();
-        if (error) reject(error); else resolve(r && r.result);
-      };
-      const abort = error => { failure = error; try { tx.abort(); } catch (e) {} finish(error); };
+      db = req.result;
+      if (settled) { db.close(); return; }   // a blocked/late open never starts a write after the upload has ended
       try {
         requireOwner(); checkPrivateEpoch(epoch); tx = db.transaction('files', mode); if (isPrivate()) Private.transactions.add(tx);
         tx.oncomplete = () => { try { checkPrivateEpoch(epoch); requireOwner(); finish(); } catch (e) { finish(e); } };
-        tx.onerror = () => finish(failure || tx.error || new Error('Private database transaction failed'));
-        tx.onabort = () => finish(failure || tx.error || new Error('Private database transaction aborted'));
+        tx.onerror = () => finish(tx.error || r?.error || new Error('PDF storage failed'));
+        tx.onabort = () => finish(tx.error || r?.error || new Error('PDF storage stopped'));
         r = fn(tx.objectStore('files'), abort);
-      } catch (e) { if (tx) abort(e); else finish(e); }
+      } catch (e) { abort(e); }
     };
   });
-  return mode === 'readonly' ? work : localWork(work);   // Phase 22: a write a reload must not cut off
+  return mode === 'readonly' ? work : localWork(work);   // a reload must not cut off a write
 }
 const localPdfGet = id => { requireTarget(); return isOwner() ? pdfStore('readonly', st => st.get(id)) : Promise.resolve(null); };
-const localPdfPut = (id, blob) => { copySourceChanged(id); return pdfStore('readwrite', st => st.put(blob, id)); };
+const localPdfPut = (id, blob) => pdfStore('readwrite', st => st.put(blob, id)).then(result => { copySourceChanged(id); return result; });
 const localPdfDel = id => pdfStore('readwrite', st => st.delete(id));
 
 /* ===== KEPT ON THIS DEVICE (offline reading, 4 November 2026, plan docs/superpowers/plans/2026-11-04-scout-offline.md,
@@ -16822,7 +16833,7 @@ async function openResponse(pub, privateKey, request, sealed) {
 return { sealRequest, openResponse, publicKey };
 })();
 const SIMILAR_KEYS = 'scholar_similar_keys_v1', SIMILAR_WAIT_MS = 20 * 60 * 1000, SIMILAR_RETRY_MS = 5 * 60 * 1000;
-const Similar = { timer: 0, work: null, serial: 0, pub: null, counts: new Map() };
+const Similar = { timer: 0, work: null, serial: 0, pub: null, counts: new Map(), sends: new Map() };
 function similarAvailable() { return isPrivate() && isOwner() && !!(Vault.ready && Vault.key && Vault.index); }
 function similarWritable() { return similarAvailable() && navigator.onLine && Private.state === 'verified'; }
 function similarMerge(a, b) {
@@ -16843,6 +16854,7 @@ function similarForget(id) {
 }
 function similarCancel(id) {
   if (!id) { Similar.serial++; clearTimeout(Similar.timer); Similar.pub = null; Similar.counts.clear(); }
+  for (const [key, ctl] of Similar.sends) if (!id || key === id) { ctl.abort(); Similar.sends.delete(key); }
   similarForget(id);
 }
 async function similarPublic(epoch) {
@@ -16870,7 +16882,7 @@ function similarIdentifier(link) {
     const url = new URL(link);
     if (url.protocol !== 'https:' || url.username || url.password || url.port || url.search || url.hash) return null;
     const tail = decodeURIComponent(url.pathname);
-    if (url.hostname === 'arxiv.org' && /^\/abs\/(?:\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Z]{2})?\/\d{7})(?:v\d+)?$/.test(tail)) return tail.slice(5);
+    if (url.hostname === 'arxiv.org' && /^\/abs\/(?:\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Za-z]{2})?\/\d{7})(?:v\d+)?$/.test(tail)) return tail.slice(5);
     if (url.hostname === 'doi.org' && /^\/10\.\d{4,9}\/[^\s\x00-\x1f]+$/i.test(tail)) return tail.slice(1);
   } catch (e) {} return null;
 }
@@ -16903,9 +16915,11 @@ async function similarSave(id, result, check) {
   saveUploads();
   await similarRecord(id, check); check(); similarPaint();
 }
+function similarFinished(result) { return result?.state === 'done' || result?.state === 'failed' && (result?.attempts || 0) >= 3; }
 function similarSoon(delay = 0) {
   if (!similarAvailable()) return;
   clearTimeout(Similar.timer);
+  if (!uploadedPapers().some(p => !similarFinished(_uploads[p.id]?.similar) && uploadBriefValue(_uploads[p.id])?.abstract.trim())) return;
   Similar.timer = setTimeout(privateCallback(() => {
     if (Similar.work) return;
     const work = similarScan(); Similar.work = work;
@@ -16916,6 +16930,18 @@ async function similarUnanswered(id, result, check) {
   if (result.retry_at > Date.now()) return;
   similarForget(id);
   await similarSave(id, {...result, state:'failed', at:new Date().toISOString(), retry_at:Date.now() + SIMILAR_RETRY_MS}, check);
+}
+async function similarPut(id, request, check) {
+  check();
+  const ctl = new AbortController(); Similar.sends.set(id, ctl);
+  try {
+    await requestPut(requestPath(request.id), JSON.stringify(request), 'Ask Scout for similar papers', ctl.signal); check();
+  } catch (e) {
+    check(); if (e.conflict) throw e;
+    // An uncertain write may already be running. Retain its envelope and reply key until expiry.
+  } finally {
+    if (Similar.sends.get(id) === ctl) Similar.sends.delete(id);
+  }
 }
 async function similarScan() {
   if (!similarWritable() || !navigator.locks) return;
@@ -16928,6 +16954,8 @@ async function similarScan() {
       _uploads = mergeUploads(_uploads, JSON.parse(localStorage.getItem(UPLOADS_KEY) || '{}'));
       if (!uploadById(p.id)) { similarForget(p.id); return; }
       const check = () => { guard(); if (!uploadById(p.id)) throw Error('Upload removed'); };
+      // Unlock and normal notes sync restore durable state; polling needs no terminal-record reads.
+      if (similarFinished(_uploads[p.id].similar)) { similarForget(p.id); return; }
       await similarRecord(p.id, check); check();
       const brief = uploadBriefValue(_uploads[p.id]), result = _uploads[p.id].similar;
       if (result?.state === 'done') { similarForget(p.id); return; }
@@ -16940,7 +16968,10 @@ async function similarScan() {
         let file;
         try { file = await privateAwait(privateReadFile(requestPath(local.request.id, 'status'), true), epoch); check(); }
         catch (e) { check(); await similarUnanswered(p.id, result, check); return; }
-        if (!file) { await similarUnanswered(p.id, result, check); return; }
+        if (!file) {
+          if (result.retry_at > Date.now()) await similarPut(p.id, local.request, check);
+          await similarUnanswered(p.id, result, check); return;
+        }
         try {
           const status = similarStatus(file.text, local.request);
           if (['waiting','working','retrying'].includes(status.state)) { await similarUnanswered(p.id, result, check); return; }
@@ -16966,7 +16997,7 @@ async function similarScan() {
           await similarSave(p.id, {...result, state:'failed', at:new Date().toISOString(), retry_at:Date.now() + SIMILAR_RETRY_MS}, check); return;
         }
       }
-      if ((result?.attempts || 0) >= 3 || (result?.retry_at || 0) > Date.now()) return;
+      if (similarFinished(result) || (result?.retry_at || 0) > Date.now()) return;
       let attempt;
       try {
         const pub = await privateAwait(similarPublic(epoch), epoch); check();
@@ -16976,7 +17007,7 @@ async function similarScan() {
         privateSet(SIMILAR_KEYS, JSON.stringify(keys));
         attempt = {v:1, state:'waiting', at:new Date().toISOString(), attempts:(result?.attempts || 0) + 1, request_id:sealed.request.id, retry_at:Date.now() + SIMILAR_WAIT_MS, key_reloaded:!!result?.key_reloaded};
         await similarSave(p.id, attempt, check);
-        await privateAwait(requestPut(requestPath(sealed.request.id), JSON.stringify(sealed.request), 'Ask Scout for similar papers'), epoch); check();
+        await privateAwait(similarPut(p.id, sealed.request, check), epoch); check();
       } catch (e) {
         check(); similarForget(p.id);
         await similarSave(p.id, {...(attempt || {v:1, attempts:(result?.attempts || 0) + 1}), state:'failed', at:new Date().toISOString(), retry_at:Date.now() + SIMILAR_RETRY_MS}, check);
@@ -17056,10 +17087,10 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
      of it under way; a scan deletes the files of an upload whose record is a tombstone (removed on an older page).
    - Fences: the private epoch, the notes generation, key and salt, and an abort on notes lock or sign-out
      (invalidateVaultWork): after either nothing is committed or stored. */
-const UP_PDF = { part: 4 * 1024 * 1024, partCap: 16 * 1024 * 1024, max: 100 * 1024 * 1024, quiet: 6000, tick: 15 * 60000, store: 'scholar_upload_pdf_sync_v1', message: 'Update encrypted files' };
+const UP_PDF = { part: 4 * 1024 * 1024, partCap: 16 * 1024 * 1024, max: 100 * 1024 * 1024, quiet: 6000, tick: 15 * 60000, retryMax: 6 * 3600000, store: 'scholar_upload_pdf_sync_v1', message: 'Update encrypted files' };
 const UP_PDF_BIG_TEXT = 'This PDF is too large to reach your other devices. It stays on this one.';
 const UP_PDF_PATH = /^annotations\/uploads\/[0-9a-f]{32}\/up-[0-9a-f]{12}\/(?:manifest\.json|[0-9a-f]{32}\.bin)$/;
-const UpPdf = { serial: 0, timer: 0, work: null, again: false, backoff: 0, caps: new Set(), fetching: new Map(), publishing: new Map(), skip: new Map(), full: false };
+const UpPdf = { serial: 0, timer: 0, work: null, again: false, backoff: 0, caps: new Set(), fetching: new Map(), publishing: new Map(), skip: new Map(), failures: new Map(), full: false };
 function upPdfOn() { return isPrivate() && isOwner() && Private.state === 'verified' && navigator.onLine && hasPAT() && !!(Vault.ready && Vault.key && Vault.meta && Vault.index); }
 /* One piece of work under the notes key it began with: check() throws once the authorization, the notes (locked,
    reset, another key) or this sync (upPdfCancel) changed; wait(p) is p, cut short by any of them, then check() */
@@ -17084,8 +17115,13 @@ function upPdfCapture() {
 function upPdfCancel() {   // notes locked or reset, or signed out (invalidateVaultWork)
   UpPdf.serial++; clearTimeout(UpPdf.timer); UpPdf.timer = 0; UpPdf.work = null; UpPdf.again = false; UpPdf.backoff = 0;
   for (const c of [...UpPdf.caps]) { try { c.abort(); c.done(); } catch (e) { console.error(e); } }
-  UpPdf.fetching.clear(); UpPdf.skip.clear();
+  UpPdf.fetching.clear(); UpPdf.skip.clear(); UpPdf.failures.clear();
 }
+/* One upload's publication or fetch that failed waits its own time (1 minute, doubling to UP_PDF.retryMax) before the
+   background tries it again, whatever starts a scan (the tick, an index sync, coming online): a file is never
+   encrypted and sent again on every scan. Opening it in the reader, or unlocking the notes again, tries at once. */
+function upPdfDue(key) { const f = UpPdf.failures.get(key); return !f || Date.now() >= f.at; }
+function upPdfFailed(key) { const n = (UpPdf.failures.get(key)?.n || 0) + 1; UpPdf.failures.set(key, { n, at: Date.now() + Math.min(UP_PDF.retryMax, 60000 * 2 ** (n - 1)) }); }
 const upPdfBase = (vault, id) => 'annotations/uploads/' + vault + '/' + id + '/';
 const upPdfAad = (vault, id, nonce, i, n) => new TextEncoder().encode(['scout-upload-pdf', 1, vault, id, nonce, i, n].join('/'));
 async function upPdfVault(c) { return (await c.wait(chatHash(b64d(c.salt)))).slice(0, 32); }
@@ -17245,16 +17281,18 @@ async function upPdfRound(c, vault) {
   }
   for (const p of uploadedPapers()) {
     if (there.has(p.id) || _reviewPendingRemovals.has(p.id)) continue;
-    try { if (['done', 'there'].includes(await c.wait(upPdfPublishJob(p.id, vault)))) there.add(p.id); } catch (e) { c.check(); failed = true; }
+    if (!upPdfDue('put:' + p.id)) { failed = true; continue; }   // failed before: not sent again until its time
+    try { const r = await c.wait(upPdfPublishJob(p.id, vault)); UpPdf.failures.delete('put:' + p.id); if (['done', 'there'].includes(r)) there.add(p.id); }
+    catch (e) { c.check(); upPdfFailed('put:' + p.id); failed = true; }
   }
   const progress = upPdfProgress();
   for (const p of uploadedPapers()) {
     if (!there.has(p.id)) continue;
     const wanted = upPdfWanted(p.id, progress), local = (await c.wait(localPdfGet(p.id))) instanceof Blob;
     if (wanted && !local && !UpPdf.full) {
-      if (keptReaderLoading()) { failed = true; continue; }   // never while the reader loads a PDF
-      try { await c.wait(upPdfGet(p.id)); }
-      catch (e) { c.check(); if (e && e.name === 'QuotaExceededError') { UpPdf.full = true; toastError(KEPT_FULL_TEXT); } else failed = true; }
+      if (keptReaderLoading() || !upPdfDue('get:' + p.id)) { failed = true; continue; }   // never while the reader loads a PDF; a failed fetch waits its time
+      try { await c.wait(upPdfGet(p.id)); UpPdf.failures.delete('get:' + p.id); }
+      catch (e) { c.check(); if (e && e.name === 'QuotaExceededError') { UpPdf.full = true; toastError(KEPT_FULL_TEXT); } else { upPdfFailed('get:' + p.id); failed = true; } }
     } else if (!wanted && local && upPdfMarks(vault)[p.id] && _reader.paper?.id !== p.id) {   // a copy fetched here, unless replaced since
       const mark = upPdfMarks(vault)[p.id], blob = await c.wait(localPdfGet(p.id));
       const same = blob instanceof Blob && await c.wait(briefSha(new Uint8Array(await c.wait(blob.arrayBuffer())))) === mark;
@@ -17294,7 +17332,39 @@ function uploadPageHTML(p) {
   return { bar, glow: 'transparent', article: `<article class="pd-article pd-upload" data-pid="${dataAttr(p.id)}"><header class="pd-head"><div class="pd-kicker"><span class="upload-tag">To review</span>${u.added ? `<span>Added ${esc(shortDate(u.added.slice(0, 10)))}</span>` : ''}<span>${esc(counts || 'No notes yet')}</span></div><h1 class="pd-title">${esc(p.headline || p.title)}</h1>${p.headline ? `<p class="pd-dek">${esc(p.title)}</p>` : ''}<div class="upload-brief-state" data-upload-state="${ka}">${uploadBriefStateHTML(p.id)}</div>${p.authors ? `<div class="pd-authors">${esc(p.authors)}</div>` : ''}</header><div class="pd-body"><div class="pd-main">${summary}${abstract}${similarSection(p.id)}</div></div></article>` };
 }
 
-/* Dropping a PDF anywhere on the Library uploads it */
+/* Upload entry points own their errors, including sign-in checks before parsing. No upload fields are added to sync. */
+const UploadPdf = { busy: false, picker: null, ms: { auth: 15000, read: 30000, reader: 45000, title: 5000 } };
+function uploadPdfJournal(id, clear = false) {
+  try { if (clear) sessionStorage.removeItem('scholar_upload_pending_v1'); else sessionStorage.setItem('scholar_upload_pending_v1', JSON.stringify({ target: _acceptedTarget, id: id || null })); } catch (e) {}
+}
+function uploadPdfRecover() {
+  if (UploadPdf.busy || !isOwner()) return;
+  let pending;
+  try { pending = JSON.parse(sessionStorage.getItem('scholar_upload_pending_v1') || 'null'); } catch (e) {}
+  if (!pending || pending.target !== _acceptedTarget) return;
+  uploadPdfJournal(null, true);
+  if (pending.id && _uploads[pending.id] && !_uploads[pending.id].deleted) { uploadBriefSoon(); similarSoon(); openPaper(pending.id); toast('Your PDF is in To review.'); }
+  else toastError("That PDF wasn't added. Choose it again.");
+}
+function uploadPdfWait(promise, ms) {
+  let timer;
+  return Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(Object.assign(new Error('Upload timed out'), { uploadTimeout: true })), ms); })]).finally(() => clearTimeout(timer));
+}
+async function uploadPdfOwner(binding) {
+  const until = Date.now() + UploadPdf.ms.auth;
+  while (isPrivate() && (Private.verifying || Private.verificationBinding)) {
+    if (Date.now() >= until) throw Object.assign(new Error('Upload timed out'), { uploadTimeout: true });
+    if (Private.verifying) {
+      try { await uploadPdfWait(Private.verifying, Math.max(1, until - Date.now())); }
+      catch (e) { if (!e.transient || !isOwner()) throw e; }   // an offline re-check retains its existing authorization
+    } else await new Promise(resolve => setTimeout(resolve, 50));
+    requireTarget();
+    if (binding.target !== _acceptedTarget || binding.token !== localStorage.getItem('gh_pat')) throw privateError('Private authorization changed');
+  }
+  requireOwner();
+  if (binding.target !== _acceptedTarget || binding.token !== localStorage.getItem('gh_pat')) throw privateError('Private authorization changed');
+}
+/* Dropping a file anywhere on the Library uses its bytes, including Files app files with no type or extension. */
 (() => {
   const sec = document.getElementById('sec-library');
   const isFile = e => [...(e.dataTransfer && e.dataTransfer.types || [])].includes('Files');
@@ -17305,49 +17375,110 @@ function uploadPageHTML(p) {
   sec.addEventListener('drop', e => {
     if (!isFile(e)) return;
     e.preventDefault(); depth = 0; sec.classList.remove('drop-over');
-    const f = [...e.dataTransfer.files].find(f => /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name));
-    const group = e.target.closest && e.target.closest('[data-review-folder]');
-    if (f) uploadPdf(f, group && group.dataset.reviewFolder || null); else toast('Only PDFs can be uploaded');
+    const files = [...e.dataTransfer.files], group = e.target.closest && e.target.closest('[data-review-folder]');
+    if (files.length > 1) { toastError('Choose one PDF at a time.'); return; }
+    uploadPdf(files[0], group && group.dataset.reviewFolder || null);
   });
 })();
 function pickUploadPdf(folderId = null) {
-  const inp = document.createElement('input');
-  inp.type = 'file'; inp.accept = 'application/pdf,.pdf';
-  inp.onchange = () => { if (inp.files[0]) uploadPdf(inp.files[0], folderId); };
-  inp.click();
-}
-async function uploadPdf(file, folderId = null) { return localWork(uploadPdfNow(file, folderId)); }   // Phase 22: a reload waits for it
-async function uploadPdfNow(file, folderId = null) { const _authEpoch = capturePrivateEpoch();
-  requireOwner();
-  let doc = null, title = '', fp = '', contentHash = '';
+  let inp, active = true;
+  const close = () => { active = false; if (inp) { inp.onchange = null; inp.value = ''; inp.remove(); } if (UploadPdf.picker === close) UploadPdf.picker = null; };
+  // A return from Files can precede a slow file's change event. Only change, cancel or another pick removes it.
   try {
-    const lib = await privateAwait(loadPdfJs(), _authEpoch);
-    const bytes = await privateAwait(file.arrayBuffer(), _authEpoch);
-    contentHash = await privateAwait(briefSha(bytes), _authEpoch);
-    doc = await privateAwait(privatePdfDocument(lib, { data: bytes, isEvalSupported: false, verbosity: 0 }), _authEpoch); requireOwner();
-    fp = (doc.fingerprints || [])[0] || '';
-    for (const [id, u] of Object.entries(_uploads)) {
-      if (u.deleted || u.contentHash || !fp || u.fp !== fp) continue;
-      const saved = await privateAwait(localPdfGet(id), _authEpoch);
-      if (saved) { u.contentHash = await privateAwait(briefSha(await privateAwait(saved.arrayBuffer(), _authEpoch)), _authEpoch); saveUploads(); }
+    requireTarget();
+    if (!isOwner() && !(isPrivate() && (Private.verifying || Private.verificationBinding))) { toastError('Sign in to add a PDF.'); return; }
+    if (UploadPdf.busy) { toastError('Another PDF is still being added. Try again in a moment.'); return; }
+    if (UploadPdf.picker) UploadPdf.picker();
+    inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/pdf,.pdf';
+    inp.hidden = true; inp.dataset.uploadPicker = '';
+    inp.onchange = () => { if (!active) return; const file = inp.files && inp.files[0]; close(); uploadPdf(file, folderId); };
+    inp.addEventListener('cancel', close, { once: true });
+    UploadPdf.picker = close;
+    document.body.appendChild(inp); inp.click();   // connected and synchronous: preserve the tap's permission to open Files
+  } catch (e) { close(); toastError(pdfErrorText(e, true)); }
+}
+async function uploadPdf(file, folderId = null) { return localWork(uploadPdfNow(file, folderId)); }   // a reload waits through every stage
+async function uploadPdfNow(file, folderId = null) {
+  if (UploadPdf.busy) { toastError('Another PDF is still being added. Try again in a moment.'); return; }
+  UploadPdf.busy = true;
+  const leaving = e => { e.preventDefault(); e.returnValue = ''; };
+  window.addEventListener('beforeunload', leaving);
+  let doc = null, ctl = null, stage = '', binding, published = null, storedId = null, sourceEpoch = null, notesKey, notesGeneration;
+  try {
+    requireTarget(); binding = { target: _acceptedTarget, token: localStorage.getItem('gh_pat') };
+    uploadPdfJournal();
+    for (let attempt = 0; ; attempt++) {
+      try {
+        await uploadPdfOwner(binding);
+        const epoch = capturePrivateEpoch(), generation = vaultGeneration(), key = Vault.key;
+        sourceEpoch = epoch; if (attempt === 0) { notesKey = key; notesGeneration = generation; }
+        const current = () => {
+          checkPrivateEpoch(epoch); requireOwner();
+          if (!key || Vault.key !== key || !Vault.index || generation !== vaultGeneration()) throw Object.assign(new Error('Notes are locked'), { uploadNotes: true });
+        };
+        const step = async (promise, ms = UploadPdf.ms.read) => { const value = await privateAwait(uploadPdfWait(promise, ms), epoch); current(); return value; };
+        current();
+        if (!file || typeof file.arrayBuffer !== 'function' || typeof file.slice !== 'function') throw Object.assign(new Error('Cannot read file'), { uploadRead: true });
+        // Bound memory before reading: PDF.js, hashing and the browser's stored copy can each retain the full file.
+        if (file.size > 64 * 1024 * 1024) throw Object.assign(new Error('File too large'), { uploadLarge: true });
+        stage = 'read';
+        const head = new TextDecoder().decode(await step(file.slice(0, 1024).arrayBuffer()));
+        if (!head.includes('%PDF-')) throw Object.assign(new Error('Invalid PDF'), { name: 'InvalidPDFException' });
+        const bytes = await step(file.arrayBuffer());
+        const contentHash = await step(briefSha(bytes));
+        stage = 'reader';
+        const lib = await step(loadPdfJs(), UploadPdf.ms.reader);
+        ctl = new AbortController();
+        doc = await step(privatePdfDocument(lib, { data: bytes, isEvalSupported: false, verbosity: 0 }, ctl.signal), UploadPdf.ms.reader);
+        const fp = (doc.fingerprints || [])[0] || '';
+        for (const [id, u] of Object.entries(_uploads)) {
+          if (u.deleted || u.contentHash || !fp || u.fp !== fp) continue;
+          const saved = await step(localPdfGet(id));
+          if (saved) { const hash = await step(briefSha(await step(saved.arrayBuffer()))); current(); u.contentHash = hash; saveUploads(); }
+        }
+        const same = Object.keys(_uploads).find(id => !_uploads[id].deleted && _uploads[id].contentHash === contentHash);
+        if (same) {
+          stage = 'save';
+          if (!(await step(localPdfGet(same)))) await step(localPdfPut(same, file));
+          current(); if (!_uploads[same] || _uploads[same].deleted) throw new Error('Upload was removed');
+          uploadBriefSoon(); similarSoon(); openPaper(same);
+          toast('Already in To review: opening it'); return;
+        }
+        let title = '';
+        try { title = await step(guessPdfTitle(doc), UploadPdf.ms.title); }
+        catch (e) { current(); if (!e.uploadTimeout) throw e; }   // an optional title must never hold the upload hostage
+        current(); destroyPdfDocument(doc); doc = null;
+        const id = 'up-' + [...crypto.getRandomValues(new Uint8Array(6))].map(b => b.toString(16).padStart(2, '0')).join('');
+        stage = 'save'; uploadPdfJournal(id); await step(localPdfPut(id, file).then(result => { storedId = id; return result; })); current();
+        const now = new Date().toISOString();
+        title = title || String(file.name || '').replace(/\.pdf$/i, '').replace(/[_]+/g, ' ').trim() || 'Untitled PDF';
+        _uploads[id] = { title, titleGuess: title, fp, contentHash, added: now, updated: now, folderId: folderId && _reviewFolders[folderId] && !_reviewFolders[folderId].deleted ? folderId : null, folderAt: reviewStamp() };
+        try { storeUploads(); } catch (e) { delete _uploads[id]; throw e; }
+        published = id; saveUploads();
+        // Persistence is optional. Safari may reject or throw synchronously; the committed upload still succeeds.
+        try { if (navigator.storage && navigator.storage.persist) Promise.resolve(navigator.storage.persist()).catch(() => {}); } catch (e) {}
+        uploadBriefSoon(); similarSoon(); openPaper(id);
+        toast(isPrivate() && file.size > UP_PDF.max ? UP_PDF_BIG_TEXT : 'Kept in To review on this device, separate from your library.', null, { duration: 5000 }); return;   // ENCRYPTED PDF SYNC
+      } catch (e) {
+        if (ctl) ctl.abort(); destroyPdfDocument(doc); doc = null;
+        // Only an in-progress re-check may resume. A real lock, changed token/target or notes key never grants a retry.
+        if (!published && attempt === 0 && e.privateAuth && notesKey === Vault.key && notesGeneration === vaultGeneration() && isPrivate() && (Private.verifying || Private.verificationBinding) && binding.target === _acceptedTarget && binding.token === localStorage.getItem('gh_pat')) continue;
+        throw e;
+      }
     }
-    const same = Object.keys(_uploads).find(id => !_uploads[id].deleted && _uploads[id].contentHash === contentHash);
-    if (same) {   // e.g. the same file on another device: its record (and your notes) are already here
-      if (!(await privateAwait(localPdfGet(same), _authEpoch))) await privateAwait(localPdfPut(same, file), _authEpoch); requireOwner();
-      toast('Already in To review: opening it'); uploadBriefSoon(); openPaper(same); return;
-    }
-    title = await privateAwait(guessPdfTitle(doc), _authEpoch); requireOwner();
-  } catch (e) { destroyPdfDocument(doc); doc = null; checkPrivateEpoch(_authEpoch); toastError(pdfErrorText(e)); return; }
-  finally { destroyPdfDocument(doc); checkPrivateEpoch(_authEpoch); }
-  const id = 'up-' + [...crypto.getRandomValues(new Uint8Array(6))].map(b => b.toString(16).padStart(2, '0')).join('');   // random: nothing about the paper shows in file names
-  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(privateCallback(() => {}));   // ask the browser not to clear it
-  try { await privateAwait(localPdfPut(id, file), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch); toastError("Couldn’t save the PDF. Try again."); return; }
-  requireOwner(); const now = new Date().toISOString();
-  title = title || file.name.replace(/\.pdf$/i, '').replace(/[_]+/g, ' ').trim() || 'Untitled PDF';
-  _uploads[id] = { title, titleGuess: title, fp, contentHash, added: now, updated: now, folderId: folderId && _reviewFolders[folderId] && !_reviewFolders[folderId].deleted ? folderId : null, folderAt: reviewStamp() };   // destination captured before parsing
-  saveUploads(); uploadBriefSoon();
-  openPaper(id);
-  toast(isPrivate() && file.size > UP_PDF.max ? UP_PDF_BIG_TEXT : 'Kept in To review on this device, separate from your library.', null, { duration: 5000 });
+  } catch (e) {
+    // Only this attempt's random id can be cleaned up, and never under a different authorization.
+    if (storedId && !published) { try { checkPrivateEpoch(sourceEpoch); requireOwner(); await privateAwait(localPdfDel(storedId), sourceEpoch); } catch (ignored) {} }
+    let message;
+    try {
+      if (!isOwner() && !(isPrivate() && (Private.verifying || Private.verificationBinding))) message = 'Sign in to add a PDF.';
+      else if (published) message = 'Your PDF is in To review. Open it there.';
+      else if (e.uploadNotes) message = 'Unlock your notes, then add the PDF again.';
+      else if (stage === 'reader' && navigator.onLine === false) message = 'Connect to the internet and try again.';
+      else if (stage === 'read' && !e.uploadTimeout && e.name !== 'InvalidPDFException' && !e.uploadLarge) message = "Couldn't read that file. Choose it again.";
+    } catch (ignored) { message = 'Sign in to add a PDF.'; }
+    toastError(message || pdfErrorText(e, true));
+  } finally { if (ctl) ctl.abort(); destroyPdfDocument(doc); uploadPdfJournal(null, true); window.removeEventListener('beforeunload', leaving); UploadPdf.busy = false; }
 }
 /* The title from the PDF's own metadata when it looks like one, else the largest text at the top of page 1 */
 async function guessPdfTitle(doc) { const _authEpoch = capturePrivateEpoch();
@@ -17603,15 +17734,29 @@ const PEN_TAP_SLOP = 10;   // px a Pencil tap may wobble and still be a tap
   }, true);
 })();
 function readerStatus(html) { document.getElementById('readerBody').innerHTML = `<div class="reader-status">${html}</div>`; }
+/* PDF.js shares one worker port. Its next getDocument must wait until a preceding destroy finishes. */
+function disposePdf(resource) {
+  if (!resource) return Promise.resolve();
+  const held = _pdfDisposing.get(resource); if (held) return held;
+  let done;
+  try { done = Promise.resolve(resource.destroy()).catch(() => {}); } catch (e) { done = Promise.resolve(); }
+  _pdfDisposing.set(resource, done); _pdfDisposals.add(done);
+  done.finally(() => _pdfDisposals.delete(done)); return done;
+}
 function destroyPdfDocument(doc) {
-  if (!doc) return;
-  Private.pdfDocuments.delete(doc);
-  try { Promise.resolve(doc.destroy()).catch(() => {}); } catch (e) {}
+  if (doc) Private.pdfDocuments.delete(doc);
+  return disposePdf(doc);
 }
 async function privatePdfDocument(lib, source, signal) {
-  const epoch = capturePrivateEpoch(), task = lib.getDocument(source);
+  const epoch = capturePrivateEpoch(), until = Date.now() + 5000;
+  while (_pdfDisposals.size) {
+    const pending = uploadPdfWait(Promise.all([..._pdfDisposals]), Math.max(1, until - Date.now()));
+    await (signal ? uploadBriefWait(pending, signal, epoch) : privateAwait(pending, epoch));
+  }
+  checkPrivateEpoch(epoch);
+  const task = lib.getDocument(source);
   if (isPrivate()) Private.pdfTasks.add(task);
-  const abort = () => { try { Promise.resolve(task.destroy()).catch(() => {}); } catch (e) {} };
+  const abort = () => { disposePdf(task); };
   signal?.addEventListener('abort', abort, { once: true });
   if (signal?.aborted) abort();
   const loaded = task.promise.then(doc => {
@@ -17619,7 +17764,7 @@ async function privatePdfDocument(lib, source, signal) {
     try { checkPrivateEpoch(epoch); if (signal?.aborted) throw Error('PDF cancelled'); return doc; } catch (e) { destroyPdfDocument(doc); throw e; }
   });
   try { return await (signal ? uploadBriefWait(loaded, signal, epoch) : privateAwait(loaded, epoch)); }
-  catch (e) { if (epoch === null || Private.pdfTasks.has(task)) { try { Promise.resolve(task.destroy()).catch(() => {}); } catch (error) {} } throw e; }
+  catch (e) { if (epoch === null || Private.pdfTasks.has(task)) disposePdf(task); throw e; }
   finally { signal?.removeEventListener('abort', abort); Private.pdfTasks.delete(task); }
 }
 async function loadIntoReader(p, source, isLocal, visit = _reader.visit) { const _authEpoch = capturePrivateEpoch();
@@ -17650,12 +17795,20 @@ async function loadIntoReader(p, source, isLocal, visit = _reader.visit) { const
     if (!live()) return;
     Brief.jump = null;
     console.warn('PDF load failed', e);
-    showPdfPicker(p, 'failed', pdfErrorText(e));
+    showPdfPicker(p, 'failed', pdfErrorText(e, isLocal ? 'reader' : false));
     ensureReaderNotes().then(privateCallback(() => { if (live()) runPendingNotes(); }));
   }
 }
-function pdfErrorText(e) {
+function pdfErrorText(e, local = false) {
   const n = e && e.name;
+  if (local) {
+    if (n === 'InvalidPDFException' || n === 'FormatError') return "That file isn't a PDF this reader can open.";
+    if (n === 'PasswordException') return 'The PDF is password-protected.';
+    if (n === 'QuotaExceededError') return 'Not enough space on this device. Free some space and try again.';
+    if (n === 'NotReadableError' || n === 'NotFoundError' || (e && e.uploadRead)) return "Couldn't read that file. Choose it again.";
+    if (e && e.uploadLarge) return 'That PDF is too large. Choose one under 64 MB.';
+    return local === 'reader' ? "Couldn't open that PDF. Try again." : "Couldn't add that PDF. Try again.";
+  }
   if (n === 'InvalidPDFException') return "That file isn't a PDF this reader can open.";
   if (n === 'MissingPDFException' || (e && e.status === 404)) return 'The link returned "not found".';
   if (n === 'UnexpectedResponseException') return `The site answered with an error (${e.status || 'unknown'}).`;
@@ -18312,7 +18465,7 @@ async function usePdfFileNow(file) { const _authEpoch = capturePrivateEpoch();
   } catch (e) { destroyPdfDocument(doc); doc = null; checkPrivateEpoch(_authEpoch);
     if (!live()) return;
     msg.className = 'pp-msg err';
-    msg.textContent = 'Couldn’t open that file. ' + pdfErrorText(e);
+    msg.textContent = pdfErrorText(e, 'reader');
   } finally { destroyPdfDocument(doc); }
 }
 /* The saved link is wrong and there is no better one: you choose none. pdf_url is cleared and, from schema 2 on,
@@ -25263,6 +25416,8 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
     if (typeof f !== 'function') { console.error('read-only guard: no function ' + name); return; }
     const isAsync = f.constructor && f.constructor.name === 'AsyncFunction';
     window[name] = function () {
+      // Upload entry points report their own refusals and wait for a pending sign-in check. They still require ownership before reading or writing.
+      if (name === 'pickUploadPdf' || name === 'uploadPdf') return f.apply(this, arguments);
       if (!configReady()) return isAsync ? Promise.resolve(false) : undefined;
       try { requireTarget(); } catch (e) { return isAsync ? Promise.resolve(false) : undefined; }
       if (isOwner() || (allowed && allowed(arguments))) return f.apply(this, arguments);
