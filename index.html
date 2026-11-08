@@ -22648,8 +22648,10 @@ function renderChatPanel(force) {
   if (!force && root && root.dataset.paper === pid && root.dataset.status === Chat.status) return;
   const input = document.getElementById('chatInput'); if (input) Chat.draftText = input.value;
   const ready = Chat.status === 'ready';
-  if (pid && Chat.loadedFor !== pid) { chatOpen(); if(ready)return; }   // another paper: load its chat first
+  const loading = pid && Chat.loadedFor !== pid;
+  if (loading) chatOpen();   // another paper: load its chat first
   const head = `<div class="rp-head">${paneHeadStart('chat')}<span class="grow"></span><button class="rp-icon-btn ${Chat.refreshing ? 'spinning' : ''}" id="chatRefreshBtn" onclick="chatRefresh()" title="Reload this chat" aria-label="Reload chat"${Chat.refreshing ? ' disabled' : ''}>${ICON_REFRESH}</button>${chatHistoryControlsHTML()}${paneClose('chat')}</div>`;
+  if (loading && ready) { if (!root || root.dataset.paper !== pid) chatConnectingRender(panel, head, pid); return; }   // never blank, never another paper's chat while this one loads
   const keyField = `<input type="password" id="chatKey" class="pp-input chat-key-input" placeholder="Paste your Claude API key" autocomplete="off" spellcheck="false" autocapitalize="off"><button class="ui-btn ui-btn-primary" onclick="chatUseKey()">Use this key</button><p class="chat-dim">It stays on this device.</p><p class="chat-error chat-key-err" id="chatKeyErr" role="alert" hidden></p>`;
   const keyBlock = isOwner() && !apiKey() ? `<div class="chat-key">${keyField}</div>` : '';   // under each state's first line (4 November 2026)
   const setup = {
@@ -23254,7 +23256,10 @@ async function chatSendNowWork(text, auto) { const _authEpoch = capturePrivateEp
     if (Chat.messages === messages) Chat.error = turn.stage === 'uncertain' ? 'Your message may have arrived. Reload chat to check before sending again.' : plainFailure(e, 'Chat disconnected. Reload chat to check your message.');
   }
   if (turn.apiFallback) return apiChatFallback(turn, owned());   // the API refused this key or device: the bridge, if it answers
-  if (!owned()) return;   // you moved to another paper meanwhile: its chat reloads from the bridge
+  if (!owned()) {   // you moved away meanwhile; if this paper is open again, its view loads the saved answer
+    if (Chat.pid === pid && _reader.paper && _reader.paper.id === pid) { Chat.loadedFor = null; chatOpen(); }
+    return;
+  }
   Chat.running = false; Chat.tool = '';
   if (reply) Chat.messages.push({ role: 'assistant', text: reply, ts: Date.now() / 1000 });
   Chat.streaming = '';
@@ -23737,9 +23742,10 @@ async function chatLoadSaved() { const c=chatCapture(),pid=_reader.paper.id;
   Chat.history.sort((a,b)=>Number(b.current)-Number(a.current)||b.updated-a.updated||a.id.localeCompare(b.id));
   const pending=_chatPending.get(pid);if(pending&&(row.turnIds||[]).includes(pending.turnId))chatTurnAccepted(pending);
   const recovered=_chatDrafts.get(pid);if(recovered?.turn&&!_chatPending.has(pid)){Chat.draft=recovered.draft;Chat.draftText=recovered.text;}
-  if((Chat.running&&Chat.pid===pid)||_chatPending.has(pid))return;
+  const waiting=_chatPending.get(pid);
+  if(Chat.pid===pid&&Chat.running&&(waiting||_apiTurns.has(pid)||ChatSync.bridgeRunning.has(pid))){Chat.loadedFor=pid;return;}   // this view is the running turn's own
   if(Chat.pid===pid&&Chat.selected&&Chat.selected!==active.chatId&&(Chat.draftText||Object.values(Chat.draft).some(a=>a.length))){Chat.loadedFor=pid;return;}
-  Object.assign(Chat,{pid,selected:active.chatId,anchor:active.anchor,tip:chatBranch(cat,active.chatId,active.anchor).at(-1)?.turnId||null,messages:row.shown.slice(),fresh:!row.api.length,model:row.model||CHAT_DEFAULT.model,running:_apiTurns.has(pid),streaming:'',tool:'',loadedFor:pid});
+  Object.assign(Chat,{pid,selected:active.chatId,anchor:active.anchor,tip:chatBranch(cat,active.chatId,active.anchor).at(-1)?.turnId||null,messages:waiting?waiting.messages:row.shown.slice(),fresh:!row.api.length,model:row.model||CHAT_DEFAULT.model,running:!!waiting||_apiTurns.has(pid),streaming:'',tool:'',loadedFor:pid});
 }
 async function chatLockNow() {
   const capture=chatCapture(), bridgePapers=[...ChatSync.bridgeRunning.keys()];
@@ -24248,8 +24254,6 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
     live.ctl.abort();
     for (const ctl of live.requests) Private.controllers.delete(ctl);
     if (_apiTurns.get(pid) === live) _apiTurns.delete(pid);
-    // you went to another paper and came back meanwhile: that view loads the saved conversation once this ends
-    if (!owned() && Chat.pid === pid && _reader.paper && _reader.paper.id === pid) setTimeout(privateCallback(() => { if (chatRoute() === 'api' && Chat.pid === pid && !_apiTurns.has(pid)) { Chat.loadedFor = null; chatOpen(); } }), 0);
   }
   _chatVault.check();
   if (outcome === 'refused') {
