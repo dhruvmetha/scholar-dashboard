@@ -22785,7 +22785,7 @@ function chatMsgHTML(m, i) {
   return `<div class="chat-msg claude"><div class="md chat-md" data-md-chat="${i}"></div>${chatStoppedHTML(m)}<div class="chat-acts"><button class="rp-icon-btn sm" onclick="chatCopy(${i})" title="Copy" aria-label="Copy">${ICON_COPY}</button><button class="rp-icon-btn sm" onclick="chatSaveAsNote(${i})" title="Save as a note" aria-label="Save as a note">${ICON_NOTE}</button></div></div>`;
 }
 function chatToolLabel(t) { return { WebSearch: 'Searching the web…', WebFetch: 'Reading a web page…', Read: 'Looking at the PDF…', Grep: 'Looking through your library…', Glob: 'Looking through your library…',
-  web_search: 'Searching the web…', web_fetch: 'Reading a web page…', view_pages: 'Looking at the PDF…', search_library: 'Looking through your library…' }[t] || (t ? 'Working…' : ''); }
+  web_search: 'Searching the web…', web_fetch: 'Reading a web page…', view_pages: 'Looking at the PDF…', search_library: 'Looking through your library…', compaction: 'Condensing this chat…' }[t] || (t ? 'Working…' : ''); }
 
 /* Markdown with clickable citations [[p.N "exact words"]], and cards for notes/highlights Claude was asked to add */
 const QUOTE_RE = /\[\[p\.(\d+)\s+"([^"\]\n]*)"\]\]/g;
@@ -23047,6 +23047,11 @@ function isHidden(p) { return String(p.is_hidden || '').toLowerCase() === 'true'
 
 /* ---- what Claude is given ---- */
 const _paperTextCache = new Map();
+/* The paper's text for Claude: from the open PDF, else its public facts */
+async function chatPaperText(p, pid, doc) { const _authEpoch = capturePrivateEpoch();
+  try { if (doc) { const text = await privateAwait(pdfText(doc, 'r:' + pid + ':' + (doc.fingerprints || [''])[0]), _authEpoch); if (text) return text; } } catch (e) { checkPrivateEpoch(_authEpoch); }
+  return [p.title, p.authors, p.abstract].filter(Boolean).join('\n');
+}
 async function pdfText(doc, key, cap) { const _authEpoch = capturePrivateEpoch();
   if (_paperTextCache.has(key)) return _paperTextCache.get(key);
   const pages = [];
@@ -23190,8 +23195,7 @@ async function chatSendNowWork(text, auto) { const _authEpoch = capturePrivateEp
   if (turn.stopped) throw plainError('Stopped.');
   let body = { paper: pid, turnId, message, display: user.text, auto: user.auto, model, effort, context, profile, quotes: user.quotes, mentions: user.mentions, images };
   if (fresh || turn.fresh || route === 'bridge') {
-    try { if (doc) body.paperText = await privateAwait(pdfText(doc, 'r:' + pid + ':' + (doc.fingerprints || [''])[0]), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch);}
-    if (!body.paperText) body.paperText = [p.title, p.authors, p.abstract].filter(Boolean).join('\n');
+    body.paperText = await privateAwait(chatPaperText(p, pid, doc), _authEpoch);
     if (route === 'api') {}   // the API looks at pages through view_pages, from the open PDF
     else if (local) { try { const blob = await privateAwait(localPdfGet(pid), _authEpoch); if (blob) body.pdfBase64 = await privateAwait(blobToBase64(blob), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch);} }
     else body.pdfUrl = pdfSourceOf(p);
@@ -23349,13 +23353,16 @@ function chatCopy(mi) { const m = Chat.messages[mi]; if (m) navigator.clipboard.
 const API_URL = 'https://api.anthropic.com/v1/messages', API_VERSION = '2026-10-21', API_KEY_NAME = 'claude_api_key';
 const API_MODELS = { opus: 'claude-opus-5-5', sonnet: 'claude-sonnet-5-5', haiku: 'claude-haiku-5-5' };
 const API_EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
-const API_FALLBACK_BETA = 'server-side-fallback-2026-07-01', API_BINDING_BETA = 'thinking-binding-controls-2026-08-01', API_CLEAR_BETA = 'context-management-2025-06-27';
+const API_FALLBACK_BETA = 'server-side-fallback-2026-07-01', API_BINDING_BETA = 'thinking-binding-controls-2026-08-01', API_CONTEXT_BETAS = 'context-management-2025-06-27,compact-2026-01-12';
 const API_CACHE = { type: 'ephemeral', ttl: '1h' };
 // Bounds for one turn (one question and everything Claude does to answer it)
-const API_LIMIT = { requests: 8, output: 30000, pages: 8, pagesPerCall: 4, idleMs: 120000, turnMs: 900000, pageEdge: 1300, jpeg: 0.85, libraryLines: 15 };
+const API_MAX_OUTPUT = 128000;   // the models' own limit on one response
+const API_LIMIT = { pagesPerCall: 4, idleMs: 120000, turnMs: 900000, pageEdge: 1300, jpeg: 0.85, libraryLines: 15 };
 /* Old tool results leave a long chat on Anthropic's side; the page keeps the whole history. Clearing restarts the
    prompt cache, so it waits for plenty to clear, and keep holds one heavy answer's results. */
-const API_CLEAR = { edits: [{ type: 'clear_tool_uses_20250919', trigger: { type: 'input_tokens', value: 100000 }, keep: { type: 'tool_uses', value: 8 }, clear_at_least: { type: 'input_tokens', value: 50000 } }] };
+const API_CLEAR = { type: 'clear_tool_uses_20250919', trigger: { type: 'input_tokens', value: 100000 }, keep: { type: 'tool_uses', value: 8 }, clear_at_least: { type: 'input_tokens', value: 50000 } };
+/* Past Anthropic's default trigger the server summarizes the chat. Its tools can derail the summary, hence the instructions. */
+const API_COMPACT = { type: 'compact_20260112', instructions: 'Summarize the transcript inside <summary></summary> tags. Include relevant information in the summary for continuing the task in the next context window: what the reader asked, what was concluded, and any passages, page numbers and links that were cited. The paper itself is provided again after this summary, so do not restate it. Do not call any tools while writing this summary; respond with text only.' };
 const API_STATES = new Set(['apikey_refused', 'api_blocked', 'api_credits']);
 const API_STOPPED_LINE = '\n\n*The answer stopped here. Send a message to try again.*';
 /* The bridge's SYSTEM (bridge/scholar_bridge.py) for the API: view_pages instead of Read, search_library instead of
@@ -23910,7 +23917,7 @@ function chatLegacyRuntimeSafe(messages) {
   let client = new Set();
   for (const m of messages) {
     if (!m || !['user', 'assistant'].includes(m.role) || !Array.isArray(m.content) || !m.content.length) return false;
-    if (m.content.some(b => !b || !['text', 'image', 'thinking', 'redacted_thinking', 'tool_use', 'tool_result', 'server_tool_use', 'web_search_tool_result', 'web_fetch_tool_result'].includes(b.type))) return false;
+    if (m.content.some(b => !b || !['text', 'image', 'thinking', 'redacted_thinking', 'tool_use', 'tool_result', 'server_tool_use', 'web_search_tool_result', 'web_fetch_tool_result', 'compaction'].includes(b.type))) return false;
     const results = m.content.filter(b => b.type === 'tool_result');
     if (client.size) {
       if (m.role !== 'user' || results.length !== client.size || m.content.slice(0, results.length).some(b => b.type !== 'tool_result')) return false;
@@ -23920,6 +23927,7 @@ function chatLegacyRuntimeSafe(messages) {
     const server = new Set();
     for (const b of m.content) {
       if (b.type === 'text' && typeof b.text !== 'string') return false;
+      if (b.type === 'compaction' && (m.role !== 'assistant' || (b.content !== null && typeof b.content !== 'string'))) return false;
       if (b.type === 'image' && (m.role !== 'user' || !vaultObject(b.source))) return false;
       if (b.type === 'thinking' && (m.role !== 'assistant' || typeof b.thinking !== 'string' || typeof b.signature !== 'string' || !b.signature.trim())) return false;
       if (b.type === 'redacted_thinking' && (m.role !== 'assistant' || typeof b.data !== 'string' || !b.data)) return false;
@@ -23973,17 +23981,23 @@ function chatHistoryControlsHTML() {
 /* ---- one turn on the API ---- */
 function apiTools(model) {
   return API_CLIENT_TOOLS.concat(model === 'haiku'
-    ? [{ type: 'web_search_20250305', name: 'web_search' }, { type: 'web_fetch_20250910', name: 'web_fetch', max_content_tokens: 20000 }]
-    : [{ type: 'web_search_20260209', name: 'web_search' }, { type: 'web_fetch_20260209', name: 'web_fetch', max_content_tokens: 20000 }]);
+    ? [{ type: 'web_search_20250305', name: 'web_search' }, { type: 'web_fetch_20250910', name: 'web_fetch' }]
+    : [{ type: 'web_search_20260209', name: 'web_search' }, { type: 'web_fetch_20260209', name: 'web_fetch' }]);
 }
 /* mixed: this conversation's earlier turns were made with other tools (a change between Haiku and the other
    models), so their thinking no longer fits; the API drops it rather than refusing the request */
-function apiPayload(model, effort, system, tools, messages, mixed) {
-  return { model: API_MODELS[model] || API_MODELS[CHAT_DEFAULT.model], max_tokens: API_LIMIT.output, stream: true, cache_control: API_CACHE, context_management: API_CLEAR, system, tools, messages,
+function apiPayload(model, effort, system, tools, messages, mixed, pause) {
+  return { model: API_MODELS[model] || API_MODELS[CHAT_DEFAULT.model], max_tokens: API_MAX_OUTPUT, stream: true, cache_control: API_CACHE, context_management: { edits: [API_CLEAR, { ...API_COMPACT, pause_after_compaction: pause }] }, system, tools, messages,
     ...(API_EFFORTS.includes(effort) ? { output_config: { effort } } : {}),
     ...(model !== 'haiku' ? { fallbacks: 'default' } : {}),
     ...(mixed ? { thinking: { type: 'adaptive', block_binding: { prefix_mismatch_behavior: 'drop_block' } } } : {}) };
 }
+/* A summary stands for everything before it; one that came back empty stands for nothing */
+function apiFromSummary(messages) {
+  for (let i = messages.length - 1; i >= 0; i--) if (messages[i].role === 'assistant' && messages[i].content.some(b => b.type === 'compaction' && b.content)) return messages.slice(i);
+  return messages;
+}
+const apiHoldsPaper = m => m.role === 'user' && m.content.some(b => typeof b.text === 'string' && b.text.startsWith('<paper>\n'));
 /* The first message holds the paper (cached for an hour), then <context>, figure crops, and the question */
 function apiUserContent(body, first, p) {
   const content = [];
@@ -24000,7 +24014,7 @@ async function apiFetch(payload, model, mixed, key, live) {
   if (live.stopped || live.ctl.signal.aborted) throw new DOMException('Stopped', 'AbortError');
   const ctl = new AbortController(); Private.controllers.add(ctl); live.requests.add(ctl);
   if (live.ctl.signal.aborted) ctl.abort(); else live.ctl.signal.addEventListener('abort', () => ctl.abort(), { once: true });
-  const betas = [model !== 'haiku' && API_FALLBACK_BETA, mixed && API_BINDING_BETA, payload.context_management && API_CLEAR_BETA].filter(Boolean);
+  const betas = [model !== 'haiku' && API_FALLBACK_BETA, mixed && API_BINDING_BETA, payload.context_management && API_CONTEXT_BETAS].filter(Boolean);
   const headers = { authorization: 'Bearer ' + key, 'anthropic-version': API_VERSION, 'content-type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true', ...(betas.length ? { 'anthropic-beta': betas.join(',') } : {}) };
   const idle = setTimeout(() => ctl.abort(), API_LIMIT.idleMs);   // no answer at all within the idle time
   try {
@@ -24045,6 +24059,7 @@ async function apiReadStream(res, ctl, on) { const _authEpoch = capturePrivateEp
       else if (d.type === 'thinking_delta') b.thinking = (b.thinking || '') + d.thinking;
       else if (d.type === 'signature_delta') b.signature = (b.signature || '') + d.signature;
       else if (d.type === 'input_json_delta') json.set(e.index, (json.get(e.index) || '') + d.partial_json);
+      else if (d.type === 'compaction_delta') b.content = d.content;
       else if (d.type === 'citations_delta') (b.citations = Array.isArray(b.citations) ? b.citations : []).push(d.citation);
     } else if (e.type === 'content_block_stop') {
       const raw = json.get(e.index), b = content[e.index];
@@ -24119,8 +24134,6 @@ async function apiViewPages(spec, t) { const _authEpoch = capturePrivateEpoch();
   if (!want.length) throw plainError('Give page numbers, such as "3" or "2-4".');
   if (want.length > API_LIMIT.pagesPerCall) throw plainError('Ask for at most 4 pages at a time.');
   if (want.some(n => n < 1 || n > doc.numPages)) throw plainError('This paper has ' + doc.numPages + ' pages.');
-  if (t.seen.pages + want.length > API_LIMIT.pages) throw plainError('You have looked at ' + t.seen.pages + ' pages for this answer, and 8 is the most. Answer from what you have.');
-  t.seen.pages += want.length;
   const out = [];
   for (const n of want) out.push({ type: 'text', text: 'Page ' + n }, { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: await privateAwait(apiRenderPage(doc, n), _authEpoch) } });
   return out;
@@ -24150,7 +24163,7 @@ async function apiRunTools(content, t) { const _authEpoch = capturePrivateEpoch(
   return results;
 }
 /* One question on the API (chatSendNow's body, built as for the bridge). Requests go out until Claude ends its turn,
-   within API_LIMIT. The question is kept with the conversation once the API takes the first request (the turn is
+   with only the API's own limits. The question is kept with the conversation once the API takes the first request (the turn is
    accepted then); the answer when the turn ends. A turn that ends early keeps only the words shown, so the
    conversation stays a valid history. Returns the answer's text; a failure throws the words to show. */
 /* Web Locks serialize this paper's sends and conversation changes across tabs. Owner and epoch are checked again
@@ -24169,13 +24182,12 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
   const live = { ctl: new AbortController(), requests: new Set(), stopped: false };
   live.stop = () => { live.stopped = true; live.ctl.abort(); };
   _apiTurns.set(pid, live);
-  const turnTimer = setTimeout(() => live.ctl.abort(), API_LIMIT.turnMs);
-  const usage = [], turnApi = [], seen = { output: 0, pages: 0 };
-  let reply = '', prev = '', accepted = null, outcome = 'failed', kind = '';
+  const usage = [], turnApi = [];
+  let reply = '', prev = '', accepted = null, outcome = 'failed', kind = '', pausing = true;
   const on = {
     start: b => {
       if (b.type === 'text' && reply && prev !== 'text' && !/\n\s*$/.test(reply)) reply += '\n\n';
-      if ((b.type === 'tool_use' || b.type === 'server_tool_use') && owned()) { Chat.tool = b.name; scheduleLive(); }
+      if ((b.type === 'tool_use' || b.type === 'server_tool_use' || b.type === 'compaction') && owned()) { Chat.tool = b.name || b.type; scheduleLive(); }
       prev = b.type;
     },
     text: d => { _chatVault.check();reply += d; if (accepted) { live.checkpoint = reply; if (!live.checkpointing) live.checkpointing = chatTrack(apiChatCheckpoint(pid, accepted, live.checkpoint)).catch(() => {}).finally(() => { live.checkpointing = null; }); } if (owned() && chatAvailable()) { Chat.streaming = reply; Chat.tool = ''; scheduleLive(); } },
@@ -24192,12 +24204,13 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
     const system = (stored && stored.system) || API_SYSTEM + (profile ? '\n\nAbout the user: ' + profile : '');
     const tools = apiTools(model), sig = JSON.stringify(tools);
     const mixed = !!(stored && (stored.mixed || (stored.tools && stored.tools !== sig)));
-    const user = { role: 'user', content: apiUserContent(body, !history.length, p) };
+    const needPaperText = async () => { if (!body.paperText) body.paperText = await chatPaperText(p, pid, doc); };
+    const first = !apiFromSummary(history).some(apiHoldsPaper);
+    if (first) await privateAwait(needPaperText(), _authEpoch);
+    const user = { role: 'user', content: apiUserContent(body, first, p) };
     if(stored?._rebuild&&history.at(-1)?.role==='user'){user.content=history.pop().content.concat(user.content);turn.replay=history;}
-    for (let n = 0; ; n++) {
-      if (n >= API_LIMIT.requests || seen.output >= API_LIMIT.output) { outcome = 'cap'; break; }
-      const payload = apiPayload(model, effort, system, tools, history.concat(user, turnApi), mixed);
-      payload.max_tokens = API_LIMIT.output - seen.output;
+    for (;;) {
+      const payload = apiPayload(model, effort, system, tools, apiFromSummary(history.concat(user, turnApi)), mixed, pausing);
       let res, ctl;
       try { ({ res, ctl } = await privateAwait(apiFetch(payload, model, mixed, key, live), _authEpoch)); }
       catch (e) { checkPrivateEpoch(_authEpoch); if (e && e.unsent && !accepted) throw e; outcome = live.stopped ? 'stopped' : 'failed'; break; }
@@ -24212,24 +24225,27 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
       try { msg = await privateAwait(apiReadStream(res, ctl, on), _authEpoch); }
       catch (e) { checkPrivateEpoch(_authEpoch); outcome = live.stopped ? 'stopped' : 'failed'; break; }
       const charged = apiUsage(msg, model); usage.push(charged);
-      seen.output += charged.output;
-      if (seen.output > API_LIMIT.output) { outcome = 'cap'; break; }
+      const summary = pausing && msg.content.find(b => b.type === 'compaction');
+      if (summary) {   // the summary stands in for the paper too, so the paper and the question follow it
+        pausing = false;
+        if (summary.content) { await privateAwait(needPaperText(), _authEpoch); turnApi.push({ role: 'assistant', content: [summary] }, { role: 'user', content: apiUserContent(body, true, p) }); }
+        continue;
+      }
       if (msg.stop_reason === 'refusal') { outcome = 'refusal'; break; }
       turnApi.push({ role: 'assistant', content: msg.content });
       if (msg.stop_reason === 'end_turn' || msg.stop_reason === 'stop_sequence') { outcome = 'done'; break; }
       if (msg.stop_reason === 'max_tokens') { outcome = msg.broken || apiDangling(msg.content) ? 'cut' : 'max'; break; }
       if (live.stopped) { outcome = 'stopped'; break; }
-      if (seen.output >= API_LIMIT.output) { outcome = 'cap'; break; }
       if (msg.stop_reason === 'pause_turn') continue;   // the server's own loop paused: the same request again
       if (msg.stop_reason !== 'tool_use') break;
-      const results = await privateAwait(apiRunTools(msg.content, { doc, seen }), _authEpoch);
+      const results = await privateAwait(apiRunTools(msg.content, { doc }), _authEpoch);
       if (live.stopped) { outcome = 'stopped'; break; }
       if (!results.length) break;
       turnApi.push({ role: 'user', content: results });
     }
   } catch (e) { checkPrivateEpoch(_authEpoch); if (e && e.unsent && !accepted) throw e; if (!accepted) { turn.stage = 'rejected'; throw plainError(live.stopped ? 'Stopped.' : 'Couldn’t answer. Try again.'); } outcome = live.stopped ? 'stopped' : 'failed'; }
   finally {
-    clearTimeout(turnTimer); live.ctl.abort();
+    live.ctl.abort();
     for (const ctl of live.requests) Private.controllers.delete(ctl);
     if (_apiTurns.get(pid) === live) _apiTurns.delete(pid);
     // you went to another paper and came back meanwhile: that view loads the saved conversation once this ends
@@ -24260,7 +24276,7 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
     if (!text.trim() && outcome === 'max') throw plainError('Couldn’t answer. Try again.');
     return text;
   }
-  // stopped, failed, cut off or over a bound: the words shown so far stay, as plain text
+  // stopped, failed or cut off: the words shown so far stay, as plain text
   const words = reply.trim() ? reply : '', text = words && outcome !== 'stopped' ? words + API_STOPPED_LINE : words;
   await privateAwait(chatFinishApi(pid, accepted, words ? [{ role: 'assistant', content: [{ type: 'text', text: words }] }] : [], text ? { role: 'assistant', text, ts: stamp } : null, usage, reply), _authEpoch);
   if (!words) throw plainError(outcome === 'stopped' ? 'Stopped.' : 'Couldn’t answer. Try again.');
