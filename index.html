@@ -23352,7 +23352,7 @@ const API_EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
 const API_FALLBACK_BETA = 'server-side-fallback-2026-07-01', API_BINDING_BETA = 'thinking-binding-controls-2026-08-01';
 const API_CACHE = { type: 'ephemeral', ttl: '1h' };
 // Bounds for one turn (one question and everything Claude does to answer it)
-const API_LIMIT = { requests: 8, output: 30000, searches: 4, fetches: 4, pages: 8, pagesPerCall: 4, idleMs: 120000, turnMs: 900000, maxTokens: 12000, pageEdge: 1300, jpeg: 0.85, libraryLines: 15 };
+const API_LIMIT = { requests: 8, output: 30000, searches: 10, fetches: 10, pages: 8, pagesPerCall: 4, idleMs: 120000, turnMs: 900000, maxTokens: 12000, pageEdge: 1300, jpeg: 0.85, libraryLines: 15 };
 const API_STATES = new Set(['apikey_refused', 'api_blocked', 'api_credits']);
 const API_STOPPED_LINE = '\n\n*The answer stopped here. Send a message to try again.*';
 /* The bridge's SYSTEM (bridge/scholar_bridge.py) for the API: view_pages instead of Read, search_library instead of
