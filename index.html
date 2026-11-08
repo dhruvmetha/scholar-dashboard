@@ -23361,7 +23361,8 @@ const API_EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
 const API_FALLBACK_BETA = 'server-side-fallback-2026-07-01', API_BINDING_BETA = 'thinking-binding-controls-2026-08-01', API_CONTEXT_BETAS = 'context-management-2025-06-27,compact-2026-01-12';
 const API_CACHE = { type: 'ephemeral', ttl: '1h' };
 // Bounds for one turn (one question and everything Claude does to answer it)
-const API_MAX_OUTPUT = 128000;   // the models' own limit on one response
+const API_MAX_OUTPUT = 12000;   // the last value proven against the real API; the models allow 128000
+let API_CONTEXT_ON = false;   // clearing and compaction stay off until one real request proves them
 const API_LIMIT = { pagesPerCall: 4, idleMs: 120000, turnMs: 900000, pageEdge: 1300, jpeg: 0.85, libraryLines: 15 };
 /* Old tool results leave a long chat on Anthropic's side; the page keeps the whole history. Clearing restarts the
    prompt cache, so it waits for plenty to clear, and keep holds one heavy answer's results. */
@@ -24005,7 +24006,7 @@ function apiTools(model) {
 /* mixed: this conversation's earlier turns were made with other tools (a change between Haiku and the other
    models), so their thinking no longer fits; the API drops it rather than refusing the request */
 function apiPayload(model, effort, system, tools, messages, mixed, pause) {
-  return { model: API_MODELS[model] || API_MODELS[CHAT_DEFAULT.model], max_tokens: API_MAX_OUTPUT, stream: true, cache_control: API_CACHE, context_management: { edits: [API_CLEAR, { ...API_COMPACT, pause_after_compaction: pause }] }, system, tools, messages,
+  return { model: API_MODELS[model] || API_MODELS[CHAT_DEFAULT.model], max_tokens: API_MAX_OUTPUT, stream: true, cache_control: API_CACHE, ...(API_CONTEXT_ON ? { context_management: { edits: [API_CLEAR, { ...API_COMPACT, pause_after_compaction: pause }] } } : {}), system, tools, messages,
     ...(API_EFFORTS.includes(effort) ? { output_config: { effort } } : {}),
     ...(model !== 'haiku' ? { fallbacks: 'default' } : {}),
     ...(mixed ? { thinking: { type: 'adaptive', block_binding: { prefix_mismatch_behavior: 'drop_block' } } } : {}) };
@@ -24232,7 +24233,7 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
       let res, ctl;
       try { ({ res, ctl } = await privateAwait(apiFetch(payload, model, mixed, key, live), _authEpoch)); }
       catch (e) { checkPrivateEpoch(_authEpoch); if (e && e.unsent && !accepted) throw e; outcome = live.stopped ? 'stopped' : 'failed'; break; }
-      if (!res.ok) { kind = apiRefusalKind(res.status, await privateAwait(apiErrorBody(res), _authEpoch)); outcome = 'refused'; break; }
+      if (!res.ok) { const said = await privateAwait(apiErrorBody(res), _authEpoch); console.warn('Claude refused the request', res.status, said.type || '', said.message || ''); kind = apiRefusalKind(res.status, said); outcome = 'refused'; break; }
       _chatVault.check();
       if (!accepted) {
         accepted = await privateAwait(apiChatAccept(pid, turn, user, system, sig, mixed, model), _authEpoch);
