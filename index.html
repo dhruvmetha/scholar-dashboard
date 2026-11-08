@@ -23349,15 +23349,18 @@ function chatCopy(mi) { const m = Chat.messages[mi]; if (m) navigator.clipboard.
 const API_URL = 'https://api.anthropic.com/v1/messages', API_VERSION = '2026-10-21', API_KEY_NAME = 'claude_api_key';
 const API_MODELS = { opus: 'claude-opus-5-5', sonnet: 'claude-sonnet-5-5', haiku: 'claude-haiku-5-5' };
 const API_EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
-const API_FALLBACK_BETA = 'server-side-fallback-2026-07-01', API_BINDING_BETA = 'thinking-binding-controls-2026-08-01';
+const API_FALLBACK_BETA = 'server-side-fallback-2026-07-01', API_BINDING_BETA = 'thinking-binding-controls-2026-08-01', API_CLEAR_BETA = 'context-management-2025-06-27';
 const API_CACHE = { type: 'ephemeral', ttl: '1h' };
 // Bounds for one turn (one question and everything Claude does to answer it)
-const API_LIMIT = { requests: 8, output: 30000, pages: 8, pagesPerCall: 4, idleMs: 120000, turnMs: 900000, maxTokens: 12000, pageEdge: 1300, jpeg: 0.85, libraryLines: 15, inputEstimate: 800000 };
+const API_LIMIT = { requests: 8, output: 30000, pages: 8, pagesPerCall: 4, idleMs: 120000, turnMs: 900000, pageEdge: 1300, jpeg: 0.85, libraryLines: 15 };
+/* Old tool results leave a long chat on Anthropic's side; the page keeps the whole history. Clearing restarts the
+   prompt cache, so it waits for plenty to clear, and keep holds one heavy answer's results. */
+const API_CLEAR = { edits: [{ type: 'clear_tool_uses_20250919', trigger: { type: 'input_tokens', value: 100000 }, keep: { type: 'tool_uses', value: 8 }, clear_at_least: { type: 'input_tokens', value: 50000 } }] };
 const API_STATES = new Set(['apikey_refused', 'api_blocked', 'api_credits']);
 const API_STOPPED_LINE = '\n\n*The answer stopped here. Send a message to try again.*';
 /* The bridge's SYSTEM (bridge/scholar_bridge.py) for the API: view_pages instead of Read, search_library instead of
    Grep, and links to the web pages it relied on. Kept with each conversation from its first turn, unchanged. */
-const API_SYSTEM = "You are a research assistant inside the user's paper-reading app. The user is reading one paper; its full text is given in <paper> in the conversation (page-marked). To look at a figure, table or equation layout, call view_pages with the pages you need (at most 4 at a time). Images the user attaches come with their message.\n\nEach message may start with <context>: the user's current highlights, comments and notes on this paper (they change as they read), their research interests, and sometimes other papers they @-mentioned. Use them; don't repeat them back.\n\nCiting the paper: whenever you point to something in the paper, cite it with its exact words in this form: [[p.N \"exact words from the paper\"]] (N = page). The quote must be contiguous and verbatim (no ellipses, no paraphrase), a phrase to a sentence long, with symbols as they appear in the text. The app shows each citation only as a small clickable pill (page number and a few words), so the reader cannot read its words: it is a footnote marker, never part of your prose. Every sentence, list item and table cell must say everything on its own, as if the citation were deleted; put the citation right after the claim it supports. Wrong: \"Predicates live on [[p.2 \"the low-dimensional state space\"]]\" (reads as \"Predicates live on p.2 the low-dime…\"). Right: \"Predicates are defined over a low-dimensional state space [[p.2 \"the low-dimensional state space\"]].\" A citation never replaces words, and a table cell never consists of only a citation. Tables are where this slips most: wrong \"| $\\phi$ | The sensor. It [[p.4 \"is the observation function\"]]. |\", right \"| $\\phi$ | The sensor: maps the true state to what the sensors observe [[p.4 \"is the observation function\"]]. |\". Before sending, reread each sentence with its citations removed; if any is incomplete, rewrite it. Use [[p.N \"...\"]] only for the paper being read (its pills jump within it); cite other papers, including ones the user @-mentions, in plain text by title or author, with a page if useful.\n\nOther papers: search_library searches the user's library index (tab-separated, one paper per line: id, title, authors, date, venue, topics, one-line summary, and flags such as starred, read, notes) and returns the matching lines. When they refer to another paper by description (\"the Ames backup-CBF paper\", \"the conformal STL one I read last month\"), call it with a few keywords (try a few) to identify it. If more than one could fit, ask them with a short numbered list of titles. Once you know which paper(s) they mean, reply with only one line per paper, ```paper <id>```, and nothing else: the app then sends you that paper's text and the user's own notes on it, and you continue answering their question. Papers they @-mention arrive the same way, in <other-paper>.\n\nNotes and highlights: never add to the user's notes unless they explicitly ask you to. When they do, put each note in a fenced block ```note ... ``` (Markdown; you may cite with [[p.N \"...\"]] inside), and each highlight as ```highlight p.N color \"exact words\"``` (color is one of orange, green, blue, red, purple). The app saves them for the user.\n\nThe web: you can search the web and read web pages. Link the web pages you relied on.\n\nBe direct and concise; use Markdown and $math$ / $$math$$. The chat is a narrow side panel (often under 400px): keep tables to about three columns of short cells, and put citations in the text after the table rather than inside its cells. Say when something is your inference rather than in the paper.";
+const API_SYSTEM = "You are a research assistant inside the user's paper-reading app. The user is reading one paper; its full text is given in <paper> in the conversation (page-marked). To look at a figure, table or equation layout, call view_pages with the pages you need (at most 4 at a time). Images the user attaches come with their message.\n\nEach message may start with <context>: the user's current highlights, comments and notes on this paper (they change as they read), their research interests, and sometimes other papers they @-mentioned. Use them; don't repeat them back.\n\nCiting the paper: whenever you point to something in the paper, cite it with its exact words in this form: [[p.N \"exact words from the paper\"]] (N = page). The quote must be contiguous and verbatim (no ellipses, no paraphrase), a phrase to a sentence long, with symbols as they appear in the text. The app shows each citation only as a small clickable pill (page number and a few words), so the reader cannot read its words: it is a footnote marker, never part of your prose. Every sentence, list item and table cell must say everything on its own, as if the citation were deleted; put the citation right after the claim it supports. Wrong: \"Predicates live on [[p.2 \"the low-dimensional state space\"]]\" (reads as \"Predicates live on p.2 the low-dime…\"). Right: \"Predicates are defined over a low-dimensional state space [[p.2 \"the low-dimensional state space\"]].\" A citation never replaces words, and a table cell never consists of only a citation. Tables are where this slips most: wrong \"| $\\phi$ | The sensor. It [[p.4 \"is the observation function\"]]. |\", right \"| $\\phi$ | The sensor: maps the true state to what the sensors observe [[p.4 \"is the observation function\"]]. |\". Before sending, reread each sentence with its citations removed; if any is incomplete, rewrite it. Use [[p.N \"...\"]] only for the paper being read (its pills jump within it); cite other papers, including ones the user @-mentions, in plain text by title or author, with a page if useful.\n\nOther papers: search_library searches the user's library index (tab-separated, one paper per line: id, title, authors, date, venue, topics, one-line summary, and flags such as starred, read, notes) and returns the matching lines. When they refer to another paper by description (\"the Ames backup-CBF paper\", \"the conformal STL one I read last month\"), call it with a few keywords (try a few) to identify it. If more than one could fit, ask them with a short numbered list of titles. Once you know which paper(s) they mean, reply with only one line per paper, ```paper <id>```, and nothing else: the app then sends you that paper's text and the user's own notes on it, and you continue answering their question. Papers they @-mention arrive the same way, in <other-paper>.\n\nNotes and highlights: never add to the user's notes unless they explicitly ask you to. When they do, put each note in a fenced block ```note ... ``` (Markdown; you may cite with [[p.N \"...\"]] inside), and each highlight as ```highlight p.N color \"exact words\"``` (color is one of orange, green, blue, red, purple). The app saves them for the user.\n\nThe web: you can search the web and read web pages. Link the web pages you relied on. Prefer a paper's abstract or HTML page; open a PDF from the web only when you need its full text, because each PDF stays in the conversation and costs far more.\n\nBe direct and concise; use Markdown and $math$ / $$math$$. The chat is a narrow side panel (often under 400px): keep tables to about three columns of short cells, and put citations in the text after the table rather than inside its cells. Say when something is your inference rather than in the paper.";
 const API_CLIENT_TOOLS = [
   { name: 'search_library', description: 'Search the user\'s library index: titles, authors, dates, venues, topics, one-line summaries and flags (never their notes). Returns the header line and up to 15 best-matching lines, tab-separated.',
     input_schema: { type: 'object', properties: { query: { type: 'string', description: 'A few keywords: words from the title, an author, a topic or a venue.' } }, required: ['query'], additionalProperties: false }, strict: true },
@@ -23938,15 +23941,6 @@ async function chatFlushAcceptance(pid, turnId) {
   await chatRuntimePut(pid, entry.row); capture.check();
   ChatSync.accepting.delete(turnId); ChatSync.retry.delete(pid + ':accept:' + turnId);
 }
-function chatInputEstimate(...values) {
-  const count=value=>{
-    if(typeof value==='string')return Math.ceil(new TextEncoder().encode(value).length/3);
-    if(!value||typeof value!=='object')return 0;
-    if(value.type==='image')return 8192;
-    return Object.values(value).reduce((total,item)=>total+count(item)+4,0);
-  };
-  return values.reduce((total,value)=>total+count(value),0);
-}
 async function chatFinishApi(pid, at, api, shown, usage, reply) {
   const capture = chatCapture();
   // A failed checkpoint must never prevent the final atomic turn/runtime save.
@@ -23985,7 +23979,7 @@ function apiTools(model) {
 /* mixed: this conversation's earlier turns were made with other tools (a change between Haiku and the other
    models), so their thinking no longer fits; the API drops it rather than refusing the request */
 function apiPayload(model, effort, system, tools, messages, mixed) {
-  return { model: API_MODELS[model] || API_MODELS[CHAT_DEFAULT.model], max_tokens: API_LIMIT.maxTokens, stream: true, cache_control: API_CACHE, system, tools, messages,
+  return { model: API_MODELS[model] || API_MODELS[CHAT_DEFAULT.model], max_tokens: API_LIMIT.output, stream: true, cache_control: API_CACHE, context_management: API_CLEAR, system, tools, messages,
     ...(API_EFFORTS.includes(effort) ? { output_config: { effort } } : {}),
     ...(model !== 'haiku' ? { fallbacks: 'default' } : {}),
     ...(mixed ? { thinking: { type: 'adaptive', block_binding: { prefix_mismatch_behavior: 'drop_block' } } } : {}) };
@@ -24006,7 +24000,7 @@ async function apiFetch(payload, model, mixed, key, live) {
   if (live.stopped || live.ctl.signal.aborted) throw new DOMException('Stopped', 'AbortError');
   const ctl = new AbortController(); Private.controllers.add(ctl); live.requests.add(ctl);
   if (live.ctl.signal.aborted) ctl.abort(); else live.ctl.signal.addEventListener('abort', () => ctl.abort(), { once: true });
-  const betas = [model !== 'haiku' && API_FALLBACK_BETA, mixed && API_BINDING_BETA].filter(Boolean);
+  const betas = [model !== 'haiku' && API_FALLBACK_BETA, mixed && API_BINDING_BETA, payload.context_management && API_CLEAR_BETA].filter(Boolean);
   const headers = { authorization: 'Bearer ' + key, 'anthropic-version': API_VERSION, 'content-type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true', ...(betas.length ? { 'anthropic-beta': betas.join(',') } : {}) };
   const idle = setTimeout(() => ctl.abort(), API_LIMIT.idleMs);   // no answer at all within the idle time
   try {
@@ -24027,6 +24021,7 @@ function apiRefusalKind(status, err) {
   if (status === 401 && /^CORS requests are not allowed/.test(err.message)) return 'blocked';
   if (status === 401 || status === 403) return 'refused';
   if (status === 402 || (status === 400 && /^You have reached your specified|credit balance is too low/i.test(err.message)) || (status === 429 && err.code === 'enforced_spend_limit_reached')) return 'credits';
+  if (status === 400 && /prompt is too long/i.test(err.message)) return 'full';
   return 'failed';
 }
 /* One streamed answer: signed thinking, server tool blocks, citations, tool inputs from their JSON, stop reason and
@@ -24199,11 +24194,10 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
     const mixed = !!(stored && (stored.mixed || (stored.tools && stored.tools !== sig)));
     const user = { role: 'user', content: apiUserContent(body, !history.length, p) };
     if(stored?._rebuild&&history.at(-1)?.role==='user'){user.content=history.pop().content.concat(user.content);turn.replay=history;}
-    if(chatInputEstimate(history,user,system,tools)>API_LIMIT.inputEstimate){turn.stage='rejected';throw Object.assign(plainError('This chat is full. Start a New chat to keep going.'),{unsent:true});}
     for (let n = 0; ; n++) {
       if (n >= API_LIMIT.requests || seen.output >= API_LIMIT.output) { outcome = 'cap'; break; }
       const payload = apiPayload(model, effort, system, tools, history.concat(user, turnApi), mixed);
-      payload.max_tokens = Math.min(API_LIMIT.maxTokens, API_LIMIT.output - seen.output);
+      payload.max_tokens = API_LIMIT.output - seen.output;
       let res, ctl;
       try { ({ res, ctl } = await privateAwait(apiFetch(payload, model, mixed, key, live), _authEpoch)); }
       catch (e) { checkPrivateEpoch(_authEpoch); if (e && e.unsent && !accepted) throw e; outcome = live.stopped ? 'stopped' : 'failed'; break; }
@@ -24247,7 +24241,7 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
       turn.stage = 'rejected';
       if (kind === 'blocked' || kind === 'refused') { turn.apiFallback = kind; throw plainError(''); }
       if (kind === 'credits') { Chat.status = 'api_credits'; throw plainError(''); }
-      throw plainError('Couldn’t answer. Try again.');
+      throw plainError(kind === 'full' ? 'This chat is full. Start a New chat to keep going.' : 'Couldn’t answer. Try again.');
     }
     Chat.status = { credits: 'api_credits', blocked: 'api_blocked', refused: 'apikey_refused' }[kind] || Chat.status;
     outcome = 'failed';
