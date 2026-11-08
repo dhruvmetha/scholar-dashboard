@@ -22517,9 +22517,10 @@ function chatElsewhere() { return navigator.maxTouchPoints > 1 && !bridgeRemote(
 function chatHidden() { return chatElsewhere() && Chat.status !== 'ready' && !isOwner(); }
 function chatForgetRemote() { privateRemove('claude_bridge_url'); Chat.status = chatElsewhere() ? 'elsewhere' : 'setup'; renderChatPanel(true); }
 const _chatPending = new Map(), _chatDrafts = new Map();
+const CHAT_DEFAULT = { model: 'sonnet', effort: 'medium' };   // a new chat's model and effort
 const Chat = {
   status: 'setup', token: '',
-  pid: null, messages: [], fresh: true, model: 'opus', running: false, streaming: '', tool: '', error: '',
+  pid: null, messages: [], fresh: true, model: CHAT_DEFAULT.model, running: false, streaming: '', tool: '', error: '',
   draft: { quotes: [], images: [], mentions: [] }, draftText: '', pairCode: '', loadedFor: null,
 };
 /* Notes or Chat: remembered on this device, so coming back to the reader (after iOS reloads the app, too) finds
@@ -22691,16 +22692,15 @@ function chatConnectingRender(panel, head, pid) {
   if (Chat.status === 'unknown') chatOpen();   // shown before anything asked the laptop (the reader opened on Chat): ask now
   if (Chat.pid === pid && Chat.messages.length) renderChatMessages('bottom');
 }
-const CHAT_MODELS = [['opus', 'Thorough', 'Thorough answers'], ['sonnet', 'Balanced', 'Balanced answers'], ['haiku', 'Quick', 'Quick answers']];
-const CHAT_EFFORTS = [['', 'Default'], ['low', 'Low'], ['medium', 'Medium'], ['high', 'High'], ['xhigh', 'X-high'], ['max', 'Max']];
-Chat.effort = (() => { try { return localStorage.getItem('chat_effort') || ''; } catch (e) { return ''; } })();
+const CHAT_MODELS = [['opus', 'Opus'], ['sonnet', 'Sonnet'], ['haiku', 'Haiku']];
+const CHAT_EFFORTS = [['low', 'Low'], ['medium', 'Medium'], ['high', 'High'], ['xhigh', 'X-high'], ['max', 'Max']];
+Chat.effort = (() => { try { return localStorage.getItem('chat_effort') || CHAT_DEFAULT.effort; } catch (e) { return CHAT_DEFAULT.effort; } })();
 function chatSelectsHTML() {
-  const m = CHAT_MODELS.find(x => x[0] === Chat.model) || CHAT_MODELS[0];
-  return `<select class="chat-select" aria-label="Answer style" title="${m[2]}" onchange="chatModel(this.value); this.title = this.selectedOptions[0].title">${CHAT_MODELS.map(([v, l, t]) => `<option value="${v}" title="${t}"${Chat.model === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`
+  return `<select class="chat-select" aria-label="Model" title="Model" onchange="chatModel(this.value)">${CHAT_MODELS.map(([v, l]) => `<option value="${v}"${Chat.model === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`
     + `<select class="chat-select effort" aria-label="Effort" title="How long to think before answering" onchange="chatEffort(this.value)">${CHAT_EFFORTS.map(([v, l]) => `<option value="${v}"${Chat.effort === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
 }
 function chatModel(m) { Chat.model = m; }   // used from the next message; kept with this paper's chat
-function chatEffort(e) { Chat.effort = e; try { e ? checkedStorageSet('chat_effort', e) : checkedStorageRemove('chat_effort'); } catch (x) {} }
+function chatEffort(e) { Chat.effort = e; try { checkedStorageSet('chat_effort', e); } catch (x) {} }
 async function chatNew() { const _authEpoch = capturePrivateEpoch();
   if (!chatAvailable() || Chat.running || _chatPending.has(Chat.pid)) return;
   await privateAwait(apiChatArchive(_reader.paper.id), _authEpoch);
@@ -23188,7 +23188,7 @@ async function chatSendNowWork(text, auto) { const _authEpoch = capturePrivateEp
     notesContext(_rn) ? 'My highlights, comments and notes on this paper:\n' + notesContext(_rn) : (Vault.key ? 'I have no notes on this paper yet.' : '')].filter(Boolean).join('\n\n');
   if (mentions.length) context += (context ? '\n\n' : '') + (await privateAwait(Promise.all(mentions.map(mentionContext)), _authEpoch)).join('\n\n');
   if (turn.stopped) throw plainError('Stopped.');
-  let body = { paper: pid, turnId, message, display: user.text, auto: user.auto, model, effort: effort || undefined, context, profile, quotes: user.quotes, mentions: user.mentions, images };
+  let body = { paper: pid, turnId, message, display: user.text, auto: user.auto, model, effort, context, profile, quotes: user.quotes, mentions: user.mentions, images };
   if (fresh || turn.fresh || route === 'bridge') {
     try { if (doc) body.paperText = await privateAwait(pdfText(doc, 'r:' + pid + ':' + (doc.fingerprints || [''])[0]), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch);}
     if (!body.paperText) body.paperText = [p.title, p.authors, p.abstract].filter(Boolean).join('\n');
@@ -23352,7 +23352,7 @@ const API_EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
 const API_FALLBACK_BETA = 'server-side-fallback-2026-07-01', API_BINDING_BETA = 'thinking-binding-controls-2026-08-01';
 const API_CACHE = { type: 'ephemeral', ttl: '1h' };
 // Bounds for one turn (one question and everything Claude does to answer it)
-const API_LIMIT = { requests: 8, output: 30000, searches: 10, fetches: 10, pages: 8, pagesPerCall: 4, idleMs: 120000, turnMs: 900000, maxTokens: 12000, pageEdge: 1300, jpeg: 0.85, libraryLines: 15 };
+const API_LIMIT = { requests: 8, output: 30000, pages: 8, pagesPerCall: 4, idleMs: 120000, turnMs: 900000, maxTokens: 12000, pageEdge: 1300, jpeg: 0.85, libraryLines: 15, inputEstimate: 800000 };
 const API_STATES = new Set(['apikey_refused', 'api_blocked', 'api_credits']);
 const API_STOPPED_LINE = '\n\n*The answer stopped here. Send a message to try again.*';
 /* The bridge's SYSTEM (bridge/scholar_bridge.py) for the API: view_pages instead of Read, search_library instead of
@@ -23425,7 +23425,7 @@ function chatsDB(stores, mode, fn) { requireOwner(); const epoch = capturePrivat
   });
   return mode === 'readonly' ? work : localWork(work);
 }
-const apiNewRow = pid => ({ paper: pid, id: crypto.randomUUID(), revision: 0, system: '', tools: '', mixed: false, model: 'opus', api: [], shown: [], usage: [], turnIds: [], ts: Date.now() / 1000 });
+const apiNewRow = pid => ({ paper: pid, id: crypto.randomUUID(), revision: 0, system: '', tools: '', mixed: false, model: CHAT_DEFAULT.model, api: [], shown: [], usage: [], turnIds: [], ts: Date.now() / 1000 });
 function apiForgotten(row) { const s = JSON.stringify(row); return Object.entries(_uploads).some(([id, u]) => u && u.deleted && s.includes(id)); }
 async function apiChatGet(pid) { if(!chatAvailable()&&!Vault.key)return null;return (await chatReadSelected(pid)).row; }
 async function apiChatUpdate(pid,fn) { await chatEnsure(pid); return chatWithLock(pid,async()=>{const {row}=await chatReadSelected(pid,true),next=fn(row);if(!next||apiForgotten(next))return null;return chatRuntimePut(pid,next)}); }
@@ -23461,7 +23461,7 @@ async function apiChatChangeTurn(pid,at,fn) {
     await chatRuntimePut(pid,row,at.parent);return row;
   });
 }
-function apiChatFinish(pid,at,api,shown,usage) { return chatRecoverable(pid+':'+at?.turnId,async()=>{await chatFlushAcceptance(pid,at.turnId);return apiChatChangeTurn(pid,at,row=>{row.api.push(...api);if(shown)row.shown.push({...shown,interrupted:at.status!=='complete'});else if(at.status!=='complete'&&row.shown[at.shown])row.shown[at.shown].interrupted=true;row.usage.push(...usage);if(at.mixed)row.mixed=true;row._finished=true})}); }
+function apiChatFinish(pid,at,api,shown,usage) { return chatRecoverable(pid+':'+at?.turnId,async()=>{await chatFlushAcceptance(pid,at.turnId);return apiChatChangeTurn(pid,at,row=>{row.api.push(...api);if(shown)row.shown.push({...shown,interrupted:at.status!=='complete'});else if(at.status!=='complete'&&row.shown[at.shown])row.shown[at.shown].interrupted=true;row.usage.push(...usage);row._finished=true})}); }
 function apiChatRollback(pid,at,usage) { ChatSync.accepting.delete(at.turnId);ChatSync.retry.delete(pid+':accept:'+at.turnId);return apiChatChangeTurn(pid,at,row=>{row.api.length=at.api;row.shown.length=at.shown;row.turnIds=(row.turnIds||[]).filter(id=>id!==at.turnId);row.usage.push(...usage)}); }
 async function apiChatCheckpoint(pid,at,reply) { if(!at)return;const undurable=ChatSync.accepting.get(at.turnId);if(undurable){undurable.row.checkpoint=reply;return chatFlushAcceptance(pid,at.turnId)}return chatWithLock(pid,async()=>{const c=chatCapture(),i=await chatIdentity(pid),key=chatBase(i)+at.id+'/'+(at.parent||'empty'),env=await chatGet('runtime',key);if(!env)return;const v=await chatOpenEnvelope(env,i,'chat-runtime');if(v.row.pending?.turnId!==at.turnId||v.row.revision!==at.revision)return;v.row.checkpoint=reply;const sealed=await chatSeal(v);c.check();await chatDB('runtime','readwrite',tx=>{c.check();return tx.objectStore('runtime').put(sealed,key)})}); }
 async function chatBeforeSend(pid,turn=null) {
@@ -23729,7 +23729,7 @@ async function chatLoadSaved() { const c=chatCapture(),pid=_reader.paper.id;
   const recovered=_chatDrafts.get(pid);if(recovered?.turn&&!_chatPending.has(pid)){Chat.draft=recovered.draft;Chat.draftText=recovered.text;}
   if((Chat.running&&Chat.pid===pid)||_chatPending.has(pid))return;
   if(Chat.pid===pid&&Chat.selected&&Chat.selected!==active.chatId&&(Chat.draftText||Object.values(Chat.draft).some(a=>a.length))){Chat.loadedFor=pid;return;}
-  Object.assign(Chat,{pid,selected:active.chatId,anchor:active.anchor,tip:chatBranch(cat,active.chatId,active.anchor).at(-1)?.turnId||null,messages:row.shown.slice(),fresh:!row.api.length,model:row.model||'opus',running:_apiTurns.has(pid),streaming:'',tool:'',loadedFor:pid});
+  Object.assign(Chat,{pid,selected:active.chatId,anchor:active.anchor,tip:chatBranch(cat,active.chatId,active.anchor).at(-1)?.turnId||null,messages:row.shown.slice(),fresh:!row.api.length,model:row.model||CHAT_DEFAULT.model,running:_apiTurns.has(pid),streaming:'',tool:'',loadedFor:pid});
 }
 async function chatLockNow() {
   const capture=chatCapture(), bridgePapers=[...ChatSync.bridgeRunning.keys()];
@@ -23977,16 +23977,15 @@ function chatHistoryControlsHTML() {
 }
 /* ---- end encrypted Scout conversations ---- */
 /* ---- one turn on the API ---- */
-function apiTools(model, seen = { searches: 0, fetches: 0 }) {
-  const web = model === 'haiku'
-    ? [{ type: 'web_search_20250305', name: 'web_search', max_uses: API_LIMIT.searches }, { type: 'web_fetch_20250910', name: 'web_fetch', max_uses: API_LIMIT.fetches, max_content_tokens: 20000 }]
-    : [{ type: 'web_search_20260209', name: 'web_search', max_uses: API_LIMIT.searches }, { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: API_LIMIT.fetches, max_content_tokens: 20000 }];
-  return API_CLIENT_TOOLS.concat(web.map(t => ({ ...t, max_uses: Math.max(0, t.max_uses - (t.name === 'web_search' ? seen.searches : seen.fetches)) })).filter(t => t.max_uses > 0));
+function apiTools(model) {
+  return API_CLIENT_TOOLS.concat(model === 'haiku'
+    ? [{ type: 'web_search_20250305', name: 'web_search' }, { type: 'web_fetch_20250910', name: 'web_fetch', max_content_tokens: 20000 }]
+    : [{ type: 'web_search_20260209', name: 'web_search' }, { type: 'web_fetch_20260209', name: 'web_fetch', max_content_tokens: 20000 }]);
 }
-/* mixed: this conversation's earlier turns were made with other tools (a change between Quick and the other answer
-   styles), so their thinking no longer fits; the API drops it rather than refusing the request */
+/* mixed: this conversation's earlier turns were made with other tools (a change between Haiku and the other
+   models), so their thinking no longer fits; the API drops it rather than refusing the request */
 function apiPayload(model, effort, system, tools, messages, mixed) {
-  return { model: API_MODELS[model] || API_MODELS.opus, max_tokens: API_LIMIT.maxTokens, stream: true, cache_control: API_CACHE, system, tools, messages,
+  return { model: API_MODELS[model] || API_MODELS[CHAT_DEFAULT.model], max_tokens: API_LIMIT.maxTokens, stream: true, cache_control: API_CACHE, system, tools, messages,
     ...(API_EFFORTS.includes(effort) ? { output_config: { effort } } : {}),
     ...(model !== 'haiku' ? { fallbacks: 'default' } : {}),
     ...(mixed ? { thinking: { type: 'adaptive', block_binding: { prefix_mismatch_behavior: 'drop_block' } } } : {}) };
@@ -24176,7 +24175,7 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
   live.stop = () => { live.stopped = true; live.ctl.abort(); };
   _apiTurns.set(pid, live);
   const turnTimer = setTimeout(() => live.ctl.abort(), API_LIMIT.turnMs);
-  const usage = [], turnApi = [], seen = { output: 0, searches: 0, fetches: 0, pages: 0 };
+  const usage = [], turnApi = [], seen = { output: 0, pages: 0 };
   let reply = '', prev = '', accepted = null, outcome = 'failed', kind = '';
   const on = {
     start: b => {
@@ -24196,15 +24195,13 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
     const history = stored?._rebuild ? chatReplayText(stored._turns, (body.paperText || [p.title,p.abstract].filter(Boolean).join('\n')) + (p.uploaded && !doc ? '\nThe confidential paper is unavailable here. Never search for it.' : '')) : stored && Array.isArray(stored.api) ? stored.api : [];
     if (stored?._rebuild) turn.replay = history;
     const system = (stored && stored.system) || API_SYSTEM + (profile ? '\n\nAbout the user: ' + profile : '');
-    const sig = JSON.stringify(apiTools(model));
-    const wasMixed = !!(stored && (stored.mixed || (stored.tools && stored.tools !== sig)));
+    const tools = apiTools(model), sig = JSON.stringify(tools);
+    const mixed = !!(stored && (stored.mixed || (stored.tools && stored.tools !== sig)));
     const user = { role: 'user', content: apiUserContent(body, !history.length, p) };
     if(stored?._rebuild&&history.at(-1)?.role==='user'){user.content=history.pop().content.concat(user.content);turn.replay=history;}
-    if(chatInputEstimate(history,user,system,apiTools(model))>148000){turn.stage='rejected';throw plainError('Couldn’t answer. Try again.');}
+    if(chatInputEstimate(history,user,system,tools)>API_LIMIT.inputEstimate){turn.stage='rejected';throw Object.assign(plainError('This chat is full. Start a New chat to keep going.'),{unsent:true});}
     for (let n = 0; ; n++) {
       if (n >= API_LIMIT.requests || seen.output >= API_LIMIT.output) { outcome = 'cap'; break; }
-      const tools = apiTools(model, seen), mixed = wasMixed || JSON.stringify(tools) !== sig;
-      if (accepted && mixed) accepted.mixed = true;
       const payload = apiPayload(model, effort, system, tools, history.concat(user, turnApi), mixed);
       payload.max_tokens = Math.min(API_LIMIT.maxTokens, API_LIMIT.output - seen.output);
       let res, ctl;
@@ -24221,11 +24218,8 @@ async function apiChatTurnLocked(turn, c) { const _authEpoch = capturePrivateEpo
       try { msg = await privateAwait(apiReadStream(res, ctl, on), _authEpoch); }
       catch (e) { checkPrivateEpoch(_authEpoch); outcome = live.stopped ? 'stopped' : 'failed'; break; }
       const charged = apiUsage(msg, model); usage.push(charged);
-      const count = name => msg.content.filter(b => b.type === 'server_tool_use' && b.name === name).length;
       seen.output += charged.output;
-      seen.searches += Math.max(charged.searches, count('web_search'));
-      seen.fetches += Math.max(charged.fetches, count('web_fetch'));
-      if (seen.output > API_LIMIT.output || seen.searches > API_LIMIT.searches || seen.fetches > API_LIMIT.fetches) { outcome = 'cap'; break; }
+      if (seen.output > API_LIMIT.output) { outcome = 'cap'; break; }
       if (msg.stop_reason === 'refusal') { outcome = 'refusal'; break; }
       turnApi.push({ role: 'assistant', content: msg.content });
       if (msg.stop_reason === 'end_turn' || msg.stop_reason === 'stop_sequence') { outcome = 'done'; break; }
