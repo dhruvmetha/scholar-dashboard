@@ -22614,7 +22614,7 @@ async function chatOpen(focus) { const _authEpoch=capturePrivateEpoch();
       if(chatAvailable()&&chatRoute()==='bridge'&&Chat.status==='ready')syncLibrary();
     })().finally(()=>{if(ChatSync.opening===request)ChatSync.opening=null;});
   }
-  try{await privateAwait(request.promise,_authEpoch)}catch(error){checkPrivateEpoch(_authEpoch);if(chatAvailable())throw error;}
+  try{await privateAwait(request.promise,_authEpoch)}catch(error){checkPrivateEpoch(_authEpoch);if(chatAvailable()&&_reader.paper?.id===pid){console.error('Chat did not load',error);Object.assign(Chat,{pid,messages:[],history:[],streaming:'',tool:'',running:_apiTurns.has(pid),loadedFor:pid,error:CHAT_LOAD_FAILED});}}
   renderChatPanel(true);
   if(focus&&chatAvailable())setTimeout(privateCallback(()=>{const input=document.getElementById('chatInput');if(input)input.focus()}),0);
 }
@@ -23482,7 +23482,7 @@ async function apiChatCheckpoint(pid,at,reply) { if(!at)return;const undurable=C
 async function chatBeforeSend(pid,turn=null) {
   if(!chatAvailable())return false;
   for(const [name,save]of ChatSync.retry)if(name.startsWith(pid+':')){await save();ChatSync.retry.delete(name);}
-  try{await chatSync(pid,null,false)}catch(error){if(!chatAvailable())throw error;}
+  await chatInTime(chatSync(pid,null,false));
   const cat=await chatEnsure(pid);
   if(!Chat.selected||!cat.chats[Chat.selected]||turn&&!turn.keepSelection){
     Chat.selected=cat.active.chatId;Chat.anchor=cat.active.anchor;
@@ -23729,14 +23729,26 @@ async function chatPushOutbox() {
 async function chatReadSelected(pid, ready=false) { const cat=ready?await chatLoadCatalog(pid):await chatEnsure(pid),active=cat.active,turns=chatBranch(cat,active.chatId,active.anchor),tip=turns.at(-1)?.turnId||null;let row=await chatRuntimeGet(cat,active.chatId,tip,turns);if(!row){row={...apiNewRow(pid),id:active.chatId,shown:chatShownTurns(turns),turnIds:turns.map(t=>t.turnId),api:[],_rebuild:!!turns.length};}
   row._turns=turns;row._anchor=active.anchor;return {row,cat,turns,tip};
 }
-async function chatLoadSaved() { const c=chatCapture(),pid=_reader.paper.id;
+/* Opening a chat waits this long for other devices, other tabs and the network, then opens from this device */
+const CHAT_OPEN_WAIT_MS = 4000, CHAT_LOAD_FAILED = 'Couldn’t load this chat. Use the reload button above.';
+function chatInTime(work) { let timer; return Promise.race([work.then(() => true, () => true), new Promise(r => { timer = setTimeout(r, CHAT_OPEN_WAIT_MS, false); })]).finally(() => clearTimeout(timer)); }
+async function chatBringUpToDate(pid,c) {
   try{if(navigator.onLine)await chatSync(pid,null,false)}catch(e){c.check()}
   const syncedActive=(await chatLoadCatalog(pid)).active;
   await chatMigrate(pid);
   if(navigator.onLine && ((chatRoute()==='bridge'&&Chat.status==='ready') || Chat.token))await chatImportBridge(pid,!syncedActive);
   if (!_apiTurns.has(pid)) await chatRecoverPending(pid);
-  const {cat,row}=await chatReadSelected(pid);c.check();if(!_reader.paper||_reader.paper.id!==pid||!chatAvailable())return;
+}
+/* An update that finished after the chat opened: show what it brought, unless an answer is under way */
+function chatReloadWhenIdle(pid) { if(!chatAvailable()||Chat.pid!==pid||_reader.paper?.id!==pid||Chat.running||_chatPending.has(pid))return;chatLoadSaved(true).then(()=>renderChatPanel(true)).catch(()=>{}); }
+async function chatLoadSaved(localOnly=false) { const c=chatCapture(),pid=_reader.paper.id;
+  if(Chat.error===CHAT_LOAD_FAILED)Chat.error='';
+  let ontime=true;
+  if(!localOnly){const update=chatBringUpToDate(pid,c);ontime=await chatInTime(update);if(!ontime)update.then(()=>chatReloadWhenIdle(pid),()=>{});}
+  const local=ontime?null:await chatLoadCatalog(pid),blank=!ontime&&!local.chats[local.active?.chatId];
+  const {cat,row}=blank?{}:await chatReadSelected(pid,!ontime);c.check();if(!_reader.paper||_reader.paper.id!==pid||!chatAvailable())return;
   if(Chat.pid!==pid){if(Chat.pid&&(Chat.draftText||Object.values(Chat.draft).some(a=>a.length)))_chatDrafts.set(Chat.pid,{..._chatDrafts.get(Chat.pid),draft:Chat.draft,text:Chat.draftText});const kept=_chatDrafts.get(pid);Chat.draft=kept?kept.draft:{quotes:[],images:[],mentions:[]};Chat.draftText=kept?kept.text:'';}
+  if(blank){const held=_chatPending.get(pid);Object.assign(Chat,{pid,selected:null,anchor:null,tip:null,history:[],messages:held?held.messages:[],fresh:true,model:CHAT_DEFAULT.model,running:!!held||_apiTurns.has(pid),streaming:'',tool:'',loadedFor:pid});return;}
   const active=cat.active;
   Chat.history=[];for(const [id,e]of Object.entries(cat.chats)){const paths=e.tips.length?e.tips:[null];const branches=[];for(const tip of paths){const turns=tip&&!cat.turns[tip]?[]:chatBranch(cat,id,tip),ids=turns.map(t=>t.turnId);let fork=null;for(let n=0;n<ids.length;n++)if(paths.some(other=>other!==tip&&(cat.turns[other]?chatBranch(cat,id,other):[])[n]?.turnId!==ids[n])){fork=ids[n];break}const key=id+(fork?':'+fork:'');if(branches.includes(key))continue;branches.push(key);const current=id===active.chatId&&(tip===chatBranch(cat,id,active.anchor).at(-1)?.turnId||!tip);Chat.history.push({id:current?'current':key,chatId:id,anchor:fork||tip,title:fork&&branches.length>1?'Another conversation':e.title,count:turns.length*2,updated:turns.at(-1)?.created||e.created,current})}}
   Chat.history.sort((a,b)=>Number(b.current)-Number(a.current)||b.updated-a.updated||a.id.localeCompare(b.id));
@@ -23783,7 +23795,7 @@ async function chatImportBridge(pid,initial=false) {
   const before=await chatLoadCatalog(pid),batch=new Map();let current=null;
   ChatSync.importing.set(pid,capture);
   try {
-    const response = await bridgeFetch('/chats?paper=' + encodeURIComponent(pid));
+    const response = await bridgeFetch('/chats?paper=' + encodeURIComponent(pid), { signal: AbortSignal.timeout(10000) });
     capture.check();
     if (!response.ok) throw new Error('Could not open saved chats');
     const entries = (await response.json()).chats;
@@ -23791,7 +23803,7 @@ async function chatImportBridge(pid,initial=false) {
     if (!entries.some(entry => entry.id === 'current')) entries.push({ id: 'current' });
     for (const entry of entries) {
       if (entry.id !== 'current' && !/^[0-9]+$/.test(String(entry.id))) throw new Error('Invalid bridge chat');
-      const res = await bridgeFetch('/chat/export?paper=' + encodeURIComponent(pid) + '&id=' + encodeURIComponent(entry.id));
+      const res = await bridgeFetch('/chat/export?paper=' + encodeURIComponent(pid) + '&id=' + encodeURIComponent(entry.id), { signal: AbortSignal.timeout(10000) });
       capture.check();
       if (res.status === 404) { Chat.bridgeOld = true; throw new Error('Old bridge'); }
       if (!res.ok) throw new Error('Could not open saved chat');
