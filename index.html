@@ -100,16 +100,12 @@ html, body { overscroll-behavior: none; }   /* the app never rubber-bands as a w
 a { color: inherit; text-decoration: none; }
 
 /* [3] Custom dark scrollbars — only for inner scrollable containers, not the page */
-.save-dd-list::-webkit-scrollbar,
 .topic-body::-webkit-scrollbar,
 .interest-group-body::-webkit-scrollbar,
-.save-dd-list::-webkit-scrollbar-track,
 .topic-body::-webkit-scrollbar-track,
 .interest-group-body::-webkit-scrollbar-track,
-.save-dd-list::-webkit-scrollbar-thumb,
 .topic-body::-webkit-scrollbar-thumb,
 .interest-group-body::-webkit-scrollbar-thumb,
-.save-dd-list::-webkit-scrollbar-thumb:hover,
 .topic-body::-webkit-scrollbar-thumb:hover,
 .interest-group-body::-webkit-scrollbar-thumb:hover,
 
@@ -139,8 +135,8 @@ html.private-locked:has(#skeleton:not(.hidden)) #privateAccess[data-state="loadi
 .sk-daily-picker svg{flex:none;width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .sk-daily-area{flex:1;min-height:0;padding:16px 20px calc(var(--daily-footer-height) + 16px);overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scroll-padding-bottom:var(--daily-footer-height)}
 .sk-daily-card{touch-action:pan-y;position:relative;padding:26px 25px 23px;border:1px solid var(--line);border-radius:18px;background:var(--bg);min-height:100%;box-shadow:0 6px 24px rgba(0,0,0,.055);transform-origin:50% 88%;cursor:grab;overflow-wrap:anywhere}
-.sk-daily-card h2{font-size:29px;font-weight:650;line-height:1.18;margin:0;letter-spacing:-.025em}
-.sk-daily-card h2 a{color:var(--text);text-decoration:none}
+
+
 .sk-daily-authors{margin-top:15px;font-size:13px;color:var(--text-muted)}
 .sk-daily-venue{margin-top:4px;font-size:12px;color:var(--text-secondary)}
 .sk-daily-headline{font-size:16px;font-weight:500;line-height:1.45;letter-spacing:-.01em;padding:20px 0;margin:20px 0 0;border-top:1px solid var(--line)}
@@ -191,7 +187,7 @@ html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(
   #skeleton .sk-feed > .feed-head { grid-area: head; }
   #skeleton .sk-feed > .sk-list { grid-area: list; }
   #skeleton .sk-feed .skpost { padding: 14px 20px; }
-  #skeleton .sk-feed .sk-meta, #skeleton .sk-feed .sk-dek, #skeleton .sk-feed .sk-icons, #skeleton .sk-feed:not(.sk-following) .sk-by { display: none; }
+  #skeleton .sk-feed .sk-meta, #skeleton .sk-feed .sk-dek, #skeleton .sk-feed .sk-icons, #skeleton .sk-feed:not(.sk-following):not(.sk-project) .sk-by { display: none; }
   #skeleton .sk-feed .sk-title { margin: 0; font-size: 14.5px; line-height: 1.4; }
   #skeleton .sk-feed .sk-by { margin-top: 4px; font-size: 12px; }
   #skeleton .sk-feed:not(.sk-following) .sk-why { display: block; margin-top: 4px; font-size: 12px; line-height: 1.5; }
@@ -279,7 +275,7 @@ html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(
 #skeleton:has(.sk-daily) { height: 100%; }
 #skeleton .sk-daily { --daily-footer-height: calc(108px + env(safe-area-inset-bottom, 0px)); }
 #skeleton .sk-daily-body { position: relative; display: flex; flex-direction: column; flex: 1; min-height: 0; }
-#skeleton .sk-daily-card h2 { font-size: 29px; }
+
 #skeleton .sk-daily-abstract .sk-line:last-child { display: none; }
 #skeleton .sk-daily-match { min-height: calc(1lh + 14px); }
 #skeleton .lp-sec-h { min-height: 34px; }
@@ -334,7 +330,7 @@ html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(
   #skeleton .sk-daily-card h2 .sk-line:last-child { display: flex; }
   #skeleton .sk-daily-headline .sk-line:last-child { display: flex; }
   #skeleton .sk-daily-summary .sk-line:last-child { display: flex; }
-  #skeleton .sk-daily-card h2 { font-size: 27px; }
+  
   #skeleton .sk-daily-abstract .sk-line:last-child { display: flex; }
   #skeleton .sk-daily-headline .sk-line { font-size: 15px; }
   #skeleton .sk-daily-summary .sk-line { font-size: 13px; line-height: 1.7; }
@@ -2664,23 +2660,9 @@ button.fw-chip:hover { background: rgba(255,255,255,0.05); }
 .copy-dd-item.copy-dd-new { border-top: 1px solid var(--border); color: var(--accent); }
 .copy-dd-item:disabled { opacity: 0.45; cursor: default; }
 
-/* [12] SAVE DROPDOWN — animated entrance */
+/* Save buttons open the shared chooser. */
 .save-anchor { position: relative; display: inline-flex; }
 .save-anchor > .btn-icon { font-size: 16px; padding-bottom: 7px; }
-.save-dd { position: fixed; width: 210px; background: var(--bg-surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); z-index: 9999; overflow: hidden; display: flex; flex-direction: column; animation: dropdown-in 0.15s ease forwards; }
-.save-dd-input { width: 100%; padding: 8px 12px; background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--text); font-size: 13px; outline: none; }
-.save-dd-input::placeholder { color: var(--text-muted); }
-.save-dd-list { max-height: 180px; overflow-y: auto; min-height: 0; flex: 1 1 auto; }
-/* Phase 13e: each row is a real button with role checkbox, so keys and a screen reader reach it; a row whose list
-   went elsewhere is off where it stands and says why; long names wrap */
-.save-dd-item { display: flex; width: 100%; text-align: left; background: none; border: none; font: inherit; padding: 7px 12px; font-size: 13px; cursor: pointer; align-items: center; gap: 8px; color: var(--text-secondary); transition: background 0.1s; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
-.save-dd-item:hover, .save-dd-item:focus-visible { background: var(--bg-hover); }
-.save-dd-item:disabled { opacity: 0.5; cursor: default; }
-.save-dd-item .dd-n { flex: 1 1 auto; min-width: 0; }
-.save-dd-item .dd-why { display: block; font-size: 11px; color: var(--text-muted); }
-.save-dd-item .dd-check { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; transition: all 0.15s; }
-.save-dd-item .dd-check.on { background: var(--list); border-color: var(--list); color: var(--bg); }
-.save-dd-empty { padding: 10px 12px; font-size: 12px; color: var(--text-muted); text-align: center; }
 
 /* [7] TOAST — dark glass + accent border
    Round both halves of centering: auto margins also leave intrinsic widths between pixels. Keep the same X
@@ -2871,13 +2853,13 @@ body.feed-laptop .feed-check { display: none; }
 /* X's grey for muted text is 4.6:1 on black and under 4.5:1 on a surface: inside cards, sheets, panels, popovers,
    bars and chips it takes the raised grey. So does text over a topic glow (the paper page, a list page, the lead
    card) and the count badge in the navbar. The list is what the contrast scan (tests/phase13c/chrome_feed.cjs) found. */
-.pd, .lp, .top-lead, .tab-badge, .top-card, .topic-card, .top-side, .sh-panel, .tq-panel, .hide-box, .reader-bar, .ink-bar, .reader-panel, .reader-menu, .pop .sh-panel, .save-dd, .copy-dd, .interest-dropdown,
+.pd, .lp, .top-lead, .tab-badge, .top-card, .topic-card, .top-side, .sh-panel, .tq-panel, .hide-box, .reader-bar, .ink-bar, .reader-panel, .reader-menu, .pop .sh-panel, .copy-dd, .interest-dropdown,
 .auth-modal, .pd-next, .pd-card, .pd-rel-grid, .interest-group-inner, .interest-group-header, .ig-toggle, .pull-hint, .feed-check, .save-bar, .toast, .lib-add, .search-list,
 .keys-help-box, .vault-box, .pdf-modal-box, .relevance-breakdown, .group-add-dd, .abs-popup, .venue-tooltip, .sel-bar, .anno-card, .cite-dd, .chat-hist, .chat-box, .badge-venue,
 .cr-card, .cr-phone, .la-result, .rp-card, .rp-gnote, .chat-msg.you, .md-table tr, .f-topic, .tr-group, .pd-topic-chip, .pd-match, .pd-strength, .pd-topics .badge-group, .tl-chip, .why-pill,
 .hide-reason, .btn-save-csv, .sync-btn, .lp-rail-item.on, .tc-row:hover, .lp-row:hover, .v-row:hover, .topic-item:hover, .interest-card:hover, .post:hover, .post.kb-sel, .top-row:hover,
 .feed-item:hover, .pill, .btn-labelled, .reader-status, .pdf-picker, .empty-state, .lp-empty, .tl-empty,
-.v-filter, .nav-search input, .tab-input, .sh-input, .la-input, .pp-input, .auth-input, .rp-search, .chat-box, .lp-filter, .save-dd-input, .library-rename-input, .anno-card textarea, .rp-notes-edit { --text-muted: var(--text-muted-raised); }
+.v-filter, .nav-search input, .tab-input, .sh-input, .la-input, .pp-input, .auth-input, .rp-search, .chat-box, .lp-filter, .library-rename-input, .anno-card textarea, .rp-notes-edit { --text-muted: var(--text-muted-raised); }
 /* a field's placeholder in the muted grey, whole (Chrome fades its own) */
 ::placeholder { color: var(--text-muted); opacity: 1; }
 /* ===== TOUCH SCREENS (phone, iPad) =====
@@ -2996,9 +2978,6 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   .pencil-mode::before { width: 44px; height: 44px; }   /* the tint covers the chosen 44 px button, not a desktop-sized box beside it */
   .pencil-mode[data-mode="hl"]::before { transform: translateX(46px); }
   .pencil-mode[data-mode="write"]::before { transform: translateX(92px); }
-  .save-dd { width: 240px; }
-  .save-dd-input { font-size: 16px; min-height: 44px; }
-  .save-dd-item { min-height: 44px; }
   /* Phase 13e: Library's row icons and its Rename, Copy and Delete are 44 px targets on a touch screen; the action row
      wraps so four icons and the text buttons fit at 320 px; the Copy menu's rows are 44 px too */
   .library-actions button.lib-ico { width: 44px; height: 44px; }
@@ -3167,22 +3146,6 @@ body.daily-mode:has(#saveSheet.open) #toast{z-index:456}   /* walk fixes 5: a ti
 @media(prefers-reduced-motion:reduce){.daily-card,.daily-action{transition:none!important;animation:none!important}}
 
 /* ===== LAYOUT A (7 November 2026): one action row, the open paper, two panes on a wide screen ===== */
-/* The open paper, as Daily's card and the right pane show it (paperViewHTML): the headline leads, the title follows */
-.pv-headline{margin:0;font-size:28px;font-weight:700;line-height:1.25;letter-spacing:-.02em;color:var(--text);text-wrap:pretty;overflow-wrap:anywhere}
-.pv-headline a{color:inherit;text-decoration:none}.pv-headline a:hover{text-decoration:underline;text-underline-offset:3px}
-.pv-title{margin:12px 0 0;font-size:17px;line-height:1.4;color:var(--text-secondary);overflow-wrap:anywhere}
-.pv-by{margin:12px 0 0;font-size:14px;line-height:1.5;color:var(--text-muted-raised);overflow-wrap:anywhere}
-.pv-by a{color:inherit;text-decoration:none}.pv-by a:hover{color:var(--text);text-decoration:underline;text-underline-offset:2px}.pv-by .by-f{color:var(--text);font-weight:700}
-.pv-venue{margin:4px 0 0;font-size:13px;line-height:1.45;color:var(--text-muted-raised)}
-.pv-matches{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0;padding:0;list-style:none}
-.pv-match{display:inline-flex;align-items:baseline;gap:6px;max-width:100%;padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:13px;line-height:1.35;color:var(--text);overflow-wrap:anywhere}
-.pv-match-strength{flex:none;color:var(--text-muted-raised)}.pv-match-strength::before{content:'\00b7';margin-right:6px}
-.pv-rule{height:1px;margin:20px 0 0;border:0;background:var(--line)}
-.pv-summary{margin:20px 0 0;font-size:16px;line-height:1.6;color:var(--text-secondary);overflow-wrap:anywhere}
-.pv-abstract-label{margin:22px 0 8px;font-size:13px;font-weight:600;color:var(--text-muted-raised)}
-.pv-abstract{margin:0;font-size:16px;line-height:1.6;color:var(--text-secondary);white-space:pre-wrap;overflow-wrap:anywhere}
-.pv-abstract .katex-display{max-width:100%;overflow-x:auto;overflow-y:hidden}
-@media(max-width:600px){.daily-card .pv-headline{font-size:22px;line-height:1.3}.daily-card .pv-title{font-size:15px}.daily-card .pv-by,.daily-card .pv-venue{font-size:13px}.daily-card .pv-summary,.daily-card .pv-abstract{font-size:15px;line-height:1.55}}
 /* The row on a post (one column): Pass, Save, Mark read, Read, each a 44 px target with its word */
 .post .icons.pacts{display:flex;justify-content:space-between;align-items:center;gap:2px;max-width:420px;margin:2px -10px 2px}
 .ic.pact{width:auto;min-width:44px;gap:6px;padding:0 10px;font:inherit;font-size:13px;line-height:1;white-space:nowrap}
@@ -3203,7 +3166,9 @@ body.feed-two .feed:not(.daily-feed)>.feed-head{grid-area:head}
 body.feed-two .feed:not(.daily-feed)>.feed-list{grid-area:list}
 body.feed-two .feed:not(.daily-feed)>.feed-more{grid-area:more}
 body.feed-two .feed:not(.daily-feed)>.feed-end{grid-area:end}
-body.feed-two .feed:not(.daily-feed)>.list-bar,body.feed-two .feed:not(.daily-feed)>.pull-hint{display:none}
+body.feed-two .feed:not(.daily-feed)>.pull-hint{display:none}
+body.feed-two .feed:not(.daily-feed):has(>.list-bar:not([hidden])){grid-template-rows:auto auto auto auto minmax(0,1fr);grid-template-areas:"head pane" "bar pane" "list pane" "more pane" "end pane"}
+body.feed-two .feed:not(.daily-feed)>.list-bar{grid-area:bar;min-width:0}
 .feed-pane{display:none}
 body.feed-two .feed-pane:not([hidden]){grid-area:pane;position:sticky;top:0;display:flex;flex-direction:column;min-width:0;height:var(--ms-h,calc(100dvh - 57px));border-left:1px solid var(--line);background:var(--bg)}
 .fp-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:36px 56px 28px}
@@ -3363,6 +3328,111 @@ body.feed-two:has(#feedPane:not([hidden]) .fp-acts):has(#saveSheet.open.pop) #to
   .review-row-actions .review-folder-btn { max-width: 160px; }
 }
 
+
+/* The full paper in every wide listing. Each left column keeps its own controls and scroll. */
+.listing-items{display:contents}
+.listing-two:not(.tab-section), .tab-section.active.listing-two{display:grid;grid-template-columns:clamp(300px,34vw,400px) minmax(0,1fr);align-items:start;max-width:none;margin:0;padding:0;gap:0}
+.listing-two>.listing-items{display:block;min-width:0}
+.paper-pane:not([hidden]){position:sticky;top:0;display:flex;flex-direction:column;min-width:0;height:var(--ms-h,calc(100dvh - 57px));border-left:1px solid var(--line);background:var(--bg)}
+.paper-pane[hidden]{display:none}
+.listing-two .search-box-wrap{padding:16px}
+.listing-two .sb-page{display:block}
+.listing-two .search-body{margin:0;padding:0 16px}
+.listing-two .res-bar{flex-wrap:wrap}
+.listing-two .top-row.pane-on{background:var(--bg-surface);box-shadow:inset 3px 0 0 var(--accent)}
+.listing-two .top-row{grid-template-columns:minmax(0,1fr)}
+.listing-two .paper-list .top-row{padding:12px 12px 12px 36px;margin:0 4px;column-gap:0}
+.listing-two .top-row::before{left:16px}
+.listing-two .top-row .tr-side{flex-direction:row;align-items:center;gap:10px;margin-top:6px;text-align:left}
+.listing-two .top-row .tr-groups{display:none}
+.listing-two .top-row .tr-headline{font-size:14.5px;line-height:1.4}
+.listing-two .top-row .tr-actions,.listing-two .search-row-controls{display:none!important}
+.listing-two .lib-head{padding:20px 16px 0}
+.listing-two .lib-head-actions{flex-wrap:wrap}
+.listing-two .library-wrap{padding:16px}
+.listing-two .interest-group-header{padding:12px 0}
+.listing-two .lib-disc{min-width:0}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pd-article{max-width:760px;margin:0;padding:0}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pd-title{font-size:28px;font-weight:700;line-height:1.25;text-wrap:pretty}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pd-dek{font-size:17px;line-height:1.4;margin-top:12px}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pd-body{grid-template-columns:minmax(0,1fr);gap:24px;margin-top:24px;padding-top:24px}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pd-aside{position:static}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pd-authors{margin-top:12px;font-size:14px;line-height:1.5}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pd-authors a{color:inherit;text-decoration:none}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pd-authors a:hover{text-decoration:underline;text-underline-offset:2px}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pd-authors .by-f{font-weight:700;color:var(--text)}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pd-prose{font-size:16px;line-height:1.6;color:var(--text-secondary)}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pd-notes .pd-prose{font-size:15px}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) [data-abs-tex]{white-space:pre-wrap}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pv-summary{margin-top:0}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pd-related{margin-top:28px}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pd-rel-grid{grid-template-columns:minmax(0,1fr)}
+:where(.paper-pane,#feedPane,.daily-card,.sk-pane,.sk-daily-card) .pd-kicker{flex-wrap:wrap}
+.fp-acts,.daily-feed.two .daily-actions{gap:8px;padding-left:24px;padding-right:24px}
+.fp-acts .pact,.daily-feed.two .daily-actions .pact{padding:0 12px;font-size:14px}
+.fp-acts .pd-act,.daily-actions .pd-act{flex:none;min-width:36px;min-height:44px}
+.daily-card .pd-article{width:100%}
+.daily-card .pd-title{cursor:pointer}
+.daily-feed.two .daily-card .pd-title{cursor:default}
+.pane-questions{margin-top:20px}
+.pane-questions .tq-panel{position:static;display:block;width:100%;max-width:none;max-height:none;margin:0;border:1px solid var(--line);border-radius:12px;box-shadow:none;transform:none}
+.pane-questions .tq-head{flex-wrap:wrap;padding:12px}
+.pane-questions .tq-body{overflow:visible;padding:12px}
+.pane-questions .tq-grip{display:none}
+@media(min-width:820px) and (max-width:1100px){
+ .fp-acts,.daily-feed.two .daily-actions{gap:6px;padding-left:12px;padding-right:12px}
+ .fp-acts .pact,.daily-feed.two .daily-actions .pact{padding:0 10px;font-size:13px}
+ .fp-acts .pact-pass .pact-i,.fp-acts .pact-mark .pact-i,.daily-feed.two .pact-pass .pact-i,.daily-feed.two .pact-mark .pact-i{display:none}
+ .fp-acts .pact-read,.daily-feed.two .daily-actions .pact-read{padding:0 12px}
+}
+@media(max-width:600px){.daily-card .pd-title{font-size:22px}.daily-card .pd-dek{font-size:15px}.daily-card .pd-prose{font-size:15px;line-height:1.55}}
+
+
+.skeleton-wrap .sk-listing{display:contents}
+.skeleton-wrap .sk-listing-left{display:contents}
+@media (min-width:820px) and (min-height:501px), (min-width:820px) and (hover:hover), (min-width:820px) and (pointer:fine){
+ #skeleton .sk-listing{display:grid;grid-template-columns:clamp(300px,34vw,400px) minmax(0,1fr);align-items:start}
+ #skeleton .sk-listing-left{display:block;min-width:0}
+ #skeleton .sk-listing>.sk-pane{position:sticky;top:0;display:flex;flex-direction:column;min-width:0;height:calc(100dvh - 51px);border-left:1px solid var(--line)}
+ #skeleton .sk-listing-left .search-results{display:block;padding:16px;max-width:none}
+ #skeleton .sk-listing-left .lib-head{padding:20px 16px 0}
+ #skeleton .sk-listing-left .library-wrap{padding:16px}
+ #skeleton .sk-listing-left .lib-head-actions{flex-wrap:wrap}
+ #skeleton .sk-pane .pd-article,#skeleton .sk-daily-card .pd-article{padding:0}
+ #skeleton .sk-pane .pd-body,#skeleton .sk-daily-card .pd-body{grid-template-columns:minmax(0,1fr);gap:24px}
+ #skeleton .sk-pane .pd-title,#skeleton .sk-daily-card .pd-title{font-size:28px}
+ #skeleton .sk-pane .pd-aside{position:static}
+ #skeleton .sk-pane .fp-acts{gap:6px;padding-left:12px;padding-right:12px}
+ #skeleton .sk-pane .fp-acts .pact{padding:0 10px;font-size:13px}
+}
+
+
+#skeleton :is(.sk-pane,.sk-daily-card) .pd-prose .sk-line{font-size:inherit;line-height:inherit}
+#skeleton .sk-daily-card .pd-title{font-size:28px}
+@media(max-width:600px){#skeleton .sk-daily-card .pd-title{font-size:22px}#skeleton .sk-daily-card .pd-dek{font-size:15px}#skeleton .sk-daily-card .pd-prose{font-size:15px;line-height:1.55}}
+
+#skeleton .sk-pane-extra{display:none}
+@media(min-width:820px) and (min-height:501px), (min-width:820px) and (hover:hover), (min-width:820px) and (pointer:fine){#skeleton .sk-pane-extra{display:flex;width:36px;padding:0;border:0;justify-content:center}}
+
+@media (min-width:820px) and (min-height:501px), (min-width:820px) and (hover:hover), (min-width:820px) and (pointer:fine){
+ #skeleton .sk-listing-left .search-results{padding:0}
+ #skeleton .sk-listing-left .search-box-wrap{padding:16px}
+ #skeleton .sk-listing-left .search-body{padding:0 16px;margin:0}
+ #skeleton .sk-listing .sk-search-sort{margin-left:0}
+ #skeleton .sk-listing .sk-search-title{font-size:14.5px;line-height:1.4}
+ #skeleton .sk-listing .sk-search-title .sk-line + .sk-line{display:flex}
+ #skeleton .sk-listing .sk-search-actions{display:none}
+ #skeleton .sk-listing .interest-group-header{padding:12px 0}
+ #skeleton .sk-project{grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"line pane" "head pane" "list pane" "rest pane"}
+ #skeleton .sk-project>.sk-list-head{grid-area:line}
+}
+
+.fp-acts:empty{display:none}
+
+@media (min-width:820px) and (min-height:501px), (min-width:820px) and (hover:hover), (min-width:820px) and (pointer:fine){
+ #skeleton .sk-listing .res-bar{flex-wrap:wrap}
+ #skeleton .sk-listing .sk-search-status{height:auto;min-width:auto;overflow:visible;white-space:normal;line-height:inherit;font-style:normal}
+}
 </style>
 </head>
 <body>
@@ -4236,10 +4306,11 @@ function lockPrivate(state = 'required', detail) {
   cleanup(() => libCacheLock(state));
   document.documentElement.classList.add('ro', 'private-locked');
   for (const close of Private.uiTeardowns) cleanup(close); Private.uiTeardowns.clear();
+  cleanup(() => closeSaveSheet());   // close independently before pane state and anchors are discarded
   for (const reset of Private.interactionResets) cleanup(reset);
   // Body-level popovers are outside the hidden library. Close them immediately,
   // without fades whose callbacks belong to the revoked authorization.
-  cleanup(() => closeAbsPopup()); cleanup(() => closeSaveDD()); cleanup(() => closeCopyDD()); cleanup(() => closeInterestDD()); cleanup(() => closeRelevancePopup()); cleanup(() => closeVenueTooltip());
+  cleanup(() => closeAbsPopup()); cleanup(() => closeCopyDD()); cleanup(() => closeInterestDD()); cleanup(() => closeRelevancePopup()); cleanup(() => closeVenueTooltip());
   _absBtn = null; _dismissTap = null; clearTimeout(_relPopupTimer); _relPopupTimer = null;
   if (typeof dailyTeardown === 'function') cleanup(() => dailyTeardown());
   cleanup(() => feedTeardown()); cleanup(() => refreshTeardown()); cleanup(() => briefTeardown()); cleanup(() => activityTeardown()); cleanup(() => tasteTeardown()); cleanup(() => peopleTeardown()); cleanup(() => requestsTeardown()); cleanup(() => listDefsTeardown());
@@ -6842,7 +6913,9 @@ function skeletonHTML(hash) {
     const tabs = active => `<div class="feed-head" data-sk="head"><div class="feed-tabs home" data-sk="tabs"><div class="ft-tabs">${['For you', 'Following', 'Daily'].map((t, i) => `<span class="tab${i === active ? ' on' : ''}">${t}</span>`).join('')}</div></div>${active < 2 ? `<div class="feed-ctl"><span class="ctl-btn ctl-sort" data-sk="sort"><span class="ctl-pill">${active === 0 ? 'Best' : 'Recently added'}${chevron}</span></span>${filter}</div>` : ''}</div>`;
     const posts = (list = false) => [84, 72, 90].map(w => `<div class="skpost" data-sk="card"><div class="sk-meta" data-sk="meta">${lines(1, 38)}</div><div class="sk-title" data-sk="title">${lines(2, w)}</div><div class="sk-dek" data-sk="dek">${lines(2, 62)}</div><div class="sk-by" data-sk="authors">${lines(1, 48)}</div>${list ? `<div class="sk-acts" data-sk="actions">${bar(24)}${bar(24)}${bar(30)}</div>` : `<div class="sk-why" data-sk="why">${lines(1, 40)}</div><div class="sk-icons" data-sk="actions">${['Pass', 'Save', 'Mark read', 'Read'].map(t => `<span class="sk-icon"><i class="sk"></i><b>${t}</b></span>`).join('')}</div>`}</div>`).join('');
     // Layout A: on a wide screen For you and Following are the list and the open paper, its row at the pane's foot
-    const pane = () => `<aside class="sk-pane" data-sk="pane"><div class="sk-pane-body"><div class="pv-headline" data-sk="paneHeadline">${lines(2, 80)}</div><div class="pv-title">${lines(1, 72)}</div><div class="pv-by">${lines(1, 44)}</div><div class="pv-venue">${lines(1, 22)}</div><div class="pv-matches"><span class="pv-match sk-chip">${lines(1, 100)}</span></div><hr class="pv-rule"><div class="pv-summary">${lines(3, 70)}</div><div class="pv-abstract-label">Abstract</div><div class="pv-abstract">${lines(4, 76)}</div></div><div class="fp-acts" data-sk="paneActs">${['pass', 'save', 'mark', 'read'].map(k => `<span class="pact pact-${k}">${{ pass: 'Pass', save: 'Save', mark: 'Mark read', read: 'Read' }[k]}</span>`).join('')}</div></aside>`;
+    const paperBody = (daily = false) => `<article class="pd-article" data-sk="article"><header class="pd-head"><div class="pd-kicker" data-sk="venue">${lines(1, 32)}</div><div class="pd-title pv-headline" data-sk="${daily ? 'headline' : 'paneHeadline'}">${lines(2, 80)}</div><div class="pd-dek pv-title" data-sk="title">${lines(1, 72)}</div><div class="pd-authors pv-by" data-sk="authors">${lines(1, 44)}</div><div class="pd-tq"><span class="pd-tq-chip">Ten questions</span></div></header><div class="pd-body"><div class="pd-main"><section class="pd-section"><h2>Summary</h2><div class="pd-prose pv-summary" data-sk="summary">${lines(3, 70)}</div></section><section class="pd-section"><h2>Abstract</h2><div class="pd-prose pv-abstract" data-sk="abstract">${lines(4, 76)}</div></section></div><aside class="pd-aside"><div class="pd-card">${lines(4,68)}</div><div class="pd-card" data-sk="matches"><h3>Relevance</h3>${lines(3, 68)}</div></aside></div></article>`;
+    const pane = () => `<aside class="sk-pane" data-sk="pane"><div class="sk-pane-body">${paperBody()}</div><div class="fp-acts" data-sk="paneActs">${['Pass', 'Save', 'Mark read', '↓', '⋯', 'Read'].map((t,i) => `<span class="${i===3||i===4?'pd-act':'pact'}${i===5?' pact-read':''}">${t}</span>`).join('')}</div></aside>`;
+
     if (route.startsWith('read/')) {
       const readerBar = document.querySelector('#reader > .reader-bar')?.cloneNode?.(true);
       if (readerBar) readerBar.dataset.sk = 'bar';
@@ -6895,7 +6968,7 @@ function skeletonHTML(hash) {
       return `<div class="sk-profile" data-shape="${people ? 'people' : 'interests'}"><div class="interests-header"><div class="briefing" data-sk="head"><h2 data-sk="heading">${title}</h2><p class="ip-lede" data-sk="lede">${people ? 'Scout looks for new papers by the people you follow.' : 'Choose what you want to see in your recommendations.'}</p></div></div>${people ? '' : `<div class="ip-week"><div class="ip-week-head"><h3>This week</h3></div><div class="ip-week-line">${lines(1, 54)}</div></div>`}<div class="interests-scroll"><section class="ip-sec"><div class="ip-sec-head" data-sk="section"><h3>${people ? 'People you follow' : 'Your interests'}</h3></div>${people ? `<div class="fw-chips"><span class="fw-chip" data-sk="card">${bar(80)}</span><span class="fw-chip fw-add">+ Follow someone</span></div>` : `<div class="ip-list">${[68, 52, 74].map(w => `<div class="ip-card"><div class="ip-card-head" data-sk="card"><span class="ip-name">${lines(1, w)}</span><span class="ip-meta" data-sk="meta">${lines(1, 36)}</span>${chevron.replace('<svg', '<svg class="ip-chev"')}</div></div>`).join('')}</div><button tabindex="-1" class="ip-add">+ Add an interest</button>`}</section><section class="ip-sec"><div class="ip-sec-head"><h3>${people ? 'Who to follow' : 'Suggested'}</h3></div>${people ? '<ul class="fw-list">' + '<li class="fw-row"><span class="fw-av sk"></span><span class="fw-name"><span class="sk"></span></span><span class="fw-follow sk"></span><span class="fw-x"></span></li>'.repeat(3) + '</ul>' : `<div class="ip-card">${lines(2, 66)}</div>`}</section></div></div>`;
     }
     if (route === 'lists' || route === 'library') {
-      return `<div data-shape="lists"><div class="lib-head" data-sk="head"><h2 data-sk="heading">Lists</h2><div class="lib-head-actions sk-library-buttons" data-sk="buttons"><span class="sync-status sk-sync"><span class="sync-dot"></span>Saved automatically<button tabindex="-1" class="sync-btn quiet">Sign out</button></span>${['+ Add paper', 'Upload PDF', '+ New list'].map(t => `<button tabindex="-1" class="btn-new-list">${t}</button>`).join('')}</div></div><div class="library-wrap"><section class="ls-sec"><div class="lib-sec-head ip-sec-head" data-sk="section"><h3>Your lists</h3><span class="grow"></span><span class="lib-sort"><select tabindex="-1"><option>Created</option><option>Last updated</option><option>Name</option></select></span><span class="lib-sort-dir">Oldest first${chevron}</span></div><div class="ls-cards">${[70, 54].map(w => `<div class="ls-card" data-sk="card"><span class="ls-link"><i class="sk sk-list-avatar"></i><span class="sk-list-text">${bar(w)}${bar(30)}</span></span><span class="sk-icon">${bar()}</span></div>`).join('')}</div></section><div class="lib-sec-head ip-sec-head ls-reading" data-sk="reading"><h3>Reading</h3></div>${[55, 70, 48].map((w, i) => `<div class="interest-group collapsed" data-sk="readingCard"><div class="interest-group-inner"><div class="interest-group-header" data-sk="readingBar"><button tabindex="-1" class="lib-disc"><span class="lib-icon">☰</span><span style="width:150px">${bar(w)}</span><span class="interest-group-count">${bar(100)}</span></button>${i === 0 ? '<span class="library-actions sk-owner"><button tabindex="-1">Upload PDF</button></span>' : ''}<svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>`).join('')}</div></div>`;
+      return `<div class="sk-listing" data-shape="lists"><div class="sk-listing-left"><div><div class="lib-head" data-sk="head"><h2 data-sk="heading">Lists</h2><div class="lib-head-actions sk-library-buttons" data-sk="buttons"><span class="sync-status sk-sync"><span class="sync-dot"></span>Saved automatically<button tabindex="-1" class="sync-btn quiet">Sign out</button></span>${['+ Add paper', 'Upload PDF', '+ New list'].map(t => `<button tabindex="-1" class="btn-new-list">${t}</button>`).join('')}</div></div><div class="library-wrap"><section class="ls-sec"><div class="lib-sec-head ip-sec-head" data-sk="section"><h3>Your lists</h3><span class="grow"></span><span class="lib-sort"><select tabindex="-1"><option>Created</option><option>Last updated</option><option>Name</option></select></span><span class="lib-sort-dir">Oldest first${chevron}</span></div><div class="ls-cards">${[70, 54].map(w => `<div class="ls-card" data-sk="card"><span class="ls-link"><i class="sk sk-list-avatar"></i><span class="sk-list-text">${bar(w)}${bar(30)}</span></span><span class="sk-icon">${bar()}</span></div>`).join('')}</div></section><div class="lib-sec-head ip-sec-head ls-reading" data-sk="reading"><h3>Reading</h3></div>${[55, 70, 48].map((w, i) => `<div class="interest-group collapsed" data-sk="readingCard"><div class="interest-group-inner"><div class="interest-group-header" data-sk="readingBar"><button tabindex="-1" class="lib-disc"><span class="lib-icon">☰</span><span style="width:150px">${bar(w)}</span><span class="interest-group-count">${bar(100)}</span></button>${i === 0 ? '<span class="library-actions sk-owner"><button tabindex="-1">Upload PDF</button></span>' : ''}<svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>`).join('')}</div></div></div>${pane()}</div>`;
     }
     if (/^search(?:\?.*)?$/.test(route)) {
       // Design fixes round 2 (G11): the result bar as the results draw it: its count's slot as wide as "N results for
@@ -6903,7 +6976,7 @@ function skeletonHTML(hash) {
       // Best match to its own row exactly when the results do
       let q = ''; try { q = route.startsWith('search?q=') ? decodeURIComponent(route.slice(9)) : ''; } catch (e) {}
       const count = '00 results' + (q ? ` for "${q}"` : '');
-      return `<div class="search-results" data-shape="search"><div class="search-box-wrap"><div class="sf" data-sk="box"><div class="sk-search-input">${bar(60)}</div><span class="help">ⓘ</span></div><div class="res-bar" data-sk="bar"><i class="sk sk-search-status">${esc(count)}</i><span class="ctl-btn sk-search-sort" aria-hidden="true"><span class="ctl-pill"><span class="ctl-t">Best</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></span>${filter}</div></div><div class="sb-page"><div class="search-body" data-sk="body"><div class="paper-list">${[80, 65, 90].map(w => `<div class="sk-search-card" data-sk="card"><div class="sk-search-title">${lines(2, w)}</div><div class="sk-search-meta">${bar(40)}</div><div class="sk-search-by">${bar(36)}</div><div class="sk-search-actions">${bar(25)}${bar(25)}</div></div>`).join('')}</div></div></div></div>`;
+      return `<div class="sk-listing" data-shape="search"><div class="sk-listing-left"><div class="search-results"><div class="search-box-wrap"><div class="sf" data-sk="box"><div class="sk-search-input">${bar(60)}</div><span class="help">ⓘ</span></div><div class="res-bar" data-sk="bar"><i class="sk sk-search-status">${esc(count)}</i><span class="ctl-btn sk-search-sort" aria-hidden="true"><span class="ctl-pill"><span class="ctl-t">Best</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></span>${filter}</div></div><div class="sb-page"><div class="search-body" data-sk="body"><div class="paper-list">${[80, 65, 90].map(w => `<div class="sk-search-card" data-sk="card"><div class="sk-search-title">${lines(2, w)}</div><div class="sk-search-meta">${bar(40)}</div><div class="sk-search-by">${bar(36)}</div><div class="sk-search-actions">${bar(25)}${bar(25)}</div></div>`).join('')}</div></div></div></div></div>${pane()}</div>`;
     }
     if (/^(interest|venue)\//.test(route) || route === 'top') {
       let name = 'Top Papers'; try { if (route !== 'top') name = decodeURIComponent(route.split('/').slice(1).join('/')); } catch (e) {}
@@ -6912,11 +6985,11 @@ function skeletonHTML(hash) {
     let name = null;
     if (route.startsWith('list/')) { try { name = decodeURIComponent(route.slice(5)); } catch (e) {} }
     if (name !== null) {
-      return `<div class="feed" data-shape="list"><div class="sk-list-head"></div><div class="list-bar" data-sk="bar"><div class="lb-row">${back}<span class="lb-name">${esc(name === 'To read' ? 'Reading list' : name)}</span><span class="lb-more">⋯</span><span class="lb-grow"></span><span class="lb-add"><span class="lb-pill">+ Add a paper</span></span></div><div class="lb-int" data-sk="picker"><span class="ctl-btn ctl-sort" data-sk="sort"><span class="ctl-pill">Recently added${chevron}</span></span>${filter}</div></div><h3 class="list-sec mine" data-sk="section">In this list</h3>${posts(true)}</div>`;
+      return `<div class="feed sk-feed sk-project" data-shape="list"><div class="sk-list-head"></div><div class="list-bar feed-head" data-sk="bar"><div class="lb-row">${back}<span class="lb-name">${esc(name === 'To read' ? 'Reading list' : name)}</span><span class="lb-more">⋯</span><span class="lb-grow"></span><span class="lb-add"><span class="lb-pill">+ Add a paper</span></span></div><div class="lb-int" data-sk="picker"><span class="ctl-btn ctl-sort" data-sk="sort"><span class="ctl-pill">Recently added${chevron}</span></span>${filter}</div></div><div class="sk-list"><h3 class="list-sec mine" data-sk="section">In this list</h3>${posts(true)}</div>${pane()}</div>`;
     }
     if (route === 'daily') {
       // Layout A: the headline leads the card, the title under it; on a wide screen today's papers on the left
-      return `<div class="feed sk-daily-feed sk-daily" data-shape="daily">${tabs(2)}<div class="sk-daily-body">${picker(bar(48))}<div class="sk-daily-list" data-sk="list">${[82, 64, 76, 58].map(w => `<div class="sk-daily-row"><div class="dr-h">${lines(2, w)}</div><div class="dr-s">${lines(1, 40)}</div></div>`).join('')}</div><div class="sk-daily-area" data-sk="area"><article class="sk-daily-card" data-sk="card"><div class="pv-headline" data-sk="headline">${lines(3, 85)}</div><div class="pv-title" data-sk="title">${lines(2, 80)}</div><div class="pv-by" data-sk="authors">${lines(1, 56)}</div><div class="pv-venue" data-sk="venue">${lines(1, 30)}</div><div class="pv-matches" data-sk="matches"><span class="pv-match sk-chip">${lines(1, 100)}</span></div><hr class="pv-rule"><div class="pv-summary" data-sk="summary">${lines(3, 80)}</div><div class="pv-abstract-label">Abstract</div><div class="pv-abstract" data-sk="abstract">${lines(5, 76)}</div></article></div><footer class="sk-daily-actions" data-sk="actions">${['Pass', 'Save', 'Mark read', 'Read'].map((t, i) => `<div class="sk-daily-action${i === 1 ? ' save' : ''}${i === 3 ? ' read' : ''}"><span>${bar(35)}</span><b>${t}</b></div>`).join('')}</footer></div></div>`;
+      return `<div class="feed sk-daily-feed sk-daily" data-shape="daily">${tabs(2)}<div class="sk-daily-body">${picker(bar(48))}<div class="sk-daily-list" data-sk="list">${[82, 64, 76, 58].map(w => `<div class="sk-daily-row"><div class="dr-h">${lines(2, w)}</div><div class="dr-s">${lines(1, 40)}</div></div>`).join('')}</div><div class="sk-daily-area" data-sk="area"><article class="sk-daily-card" data-sk="card">${paperBody(true)}</article></div><footer class="sk-daily-actions" data-sk="actions">${['Pass', 'Save', 'Mark read', '↓', '⋯', 'Read'].map((t, i) => `<div class="${i===3||i===4?'sk-pane-extra ':''}sk-daily-action${i === 1 ? ' save' : ''}${i === 5 ? ' read' : ''}"><span>${bar(35)}</span><b>${t}</b></div>`).join('')}</footer></div></div>`;
     }
     return `<div class="feed sk-feed${route === 'following' ? ' sk-following' : ''}" data-shape="feed">${tabs(route === 'following' ? 1 : 0)}<div class="sk-list">${posts()}</div>${pane()}</div>`;
   })();
@@ -7611,6 +7684,7 @@ function searchCommit(job) {
   job.committed = true;
   job.edits = _editGen;
   saveSheetSync();
+  listingPaneSync();
 }
 function searchMoreRender() {
   const more = document.getElementById('searchMore');
@@ -7732,7 +7806,7 @@ function openAppMenu() {
   if (InterestPicker.cur) InterestPicker.cur.close();
   if (InterestPicker.back) { InterestPicker.afterClose = privateCallback(openAppMenu); return; }
   if (Feed.menu) closeFeedMenu();
-  closeListMenu(); closeSaveSheet(); closeSaveDD(); closeCopyDD();
+  closeListMenu(); closeSaveSheet(); closeCopyDD();
   appMenuSync();
   markNavTabs(currentTab);
   AppMenu.open = true;
@@ -8188,7 +8262,7 @@ function feedLeave() {
   Feed.gen++;
   pullAbandon();
   pressReconcile();
-  closeSaveSheet(); tabEditEnd(false); listAddEnd(false);
+  closeSaveSheet(); keptPaperClose(); tabEditEnd(false); listAddEnd(false);
   if (Feed.menu) closeFeedMenu();
   if (ListMenu.cur && ListMenu.cur.where === 'tab') closeListMenu();
   const hs = document.getElementById('hideSheet');
@@ -8845,7 +8919,7 @@ function postHTML(k) {
   const savedIn = elsewhere ? ` <span class="chip-t saved-in">In ${esc(listLabel(elsewhere))}</span>` : '';
   const body = `${meta}
       <h2 class="post-t">${esc(title)}${savedIn}</h2>${dek ? `<p class="dek">${esc(dek)}</p>` : ''}${hasText(p.authors) ? `<p class="by">${follow ? followAuthorsHTML(p.authors, follow) : esc(p.authors)}</p>` : ''}`;
-  if (member || view === 'suggest') return `<article class="post ${member ? 'mine' : 'sug'}${read ? ' read' : ''}${sel}" data-key="${dataAttr(k)}" data-rec="0" tabindex="-1" onclick="feedTap(event, this)">${view === 'suggest' ? postNearHTML(k) : ''}
+  if (member || view === 'suggest') return `<article class="post ${member ? 'mine' : 'sug'}${read ? ' read' : ''}${sel}${feedTwo() && Feed.pane === k ? ' pane-on' : ''}" data-key="${dataAttr(k)}" data-rec="0" tabindex="-1" onclick="feedTap(event, this)">${view === 'suggest' ? postNearHTML(k) : ''}
       ${body}
       ${isOwner() ? listActsHTML(k, p, member) : ''}</article>`;
   const icons = isOwner() ? postActsHTML(k, p) : '';
@@ -8876,7 +8950,7 @@ function heldLists(k) { return [TO_READ].concat(projectNames()).filter(n => list
    own scroll, so paging, Back and the scroll kept on return work as they did. */
 const FEED_WIDE = '(min-width: 820px)';
 function twoPane() { return feedLayout() === 'laptop' && matchMedia(FEED_WIDE).matches; }
-function feedTwo() { return twoPane() && Feed.mode !== 'daily' && !projectMode(); }
+function feedTwo() { return twoPane() && Feed.mode !== 'daily'; }
 /* The quiet line under a post's headline in the left pane: its strongest interest and how strongly (mockup A) */
 function postWhyHTML(p, follow) {
   if (followingShown() || p.uploaded) return '';
@@ -8891,25 +8965,129 @@ function authorLinksHTML(text, on) {
     return `<a class="pv-author${bold ? ' by-f' : ''}" href="#search?q=${dataAttr(encodeURIComponent(q))}">${esc(part)}</a>`;
   }).join('');
 }
-/* The open paper, as the right pane and Daily's card show it: the headline first, the paper's own title in a smaller
-   line, the linked authors, venue and month, its interests by strength (Strong, Moderate, Weak, in the Relevance
-   card's order), then the summary and the abstract. Every value escaped. */
-function paperViewHTML(p, o) {
-  o = o || {};
-  const k = paperKey(p), headline = hasText(p.headline) ? p.headline : (p.title || ''), title = hasText(p.title) && p.title.trim() !== String(headline).trim() ? p.title : '';
-  const venue = [hasText(p.venue) ? p.venue : '', dailyReleaseText(p)].filter(Boolean).join(' · '), matches = p.uploaded ? [] : relevanceMatches(scoreParts(p));
-  const follow = p.uploaded ? null : followMarks(p, true);
-  return `<h2 class="pv-headline">${o.link === false ? esc(headline) : `<a href="#paper/${encodeURIComponent(k)}">${esc(headline)}</a>`}</h2>`
-    + (title ? `<p class="pv-title">${esc(title)}</p>` : '')
-    + (hasText(p.authors) ? `<p class="pv-by">${authorLinksHTML(p.authors, follow)}</p>` : '')
-    + (venue ? `<p class="pv-venue">${esc(venue)}</p>` : '')
-    + (matches.length ? `<ul class="pv-matches" aria-label="Matching interests">${matches.map(m => `<li class="pv-match"><span class="pv-match-name">${esc(m.name)}</span><span class="pv-match-strength">${esc(STRENGTH_NAME[m.strength])}</span></li>`).join('')}</ul>` : '')
-    + '<hr class="pv-rule">'
-    + (hasText(p.summary) ? `<p class="pv-summary">${esc(p.summary)}</p>` : '')
-    + (hasText(p.abstract) ? `<h3 class="pv-abstract-label">Abstract</h3><p class="pv-abstract" data-abs-tex>${esc(p.abstract)}</p>` : '');
+/* Every listing uses the full paper article. The source keeps its own order and action guards. */
+function paperControlsMount(root) {
+  for (const [cls, id] of [['pd-dl','paperDownload'], ['pd-more','paperMore']]) {
+    const next = root.querySelector('.' + cls);
+    if (!next || !next.closest('.tab-section.active')) continue;
+    document.querySelectorAll('#' + id).forEach(b => { if (b !== next) b.removeAttribute('id'); });
+    next.id = id;
+  }
+  if (typeof paperMenuPlace === 'function') paperMenuPlace();
+  const menu = document.getElementById('keptPaperMenu');
+  if (menu && !shownPaperControl(menu.dataset.id, 'paperDownload')) keptPaperClose();
 }
+function shownPaperArticle(id) {
+  return [...document.querySelectorAll('.pd-article[data-pid]')].find(a => a.dataset.pid === id && a.closest('.tab-section.active')) || null;
+}
+function shownPaperControl(id, controlId, button = document.getElementById(controlId)) {
+  return button && button === document.getElementById(controlId) && button.isConnected && button.dataset.pid === id
+    && button.closest('.tab-section.active') && shownPaperArticle(id) ? button : null;
+}
+function paneFooterHTML(p, actions) {
+  if (!p) return actions;
+  const at = actions.lastIndexOf('<button'), link = actions.lastIndexOf('<a '), i = Math.max(at, link);
+  const extras = isOwner() && !p._goneRemote ? paperDownloadButton(p) + paperMoreButton(p) : '';
+  return i < 0 ? actions + extras : actions.slice(0, i) + extras + actions.slice(i);
+}
+const ListingPane = { key: null, route: null, peek: null };
+Private.interactionResets.add(() => {
+  ListingPane.key = ListingPane.route = ListingPane.peek = null;
+  document.querySelectorAll('.paper-pane').forEach(pane => pane.remove());
+  document.querySelectorAll('.listing-two').forEach(host => host.classList.remove('listing-two'));
+});
+function listingPaneHost() {
+  if (_paperViewActive || _listViewActive) return null;
+  if (_searchActive) return document.getElementById('globalSearchResults');
+  if (currentTab === 'library') return document.getElementById('sec-library');
+  return null;
+}
+function listingPaneKeys(host) {
+  return [...host.querySelectorAll('.top-row[data-key]')].filter(e => !e.closest('[hidden], .collapsed')).map(e => e.dataset.key).filter((k,i,a) => a.indexOf(k) === i);
+}
+function listingPaneSync() {
+  const host = listingPaneHost();
+  if (!host) return;
+  host.classList.toggle('listing-two', twoPane());
+  host.style.setProperty('--ms-h', document.getElementById('mainScroll').clientHeight + 'px');
+  let pane = host.querySelector(':scope > .paper-pane');
+  if (!twoPane()) { if (pane) { pane.remove(); paperControlsMount(pane); } return; }
+  if (!host.querySelector(':scope > .listing-items')) {
+    const items = document.createElement('div'), active = document.activeElement; items.className = 'listing-items';
+    while (host.firstChild) items.appendChild(host.firstChild); host.appendChild(items);
+    if (active && items.contains(active)) active.focus({ preventScroll: true });   // moving Search into its column keeps the typing field
+  }
+  if (!pane) { pane = document.createElement('aside'); pane.className = 'paper-pane'; pane.setAttribute('aria-label', 'The open paper'); host.appendChild(pane); }
+  const keys = listingPaneKeys(host);
+  if (ListingPane.route !== location.hash) { ListingPane.route = location.hash; ListingPane.key = ListingPane.peek = null; }
+  if (!keys.includes(ListingPane.key) && (ListingPane.peek !== ListingPane.key || !findPaper(ListingPane.key))) ListingPane.key = keys[0] || null;
+  const p = ListingPane.key && findPaper(ListingPane.key);
+  pane.hidden = !p;
+  if (!p) { pane.innerHTML = ''; delete pane.dataset.key; paperControlsMount(pane); return; }
+  const article = paperViewHTML(p, { pane: true }).article, actions = listingPaneActsHTML(p), same = pane.dataset.key === p.id;
+  if (!same || pane._html !== article) {
+    const box = pane.querySelector('.fp-body'), y = same && box ? box.scrollTop : 0;
+    if (same && box) box.innerHTML = article;   // notes and brief refreshes keep the footer and its open Save
+    else {
+      if (Feed.sheet?.btn && pane.contains(Feed.sheet.btn)) { Feed.sheet.pane = Feed.sheet.listingPane = null; closeSaveSheet(); }
+      pane.innerHTML = `<div class="fp-body" tabindex="-1">${article}</div><footer class="fp-acts pacts" aria-label="Paper actions">${actions}</footer>`;
+      pane._acts = actions;
+    }
+    pane.dataset.key = p.id; pane._html = article;
+    const body = pane.querySelector('.fp-body'); body.scrollTop = y;
+    paperPostRender(body, p); body.querySelectorAll('[data-abs-tex]').forEach(el => renderAbstractText(el, p.abstract));
+    paperDownloadDot().catch(() => {});
+  }
+  const footer = pane.querySelector('.fp-acts'), replaced = pane._acts !== actions && (!Feed.sheet || !footer.contains(Feed.sheet.btn));
+  if (replaced) { footer.innerHTML = actions; pane._acts = actions; }
+  paperControlsMount(pane);
+  if (replaced) paperDownloadDot().catch(() => {});
+  host.querySelectorAll('.top-row[data-key]').forEach(e => { e.classList.toggle('pane-on', e.dataset.key === p.id); if (e.dataset.key === p.id) e.setAttribute('aria-current', 'true'); else e.removeAttribute('aria-current'); });
+}
+function listingPaneActsHTML(p) {
+  if (!isOwner()) return '';
+  const m = paperMarks(p), off = !!p._goneRemote;
+  return paneFooterHTML(p, paperActsHTML({ listed: m.listed, read: m.read, pass: isPassed(p), passOff: off || p.uploaded || isHiddenRow(p) || (!isPassed(p) && likedKey(p.id)), saveOff: off, readOff: off }, 'fp-act', kind => `onclick="listingPaneAct('${kind}',this,event)"`));
+}
+function listingPaneOpen(id) {
+  if (feedActive()) return paneOpen(id);
+  if (dailyView()) return dailyOpenPaper(id);
+  const host = listingPaneHost();
+  if (!host || !findPaper(id)) return false;
+  if (ListingPane.key !== id) briefVisit(id);
+  ListingPane.peek = listingPaneKeys(host).includes(id) ? null : id;
+  ListingPane.key = id; ListingPane.route = location.hash; listingPaneSync();
+  const body = host.querySelector('.fp-body'); if (body) body.scrollTop = 0;
+  return true;
+}
+function listingPaneAdvance(id) {
+  const host = listingPaneHost(); if (!host || !twoPane()) return;
+  const keys = listingPaneKeys(host), at = keys.indexOf(id), next = keys[at + 1] || keys[at - 1];
+  if (next) ListingPane.key = next;
+  listingPaneSync();
+}
+function listingPaneAct(kind, btn, ev) {
+  if (!btn?.isConnected || !btn.closest('.tab-section.active')) return;
+  requireOwner();
+  const pane = btn.closest('.paper-pane'), daily = btn.closest('.daily-feed.two'), id = pane?.dataset.key || (daily && Daily.preview), p = id && findPaper(id);
+  if (!p || !twoPane() || (!daily && id !== ListingPane.key) || !shownPaperArticle(id)) return;
+  if (kind === 'save') { openSaveTo(ev,btn,id); if (Feed.sheet?.key === id) Feed.sheet.listingPane = { key: id }; return; }
+  if (kind === 'read') { openReader(id); return; }
+  const was = readSet.has(id);
+  if (kind === 'pass') { if (!pagePass(id)) return; } else toggleRead(id);
+  if (daily) { Daily.preview = null; dailyRender(false, true); }
+  else if (kind === 'pass' || !was) listingPaneAdvance(id); else listingPaneSync();
+}
+window.addEventListener('resize', privateCallback(() => listingPaneSync()), { passive: true });
+// Ordinary paper links inside a listing open in its pane. Modified links keep browser behavior.
+document.addEventListener('click', e => {
+  const a = e.target.closest?.('a[href^="#paper/"]');
+  if (!a || !twoPane() || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return;
+  const id = decodeURIComponent(a.getAttribute('href').slice(7));
+  if (listingPaneOpen(id)) { e.preventDefault(); e.stopPropagation(); }
+}, true);
 /* The post the right pane may show: still open in the list as drawn */
-function paneKeyOK(k) { return !!k && !!postEl(k) && postView(k) === 'open'; }
+function paneKeyOK(k) { const p = feedRow(k); return !!p && !p._goneRemote && (Feed.peek === k || (!!postEl(k) && ['open', 'member', 'suggest'].includes(postView(k)))); }
 /* After `from` in the list: the next open post (mounting the next page when the list ends there), else the nearest
    one before it, else none */
 function paneNextKey(from) {
@@ -8924,40 +9102,43 @@ function paneNextKey(from) {
   return null;
 }
 function paneState(k, p) {
-  return { pass: false, listed: paperMarks(p).listed, read: readSet.has(k), passOff: likedKey(k), saveOff: !feedLive(k), readOff: false, openOff: !(pdfSourceOf(p) || paperOpenUrl(p) || isOwner()), readHref: pdfSourceOf(p) ? '' : paperOpenUrl(p) || '' };
+  return { pass: isPassed(p), listed: paperMarks(p).listed, read: readSet.has(k), passOff: !!p.uploaded || isHiddenRow(p) || (!isPassed(p) && likedKey(k)), saveOff: !feedLive(k), readOff: false, openOff: !(pdfSourceOf(p) || paperOpenUrl(p) || isOwner()), readHref: '' };
 }
 function paneActsHTML(k, p) {
   const s = paneState(k, p);
-  return paperActsHTML(s, 'fp-act', kind => kind === 'read' && s.readHref ? `data-act="open"` : `data-act="${{ pass: 'pass', save: 'save', mark: 'markread', read: 'open' }[kind]}" onclick="paneAct('${kind}', this, event)"`);
+  return paneFooterHTML(p, paperActsHTML(s, 'fp-act', kind => kind === 'read' && s.readHref ? `data-act="open"` : `data-act="${{ pass: 'pass', save: 'save', mark: 'markread', read: 'open' }[kind]}" onclick="paneAct('${kind}', this, event)"`));
 }
 /* The right pane follows the list: the chosen post while it is open, else the next one. Drawn again only when its
    paper or what it shows changed; the footer's buttons change in place, so a Save popover stays at its button. */
 function paneSync() {
   const pane = document.getElementById('feedPane');
   if (!pane) return;
-  if (!feedTwo() || !feedActive()) { if (pane.dataset.key !== undefined || pane.innerHTML) { pane.innerHTML = ''; delete pane.dataset.key; pane._html = ''; } pane.hidden = !feedTwo(); return; }
+  if (!feedTwo() || !feedActive()) { if (pane.dataset.key !== undefined || pane.innerHTML) { pane.innerHTML = ''; delete pane.dataset.key; pane._html = ''; } pane.hidden = !feedTwo(); paperControlsMount(pane); return; }
   pane.hidden = false;
   let k = Feed.pane;
   if (!paneKeyOK(k)) { k = paneNextKey(k); paneSelect(k, false); }
   const p = k && feedRow(k);
-  if (!p) { if (pane.innerHTML) { pane.innerHTML = ''; pane._html = ''; } delete pane.dataset.key; return; }
-  const body = paperViewHTML(p), same = pane.dataset.key === k;
+  if (!p) { if (pane.innerHTML) { pane.innerHTML = ''; pane._html = ''; } delete pane.dataset.key; paperControlsMount(pane); return; }
+  const body = paperViewHTML(p, { pane: true }).article, same = pane.dataset.key === k;
   if (!same || pane._html !== body) {
     const box = pane.querySelector('.fp-body'), y = same && box ? box.scrollTop : 0, held = Feed.sheet && Feed.sheet.btn && pane.contains(Feed.sheet.btn);
     if (same && box) { box.innerHTML = body; }
     else {
-      if (held) { Feed.sheet.pane = null; closeSaveSheet(); }   // its paper changed: the popover goes, and decides nothing
+      if (held) { Feed.sheet.pane = Feed.sheet.listingPane = null; closeSaveSheet(); }   // its paper changed: the popover goes, and decides nothing
       const ae = document.activeElement, kind = ae && pane.contains(ae) && ae.classList.contains('pact') ? PACT_KINDS.find(x => ae.classList.contains('pact-' + x)) : null;
       pane.innerHTML = `<div class="fp-body" tabindex="-1" aria-label="${dataAttr(p.headline || p.title || '')}">${body}</div>${isOwner() ? `<footer class="fp-acts pacts" aria-label="Paper actions">${paneActsHTML(k, p)}</footer>` : ''}`;   // signed out: the paper, no actions
       if (kind) { const b = pane.querySelector('.pact-' + kind); if (b) b.focus({ preventScroll: true }); }   // a key's focus stays on the same action
     }
     pane.dataset.key = k; pane._html = body;
     const nb = pane.querySelector('.fp-body'); nb.scrollTop = y;
+    paperPostRender(nb, p);
     nb.querySelectorAll('[data-abs-tex]').forEach(el => renderAbstractText(el, p.abstract));
+    paperDownloadDot().catch(() => {});
   }
+  paperControlsMount(pane);
   const s = paneState(k, p);
   pane.querySelectorAll('.fp-acts .pact').forEach(b => {
-    const kind = PACT_KINDS.find(x => b.classList.contains('pact-' + x)), on = kind === 'save' ? s.listed : kind === 'mark' ? s.read : false;
+    const kind = PACT_KINDS.find(x => b.classList.contains('pact-' + x)), on = kind === 'save' ? s.listed : kind === 'mark' ? s.read : kind === 'pass' ? s.pass : false;
     const off = kind === 'pass' ? s.passOff : kind === 'save' ? s.saveOff : kind === 'read' ? s.openOff : s.readOff;
     b.classList.toggle('on', on); b.disabled = !!off;
     if (b.hasAttribute('aria-pressed')) b.setAttribute('aria-pressed', String(on));
@@ -8967,6 +9148,8 @@ function paneSync() {
 /* A post chosen for the right pane: marked in the list (aria-current) without drawing the list again */
 function paneSelect(k, user) {
   if (k === Feed.pane && !user) return;
+  if (Feed.pane !== k && k) briefVisit(k);
+  Feed.peek = k && (!postEl(k) || !['open', 'member', 'suggest'].includes(postView(k))) ? k : null;
   Feed.pane = k || null; Feed.paneGen++;
   if (k) { const i = Feed.keys.indexOf(k); if (i >= 0) Feed.paneAt = i; }
   const list = document.getElementById('feedList');
@@ -8977,7 +9160,7 @@ function paneSelect(k, user) {
 }
 /* A tap on a post in the left pane: it opens on the right; the list stays where it is */
 function paneOpen(k) {
-  if (!feedTwo() || !paneKeyOK(k)) return false;
+  if (!feedTwo() || !feedRow(k) || feedRow(k)._goneRemote) return false;
   paneSelect(k, true); paneSync();
   const box = document.querySelector('#feedPane .fp-body'); if (box) box.scrollTop = 0;
   return true;
@@ -8986,28 +9169,27 @@ function paneOpen(k) {
 function paneAdvance(from) {
   if (!feedTwo() || !feedActive()) return;
   if (Feed.pane === from) { paneSelect(paneNextKey(from), true); paneSync(); }   // the paper stayed open (Following's read mark)
-  const el = Feed.pane && postEl(Feed.pane); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' });
+
 }
 /* The pane's row acts on the paper the pane shows, through the post's own handlers and their guards */
 function paneAct(kind, btn, ev) {
   requireOwner();
   const pane = btn && btn.closest('#feedPane'), k = pane && pane.dataset.key;
   if (!k || k !== Feed.pane || !feedTwo() || !paneKeyOK(k)) return false;
-  if (kind === 'pass') { if (feedPass(k)) { paneAdvance(k); return true; } return false; }
+  if (kind === 'pass') { if ((projectMode() || Feed.peek === k ? pagePass(k) : feedPass(k))) { paneAdvance(k); return true; } return false; }
   if (kind === 'mark') {
     const was = readSet.has(k);
-    if (!feedMarkRead(k)) return false;
+    if (projectMode() || Feed.peek === k) { toggleRead(k); } else if (!feedMarkRead(k)) return false;
     if (!was) paneAdvance(k); else paneSync();
     return true;
   }
   if (kind === 'save') {
     if (Feed.sheet && Feed.sheet.btn === btn) { closeSaveSheet(); return false; }
-    const listed = paperMarks(feedRow(k)).listed;
     openSaveSheet(ev || null, btn, k);
-    if (Feed.sheet && Feed.sheet.key === k) Feed.sheet.pane = { key: k, listed };
+    if (Feed.sheet && Feed.sheet.key === k) Feed.sheet.pane = { key: k };
     return true;
   }
-  feedOpen(k); return true;
+  openReader(k); return true;
 }
 /* A tap on a post opens its page, unless it was on one of its own controls */
 function feedTap(ev, el) {
@@ -9090,7 +9272,7 @@ function feedOpenToRead() { openListPage(TO_READ); }   // Phase 31: To read's ow
    replaced only when what it shows changed, and focus stays with the post. */
 function feedRepaintPost(k, el) {   // `el`: the post's element when the caller has it (feedRepaintAll), else looked up
   el = el || postEl(k);
-  if (!el) return;
+  if (!el) { if (!_paneHold && feedTwo() && Feed.pane === k) paneSync(); return; }
   const h = postHTML(k);
   if (!h) { feedDropPost(el); return; }
   if (el._html === h) { if (!_paneHold && feedTwo()) paneSync(); return; }
@@ -9401,7 +9583,7 @@ function pressControl(t) {
   if (!t || !t.closest) return null;
   return t.closest('.daily-action, .daily-picker, .daily-interest-row, .daily-interest-done, #dailyInterestSheet, button.daily-row') || t.closest('#feedPane .fp-act, #feedList .post .ic, #feedList .post .chip, #feedList .post .act, #feedList .post.gone button, #feedTabs .tab, #feedTabs .tab-add, #feedCtl button, #feedSortMenu button, #listBar button, .list-menu button, #saveSheet [data-guard], #hideSheet [data-guard], #hideSheet .hide-own input')
     || t.closest('.sh-panel') || t.closest('#saveSheet') || t.closest('.hide-box') || t.closest('#hideSheet') || t.closest('#feedList .post')
-    || t.closest('.save-dd .save-dd-item, .copy-dd .copy-dd-item, #paperDetail .pd-bar .pd-act[data-act], #libraryContent .top-row .p-actions [data-act]')   // Phase 13e: the picker, the Copy menu, the paper page's bar and Library's row icons
+    || t.closest('.copy-dd .copy-dd-item, #paperDetail .pd-bar .pd-act[data-act], #libraryContent .top-row .p-actions [data-act]')   // Phase 13e: the picker, the Copy menu, the paper page's bar and Library's row icons
     || t.closest('#paperDetail .pd-related .feed-item [data-act], #libraryContent [data-lib] .library-actions button[data-act]')   // and a page's related papers, and a Library group's header actions
     || t.closest('#paperDetail .pd-related .feed-item');   // a related paper itself: it opens that paper's page
 }
@@ -9445,8 +9627,6 @@ function pressWhat(el) {
   const s = el.closest('#saveSheet');
   if (s) { const ed = el.dataset.guard && el.closest('.sh-edit'), se = ed ? Number(ed.dataset.edit || 0) : 0;   // Add: the opening of the field it is in
     return { kind: 'sheet', act: el.dataset.guard || '', sedit: se, n: el.dataset.guard === 'row' ? el.dataset.n : null, ident: `sheet:${s.dataset.sheet || ''}:${el === s ? 'shade' : el.dataset.guard ? `${el.dataset.guard}:${el.dataset.n || ''}${ed ? ':' + se : ''}` : 'panel'}` }; }
-  const dd = el.closest('.save-dd');
-  if (dd) return { kind: 'dd', dd: Number(dd.dataset.dd || 0), key: dd.dataset.key || '', n: el.dataset.n || '', ident: `dd:${dd.dataset.dd || ''}:${el.dataset.n || ''}` };
   const cd = el.closest('.copy-dd');
   if (cd) return { kind: 'copy', copy: Number(cd.dataset.copy || 0), n: el.dataset.n || '', ident: `copy:${cd.dataset.copy || ''}:${el.dataset.n || (el.classList.contains('copy-dd-new') ? 'new' : '')}` };
   if (el.closest('#paperDetail .pd-bar')) { const page = document.querySelector('#paperDetail .pd-article[data-pid]'), k = page ? page.dataset.pid : ''; return { kind: 'pd', act: el.dataset.act || '', key: k, ident: `pd:${k}:${el.dataset.act || ''}` }; }
@@ -9463,13 +9643,13 @@ function pressBegin(id, el) {
   const w = pressWhat(el);
   if (!w) { Presses.delete(id); return; }
   const hs = w.kind === 'hide' ? document.getElementById('hideSheet') : null;
-  const key = w.kind === 'post' || w.kind === 'pane' || w.kind === 'dd' || w.kind === 'pd' || w.kind === 'lib' || w.kind === 'rel' ? w.key : w.kind === 'sheet' ? (Feed.sheet ? Feed.sheet.key : null) : hs ? hs.dataset.key || null : null;
+  const key = w.kind === 'post' || w.kind === 'pane' || w.kind === 'pd' || w.kind === 'lib' || w.kind === 'rel' ? w.key : w.kind === 'sheet' ? (Feed.sheet ? Feed.sheet.key : null) : hs ? hs.dataset.key || null : null;
   const r = w.kind === 'post' ? Feed.recs.get(key) : null;
-  const on = w.kind === 'sheet' && w.n !== null && w.n !== undefined ? sheetHas(w.n, key) : w.kind === 'dd' && w.n ? ddHas(w.n, key) : w.kind === 'pd' || w.kind === 'lib' || w.kind === 'rel' ? markOf(key, w.act) : w.kind === 'libhead' ? libHeadMark(w.group) : w.kind === 'post' || w.kind === 'pane' ? postMark(key, w.act, w.n) : null;
+  const on = w.kind === 'sheet' && w.n !== null && w.n !== undefined ? sheetHas(w.n, key) : w.kind === 'pd' || w.kind === 'lib' || w.kind === 'rel' ? markOf(key, w.act) : w.kind === 'libhead' ? libHeadMark(w.group) : w.kind === 'pane' ? (w.act === 'markread' ? readSet.has(key) : markOf(key, w.act)) : w.kind === 'post' ? postMark(key, w.act, w.n) : null;
   Presses.set(id, { ident: w.ident, dailyGen: w.dailyGen, kind: w.kind, act: w.act || '', key, n: w.n === undefined ? null : w.n, gen: Feed.gen, project: Feed.project,
     rec: r ? r.id : 0, tabsGen: Feed.tabsGen, edit: Feed.edit ? Feed.edit.id : 0, sheet: Feed.sheet ? Feed.sheet.id : 0, sedit: w.sedit || 0,
     hs: hs ? Number(hs.dataset.hs || 0) : 0, hrec: hs ? Number(hs.dataset.rec || 0) : 0,
-    dd: w.dd || 0, copy: w.copy || 0, group: w.group || '', page: w.page || '', ctlGen: Feed.ctlGen, menu: w.menu || 0, on, up: 0, dead: false, el });
+    copy: w.copy || 0, group: w.group || '', page: w.page || '', ctlGen: Feed.ctlGen, menu: w.menu || 0, on, up: 0, dead: false, el });
 }
 /* What a post's control showed when a press on it began (Phase 25): the chip's list and whether the paper was in it, a
    list paper's read mark or membership, a suggestion still one */
@@ -9498,14 +9678,7 @@ function pressStill(pr) {
     if (!s || !s.classList.contains('open') || Number(s.dataset.hs || 0) !== pr.hs) return false;
     return !pr.hrec || (pr.gen === Feed.gen && feedRecLive(pr.hrec, 'pass') && !feedRecById(pr.hrec).hide && feedRecById(pr.hrec).key === pr.key);
   }
-  if (['dd', 'copy', 'pd', 'rel', 'lib', 'libhead'].includes(pr.kind) && pr.gen !== Feed.gen) return false;   // the view was left since (the reader opened over it too)
-  if (pr.kind === 'dd') {   // the same picker, for the same paper; for a row its list still a place to save to, with the paper in it or not as when the press began
-    const dd = _activeSaveDD;
-    if (!dd || dd.id !== pr.dd || dd.key !== pr.key) return false;
-    const p = feedRow(pr.key);
-    if (!p || p._goneRemote) return false;
-    return !pr.n || (ddDestOK(pr.n, pr.key) && ddHas(pr.n, pr.key) === pr.on);
-  }
+  if (['copy', 'pd', 'rel', 'lib', 'libhead'].includes(pr.kind) && pr.gen !== Feed.gen) return false;   // the view was left since (the reader opened over it too)
   if (pr.kind === 'copy') {   // the same Copy menu; for a row its list still a place to copy to
     const cd = _copyDD;
     if (!cd || cd.id !== pr.copy || !copySourceOK(cd.src)) return false;
@@ -9534,7 +9707,7 @@ function pressStill(pr) {
   }
   if (pr.kind === 'lmenu') return !!ListMenu.cur && ListMenu.cur.id === pr.menu;   // the same opening of a list's menu, still open
   if (pr.gen !== Feed.gen) return false;   // the feed was rebuilt, left or locked since
-  if (pr.kind === 'pane') return feedTwo() && Feed.pane === pr.key && paneKeyOK(pr.key) && (pr.act !== 'markread' || postMark(pr.key, 'markread') === pr.on) && (pr.act !== 'pass' || (feedEligible(pr.key) && !likedKey(pr.key)));   // Layout A: the same paper, still open, its value as it showed
+  if (pr.kind === 'pane') return feedTwo() && Feed.pane === pr.key && paneKeyOK(pr.key) && (pr.act !== 'markread' || readSet.has(pr.key) === pr.on) && (pr.act !== 'pass' || (isPassed(feedRow(pr.key)) === pr.on && (pr.on || (!feedRow(pr.key)?.uploaded && !isHiddenRow(feedRow(pr.key)) && !likedKey(pr.key)))));   // Layout A: the same paper, still open, its value as it showed
   if (pr.kind === 'lbar') return listTabShown() && pr.project === Feed.project;   // the same list's bar
   if (pr.kind === 'ctl') return pr.ctlGen === Feed.ctlGen && (feedCtlOn() || followingShown());   // the same row
   if (pr.kind === 'ctlmenu') return !!Feed.menu && Feed.menu.id === pr.menu;   // the same opening of the menu, still open
@@ -9679,7 +9852,7 @@ function openSaveSheet(ev, btn, k) {
   const names = projectNames(), keyed = !ev || ev.detail === 0, from = document.activeElement;
   if (hidden) rowLists(row).forEach(n => { if (isProjectName(n) && !names.includes(n)) names.push(n); });   // and the lists its row carries, as before
   const lib = out && out.closest && out.closest('#libraryContent [data-lib]');   // a Library row's Save: its group, to find it again after a redraw
-  Feed.sheet = { id: ++Feed.seq, key: k, names, dead: new Set(), from: keyed && from && from !== document.body ? from : null, edit: 0, btn: out, hidden, lib: lib ? lib.dataset.lib : null };
+  Feed.sheet = { id: ++Feed.seq, key: k, names, dead: new Set(), added: new Set(), held: new Set([TO_READ].concat(names).filter(n => sheetHas(n, k))), from: keyed && from && from !== document.body ? from : null, edit: 0, btn: out, hidden, lib: lib ? lib.dataset.lib : null };
   let s = document.getElementById('saveSheet');
   if (!s) {
     s = document.createElement('div'); s.id = 'saveSheet'; s.className = 'save-sheet';
@@ -9757,6 +9930,7 @@ function sheetToggle(n, sid) {
   const k = sh.key, on = !sheetHas(n, k), at = on ? undefined : (uploadById(k) ? uploadListAt(n, k) : listAddedAt(n)[k]) || '';   // when it was added, read before it goes
   if (uploadById(k) || sh.hidden) {   // an upload: its private lists (uploadListSet), never libraryLists; a hidden paper: its own row (listSet)
     if (!listSet(n, k, on)) return false;
+    if (on && !sh.held.has(n)) sh.added.add(n); else sh.added.delete(n);
     updateLibraryBadge(); if (sh.btn) refreshPaper(k, { list: n }); saveSheetSync();
     listToast(n, k, on, at);   // Layout A: every add and remove has its Undo
     return true;
@@ -9765,6 +9939,7 @@ function sheetToggle(n, sid) {
   if (dailyDelta && !dailyTrySheetChange(k, dailyDelta)) return false;
   if (on) (hasList(n) ? libraryLists[n] : (libraryLists[n] = [])).push(k);
   else libraryLists[n] = libraryLists[n].filter(x => x !== k);
+  if (on && !sh.held.has(n)) sh.added.add(n); else sh.added.delete(n);
   persistLists(); updateLibraryBadge();
   if (sh.btn) refreshPaper(k, { list: n });   // the paper page's Save, a Library or search row
   else feedRepaintPost(k);   // Save and Pass say whether the paper is in a list now
@@ -9824,7 +9999,7 @@ function sheetNewSubmit() {
   if (dailyDelta && !dailyTrySheetChange(sh.key, dailyDelta)) return false;
   const own = !!uploadById(sh.key) || !!sh.hidden;
   libraryLists[name] = own ? [] : [sh.key];   // an upload joins it privately, a hidden paper by its own row, below
-  sh.names.push(name);
+  sh.names.push(name); sh.added.add(name);
   s.querySelector('.sh-list').insertAdjacentHTML('beforeend', sheetRowHTML(name));
   sheetEditEnd(false);
   persistLists(); updateLibraryBadge();
@@ -9896,7 +10071,13 @@ function closeSaveSheet() {
   if (inside) document.activeElement.blur();   // the feed's keys work again
   s.classList.remove('open', 'pop'); s.innerHTML = ''; delete s.dataset.sheet;
   if (typeof dailySheetClosed === 'function') dailySheetClosed();
-  if (sh && sh.pane && !sh.pane.listed && feedRow(sh.pane.key) && paperMarks(feedRow(sh.pane.key)).listed) paneAdvance(sh.pane.key);   // Layout A: saved from the right pane, the next post opens
+  const added = sh && isOwner() && sh.added && [...sh.added].some(n => sheetHas(n, sh.key));
+  if (sh?.listingPane) {
+    if (dailyView() && sh.btn?.closest('.daily-feed')) { if (added) Daily.preview = null; if (!dailyResume()) dailyRender(false, true); }
+    else if (added) listingPaneAdvance(sh.listingPane.key);
+    else listingPaneSync();   // removals stay here, with Save reflecting the remaining memberships
+  }
+  if (sh?.pane && added) paneAdvance(sh.pane.key);   // Layout A: saved from the right pane, the next post opens
   if (sh && sh.from && inside) { const to = sh.from.isConnected ? sh.from : save; if (to) to.focus(); }   // opened by a key: back where it was
 }
 /* The Other sheet of a passed post closes when its pass is no longer the post's live record */
@@ -10238,7 +10419,7 @@ const DAILY_CURRENT = 'daily/current.json';
 const DAILY_HANDLED = 'daily_handled.json';
 const DAILY_CURRENT_CAP = 1024 * 1024;
 const DAILY_HANDLED_CAP = 4 * 1024 * 1024;
-const Daily = { timer: 0, generation: 0, seq: 0, pending: null, active: null, interest: null, press: null, undo: null, handled: { schema: 1, operations: {}, undone: [] }, edits: new Map(), status: 'waiting', destinations: new Map(), sheet: null, picker: null, footerObs: null, sel: null, selPos: null };   // Layout A: sel, the card chosen in two panes; selPos, its place
+const Daily = { timer: 0, generation: 0, seq: 0, pending: null, active: null, interest: null, press: null, undo: null, handled: { schema: 1, operations: {}, undone: [] }, edits: new Map(), status: 'waiting', destinations: new Map(), sheet: null, picker: null, footerObs: null, sel: null, selPos: null, preview: null };   // Layout A: sel, the card chosen in two panes; selPos, its place
 function dailyShown() { return SHOW_DAILY_TAB && isPrivate() && Private.authorized && isOwner(); }
 function dailyView() { return dailyShown() && Feed.mode === 'daily' && currentTab === 'all' && !_paperViewActive && !_listViewActive && !_searchActive; }
 function dailyCanonical(v) {
@@ -10310,7 +10491,7 @@ async function dailyReceive(texts) {
     // Snapshot digests bind the worker's input, not the latest owner commit. Keep every newer decision.
     Daily.handled = dailyMergeHandled(dailyUnion(handled, Daily.handled), Daily.edits);
     Daily.pending = { current, epoch }; dailyAdopt();
-  } catch (e) { try { checkPrivateEpoch(epoch); } catch (_) { return; } if (seq === Daily.seq) { dailyCancelPress(); dailyCloseInterestSheet(false); Daily.generation++; Daily.active = Daily.pending = null; Daily.status = 'retry'; if (typeof dailyRender === 'function' && dailyView()) dailyRender(); } }
+  } catch (e) { try { checkPrivateEpoch(epoch); } catch (_) { return; } if (seq === Daily.seq) { dailyCancelPress(); dailyCloseInterestSheet(false); Daily.generation++; Daily.active = Daily.pending = null; Daily.sel = Daily.selPos = Daily.preview = null; Daily.status = 'retry'; if (typeof dailyRender === 'function' && dailyView()) dailyRender(); } }
 }
 function dailySections() {
   if (!Daily.active) return [];
@@ -10323,14 +10504,18 @@ function dailyRowMatches(p, interest) {
 }
 function dailyControlHeld() { return typeof Presses !== 'undefined' && [...Presses.values()].some(p => p.kind === 'daily' && !p.up && !p.dead); }
 function dailyAdopt() {
-  if (!Daily.pending || Daily.press || Daily.sheet || Daily.picker || dailyControlHeld()) return false;
+  if (!Daily.pending || Daily.press || Daily.sheet || Daily.picker || Feed.sheet?.btn?.closest('.daily-feed') || dailyControlHeld()) return false;
   const { current, epoch } = Daily.pending; checkPrivateEpoch(epoch);
   const valid = !current || current.sections.every(s => s.cards.every(c => { const p = feedRow(c.paper); return p && !p._goneRemote; }));
-  if (!valid) { Daily.status = 'waiting'; Daily.active = null; Daily.pending = null; return false; }
+  if (!valid) {
+    Daily.status = 'waiting'; Daily.active = Daily.pending = null; Daily.generation++; Daily.sel = Daily.selPos = Daily.preview = null;
+    if (typeof dailyRender === 'function' && dailyView()) dailyRender();
+    return false;
+  }
   Daily.pending = null;
   const changed = !Daily.active || !current || Daily.active.generation !== current.generation;
   Daily.active = current; Daily.status = current ? 'ready' : 'waiting';
-  if (changed) { Daily.generation++; Daily.destinations = new Map(); Daily.sel = Daily.selPos = null; }   // Layout A: a new manifest starts from its first card
+  if (changed) { Daily.generation++; Daily.destinations = new Map(); Daily.sel = Daily.selPos = Daily.preview = null; }   // Layout A: a new manifest starts from its first card
   const sections = dailySections(); if (!sections.some(s => s.interest === Daily.interest)) { const available = dailyCards(); Daily.interest = sections.find(s => available.some(c => c.interest === s.interest))?.interest || sections[0]?.interest || null; }
   if (typeof dailyRender === 'function' && dailyView()) dailyRender(); return true;
 }
@@ -10344,13 +10529,13 @@ function dailyCards() {
 function dailySetInterest(name) {
   if (!dailyShown() || !dailySections().some(s => s.interest === name)) return false;
   dailyCancelPress(); if (Feed.sheet) closeSaveSheet(); dailyCloseInterestSheet(false);
-  Daily.interest = name; Daily.generation++; Daily.sel = Daily.selPos = null; dailyResume();
+  Daily.interest = name; Daily.generation++; Daily.sel = Daily.selPos = Daily.preview = null; dailyResume();
   if (typeof dailyRender === 'function') dailyRender(false, true); return true;
 }
 function dailyResume() {
   // A library refresh holds its manifest with the library, before dailyReceive can stage it.
   if (dailyView() && Refresh.staged?.texts.dailyCurrent !== undefined) refreshShow();
-  dailyAdopt();
+  return dailyAdopt();
 }
 /* One chooser for Daily's interests and for every screen's Filters; callers retain their own state and validity checks.
    A row is an interest (one at a time: radio) or, with row.kind, a pick (row.value, shown as row.label; a checkbox, or a
@@ -10500,7 +10685,7 @@ function dailyTeardown() {
   cleanup(() => dailyCloseInterestSheet(false));
   if (Daily.footerObs) { cleanup(() => Daily.footerObs.disconnect()); Daily.footerObs = null; }
   clearTimeout(Daily.timer); Daily.timer = 0;
-  Daily.seq++; Daily.generation++; Daily.active = Daily.pending = Daily.interest = Daily.undo = Daily.sheet = Daily.sel = Daily.selPos = null; Daily.status = 'waiting'; Daily.edits.clear(); Daily.destinations.clear(); Daily.handled = { schema: 1, operations: {}, undone: [] };
+  Daily.seq++; Daily.generation++; Daily.active = Daily.pending = Daily.interest = Daily.undo = Daily.sheet = Daily.sel = Daily.selPos = Daily.preview = null; Daily.status = 'waiting'; Daily.edits.clear(); Daily.destinations.clear(); Daily.handled = { schema: 1, operations: {}, undone: [] };
   cleanup(() => dailyCancelPress()); document.body.classList.remove('daily-mode');
   const body = document.getElementById('dailyBody'); if (body) body.innerHTML = '';
 }
@@ -10822,13 +11007,6 @@ function dailyFocusUndo() {
   if (dailyCards().some(c => c.interest === Daily.interest)) return;
   const undo = document.querySelector('#toast .toast-undo'); if (undo) undo.focus({ preventScroll: true });
 }
-function dailyReleaseText(row) {
-  const known = [pubParts(row.publishing_date), paperArxiv(row)].filter(Boolean), day = releaseDay(row);
-  if (!known.length || day === null) return '';
-  const date = new Date(day * 86400000), y = date.getUTCFullYear(), m = date.getUTCMonth() + 1;
-  if (known.some(d => d.y === y && d.m === m)) return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-  return known.some(d => d.y === y && !d.m) ? String(y) : '';   // never invent a month from a year or discovery date
-}
 /* The footer can grow with a destination's name or a phone's safe area. Reserve its measured height. */
 function dailyWatchFooter(root) {
   if (Daily.footerObs) { Daily.footerObs.disconnect(); Daily.footerObs = null; }
@@ -10838,17 +11016,18 @@ function dailyWatchFooter(root) {
   measure();
   if (typeof ResizeObserver === 'function') { Daily.footerObs = new ResizeObserver(measure); Daily.footerObs.observe(footer); }
 }
-function dailyCardHTML(card, row) {
+function dailyCardHTML(row) {
   // Layout A (Main.dc.html): the headline leads, the paper's own title is the smaller line under it
   return `<article class="daily-card" tabindex="0" aria-label="${dataAttr(row.title || row.headline || '')}">
-    <span class="daily-stamp daily-stamp-save" aria-hidden="true">${esc(listLabel(dailyDestination(card.paper)))}</span><span class="daily-stamp daily-stamp-pass" aria-hidden="true">Pass</span>
-    ${paperViewHTML(row)}
+    <span class="daily-stamp daily-stamp-save" aria-hidden="true">${esc(listLabel(dailyDestination(paperKey(row))))}</span><span class="daily-stamp daily-stamp-pass" aria-hidden="true">Pass</span>
+    ${paperViewHTML(row, { pane: true }).article}
   </article>`;
 }
 /* Layout A: Daily's row, Pass, Save, Mark read and Read, as every paper's (paperActsHTML). Save opens the lists. */
 function dailyActsHTML() {
   const act = { pass: 'pass', save: 'save', mark: 'read', read: 'open' };
-  return paperActsHTML({ listed: false, read: false }, 'daily-action', kind => `data-daily-action="${act[kind]}"${kind === 'save' ? ' aria-label="Save: choose a list"' : ''}`);
+  const actions = paperActsHTML({ listed: false, read: false }, 'daily-action', kind => `data-daily-action="${act[kind]}"${kind === 'save' ? ' aria-label="Save: choose a list"' : ''}`);
+  return twoPane() ? paneFooterHTML(feedRow(Daily.sel?.paper), actions) : actions;
 }
 /* Two panes: what a handled row says, in a plain word */
 function dailyRowWord(k, p) {
@@ -10887,9 +11066,9 @@ function dailyListed(section, available) {
    the right; one handled is muted, with what happened to it, and opens its page. */
 function dailyListHTML(section, available, card) {
   return `<div class="daily-list" role="list" aria-label="${dataAttr(`Today's papers in ${section.interest}`)}">${dailyListed(section, available).map(c => {
-    const p = feedRow(c.paper), live = c.live, on = !!(live && card && live.slot === card.slot && live.paper === card.paper);
+    const p = feedRow(c.paper), live = c.live, on = !!(!Daily.preview && live && card && live.slot === card.slot && live.paper === card.paper);
     const head = esc(hasText(p.headline) ? p.headline : p.title || '');
-    if (!live) { const word = dailyRowWord(c.paper, p); return `<div role="listitem"><a class="daily-row done" href="#paper/${encodeURIComponent(c.paper)}"><span class="dr-h">${head}</span>${word ? `<span class="dr-s">${esc(word)}</span>` : ''}</a></div>`; }
+    if (!live) { const word = dailyRowWord(c.paper, p); return `<div role="listitem"><a class="daily-row done${Daily.preview === c.paper ? ' on' : ''}" href="#paper/${encodeURIComponent(c.paper)}"><span class="dr-h">${head}</span>${word ? `<span class="dr-s">${esc(word)}</span>` : ''}</a></div>`; }
     return `<div role="listitem"><button type="button" class="daily-row${on ? ' on' : ''}" data-daily-action="row" data-daily-row="${dataAttr(c.slot)}" data-row-paper="${dataAttr(c.paper)}"${on ? ' aria-current="true"' : ''}><span class="dr-h">${head}</span>${hasText(p.authors) ? `<span class="dr-s">${esc(p.authors)}</span>` : ''}</button></div>`;
   }).join('')}</div>`;
 }
@@ -10899,16 +11078,26 @@ function dailySelect(slot, paper) {
   if (!dailyView() || !twoPane() || Daily.sheet || Daily.picker || Daily.press) return false;
   const c = dailyCards().find(x => x.interest === Daily.interest && x.slot === slot && x.paper === paper);
   if (!c) return false;
+  Daily.preview = null;
   Daily.sel = { slot, paper }; Daily.selPos = c.position; Daily.generation++;
   dailyRender(false, true);
   const area = document.querySelector('#dailyBody .daily-area'); if (area) area.scrollTop = 0;
   return true;
 }
+function dailyOpenPaper(id) {
+  if (!dailyView() || !twoPane() || Daily.sheet || Daily.picker || Daily.press) return false;
+  const section = dailySections().find(s => s.interest === Daily.interest), c = dailyListed(section, dailyCards()).find(c => c.paper === id);
+  if (!c && !findPaper(id)) return false;
+  if (c?.live) return dailySelect(c.slot, id);
+  Daily.preview = id; Daily.generation++; dailyRender(false, true);
+  const area = document.querySelector('.daily-area'); if (area) area.scrollTop = 0;
+  return true;
+}
 function dailyRender(focus, keepInterest) {
-  if (!dailyView() || Daily.press || Daily.sheet || Daily.picker) return;
+  if (!dailyView() || Daily.press || Daily.sheet || Daily.picker || Feed.sheet?.btn?.closest('.daily-feed')) return;
   dailyTick();
   const box = document.getElementById('topStories'); if (!box) return;
-  const previousArea = box.querySelector('.daily-area'), previousPaper = box.querySelector('.daily-action')?.dataset.dailyPaper, previousScroll = previousArea?.scrollTop || 0;
+  const previousArea = box.querySelector('.daily-area'), previousPaper = box.querySelector('.daily-card .pd-article')?.dataset.pid, previousScroll = previousArea?.scrollTop || 0;
   const previousInterest = box.querySelector('#dailyBody .daily-picker-name')?.textContent, previousList = box.querySelector('.daily-list')?.scrollTop || 0;
   const old = box.querySelector('.daily-card'), hadFocus = !!focus || old && old.contains(document.activeElement);
   if (!box.querySelector('#dailyBody')) {
@@ -10926,16 +11115,17 @@ function dailyRender(focus, keepInterest) {
   }
   // The card shown: the one chosen while it is still to decide, else the next one after it, else the first
   const here = available.filter(c => c.interest === Daily.interest), chosen = Daily.sel && here.find(c => c.slot === Daily.sel.slot && c.paper === Daily.sel.paper);
-  const card = chosen || (Daily.selPos !== null && Daily.selPos !== undefined && here.find(c => c.position > Daily.selPos)) || here[0], row = card && feedRow(card.paper), root = box.querySelector('#dailyBody');
+  const card = chosen || (Daily.selPos !== null && Daily.selPos !== undefined && here.find(c => c.position > Daily.selPos)) || here[0], preview = two && Daily.active && Daily.status === 'ready' && Daily.preview && findPaper(Daily.preview) ? feedRow(Daily.preview) : null, row = preview || (card && feedRow(card.paper)), root = box.querySelector('#dailyBody');
   if (card) { Daily.sel = { slot: card.slot, paper: card.paper }; Daily.selPos = card.position; } else Daily.sel = null;
   const section = sections.find(s => s.interest === Daily.interest);
   const listed = dailyListed(section, available), total = listed.length;   // walk fixes 8: "N of M" counts the rows the list shows
-  const position = card ? listed.findIndex(c => c.live && c.slot === card.slot && c.paper === card.paper) + 1 : total;
+  const previewAt = preview ? listed.findIndex(c => c.paper === preview.id) : -1;
+  const position = previewAt >= 0 ? previewAt + 1 : card ? listed.findIndex(c => c.live && c.slot === card.slot && c.paper === card.paper) + 1 : total;
   const empty = Daily.status === 'retry' ? `Couldn't load your picks. <button type="button" data-daily-retry>Try again</button>` : !Daily.active || !section || Daily.status === 'waiting' || !sections.some(s => s.cards.length) ? 'Your next picks are on the way.' : "That's all for today. More tomorrow.";
   root.innerHTML = `${section ? interestPickerHTML(section.interest, '', `${position} of ${total}`) : ''}${two && section ? dailyListHTML(section, available, card) : ''}
-    <section class="daily-area">${card && row ? dailyCardHTML(card, row) + `</section><footer class="daily-actions pacts" aria-label="Paper actions">${dailyActsHTML()}</footer>` : `<div class="daily-empty" role="status">${empty}</div></section>`}`;
+    <section class="daily-area">${row ? dailyCardHTML(row) + `</section><footer class="daily-actions pacts" aria-label="Paper actions">${preview ? listingPaneActsHTML(row) : dailyActsHTML()}</footer>` : `<div class="daily-empty" role="status">${empty}</div></section>`}`;
   dailyWatchFooter(root);
-  root.querySelector('.daily-area').scrollTop = card && card.paper === previousPaper ? previousScroll : 0;
+  root.querySelector('.daily-area').scrollTop = row && row.id === previousPaper ? previousScroll : 0;
   const list = root.querySelector('.daily-list'); if (list) list.scrollTop = previousList;
   root.querySelectorAll('.daily-action, .daily-picker').forEach(b => { b.dataset.dailyGen = String(Daily.generation); b.dataset.dailyPaper = card ? card.paper : ''; });
   if (two) root.querySelectorAll('.daily-row').forEach(b => {
@@ -10946,17 +11136,19 @@ function dailyRender(focus, keepInterest) {
   const picker = root.querySelector('.daily-picker'), pickerGeneration = Daily.generation;
   if (picker) picker.onclick = privateCallback(e => { if (pickerGeneration === Daily.generation) dailyOpenInterestSheet(e, picker); });
   const retry = root.querySelector('[data-daily-retry]'); if (retry) retry.onclick = privateCallback(dailyRefresh);
-  if (card) {
-    const generation = Daily.generation, el = root.querySelector('.daily-card'); dailyBindGestures(el, card, generation);
+  if (row) {
+    const generation = Daily.generation, el = root.querySelector('.daily-card'); if (!preview) dailyBindGestures(el, card, generation);
+    paperPostRender(el, row); paperDownloadDot().catch(() => {});
+    if (!two) el.querySelector('.pd-title').onclick = e => openPaper(row.id, e);
     const abstract = el.querySelector('[data-abs-tex]'); if (abstract) renderAbstractText(abstract, row.abstract);
     root.querySelectorAll('.daily-action').forEach(b => { b.onclick = privateCallback(e => { const a = b.dataset.dailyAction; if (a === 'save') dailyOpenSaveSheet(e, b, card); else if (a === 'open') { if (generation === Daily.generation && dailyValidCard(card, generation)) feedOpen(card.paper); } else dailyAct(a, card, generation); }); });
     if (hadFocus) el.focus({ preventScroll: true });
-  } else if (hadFocus) { const undo = document.querySelector('#toast button'); if (undo) undo.focus({ preventScroll: true }); }
+  } else { paperControlsMount(root); if (hadFocus) { const undo = document.querySelector('#toast button'); if (undo) undo.focus({ preventScroll: true }); } }
 }
 function dailyBindGestures(el, card, generation) {
   if (!el) return;
   el.onpointerdown = e => {
-    if (e.button !== 0 || e.isPrimary === false || Daily.press || Daily.sheet || Daily.picker || !dailyValidCard(card, generation) || e.target?.closest?.('button,a,input,textarea,select,[contenteditable="true"]') || !window.getSelection()?.isCollapsed) return;
+    if (e.button !== 0 || e.isPrimary === false || Daily.press || Daily.sheet || Daily.picker || !dailyValidCard(card, generation) || e.target?.closest?.('button,a,summary,input,textarea,select,[contenteditable="true"]') || !window.getSelection()?.isCollapsed) return;
     Daily.press = { id: e.pointerId, x: e.clientX, y: e.clientY, dx: 0, intent: null, el, card, generation, epoch: capturePrivateEpoch() };
   };
   el.onpointermove = e => {
@@ -11483,7 +11675,7 @@ function openListMenu(btn, n, kind) {
   if (was) { const same = was.btnId === btn.id; closeListMenu(same); if (same) return; }
   if (!btn || (n !== TO_READ && !hasList(n)) || (kind === 'more' && (!isOwner() || n === TO_READ))) return;
   if (Feed.menu) closeFeedMenu();
-  closeSaveSheet(); closeSaveDD(); closeCopyDD();
+  closeSaveSheet(); closeCopyDD();
   const names = kind === 'interest' ? feedChipNames() : null, chosen = kind === 'interest' ? listInterest(n) : null;
   if (kind === 'interest') {
     const cur = ListMenu.cur = { id: ++ListMenu.seq, kind, list: n, btnId: btn.id, sig: JSON.stringify(names), where: btn.closest('#listBar') ? 'tab' : 'lib' };
@@ -11771,12 +11963,12 @@ pullBind();
    button underneath (as on iOS). Scrolling outside still closes it and scrolls. Short-lived hints don't count: the venue
    tooltip, and the score breakdown while it's only hovered (counted, a mouse click on its (i) closed it instead of
    keeping it open). */
-const POPOVERS = '#dailyInterestSheet.open, #saveSheet.open, #feedSortMenu, .list-menu, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup[data-pinned], #chatHist, #keptPaperMenu, #paperMenu';
+const POPOVERS = '#dailyInterestSheet.open, #saveSheet.open, #feedSortMenu, .list-menu, #readerMenu.open, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup[data-pinned], #chatHist, #keptPaperMenu, #paperMenu';
 let _dismissTap = null;
 function closePopovers() {
   paperMenuClose();
   dailyCloseInterestSheet();
-  closeSaveSheet(); closeFeedMenu(); closeListMenu(); toggleReaderMenu(false); closeSaveDD(); closeCopyDD(); closeInterestDD(); closeAbsPopup(); closeRelevancePopup();
+  closeSaveSheet(); closeFeedMenu(); closeListMenu(); toggleReaderMenu(false); closeCopyDD(); closeInterestDD(); closeAbsPopup(); closeRelevancePopup();
   const h = document.getElementById('chatHist'); if (h) { if (h._close) h._close(); else h.remove(); }
 }
 document.addEventListener('pointerdown', e => {
@@ -12112,7 +12304,7 @@ function readBtn(p, labelled) {
 function openSaveTo(ev, btn, key) {
   if (Feed.sheet && Feed.sheet.btn === btn) { closeSaveSheet(); return; }
   if (Feed.sheet) closeSaveSheet();
-  closeSaveDD(); closeCopyDD();
+  closeCopyDD();
   openSaveSheet(ev, btn, key);
 }
 function saveBtn(p, labelled) {
@@ -12295,84 +12487,7 @@ function markTruncatedVenues() {
   });
 }
 
-/* ===== SAVE DROPDOWN: the picker on a paper's page and on Library's rows (Phase 13e) =====
-   ☰ opens it for one paper: a field for a new project, then the projects in the order they were made, then To read
-   (never a survey lane); for a hidden paper also the projects its own row carries. Each row is a button with role
-   checkbox: Tab, the arrows, Home and End move through the field and the rows; Enter or Space on a row ticks it; Enter in
-   the field makes a project (once, not while composing); Escape closes and puts focus back on the ☰. One instance per
-   opening (_activeSaveDD.id): its rows stay where they are for its life. A list that goes elsewhere while it is open is
-   off where it stands and says why; a name that comes back is offered only by the next picker. Received data patches
-   the ticks in place (saveDDSync), the field and what is typed in it untouched; a redraw of the row or page it opened
-   from finds the ☰ again by paper and Library group. A scroll the page makes itself (a row redrawn above) places it
-   again; a scroll by hand, or a tap outside, closes it. Every press on it is bound to this instance and its row
-   (Presses). */
-let _activeSaveDD = null, _saveDDSeq = 0;
 function goneRowMessage() { return 'This paper was removed from your library. Changes to it can’t be saved.'; }
-function ddHas(n, k) { const h = hiddenRowOf(k); return h ? rowLists(h).includes(n) : hasList(n) && libraryLists[n].includes(k); }
-/* A row the open picker can save to: offered by this instance, not gone since, a place to save to now; a hidden paper's
-   own row lists stay editable while the row carries them. A name that went while this picker was open stays off in it
-   even when it comes back on the hidden paper's row: the dead record is checked first, and only a new picker offers
-   the name again. */
-function ddDestOK(n, k) {
-  const dd = _activeSaveDD;
-  if (!dd || dd.key !== k || !dd.names.includes(n) || isMachineLane(n) || dd.dead.has(n)) return false;
-  const h = hiddenRowOf(k);
-  if (h && rowLists(h).includes(n)) return true;
-  return listDestOK(n);
-}
-/* The lists a picker offers for a paper: the projects in the order they were made, for a hidden paper also the projects
-   its own row carries, then To read (there or not: its first add makes it). Never a survey lane. */
-function pickerNames(k) {
-  const h = hiddenRowOf(k), names = projectNames();
-  if (h) rowLists(h).forEach(n => { if (isProjectName(n) && !names.includes(n)) names.push(n); });
-  names.push(TO_READ);
-  return names;
-}
-function ddRowHTML(n, k) {
-  const on = ddHas(n, k), ok = ddDestOK(n, k);
-  return `<button type="button" class="save-dd-item${on ? ' on' : ''}" role="checkbox" aria-checked="${on}" data-n="${dataAttr(n)}"${ok ? '' : ' disabled'} onclick="event.stopPropagation();toggleListItem(this.dataset.n, this.closest('.save-dd').dataset.key)"><span class="dd-check${on ? ' on' : ''}" aria-hidden="true">${on ? '&#10003;' : ''}</span><span class="dd-n">${esc(listLabel(n))}${ok ? '' : '<span class="dd-why">Unavailable</span>'}</span></button>`;
-}
-function buildDDItems(k, names) { return (names || (_activeSaveDD && _activeSaveDD.key === k ? _activeSaveDD.names : pickerNames(k))).map(n => ddRowHTML(n, k)).join(''); }
-function openSaveDD(btn, key) {
-  closeSaveDD();
-  const p = feedRow(key);
-  if (!p || p._goneRemote) { if (p) toast(goneRowMessage()); return; }
-  const id = ++_saveDDSeq, group = btn && btn.closest ? btn.closest('[data-lib]') : null, onPage = !!(btn && btn.closest && btn.closest('#paperDetail .pd-bar'));
-  const dd = document.createElement('div');
-  dd.className = 'save-dd'; dd.setAttribute('role', 'group'); dd.setAttribute('aria-label', 'Save to');
-  dd.dataset.dd = String(id); dd.dataset.key = key;
-  dd.onclick = e => e.stopPropagation();
-  dd.onkeydown = saveDDKey;
-  _activeSaveDD = { id, el: dd, key, names: pickerNames(key), dead: new Set(), from: btn, page: onPage, group: group ? group.dataset.lib : null, rect: btn.getBoundingClientRect(), place: null, done: null };
-  dd.innerHTML = `<input class="save-dd-input" type="text" placeholder="New list…" aria-label="New list name" maxlength="200" autocomplete="off" enterkeyhint="done" onclick="event.stopPropagation()">
-    <div class="save-dd-list">${buildDDItems(key)}</div>`;
-  document.body.appendChild(dd);
-  const place = () => saveDDPlace(), vv = window.visualViewport;
-  _activeSaveDD.place = place;
-  _activeSaveDD.done = () => { if (vv) { vv.removeEventListener('resize', place); vv.removeEventListener('scroll', place); } };
-  place();
-  if (vv) { vv.addEventListener('resize', place); vv.addEventListener('scroll', place); }   // a keyboard opening or closing
-  btn.setAttribute('aria-expanded', 'true');
-  const input = dd.querySelector('.save-dd-input');
-  if (!matchMedia('(pointer: coarse)').matches && input) input.focus();   // touch: the lists first, the keyboard only when you tap the field
-}
-/* The ☰ the picker opened from, found again after a redraw: on the page by the paper, in Library (or any list of rows)
-   by the paper and its group */
-function saveDDAnchor(dd) {
-  if (dd.from && dd.from.isConnected) return dd.from;
-  const all = [...document.querySelectorAll('.save-anchor [data-act="list"]')];
-  return all.find(b => {
-    if (dd.page) { const page = document.querySelector('#paperDetail .pd-article[data-pid]'); return !!b.closest('#paperDetail .pd-bar') && !!page && page.dataset.pid === dd.key; }
-    const row = b.closest('[data-key]'); if (!row || row.dataset.key !== dd.key) return false;
-    const g = b.closest('[data-lib]'); return (g ? g.dataset.lib : null) === dd.group;
-  }) || null;
-}
-function saveDDPlace() {
-  const dd = _activeSaveDD; if (!dd) return;
-  const a = saveDDAnchor(dd);
-  if (a) { dd.from = a; dd.rect = a.getBoundingClientRect(); }
-  placeFixedMenu(dd.el, dd.rect);
-}
 /* The safe area's insets (a notch, rounded corners, the home bar), as CSS gives them under viewport-fit=cover: a
    hidden fixed probe padded by env(safe-area-inset-*) and read back in pixels */
 function safeInsets() {
@@ -12414,126 +12529,20 @@ function placeFixedMenu(m, rect) {
   }
   m.style.left = Math.max(left + pad, Math.min(rect.right - m.offsetWidth, left + w - pad - m.offsetWidth)) + 'px';
 }
-/* The picker's keys: the arrows move through the field and the rows that can be saved to, Home and End on a row go to
-   the ends (in the field they move the caret, as usual), Escape closes and puts focus back on the ☰, Enter in the field
-   makes a project once (not held, not while composing); Enter or Space on a row is the button's own click (pressKey
-   holds a repeat back); Tab moves on as usual. */
-function saveDDKey(e) {
-  const dd = _activeSaveDD;
-  if (!dd || e.metaKey || e.ctrlKey || e.altKey || e.isComposing) return;
-  const input = dd.el.querySelector('.save-dd-input'), inField = e.target === input;
-  const items = [input, ...dd.el.querySelectorAll('.save-dd-item:not(:disabled)')].filter(Boolean), i = items.indexOf(document.activeElement);
-  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { const d = e.key === 'ArrowDown' ? 1 : -1; if (items.length) items[(Math.max(i, d > 0 ? -1 : 0) + d + items.length) % items.length].focus(); }
-  else if ((e.key === 'Home' || e.key === 'End') && !inField) { if (items.length) items[e.key === 'Home' ? 0 : items.length - 1].focus(); }
-  else if (e.key === 'Escape') closeSaveDD();
-  else if (e.key === 'Enter' && inField) { if (!e.repeat && e.keyCode !== 229) createListFromDD(input, dd.key); }
-  else return;
-  e.preventDefault(); e.stopPropagation();
-}
-/* The open picker follows the lists and its paper: each row patched in place (its tick; off where its list went, and
-   why), the ☰ found again and the menu placed again; the field is not touched. It closes when its paper is gone,
-   deleted on GitHub, or no longer shows where it opened from. */
-function saveDDSync() {
-  pressReconcile();   // every change passes here: a press it turned stale stays stale
-  const dd = _activeSaveDD;
-  if (!dd) return;
-  const p = feedRow(dd.key);
-  if (!p || p._goneRemote || !isOwner() || !saveDDAnchor(dd)) { closeSaveDD(); return; }
-  dd.names.forEach(n => { if (n !== TO_READ && (!hasList(n) || listGone(n))) dd.dead.add(n); });   // for good, in this picker
-  dd.el.querySelectorAll('.save-dd-item').forEach(b => {
-    const n = b.dataset.n, on = ddHas(n, dd.key), ok = ddDestOK(n, dd.key);
-    b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); b.disabled = !ok;
-    const t = b.querySelector('.dd-check'); if (t) { t.classList.toggle('on', on); t.innerHTML = on ? '&#10003;' : ''; }
-    const why = b.querySelector('.dd-why'), nm = b.querySelector('.dd-n');
-    if (!ok && !why && nm) nm.insertAdjacentHTML('beforeend', '<span class="dd-why">Unavailable</span>');
-    else if (ok && why) why.remove();
-  });
-  saveDDPlace();
-  if (dd.from && dd.from.setAttribute) dd.from.setAttribute('aria-expanded', 'true');
-}
-/* A new project from the picker's field with the paper in it, or an existing one typed by name: saved to (never
-   replaced). "To read" is itself, made by this add when it is not there yet. A survey lane, a name that went elsewhere
-   (the picker never brings one back: Library does), a taken kept name, "|" or a name every object has is refused with
-   the name selected to fix. Checked again at the commit, after the paper itself (correction 2). */
-function createListFromDD(input, key) {
-  const typed = String(input && input.value != null ? input.value : '').trim();
-  if (!typed) return false;
-  const dd = _activeSaveDD && _activeSaveDD.key === key ? _activeSaveDD : null;
-  const refuse = m => { toast(m); if (input.select) input.select(); return false; };
-  if (isMachineLane(typed)) return refuse(laneMessage(typed));
-  if (listGone(typed) || (dd && dd.dead.has(typed))) return refuse(goneMessage(typed));
-  let name;
-  if (readingListTyped(typed)) name = TO_READ;   // the general list, by its shown or stored name
-  else if (hasList(typed) && isProjectName(typed)) name = typed;   // there already: saved to as it is
-  else { name = checkListName(typed); if (!name) { if (input.select) input.select(); return false; } }
-  const h = hiddenRowOf(key), p = h || feedPaper(key);
-  if (!p) return false;
-  if (p._goneRemote) return refuse(goneRowMessage());
-  if (!hasList(name)) libraryLists[name] = [];   // new, or To read's first add
-  if (!libraryLists[name].includes(key)) libraryLists[name].push(key);
-  if (h) hiddenList(h, name, true);   // a hidden paper: its own row
-  persistLists(); updateLibraryBadge();
-  input.value = '';
-  if (dd && !dd.names.includes(name)) {   // a new project: a row of its own, above To read, in this picker
-    dd.names.splice(dd.names.indexOf(TO_READ) >= 0 ? dd.names.indexOf(TO_READ) : dd.names.length, 0, name);
-    const list = dd.el.querySelector('.save-dd-list'), toRead = [...list.querySelectorAll('.save-dd-item')].find(b => b.dataset.n === TO_READ);
-    if (toRead) toRead.insertAdjacentHTML('beforebegin', ddRowHTML(name, key)); else list.insertAdjacentHTML('beforeend', ddRowHTML(name, key));
-  }
-  toast(`Saved to "${esc(listLabel(name))}"`);
-  refreshPaper(key, { list: name });
-  return true;
-}
-/* One list ticked or unticked for a paper from the picker (or by name). The destination is checked at the commit: a
-   survey lane never (before the hidden-row branch too), a list that went elsewhere or is not here never, To read made by
-   its first add; a hidden paper's own row lists come off its row. A paper deleted on GitHub takes no more changes.
-   Returns whether it wrote. */
-function toggleListItem(listName, key) {
-  const dd = _activeSaveDD && _activeSaveDD.key === key ? _activeSaveDD : null;
-  if (isMachineLane(listName)) { toast(laneMessage(listName)); saveDDSync(); return false; }
-  const h = hiddenRowOf(key), p = h || feedPaper(key);
-  if (!p) return false;
-  if (p._goneRemote) { toast(goneRowMessage()); saveDDSync(); return false; }
-  if (dd && dd.dead.has(listName)) { toast(goneMessage(listName)); saveDDSync(); return false; }   // went while this picker was open: off for good in it, carried by a hidden row or not
-  const carried = h ? rowLists(h).includes(listName) : false;
-  if (!carried && ((dd && !dd.names.includes(listName)) || !listDestOK(listName))) { toast(goneMessage(listName)); saveDDSync(); return false; }
-  if (h) hiddenList(h, listName, !carried);   // a hidden paper: its own row
-  else {
-    const on = !(hasList(listName) && libraryLists[listName].includes(key));
-    if (on) (hasList(listName) ? libraryLists[listName] : (libraryLists[listName] = [])).push(key);   // To read is made by its first add
-    else libraryLists[listName] = libraryLists[listName].filter(x => x !== key);
-  }
-  persistLists(); updateLibraryBadge();
-  refreshPaper(key, { list: listName });
-  return true;
-}
-/* The page's ☰ after a list change: kept for its callers; paperBarSync does the work */
-function updateListIcon(key) { if (_paperViewActive) paperBarSync(); }
-function closeSaveDD() {
-  const dd = _activeSaveDD;
-  if (!dd) return;
-  _activeSaveDD = null;
-  if (dd.done) dd.done();
-  const inside = dd.el.contains(document.activeElement);
-  dd.el.remove();
-  const a = saveDDAnchor(dd);
-  if (a && a.setAttribute) a.setAttribute('aria-expanded', 'false');
-  if (inside && a && a.focus) a.focus({ preventScroll: true });   // back where it opened from
-  pressReconcile();   // a press on this picker is dead for good
-}
 /* A tap outside closes the menus. Scrolling the page by hand closes them too (the wheel, a finger, the keys that
    scroll); a scroll the page makes itself (a row redrawn above, a jump) only places them again, so a draft in the
    picker's field survives it. */
 function menuScrollIntent(e) {
   const lm = ListMenu.cur ? ListMenu.cur.el : null;
-  if (!_activeSaveDD && !_copyDD && !lm) return;
-  if (e.target && ((_activeSaveDD && _activeSaveDD.el.contains(e.target)) || (_copyDD && _copyDD.el.contains(e.target)) || (lm && lm.contains(e.target)))) return;
+  if (!_copyDD && !lm) return;
+  if (e.target && ((_copyDD && _copyDD.el.contains(e.target)) || (lm && lm.contains(e.target)))) return;
   if (e.type === 'wheel' && e.ctrlKey) return;   // a pinch on a trackpad zooms: the menu is placed again
   if (e.type === 'keydown' && !['PageUp', 'PageDown', 'Home', 'End', ' ', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
   if (e.type === 'keydown' && e.target && (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable)) return;
-  closeSaveDD(); closeCopyDD(); closeListMenu();
+  closeCopyDD(); closeListMenu();
 }
 ['wheel', 'touchmove', 'keydown'].forEach(t => document.addEventListener(t, menuScrollIntent, { capture: true, passive: true }));
-document.addEventListener('click', () => { closeSaveDD(); closeAbsPopup(); closeVenueTooltip(); closeRelevancePopup(); });
+document.addEventListener('click', () => { closeAbsPopup(); closeVenueTooltip(); closeRelevancePopup(); });
 /* While the page moves, rows sliding under a still mouse don't open or light up (from Sumanth's ba20392): each one
    opening pushed every row below it down and laid the list out again every frame. #mainScroll carries .scrolling until
    160 ms after the last scroll; the rows' hover rules skip it (:where, so their specificity and the touch overrides are
@@ -12543,14 +12552,13 @@ document.getElementById('mainScroll').addEventListener('scroll', e => {
   const ms = e.currentTarget; ms.classList.add('scrolling');
   clearTimeout(_scrollStill); _scrollStill = setTimeout(() => ms.classList.remove('scrolling'), 160);
 }, { passive: true });
-document.getElementById('mainScroll').addEventListener('scroll', () => { if (_activeSaveDD) saveDDPlace(); if (_copyDD && _copyDD.place) _copyDD.place(); if (ListMenu.cur) placeListMenu(); closeAbsPopup(); closeVenueTooltip(); closeRelevancePopup(); }, { passive: true });
+document.getElementById('mainScroll').addEventListener('scroll', () => { if (_copyDD && _copyDD.place) _copyDD.place(); if (ListMenu.cur) placeListMenu(); closeAbsPopup(); closeVenueTooltip(); closeRelevancePopup(); }, { passive: true });
 
 /* [5] Micro-interaction: pop animation on toggle. A star or a read mark made here draws only what shows the paper
    (refreshPaper); a paper deleted on GitHub and kept for an unsaved edit takes no more changes. Phase 25: nothing on
    screen stars a paper any more (is_starred stays in the data and still counts as liked); toggleStar stays for the
    save machinery's tests. */
 function toggleStar(k, btn) {
-  closeSaveDD();
   const h = hiddenRowOf(k), p = h || feedPaper(k);
   if (p && p._goneRemote) { toast(goneRowMessage()); return; }
   if (h) hiddenMark(h, 'is_starred', starSet, h.is_starred !== 'true');   // a hidden paper: its own row
@@ -12560,7 +12568,6 @@ function toggleStar(k, btn) {
   refreshPaper(k, { star: true });
 }
 function toggleRead(k, btn) {
-  closeSaveDD();
   const h = hiddenRowOf(k), p = h || feedPaper(k);
   if (p && p._goneRemote) { toast(goneRowMessage()); return; }
   if (p?.uploaded) {
@@ -12581,7 +12588,6 @@ function toggleRead(k, btn) {
 function hidePaper(k, reason) {
   const p = allPapers.find(x => paperKey(x) === k);
   if (!p) return;
-  closeSaveDD();
   flushStateToCSV();
   p.is_hidden = 'true';
   if (hideReasonsKept()) p.hide_reason = reason || '';
@@ -12657,7 +12663,7 @@ function askHide(k, opts) {
   const p = allPapers.find(x => paperKey(x) === k);
   if (!p) return;
   const rec = opts && opts.rec ? opts.rec : 0;
-  closeSaveDD(); closeSaveSheet();
+  closeSaveSheet();
   let s = document.getElementById('hideSheet');
   if (!s) {
     s = document.createElement('div'); s.id = 'hideSheet'; s.className = 'hide-sheet';
@@ -12734,7 +12740,7 @@ function refresh() {
   // A list page stays live (a paper marked read leaves it, stars show); the page underneath redraws on the way back
   if (_listViewActive) { renderListPage(); return; }
   if (_paperViewActive) { paperViewSync(); return; }   // the page from its row as it is now (received topics, notes, related papers), or unavailable
-  if (_searchActive) { searchFilterRender(); saveDDSync(); }   // search shows over the tab it was opened from: it first, with what it filters and counts; the tab under it below, as before
+  if (_searchActive) { searchFilterRender(); saveSheetSync(); }   // search shows over the tab it was opened from: it first, with what it filters and counts; the tab under it below, as before
   if (feedActive()) feedRefresh();   // the feed keeps its posts where they are
   else if (['all','email'].includes(currentTab)) applyFilters();
   else if (currentTab === 'library') renderLibrary();
@@ -12746,10 +12752,10 @@ function refresh() {
    saved first (persistStars, persistRead, persistLists), and that save bar ran viewsSync. */
 function refreshPaper(k, what) {
   if (_listViewActive) { renderListPage(); return; }   // a list page stays live, as before
-  if (_paperViewActive) { paperBarSync(); rowsSync(document.getElementById('paperDetail'), k); saveDDSync(); return; }   // the bar, a related paper's row, the picker
+  if (_paperViewActive) { paperBarSync(); rowsSync(document.getElementById('paperDetail'), k); saveSheetSync(); return; }   // the bar, a related paper's row, the picker
   if (_searchActive) { searchRepaint(k, what || {}); return; }   // search shows over the tab it was opened from (Library too): it first
   if (feedActive()) { feedRepaintPost(k); return; }   // the sheet, the records and the presses followed in the save bar (viewsSync)
-  if (currentTab === 'library') { libraryRepaint(k, what || {}); saveDDSync(); return; }
+  if (currentTab === 'library') { libraryRepaint(k, what || {}); saveSheetSync(); return; }
   refresh();   // any other view: as before
 }
 /* Search results after one paper changed: its rows in place; a read mark with "Unread only" on changes which results
@@ -12758,11 +12764,10 @@ function searchRepaint(k, what) {
   if (what.read && _searchFilters.unread) searchFilterRender();
   else rowsSync(document.getElementById('sec-search'), k);
   saveSheetSync();
-  saveDDSync();
 }
 /* Every view that shows marks follows a change: the feed's sheet, records and presses, a paper page's bar and the open
    picker. Called wherever feedSync was: the lists read (bootstrapStateFromCSV) and every save bar (showSaveBar). */
-function viewsSync() { similarPaint(); listOpsWatch(); listAddSettle(); feedSync(); paperBarSync(); saveDDSync(); }
+function viewsSync() { listingPaneSync(); similarPaint(); listOpsWatch(); listAddSettle(); feedSync(); paperBarSync(); saveSheetSync(); }
 /* One paper's rows under `root` drawn again in place from the row as it is now (Library's rows, a page's related papers,
    search results), focus kept with the row */
 function rowsSync(root, k) {
@@ -13282,7 +13287,7 @@ let _kbKey = null, _kbHinted = false;
 function kbRows() {
   let scope = null;
   if (_listViewActive) scope = document.getElementById('lpBody');
-  else if (_searchActive) scope = document.getElementById('sec-search');
+  else if (_searchActive) scope = document.getElementById('searchRows');
   else if (currentTab === 'library') scope = document.getElementById('sec-library');
   else if (['all', 'email'].includes(currentTab) && !document.body.classList.contains('feed-mode')) scope = document.getElementById('papersContent');
   if (!scope) return [];
@@ -13372,7 +13377,7 @@ document.addEventListener('keydown', e => {
   t.click();
 });
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeRelevancePopup(); closeAbsPopup(); closeSaveDD(); _resolveGeneric(null); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeRelevancePopup(); closeAbsPopup(); _resolveGeneric(null); } });
 
 /* ===== LIBRARY ===== */
 let _openLibGroups = new Set(['progress']);   // every group starts collapsed except In progress; opening one is remembered for the visit
@@ -13385,6 +13390,7 @@ function toggleLibGroup(headerEl, key) {
   if (disc) disc.setAttribute('aria-expanded', String(open));   // Phase 25 (Sol's correction 8): the disclosure says so
   if (open) _openLibGroups.add(key);
   else { _openLibGroups.delete(key); listMenuSync(); }   // a list's menu opened from inside it closes with it
+  listingPaneSync();
 }
 /* Collapsed lists ("All" has ~1,000 papers) render their rows only when opened */
 let _libPapers = {};
@@ -13426,7 +13432,7 @@ function uploadRowHTML(p) {
   const ka = escAttr(p.id), ix = Vault.index && Vault.index.papers[p.id], read = readSet.has(p.id);
   const added = (_uploads[p.id].added || '').slice(0, 10);
   const counts = ix ? [ix.g && `${ix.g} note${ix.g === 1 ? '' : 's'}`, ix.h && `${ix.h} highlight${ix.h === 1 ? '' : 's'}`, ix.c && `${ix.c} comment${ix.c === 1 ? '' : 's'}`, ix.d && 'handwriting'].filter(Boolean).join(' · ') : '';
-  return `<article class="topic-item top-row${read ? ' is-read' : ''}" tabindex="0" data-upload="${ka}" onclick="openPaper('${ka}',event)">
+  return `<article class="topic-item top-row${read ? ' is-read' : ''}" tabindex="0" data-key="${ka}" data-upload="${ka}" onclick="openPaper('${ka}',event)">
     <div class="tr-main">
       <div class="tr-headline">${esc(p.headline || p.title)}</div>
       ${p.headline ? `<div class="tr-title">${esc(p.title)}</div>` : ''}
@@ -13934,10 +13940,10 @@ function renderLibrary() {
   if (editing) { const input = document.querySelector('.review-folder-edit'); if (input) { input.focus({ preventScroll: true }); input.setSelectionRange(...selection); } }
 }
 /* After Library is drawn whole, every element in it is new: a picker opened from one of its rows finds its ☰ again by
-   paper and group, or closes when that row is no longer there (saveDDSync); the Copy menu closes when its list can no
+   paper and group, or closes when that row is no longer there (saveSheetSync); the Copy menu closes when its list can no
    longer be copied from or its group is gone; a press on what went is dead for good. */
 function libraryDrawn() {
-  if (_activeSaveDD && !_activeSaveDD.page) saveDDSync();
+  listingPaneSync();
   // design fixes round 2: the Save sheet opened from a Library row finds that paper's Save again in its group, as the
   // picker did, and stays open; it closes (saveSheetSync) when the row is no longer there
   const sh = Feed.sheet;
@@ -16796,20 +16802,27 @@ function dlMenuKey(e) {
 function dlMenuHTML(p) {
   const info = Dl.info || { has: false, here: false }, ios = dlIOS(), off = !info.has || !!Dl.busy;
   const item = (kind, label, small) => {
-    if (Dl.ready && Dl.ready.kind === kind) return `<button type="button" class="dl-item dl-go" role="menuitem" data-kind="${kind}" onclick="event.stopPropagation();paperDownloadHandoff()">${DL_ICON}<span>${Dl.ready.mode === 'open' ? 'Open PDF' : 'Save'}</span></button>`;
-    return `<button type="button" class="dl-item" role="menuitem" data-kind="${kind}"${off ? ' disabled' : ''} onclick="event.stopPropagation();paperDownloadGo('${kind}').catch(()=>{})">${DL_ICON}<span>${Dl.busy === kind ? 'Preparing…' : label}<small>${esc(small)}</small></span></button>`;
+    if (Dl.ready && Dl.ready.kind === kind) return `<button type="button" class="dl-item dl-go" role="menuitem" data-kind="${kind}" onclick="event.stopPropagation();paperDownloadChoose(this).catch(()=>{})">${DL_ICON}<span>${Dl.ready.mode === 'open' ? 'Open PDF' : 'Save'}</span></button>`;
+    return `<button type="button" class="dl-item" role="menuitem" data-kind="${kind}"${off ? ' disabled' : ''} onclick="event.stopPropagation();paperDownloadChoose(this).catch(()=>{})">${DL_ICON}<span>${Dl.busy === kind ? 'Preparing…' : label}<small>${esc(small)}</small></span></button>`;
   };
   let h = item('plain', ios ? 'Save PDF to Files' : 'Download PDF', 'The paper as published') + item('annotated', ios ? 'Save your copy to Files' : 'Download your copy', 'With your notes, highlights and writing');
   if (!info.has) h += `<p class="dl-note">${p.uploaded ? 'Add its PDF on this device to read or download it.' : 'This paper has no open PDF'}</p>`;
   if (Dl.failed) h += "<p class=\"dl-note dl-bad\" role=\"status\">Couldn't download this paper. Try again.</p>";
-  const keep = keptActionLabel(p), foot = (info.here ? `<div class="dl-foot">On this ${esc(copyDeviceName())}, opens offline</div>` : '') + (keep ? `<button type="button" class="dl-item dl-noico dl-keep" role="menuitem" onclick="event.stopPropagation();keptPaperAction(this.closest('#keptPaperMenu').dataset.id)"><span>${esc(keep)}</span></button>` : '');
+  const keep = keptActionLabel(p), foot = (info.here ? `<div class="dl-foot">On this ${esc(copyDeviceName())}, opens offline</div>` : '') + (keep ? `<button type="button" class="dl-item dl-noico dl-keep" role="menuitem" onclick="event.stopPropagation();paperDownloadChoose(this).catch(()=>{})"><span>${esc(keep)}</span></button>` : '');
   if (foot) h += '<div class="dl-sep"></div>' + foot;
   return h;
+}
+async function paperDownloadChoose(button) {
+  const menu = button?.closest('#keptPaperMenu');
+  if (!button?.isConnected || !menu || menu !== document.getElementById('keptPaperMenu') || menu.dataset.id !== Dl.id || !shownPaperControl(menu.dataset.id, 'paperDownload')) return false;
+  if (button.classList.contains('dl-keep')) return keptPaperAction(menu.dataset.id);
+  if (button.classList.contains('dl-go')) return paperDownloadHandoff();
+  return paperDownloadGo(button.dataset.kind);
 }
 function dlMenuSync() {
   const m = document.getElementById('keptPaperMenu'); if (!m) return;
   const p = findPaper(m.dataset.id), body = m.querySelector('.dl-body');
-  if (!p || !body) { keptPaperClose(); return; }
+  if (!p || !body || !shownPaperControl(m.dataset.id, 'paperDownload')) { keptPaperClose(); return; }
   if (Dl.ready && !copySnapshotCurrent(Dl.ready.file._copySnapshot)) Dl.ready = null;   // the notes changed or were locked since
   const html = dlMenuHTML(p);
   if (m._html !== html) {
@@ -16819,13 +16832,14 @@ function dlMenuSync() {
   }
 }
 async function paperDownloadMenu(button, id) {
+  if (!shownPaperControl(id, 'paperDownload', button)) return;
   const open = document.getElementById('keptPaperMenu');
   closePopovers();
-  if (open || !_paperViewActive) return;
+  if (open) return;
   requireOwner();
   const p = findPaper(id), epoch = capturePrivateEpoch(); if (!p) return;
   const info = await privateAwait(dlInfo(p), epoch);
-  if (!_paperViewActive || !button.isConnected || document.getElementById('keptPaperMenu')) return;
+  if (!shownPaperControl(id, 'paperDownload', button) || document.getElementById('keptPaperMenu')) return;
   if (Dl.id !== id) { Dl.id = id; Dl.op++; Dl.busy = ''; Dl.ready = null; }
   Dl.failed = false;
   if (Dl.ready && !copySnapshotCurrent(Dl.ready.file._copySnapshot)) Dl.ready = null;
@@ -16845,6 +16859,7 @@ async function paperDownloadMenu(button, id) {
   dlMenuFocus(menu);
 }
 async function keptPaperAction(id) {
+  if (!shownPaperControl(id, 'paperDownload')) return false;
   keptPaperClose();
   if (!keptActionLabel(findPaper(id))) return false;
   return keptHand(id) ? keptRemove(id) : keptKeep(id);
@@ -16872,7 +16887,7 @@ function dlFail(show) {
 }
 async function paperDownloadGo(kind) {
   const id = Dl.id, p = findPaper(id);
-  if (!p || Dl.busy || !['plain', 'annotated'].includes(kind)) return;
+  if (!p || Dl.busy || !['plain', 'annotated'].includes(kind) || !shownPaperControl(id, 'paperDownload')) return;
   requireOwner();
   const epoch = capturePrivateEpoch(), op = ++Dl.op, gen = Dl.gen, live = () => op === Dl.op;
   Dl.busy = kind; Dl.failed = false; Dl.ready = null; dlMenuSync();
@@ -16909,17 +16924,18 @@ async function paperDownloadGo(kind) {
 /* Design fixes round 2 (finding 4): the Download menu closed for the notes password comes back once they are unlocked,
    as it stays open when they already were: preparing, then the Save or Open that a second tap needs (an iPhone whose
    tap expired while it prepared, or that cannot share files). Only for the same sign-in, the same Download (op) before
-   any lock or sign-out (Dl.gen), notes still unlocked, on that paper's page with no menu open; what it offers is checked
+   any lock or sign-out (Dl.gen), notes still unlocked, with that paper visible and no menu open; what it offers is checked
    at every draw and tap as before (copySnapshotCurrent: the epoch, the vault and the paper's notes generation). */
 function dlReopen(id, epoch, gen, live) {
   try { checkPrivateEpoch(epoch); requireOwner(); } catch (e) { return; }
-  const b = document.getElementById('paperDownload');
-  if (!live() || gen !== Dl.gen || Dl.id !== id || !copyNotesUnlocked() || !_paperViewActive || !b || !b.isConnected || b.dataset.pid !== id || document.getElementById('keptPaperMenu')) return;
+  const b = shownPaperControl(id, 'paperDownload');
+  if (!live() || gen !== Dl.gen || Dl.id !== id || !copyNotesUnlocked() || !b || document.getElementById('keptPaperMenu')) return;
   paperDownloadMenu(b, id).catch(() => {});
 }
 /* The second tap: sharing needs a fresh one when preparing took long */
 function paperDownloadHandoff() {
   const r = Dl.ready; if (!r || Dl.sending) return;
+  if (!shownPaperControl(Dl.id, 'paperDownload') || r.file._copySnapshot?.id !== Dl.id) { Dl.ready = null; keptPaperClose(); return; }
   const epoch = capturePrivateEpoch();
   try { requireOwner(); if (!copySnapshotCurrent(r.file._copySnapshot)) throw Error('copy_stale'); } catch (e) { Dl.ready = null; dlFail(true); dlMenuSync(); return; }
   if (r.mode === 'open') { dlLink(r.file, true); Dl.ready = null; keptPaperClose(); return; }
@@ -17259,6 +17275,7 @@ function toggleReviewFolder(button) {
   requireOwner(); const group = button.closest('.review-folder'), open = button.getAttribute('aria-expanded') !== 'true';
   button.setAttribute('aria-expanded', String(open)); group.querySelector('.review-folder-body').hidden = !open;
   if (open) _openLibGroups.add(group.dataset.lib); else _openLibGroups.delete(group.dataset.lib);
+  listingPaneSync();
 }
 function closeReviewFolderMenus() {
   _reviewMenu = null;
@@ -17778,10 +17795,7 @@ function uploadBriefStateHTML(id, row = false) {
   return '';
 }
 function uploadBriefPaint() {
-  if (!isOwner()) return;
-  if (currentTab === 'library') renderLibrary();
-  const id = document.querySelector('#paperDetail .pd-article[data-pid]')?.dataset.pid;
-  if (id?.startsWith('up-') && _paperViewActive) { const p = uploadById(id); if (p) renderPaperDetail(p); else { homeGo('#lists', true); listsShowReview(); } }
+  if (isOwner()) reviewRefresh();   // the upload's rows, selected pane and standalone page follow the same refresh
 }
 function uploadBriefCancel(id) {
   try { uploadQuestionsCancel(id); } catch (e) { console.error(e); }
@@ -20381,14 +20395,15 @@ async function resetLocalVault(newMeta) { const _authEpoch = capturePrivateEpoch
   if (_acId) { _acId = null; document.getElementById('annoCard').classList.remove('open'); }
   _acPending = null; endDraft('discard');
   Vault.key = null; Vault.index = null; Vault.cache.clear(); Vault.meta = newMeta || null; _rn = null;
-  await privateAwait(notesDB('files', 'readwrite', st => { checkVaultGeneration(generation); return st.clear(); }), _authEpoch); requireOwner(); checkVaultGeneration(generation);
-  await privateAwait(notesDB('keys', 'readwrite', st => { checkVaultGeneration(generation); return st.clear(); }), _authEpoch); requireOwner(); checkVaultGeneration(generation);
-  await privateAwait(usDB('readwrite', st => { checkVaultGeneration(generation); return st.clear(); }), _authEpoch); requireOwner(); checkVaultGeneration(generation);   // UPLOAD STATE
-  if (newMeta) await privateAwait(nfPut('_vault.json', { env: newMeta, sha: null, base: newMeta.updated, dirty: false }), _authEpoch);
+  // Scrub before storage cleanup: a slow or failed deletion cannot leave decrypted notes mounted.
   hideSelBar();
   if (_reader.paper) { redrawAnnoLayers(); setRnState('ready'); }
   if (currentTab === 'library') renderLibrary();
   repaintShownPapers();
+  await privateAwait(notesDB('files', 'readwrite', st => { checkVaultGeneration(generation); return st.clear(); }), _authEpoch); requireOwner(); checkVaultGeneration(generation);
+  await privateAwait(notesDB('keys', 'readwrite', st => { checkVaultGeneration(generation); return st.clear(); }), _authEpoch); requireOwner(); checkVaultGeneration(generation);
+  await privateAwait(usDB('readwrite', st => { checkVaultGeneration(generation); return st.clear(); }), _authEpoch); requireOwner(); checkVaultGeneration(generation);   // UPLOAD STATE
+  if (newMeta) await privateAwait(nfPut('_vault.json', { env: newMeta, sha: null, base: newMeta.updated, dirty: false }), _authEpoch);
   toast(newMeta ? 'Your notes were given a new password on another device. Unlock them with it.' : 'Your notes were reset. Set a password to start again.', null, { duration: 6000 });
 }
 async function loadPrivateIndex(key, generation) {
@@ -25015,6 +25030,7 @@ function openPaper(id, event) {
     window.open((SHARE_PAGES && !uploaded ? APP_ROOT + 'p/' + paperId + '/' : APP_ROOT) + location.search + '#paper/' + paperId, '_blank');
     return;
   }
+  if (twoPane() && listingPaneOpen(id)) return;
   location.hash = '#paper/' + paperId;
 }
 
@@ -25097,7 +25113,7 @@ function relevanceCardHTML(p, ka) {
    the focus goes back to ⋯. It closes when the page is drawn without its button. */
 const PaperMenu = { cur: null, seq: 0, step: null };
 function paperMoreButton(p) {
-  return `<button type="button" class="pd-act pd-more" id="paperMore" data-act="more" aria-label="More" title="More" aria-haspopup="menu" aria-expanded="false" onclick="event.stopPropagation();paperMenuOpen(this,'${escAttr(paperKey(p))}')">&#8943;</button>`;
+  return `<button type="button" class="pd-act pd-more" id="paperMore" data-pid="${dataAttr(paperKey(p))}" data-act="more" aria-label="More" title="More" aria-haspopup="menu" aria-expanded="false" onclick="event.stopPropagation();paperMenuOpen(this,'${escAttr(paperKey(p))}')">&#8943;</button>`;
 }
 function paperMenuItems(p) {
   if (p.uploaded) return [['title', 'Edit title'], ['remove', 'Remove', true]];
@@ -25105,10 +25121,11 @@ function paperMenuItems(p) {
 }
 function paperMenuOpen(btn, k) {
   requireOwner();
-  if (PaperMenu.cur) { const same = PaperMenu.cur.k === k; paperMenuClose(true, same); if (same) return; }
   const p = feedRow(k);
-  if (!p || p._goneRemote || !btn || !btn.isConnected || !_paperViewActive) return;
+  if (!p || p._goneRemote || !shownPaperControl(k, 'paperMore', btn)) return;
+  if (PaperMenu.cur) { const same = PaperMenu.cur.k === k; paperMenuClose(true, same); if (same) return; }
   closePopovers(); keptPaperClose();
+  if (!shownPaperControl(k, 'paperMore', btn)) return;   // closing Save can advance the pane
   const id = ++PaperMenu.seq, m = document.createElement('div');
   m.id = 'paperMenu'; m.className = 'sort-menu paper-menu'; m.dataset.menu = String(id);
   m.setAttribute('role', 'menu'); m.setAttribute('aria-label', 'More');
@@ -25124,8 +25141,8 @@ function paperMenuOpen(btn, k) {
 }
 function paperMenuPlace() {
   const cur = PaperMenu.cur; if (!cur) return;
-  const btn = document.getElementById('paperMore');
-  if (!btn || !btn.isConnected || !_paperViewActive || (document.querySelector('#paperDetail .pd-article[data-pid]') || {}).dataset?.pid !== cur.k) { paperMenuClose(); return; }
+  const btn = shownPaperControl(cur.k, 'paperMore');
+  if (!btn) { paperMenuClose(); return; }
   btn.setAttribute('aria-expanded', 'true'); btn.setAttribute('aria-controls', cur.el.id);
   placePopover(cur.el, btn);
 }
@@ -25158,7 +25175,7 @@ function paperMenuChoose(item) {
   const cur = PaperMenu.cur, m = item && item.closest ? item.closest('#paperMenu') : null;
   if (!cur || !m || Number(m.dataset.menu) !== cur.id) return;
   checkPrivateEpoch(cur.epoch);
-  const k = cur.k, v = item.dataset.v, p = feedRow(k), live = !!p && !p._goneRemote;
+  const k = cur.k, v = item.dataset.v, p = feedRow(k), live = !!p && !p._goneRemote && !!shownPaperControl(k, 'paperMore');
   // Hide paper's sheet, Edit title's prompt and Remove's question keep the menu's step in history, so Back closes them
   // on the same page, as it closes the menu. Closing them any other way takes the step back.
   const asks = live && (p.uploaded ? v === 'title' || v === 'remove' : v === 'hide' && !isHiddenRow(p));
@@ -25230,6 +25247,11 @@ function uploadQuestionsCancel(id) {
   // Decrypted answers leave memory and the screen with the key (a lock, a reset) or with the paper (a removal)
   for (const pid of [...Brief.files.keys(), ...Brief.loading.keys()]) if (/^up-/.test(pid) && (!id || id === pid)) { Brief.files.delete(pid); Brief.loading.delete(pid); }
   if (Brief.sheet && /^up-/.test(Brief.sheet.pid) && (!id || id === Brief.sheet.pid)) briefSheetHide();
+  document.querySelectorAll('.pane-questions').forEach(el => {
+    const pid = el.querySelector('[data-brief]')?.dataset.brief;
+    if (/^up-/.test(pid || '') && (!id || id === pid)) el.remove();
+  });
+  if (/^up-/.test(Brief.inline || '') && (!id || id === Brief.inline)) Brief.inline = null;
 }
 async function uploadQuestionsRecipe(epoch) {
   if (UploadQuestions.recipe) return UploadQuestions.recipe;
@@ -25383,7 +25405,7 @@ async function uploadQuestionsAsk(id) {
       }));
     })());
     check();
-    if (result) { briefKeep(id, result); briefRedraw(id); if (opened) briefSheetOpen(id); }
+    if (result) { briefKeep(id, result); briefRedraw(id); if (opened && shownPaperArticle(id) && !document.getElementById('reader').classList.contains('open')) briefSheetOpen(id); }
   } catch (e) {
     try {
       check();
@@ -25458,9 +25480,9 @@ function pagePass(k) {
   refresh();
   return true;
 }
-/* The paper's page as HTML: { bar, article, glow }. Nothing here touches the document; paperPostRender does what needs
+/* The full paper view as HTML: { bar, article, glow }. Nothing here touches the document; paperPostRender does what needs
    the page in place. */
-function paperPageHTML(p, opts) {
+function paperViewHTML(p, opts) {
   opts = opts || {};
   const k = paperKey(p), ka = escAttr(k);
   const marks = paperMarks(p), ir = marks.read, inAny = marks.listed;   // a hidden paper's from its row
@@ -25505,26 +25527,27 @@ function paperPageHTML(p, opts) {
 
   // Heading: venue + date, Claude's headline (else the real title), the real title as the subheading, authors, why it's here
   const headline = hasText(p.headline) ? p.headline : (p.title || '');
-  const dek = hasText(p.title) && p.title.trim() !== headline.trim() ? `<p class="pd-dek">${esc(p.title)}</p>` : '';
+  const dek = hasText(p.title) && p.title.trim() !== headline.trim() ? `<p class="pd-dek pv-title">${esc(p.title)}</p>` : '';
   const glowGroups = shownTopics(p);   // confirmed topics, in order: the glow and its chips (none while SHOW_TOPICS is off)
   const head = `<header class="pd-head">
     ${gone ? '<p class="pd-gone" role="status">This paper was removed from your library. Changes to it can’t be saved.</p>' : ''}
     ${glowGroups.length ? `<div class="pd-topicline">${glowGroups.map(g => `<button class="pd-topic-chip" onclick="openGroup('${escAttr(g)}')" title="All ${dataAttr(g)} papers">${gdot(g)}${esc(g)}</button>`).join('')}</div>` : ''}
     <div class="pd-kicker">${[hasText(p.venue) ? venueLinkHTML(p, 'pd-venue') : '', displayDate(p) ? `<span>${esc(displayDate(p))}</span>` : '', p.uploaded ? '' : `<span class="f-rel rel-${rel}"><i></i>${relLabel(rel)}</span>`].join('')}</div>
-    <h1 class="pd-title">${esc(headline)}</h1>
+    <h1 class="pd-title pv-headline">${esc(headline)}</h1>
     ${dek}
-    ${hasText(p.authors) ? `<div class="pd-authors">${esc(p.authors)}</div>` : ''}
+    ${hasText(p.authors) ? `<div class="pd-authors pv-by">${opts.pane ? authorLinksHTML(p.authors, p.uploaded ? null : followMarks(p, true)) : esc(p.authors)}</div>` : ''}
     ${p.uploaded ? `<div class="upload-brief-state" data-upload-state="${dataAttr(p.id)}">${uploadBriefStateHTML(p.id)}</div>` : ''}
     ${briefChipBoxHTML(p)}
     ${p.uploaded ? reviewChipsHTML(p.id) : ''}
     ${parseWhy(p) ? `<div class="pd-why"><span class="pd-why-label">Why it's here</span>${whyHTML(p)}</div>` : ''}
+    ${opts.pane && twoPane() && Brief.inline === p.id ? `<section class="pane-questions">${briefSheetHTML(p.id, true)}</section>` : ''}
   </header>`;
 
   // Reading column
   let main = '';
-  if (hasText(p.summary)) main += `<section class="pd-section"><h2>Summary</h2><p class="pd-prose">${esc(p.summary)}</p></section>`;
+  if (hasText(p.summary)) main += `<section class="pd-section"><h2>Summary</h2><p class="pd-prose pv-summary">${esc(p.summary)}</p></section>`;
   else if (!hasText(p.abstract) && !(hasNotes || (ix && ix.h + ix.c))) main = `<p class="pd-empty">${p.uploaded ? 'No summary or abstract yet.' : 'No summary or abstract yet. Open the paper to read it at the source.'}</p>`;
-  if (hasText(p.abstract)) main += `<section class="pd-section"><h2>Abstract</h2><p class="pd-prose" data-abs-tex>${esc(p.abstract)}</p>${p.uploaded ? '' : '<p class="pd-attribution">Some abstracts are provided by Semantic Scholar and OpenAlex.</p>'}</section>`;
+  if (hasText(p.abstract)) main += `<section class="pd-section"><h2>Abstract</h2><p class="pd-prose pv-abstract" data-abs-tex>${esc(p.abstract)}</p>${p.uploaded ? '' : '<p class="pd-attribution">Some abstracts are provided by Semantic Scholar and OpenAlex.</p>'}</section>`;
   if (hasNotes || (ix && ix.h + ix.c)) main += `<section class="pd-section pd-notes"><h2>Your notes ${pencilDevice() ? `<button class="pd-edit" onclick="openReader('${ka}', 'new')">+ Type</button><button class="pd-edit" onclick="openReader('${ka}', 'write')" title="Write or draw a note with the Pencil">+ Write</button>` : `<button class="pd-edit" onclick="openReader('${ka}', 'new')">+ Add note</button>`}</h2>${hasNotes ? vn.entries.map(e => `<div class="pd-note"><div class="pd-note-top"><span>${esc(noteDate(e))}</span>${e.hand && !e.text.trim() && !(pencilDevice() || !matchMedia('(pointer: coarse)').matches) ? '' : `<button class="rp-icon-btn sm" onclick="openReader('${ka}', '${escAttr(e.id)}')" title="Edit note" aria-label="Edit note">${ICON_EDIT}</button>`}</div>${e.hand ? hwViewHTML(e) : ''}${e.text.trim() || !e.hand ? `<div class="pd-prose md" data-pdnote="${dataAttr(e.id)}"></div>` : ''}</div>`).join('') : ''}${ix && ix.h + ix.c ? `<div class="pd-notes-meta">${[ix.h && `${ix.h} highlight${ix.h === 1 ? '' : 's'}`, ix.c && `${ix.c} comment${ix.c === 1 ? '' : 's'}`].filter(Boolean).join(', ')} · <button onclick="openReader('${ka}', 'panel')">Open in the reader</button></div>` : ''}</section>`;
 
   // Side panel: facts + editable topics
@@ -25564,13 +25587,13 @@ function paperPageHTML(p, opts) {
   return { bar, glow: glowGroups.length ? topicGlow(glowGroups) : 'transparent', article: `<article class="pd-article" data-pid="${dataAttr(p.id)}" data-gone="${gone}" data-hidden="${isHiddenRow(p)}" data-passed="${isPassed(p)}">
       ${head}
       <div class="pd-body"><div class="pd-main">${main}</div>${aside}</div>
-      ${nextCard}
+      ${opts.pane ? '' : nextCard}
       ${related ? `<section class="pd-related"><h2>Related papers</h2>${related}</section>` : ''}
     </article>` };
 }
 function renderPaperDetail(p) {
   if (p.uploaded) requireOwner();
-  const page = paperPageHTML(p), box = document.getElementById('paperDetail');
+  const page = paperViewHTML(p), box = document.getElementById('paperDetail');
   const sh = Feed.sheet, held = !!(sh && sh.btn && box.contains(sh.btn));   // the Save sheet opened from this page's Save
   box.innerHTML = `<div class="pd" style="--gbg:${page.glow}">${page.bar}
     ${page.article}
@@ -25591,6 +25614,8 @@ function renderPaperDetail(p) {
    again when they arrive, wherever it still shows. */
 function paperPostRender(root, p) {
   if (!root || !p) return;
+  paperControlsMount(root.closest('.paper-pane, #feedPane, .daily-feed, #paperDetail') || root);
+  root.querySelectorAll('[data-brief]').forEach(sec => { if (sec.dataset.brief === p.id) briefWire(sec, p.id); });
   briefMount(root, p);   // before the notes' early return: the answers do not wait on notes
   const vn = Vault.key && Vault.cache.get(p.id), ix = Vault.index && Vault.index.papers && Vault.index.papers[p.id];
   if (Vault.key && !Vault.cache.has(p.id) && ix) paperNotes(p.id).then(privateCallback(() => repaintPaper(p)));
@@ -25607,12 +25632,34 @@ function repaintPaper(p) {
   if (!p) return;
   if (_paperViewActive && location.hash === '#paper/' + encodeURIComponent(p.id)) renderPaperDetail(p);
   if (feedActive()) feedRepaintPost(paperKey(p));
+  listingPaneSync();
+  if (dailyView() && (Daily.sel?.paper === p.id || Daily.preview === p.id)) dailyRender(false, true);
 }
 /* The notes unlocked, locked or were reset: every paper page in the document, on screen or not (under the reader, or
    left behind by another view). A post shows no notes. */
 function repaintShownPapers() {
   const page = document.querySelector('#paperDetail .pd-article[data-pid]');
-  if (page) { const p = feedRow(page.dataset.pid) || uploadById(page.dataset.pid); if (p) renderPaperDetail(p); }
+  if (page) { const p = findPaper(page.dataset.pid); if (p) renderPaperDetail(p); else paperUnavailable(page.dataset.pid); }   // also under its questions or the reader, as before
+  const daily = document.querySelector('.tab-section.active .daily-card .pd-article[data-pid]');
+  const ids = new Set([...document.querySelectorAll('.pd-article[data-pid]')].filter(a => !a.closest('#paperDetail') && a !== daily).map(a => a.dataset.pid));
+  ids.forEach(id => { const p = findPaper(id); if (p) repaintPaper(p); });
+  document.querySelectorAll('.pd-article[data-pid]').forEach(article => {
+    if (article === daily) {
+      const p = findPaper(article.dataset.pid), card = article.closest('.daily-card'), area = card.closest('.daily-area'), y = area.scrollTop;
+      if (p) {
+        article.outerHTML = paperViewHTML(p, { pane: true }).article;   // lock/reset cannot wait for Daily's chooser, picker or gesture
+        paperPostRender(card, p); card.querySelectorAll('[data-abs-tex]').forEach(el => renderAbstractText(el, p.abstract));
+        if (!twoPane()) card.querySelector('.pd-title').onclick = e => openPaper(p.id, e);
+        area.scrollTop = y;
+      } else article.replaceChildren();
+      return;
+    }
+    const pane = article.closest('#feedPane, .paper-pane'), present = !!findPaper(article.dataset.pid);
+    if (article.closest('.tab-section.active, #paperDetail') && present) return;
+    if (pane?.closest('.tab-section.active') && !present) { pane.replaceChildren(); delete pane.dataset.key; paperControlsMount(pane); }
+    else article.replaceChildren();   // hidden or missing papers cannot retain decrypted notes
+    if (pane) pane._html = '';
+  });
 }
 /* ===== Ten questions: shared reading and rendering =====
    The page calls the API and publishes library answers to briefs/. Existing files retain schema 1. */
@@ -25645,7 +25692,7 @@ const BRIEF_PURIFY = { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'del'
 /* gen: moved by a lock, a pull or a new target. index: the index read (a promise, null when absent). files: one
    result per paper, at most BRIEF_CACHE. loading: the reads in flight. visit: the items open on the paper shown,
    kept for this visit across redraws and the reader's Back. focus: what had the keyboard in the section. sheet: { pid, from } while the sheet shows. */
-const Brief = { gen: 0, index: null, questions: null, files: new Map(), loading: new Map(), visit: { pid: null, open: new Set() }, focus: null, sheet: null, pushed: null, lostFocus: null };
+const Brief = { gen: 0, index: null, questions: null, files: new Map(), loading: new Map(), visit: { pid: null, open: new Set() }, focus: null, sheet: null, pushed: null, lostFocus: null, inline: null };
 
 function briefEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function briefEligible(p) { return !!p && typeof p.id === 'string' && (p.uploaded ? /^up-[0-9a-f]{12}$/.test(p.id) && !!uploadById(p.id) : BRIEF_ID.test(p.id) && !p.id.startsWith('up-')); }
@@ -25892,7 +25939,7 @@ function briefRedraw(pid) {
   const p = findPaper(pid);
   if (p?.uploaded && !briefCanAsk(p) && location.hash === '#paper/' + encodeURIComponent(pid) + '/questions') briefSheetShow(pid);
   const box = document.getElementById('briefSheet');
-  for (const sec of box && Brief.sheet && Brief.sheet.pid === pid ? box.querySelectorAll('[data-brief]') : []) {
+  for (const sec of document.querySelectorAll('[data-brief]')) {
     if (sec.dataset.brief !== pid) continue;
     const a = document.activeElement, held = a && a !== sec && sec.contains(a) ? briefFocusKey(a) : null;   // before its control is replaced
     const key = held || (a === sec ? Brief.lostFocus : null);   // a control an earlier redraw took away, back when it is
@@ -25989,11 +26036,13 @@ function briefChipHTML(p) {
 /* The chip's place under the authors: polite, so a screen reader hears each change of state */
 function briefChipBoxHTML(p) { return briefEligible(p) ? `<div class="pd-tq" data-tq="${dataAttr(p.id)}" aria-live="polite" tabindex="-1">${briefChipHTML(p)}</div>` : ''; }
 function briefChipSync(pid) {
-  const box = [...document.querySelectorAll('#paperDetail [data-tq]')].find(b => b.dataset.tq === pid), p = box && findPaper(pid);
-  if (!box || !p) return;
-  const a = document.activeElement, had = a && box.contains(a);
-  box.innerHTML = briefChipHTML(p);
-  if (had) (box.querySelector('button:not(:disabled)') || box).focus({ preventScroll: true });   // a state with no button keeps the focus here
+  const p = findPaper(pid); if (!p) return;
+  document.querySelectorAll('[data-tq]').forEach(box => {
+    if (box.dataset.tq !== pid) return;
+    const a = document.activeElement, had = a && box.contains(a);
+    box.innerHTML = briefChipHTML(p);
+    if (had) (box.querySelector('button:not(:disabled)') || box).focus({ preventScroll: true });
+  });
 }
 /* Tapping a chip with no answers: one request, never while answers exist, while it is still finding out, or while one
    is already under way */
@@ -26022,6 +26071,17 @@ function briefAnsweredNow(pid) {
    renderer. Brief.sheet: { pid, from } while it shows. */
 function briefSheetOpen(pid) {
   if (!findPaper(pid)) return;
+  const article = shownPaperArticle(pid);
+  if (twoPane() && article && article.closest('.paper-pane, #feedPane, .daily-feed.two')) {
+    let inline = article.querySelector('.pane-questions');
+    if (!inline) { inline = document.createElement('section'); inline.className = 'pane-questions'; article.querySelector('.pd-head').appendChild(inline); }
+    if (Brief.visit.pid !== pid) Brief.visit = { pid, open: new Set() };
+    Brief.inline = pid;
+    inline.innerHTML = briefSheetHTML(pid, true);
+    const panel = inline.querySelector('[data-brief]'); briefWire(panel, pid);
+    panel.focus({ preventScroll: true });
+    return;
+  }
   Brief.pushed = '#paper/' + encodeURIComponent(pid) + '/questions';   // this step is Scout's own
   location.hash = Brief.pushed;
 }
@@ -26034,10 +26094,11 @@ function briefSheetClose() {
   history.replaceState(null, '', APP_ROOT + location.search + '#paper/' + encodeURIComponent(Brief.sheet.pid));
   applyHash();
 }
-function briefSheetHTML(pid) {
+function briefInlineClose(btn) { Brief.inline = null; btn.closest('.pane-questions')?.remove(); }
+function briefSheetHTML(pid, inline = false) {
   const all = Brief.visit.pid === pid && Brief.visit.open.size === 10;
-  return `<div class="tq-panel pd-q" role="dialog" aria-modal="true" aria-labelledby="tqTitle" data-brief="${briefEsc(pid)}" data-pid="${briefEsc(pid)}" tabindex="-1">
-    <div class="tq-head"><span class="tq-grip" aria-hidden="true"></span><h2 id="tqTitle">Ten questions</h2><button type="button" class="pd-q-all" aria-pressed="${all}" onclick="briefExpandAll(this)">${all ? 'Collapse all' : 'Expand all'}</button><button type="button" class="tq-done" onclick="briefSheetClose()">Done</button></div>
+  return `<div class="tq-panel pd-q" role="${inline ? 'region' : 'dialog'}"${inline ? '' : ' aria-modal="true"'} aria-labelledby="${inline ? 'tqInlineTitle' : 'tqTitle'}" data-brief="${briefEsc(pid)}" data-pid="${briefEsc(pid)}" tabindex="-1">
+    <div class="tq-head"><span class="tq-grip" aria-hidden="true"></span><h2 id="${inline ? 'tqInlineTitle' : 'tqTitle'}">Ten questions</h2><button type="button" class="pd-q-all" aria-pressed="${all}" onclick="briefExpandAll(this)">${all ? 'Collapse all' : 'Expand all'}</button><button type="button" class="tq-done" onclick="${inline ? 'briefInlineClose(this)' : 'briefSheetClose()'}">Done</button></div>
     <div class="tq-body"><p class="pd-q-meta" aria-live="polite">${briefMetaHTML(pid)}</p><div class="pd-q-list">${briefItemsHTML(pid)}</div></div>
   </div>`;
 }
@@ -26078,7 +26139,7 @@ function briefSheetHide() {
   const inside = s.contains(document.activeElement);
   s.classList.remove('open'); s.hidden = true; s.innerHTML = '';
   if (was && inside) {   // back to the chip that opened it, found again by the paper's id
-    const box = [...document.querySelectorAll('#paperDetail [data-tq]')].find(b => b.dataset.tq === was.pid);
+    const box = [...document.querySelectorAll('[data-tq]')].find(b => b.dataset.tq === was.pid);
     const to = box && box.querySelector('button:not(:disabled)');
     if (to) to.focus({ preventScroll: true }); else if (was.from && was.from.isConnected) was.from.focus({ preventScroll: true });
   }
@@ -26167,12 +26228,12 @@ function briefInvalidate() {
    another view reads nothing now. It is drawn and read afresh when it shows again. */
 function briefRefresh() {
   briefInvalidate();
-  if (!_paperViewActive) return;
-  for (const box of document.querySelectorAll('#paperDetail [data-tq]')) { briefRedraw(box.dataset.tq); briefStart(box.dataset.tq); }
-  if (Brief.sheet && ![...document.querySelectorAll('#paperDetail [data-tq]')].some(b => b.dataset.tq === Brief.sheet.pid)) { briefRedraw(Brief.sheet.pid); briefStart(Brief.sheet.pid); }
+  const boxes = [...document.querySelectorAll('[data-tq]')].filter(box => box.closest('.tab-section.active') || (_paperViewActive && box.closest('#paperDetail')));
+  for (const box of boxes) { briefRedraw(box.dataset.tq); briefStart(box.dataset.tq); }
+  if (Brief.sheet && ![...document.querySelectorAll('[data-tq]')].some(b => b.dataset.tq === Brief.sheet.pid)) { briefRedraw(Brief.sheet.pid); briefStart(Brief.sheet.pid); }
 }
 /* Run by lockPrivate. Nothing of the session's briefs outlives the authorization. */
-function briefTeardown() { uploadQuestionsCancel(); briefInvalidate(); Brief.visit = { pid: null, open: new Set() }; Brief.focus = null; Brief.pushed = null; briefSheetHide(); }
+function briefTeardown() { uploadQuestionsCancel(); document.querySelectorAll('.pane-questions').forEach(el => el.remove()); briefInvalidate(); Brief.visit = { pid: null, open: new Set() }; Brief.focus = null; Brief.pushed = null; Brief.inline = null; briefSheetHide(); }
 
 /* ===== the paper page follows the paper (Phase 13e) =====
    paperBarSync, on every change (viewsSync): the bar's ★, ✓ and ☰ patched from the row's marks as they are now, so a
@@ -26186,7 +26247,7 @@ function paperBarSync() {
   const k = page.dataset.pid, p = feedRow(k) || uploadById(k);
   if (p?.uploaded) paperDownloadDot().catch(() => {});
   if (!p) { paperUnavailable(k); return; }
-  if (String(!!p._goneRemote) !== page.dataset.gone || String(isHiddenRow(p)) !== page.dataset.hidden || String(isPassed(p)) !== page.dataset.passed) { renderPaperDetail(p); saveDDSync(); return; }
+  if (String(!!p._goneRemote) !== page.dataset.gone || String(isHiddenRow(p)) !== page.dataset.hidden || String(isPassed(p)) !== page.dataset.passed) { renderPaperDetail(p); saveSheetSync(); return; }
   const m = paperMarks(p), bar = document.querySelector('#paperDetail .pd-bar');
   if (!bar) return;
   const set = (act, on, cls, title, label) => {
@@ -26205,17 +26266,17 @@ function paperViewSync() {
   const page = document.querySelector('#paperDetail .pd-article[data-pid]');
   if (!page) return;
   const p = feedRow(page.dataset.pid) || uploadById(page.dataset.pid);
-  if (p) { renderPaperDetail(p); saveDDSync(); } else paperUnavailable(page.dataset.pid);
+  if (p) { renderPaperDetail(p); saveSheetSync(); } else paperUnavailable(page.dataset.pid);
 }
 /* The paper is no longer in the library (deleted on GitHub with nothing of yours pending, so it went here too): the
    page says so, with Back; its picker closes and a press on its controls reaches nothing (correction 7). Nothing is
    rebuilt or added back. */
 function paperUnavailable(k) {
-  closeSaveDD();
   const box = document.getElementById('paperDetail');
   if (!box) return;
   box.innerHTML = `<div class="pd"><div class="pd-bar"><div class="pd-bar-inner">${history.length > 1 ? `<button class="pd-back" onclick="paperBack()" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg><span class="pd-back-label">Back</span></button>` : ''}</div></div>
     <article class="pd-article pd-unavailable" data-pid="${dataAttr(k)}" data-gone="true" data-hidden="false" data-passed="false"><header class="pd-head"><h1 class="pd-title">This paper is no longer in the library</h1><p class="pd-dek">It was removed from your library. Changes to it cannot be saved.</p></header></article></div>`;
+  paperControlsMount(box);
   pressReconcile();
 }
 /* Show the title in the sticky bar once the page heading has scrolled under it */
@@ -26463,7 +26524,7 @@ function applyHash() {
   _appliedHash = location.hash;
   const hash = location.hash.slice(1); // remove '#'
   document.getElementById('sec-settings').classList.remove('active');
-  if (hash === 'settings') { closeAppMenu(false, false); searchOff(); leaveListView(); if (document.getElementById('reader').classList.contains('open')) hideReader(); document.querySelectorAll('.tab-section.active').forEach(el => el.classList.remove('active')); currentTab = 'settings'; document.getElementById('sec-settings').classList.add('active'); renderCopySettings(); copyRefreshAvailability().catch(privateCallback(()=>{})); if(!copyMobile())copyHelperRetry().catch(privateCallback(()=>{})); return; }
+  if (hash === 'settings') { feedLeave(); closeAppMenu(false, false); searchOff(); leaveListView(); if (document.getElementById('reader').classList.contains('open')) hideReader(); document.querySelectorAll('.tab-section.active').forEach(el => el.classList.remove('active')); currentTab = 'settings'; document.getElementById('sec-settings').classList.add('active'); renderCopySettings(); copyRefreshAvailability().catch(privateCallback(()=>{})); if(!copyMobile())copyHelperRetry().catch(privateCallback(()=>{})); return; }
 
   // PDF reader sits over whatever was on screen
   if (hash.startsWith('read/')) {
@@ -26499,6 +26560,8 @@ function applyHash() {
         renderGlobalSearch(Search.q, { restore: true });
       }
       else if (feedActive()) feedRefresh();   // the posts, as they are now
+      else if (dailyView()) dailyRender(false, true);
+      else listingPaneSync();
       return;
     }
   }
@@ -26924,7 +26987,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
     // Phase 25 (Sol's review #1): a list's interest menu, in its tab and in Library, and what it draws; closeListMenu stays
     // callable after the sign-in went, as closeFeedMenu does. Save to from the page and a row opens the sheet (fix round)
     'openListMenu', 'placeListMenu', 'listMenuChoose', 'setListInterest', 'listBarRender', 'listBarSync', 'listRelist', 'libGroupRedraw', 'openSaveTo',
-    'refreshPaper', 'viewsSync', 'paperBarSync', 'paperViewSync', 'saveDDSync', 'libraryRepaint', 'placeFixedMenu', 'rowsSync', 'searchRepaint', 'libraryDrawn',
+    'refreshPaper', 'viewsSync', 'paperBarSync', 'paperViewSync', 'libraryRepaint', 'placeFixedMenu', 'rowsSync', 'searchRepaint', 'libraryDrawn',
     'renderPapers', 'renderEmailPapers', 'renderWeekPulse', 'renderTopPapers',
     'openLatestDigest', 'openAlert', 'openGroup', 'openVenue', 'setVenueYear', 'openTopList', 'showList',
     'renderVenues', 'renderListPage', 'renderListRail', 'renderListTools', 'renderListBody', 'setListOrder', 'setListRel', 'setListQuery',
@@ -26967,7 +27030,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
    The controls are hidden too (html.ro); this is the backstop. A name that no longer exists is reported, so the
    list can't quietly go stale. */
 (function () {
-  const ALWAYS = ['toggleStar', 'toggleRead', 'persistStars', 'persistRead', 'persistLists', 'openSaveDD', 'toggleListItem', 'createListFromDD',
+  const ALWAYS = ['toggleStar', 'toggleRead', 'persistStars', 'persistRead', 'persistLists', 
     'hidePaper', 'unhidePaper', 'addGroupToPaper', 'removeGroupFromPaper', 'toggleGroupAddDD', 'createNewList', 'renameList', 'deleteList', 'listRevive',
     'showCopyDD', 'doCopyList', 'doCopyNew', 'updateI', 'updateG', 'updateInterestField', 'toggleInterestDropdown', 'gDragStart', 'gDrop',
     'resetChanges', 'pushToGitHub', 'showSaveBar', 'openStrengthDD', 'setMatchStrength', 'scheduleAutoPush', 'disconnectGitHub', 'submitPdfLink', 'pinPdfVersion',
