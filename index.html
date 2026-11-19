@@ -1431,14 +1431,14 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 @keyframes reader-in { from { opacity: 0; transform: translateY(14px) scale(0.995); } }
 @keyframes reader-out { to { opacity: 0; transform: translateY(10px); } }
 .reader-pages.first-in { animation: ui-fade var(--t-slow) ease-out; }
-.reader-page canvas.page-in { animation: ui-fade 0.2s ease-out; }
+.reader-page :is(canvas, img.page-img).page-in { animation: ui-fade 0.2s ease-out; }
 .reader-skel { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 18px 18px 0; }
 .reader-skel div { width: min(100%, 1000px); aspect-ratio: 8.5 / 11; max-height: 70vh; border-radius: 2px; background: #dedee1 linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%) 0 0 / 300% 100%; animation: skel-sweep 1.4s ease-in-out infinite; }   /* a dimmed page: the real (white) one arrives without a flash */
 .reader.dark .reader-skel div { background-color: var(--bg-surface); background-image: linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.05) 50%, transparent 70%); }
 /* a page not drawn yet shows faint lines of text instead of a blank sheet */
 .reader-page { isolation: isolate; }   /* so the lines below sit under the page's own drawing, not over it */
-.reader-page:not(:has(canvas:not(.page-in)))::before { content: ''; position: absolute; z-index: -1; inset: 11% 14%; background: repeating-linear-gradient(to bottom, rgba(0,0,0,0.055) 0 7px, transparent 7px 19px); }
-.reader.dark .reader-page:not(:has(canvas:not(.page-in)))::before { background: repeating-linear-gradient(to bottom, rgba(255,255,255,0.05) 0 7px, transparent 7px 19px); }
+.reader-page:not(:has(:is(canvas, img.page-img):not(.page-in)))::before { content: ''; position: absolute; z-index: -1; inset: 11% 14%; background: repeating-linear-gradient(to bottom, rgba(0,0,0,0.055) 0 7px, transparent 7px 19px); }
+.reader.dark .reader-page:not(:has(:is(canvas, img.page-img):not(.page-in)))::before { background: repeating-linear-gradient(to bottom, rgba(255,255,255,0.05) 0 7px, transparent 7px 19px); }
 .reader-skel p { margin: 0; font-size: 13px; color: var(--text-muted); }
 @keyframes skel-sweep { from { background-position: 100% 0; } to { background-position: 0 0; } }
 .reader-bar { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 16px; border-bottom: 1px solid var(--border); background: var(--reader-bar); flex-shrink: 0; }
@@ -1550,10 +1550,11 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 .reader.no-doc .reader-pageno, .reader.no-doc .reader-zoom, .reader.no-doc #readerDarkBtn, .reader.no-doc .rt-more-wrap { visibility: hidden; }
 .reader-pages { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px 12px calc(60px + env(safe-area-inset-bottom, 0px)); width: max-content; min-width: 100%; box-sizing: border-box; }
 .reader-page { position: relative; background: #fff; box-shadow: 0 2px 18px rgba(0,0,0,0.5); flex-shrink: 0; }
-.reader-page canvas { display: block; }
-.reader-page canvas.stale { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }   /* old pixels, shown until the sharp redraw */
+.reader-page :is(canvas, img.page-img) { display: block; }
+.reader-page img.page-img { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+.reader-page :is(canvas, img.page-img).stale { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }   /* old pixels, shown until the sharp redraw */
 .reader.dark .reader-page { background: var(--bg-surface); }
-.reader.dark .reader-page canvas { filter: invert(0.9) hue-rotate(180deg); }
+.reader.dark .reader-page :is(canvas, img.page-img) { filter: invert(0.9) hue-rotate(180deg); }
 .reader-page .textLayer { position: absolute; inset: 0; overflow: clip; line-height: 1; text-size-adjust: none; forced-color-adjust: none; transform-origin: 0 0; z-index: 1; }
 .reader-page .textLayer :is(span, br) { color: transparent; position: absolute; white-space: pre; cursor: text; transform-origin: 0% 0%; }
 .reader-page .textLayer ::selection { background: rgba(84,98,122,0.3); }   /* neutral slate: a selection shouldn't look like a highlight already made */
@@ -4299,7 +4300,7 @@ function lockPrivate(state = 'required', detail) {
   for (const task of Private.renderTasks) { try { task.cancel(); } catch (e) {} } Private.renderTasks.clear();
   for (const task of Private.pdfTasks) disposePdf(task); Private.pdfTasks.clear();
   cleanup(() => readerReleaseFocus());
-  _reader.visit++; _reader.token++; if (_reader.obs) cleanup(() => _reader.obs.disconnect()); if (_reader.far) cleanup(() => _reader.far.disconnect());
+  _reader.visit++; _reader.token++; if (_reader.obs) cleanup(() => _reader.obs.disconnect()); cleanup(() => readerPixFree());
   if (_reader.leaveClear) { try { _reader.leaveClear(); } catch (e) {} }
   for (const doc of new Set([...Private.pdfDocuments, _reader.doc])) cleanup(() => destroyPdfDocument(doc));
   Private.pdfDocuments.clear();
@@ -18244,6 +18245,7 @@ function upPdfReader(p, visit) {
 async function upPdfOpen(p, visit, live, notes) {
   if (!navigator.onLine || Private.state !== 'verified' || !hasPAT()) { upPdfLine(true); notes(); return; }
   document.getElementById('reader').classList.add('no-doc');
+  readerPixFree();
   document.getElementById('readerBody').innerHTML = '<div class="reader-skel" role="status" aria-label="Loading the PDF"><div></div><p>Loading the PDF…</p></div>';   // as for a library PDF
   let bytes;
   try { bytes = await upPdfGet(p.id); }
@@ -18662,10 +18664,9 @@ function hideReader() {
   document.body.style.overflow = '';
   flushReaderPosition(); flushReading(); setTimeout(privateCallback(refreshContinueReading), 0);
   if (_reader.obs) _reader.obs.disconnect();
-  if (_reader.far) _reader.far.disconnect();
   _reader.visit++; _reader.token++;
   const doc = _reader.doc; _reader.doc = null;
-  const clear = _reader.leaveClear = () => { clearTimeout(_reader.leaveT); _reader.leaveClear = null; el.classList.remove('leaving'); destroyPdfDocument(doc); if (!el.classList.contains('open')) document.getElementById('readerBody').innerHTML = ''; };
+  const clear = _reader.leaveClear = () => { clearTimeout(_reader.leaveT); _reader.leaveClear = null; el.classList.remove('leaving'); destroyPdfDocument(doc); if (!el.classList.contains('open')) { readerPixFree(); document.getElementById('readerBody').innerHTML = ''; } };
   if (!wasOpen || reduceMotion()) return clear();
   el.classList.add('leaving');   // fades away over the page underneath, then lets go of the PDF
   _reader.leaveT = setTimeout(privateCallback(clear), 200);
@@ -18788,7 +18789,7 @@ const PEN_TAP_SLOP = 10;   // px a Pencil tap may wobble and still be a tap
     given = null; e.preventDefault(); e.stopImmediatePropagation();
   }, true);
 })();
-function readerStatus(html) { document.getElementById('readerBody').innerHTML = `<div class="reader-status">${html}</div>`; }
+function readerStatus(html) { readerPixFree(); document.getElementById('readerBody').innerHTML = `<div class="reader-status">${html}</div>`; }
 /* PDF.js shares one worker port. Its next getDocument must wait until a preceding destroy finishes. */
 function disposePdf(resource) {
   if (!resource) return Promise.resolve();
@@ -18827,6 +18828,7 @@ async function loadIntoReader(p, source, isLocal, visit = _reader.visit) { const
   const load = ++_reader.load, token = ++_reader.token;
   const live = () => visit === _reader.visit && load === _reader.load && _reader.paper === p && document.getElementById('reader').classList.contains('open');
   document.getElementById('reader').classList.add('no-doc');
+  readerPixFree();
   document.getElementById('readerBody').innerHTML = '<div class="reader-skel" role="status" aria-label="Loading the PDF"><div></div><p>Loading the PDF…</p></div>';   // a page-shaped placeholder where the paper will be
   try {
     const lib = await privateAwait(loadPdfJs(), _authEpoch);
@@ -18913,7 +18915,7 @@ async function layoutReader(restore) { const _authEpoch = capturePrivateEpoch();
     const wrap = body.querySelector('.reader-pages');
     wrap.style.paddingLeft = wrap.style.paddingRight = left + 'px';
     if (_reader.token !== _reader.layoutToken)   // the caller cancelled draws in flight: redo those pages
-      oldPages.forEach(d => { if (d.dataset.drawn && !d.querySelector('.textLayer')) { releaseReaderPage(d); _reader.obs.unobserve(d); _reader.obs.observe(d); } });
+      oldPages.forEach(d => { if (d.dataset.drawn && !d.querySelector('.textLayer')) { delete d.dataset.drawn; _reader.obs.unobserve(d); _reader.obs.observe(d); } });   // the old drawing stays until the new one has decoded
     _reader.layoutToken = _reader.token;
     updateReaderPageNo();
     renderInkBar();   // the paper's area moved (panel opened/closed): keep the Pencil's tools centred over it
@@ -18926,18 +18928,17 @@ async function layoutReader(restore) { const _authEpoch = capturePrivateEpoch();
     const top = body.scrollTop, cur = oldPages.filter(d => d.offsetTop <= top + 1).pop() || oldPages[0];
     anchor = { page: +cur.dataset.page, frac: (top - cur.offsetTop) / cur.offsetHeight };
   }
+  // every drawn page keeps its old pixels (stretched) until its sharp redraw: no page goes blank on a zoom
   const keepCanvas = {};
-  if (anchor) oldPages.forEach(d => { const c = d.querySelector('canvas'); if (c && Math.abs(+d.dataset.page - anchor.page) <= 2) keepCanvas[d.dataset.page] = c; });
+  if (!restore) oldPages.forEach(d => { const c = d.querySelector(READER_PIX + ':not(.stale)') || d.querySelector(READER_PIX); if (c) keepCanvas[d.dataset.page] = c; });
   let html = `<div class="reader-pages${oldPages.length ? '' : ' first-in'}" style="padding-left:${left}px;padding-right:${left}px">`;
   for (let i = 1; i <= doc.numPages; i++) html += `<div class="reader-page" data-page="${i}" style="width:${w}px;height:${h}px"></div>`;
+  readerPixFree(new Set(Object.values(keepCanvas)));
   body.innerHTML = html + '</div>';
   Object.entries(keepCanvas).forEach(([n, c]) => { c.classList.add('stale'); c.style.width = c.style.height = ''; body.querySelector(`.reader-page[data-page="${n}"]`).appendChild(c); });
   if (_reader.obs) _reader.obs.disconnect();
-  if (_reader.far) _reader.far.disconnect();
   _reader.obs = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) drawReaderPage(en.target); }), { root: body, rootMargin: '900px 0px' });
-  // pages far out of view give their pixels back (a sharp page is tens of MB)
-  _reader.far = new IntersectionObserver(es => es.forEach(en => { if (!en.isIntersecting) releaseReaderPage(en.target); }), { root: body, rootMargin: '4000px 0px' });
-  body.querySelectorAll('.reader-page').forEach(d => { _reader.obs.observe(d); _reader.far.observe(d); });
+  body.querySelectorAll('.reader-page').forEach(d => _reader.obs.observe(d));
   if (anchor) {
     const target = body.querySelector(`.reader-page[data-page="${anchor.page}"]`);
     if (target) body.scrollTop = target.offsetTop + anchor.frac * target.offsetHeight;
@@ -18965,18 +18966,30 @@ async function drawReaderPage(div) { const _authEpoch = capturePrivateEpoch();
   let out = window.devicePixelRatio || 1;
   const MAX_PIXELS = 16777216;
   if (cssW * cssH * out * out > MAX_PIXELS) out = Math.sqrt(MAX_PIXELS / (cssW * cssH));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(cssW * out); canvas.height = Math.round(cssH * out);
-  canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
-  div.style.width = cssW + 'px'; div.style.height = cssH + 'px';
-  const sx = canvas.width / vp.width, sy = canvas.height / vp.height;
-  const renderTask = page.render({ canvasContext: canvas.getContext('2d', { alpha: false }), viewport: vp, transform: [sx, 0, 0, sy, 0, 0] });
-  if (isPrivate()) Private.renderTasks.add(renderTask);
-  try { await privateAwait(renderTask.promise, _authEpoch); } finally { Private.renderTasks.delete(renderTask); }
-  if (token !== _reader.token) return;
-  if (!div.querySelector('canvas.stale') && !reduceMotion()) { canvas.classList.add('page-in'); canvas.addEventListener('animationend', () => canvas.classList.remove('page-in'), { once: true }); }   // drawn off screen, then shown whole: a first draw fades in; a redraw just sharpens
-  div.appendChild(canvas);
-  div.querySelectorAll('canvas.stale').forEach(c => { c.width = 0; c.height = 0; c.remove(); });   // the sharp page is ready
+  // a drawn page becomes an image of the same pixels and its canvas goes back at once: the browsers cap or blank
+  // canvases (iPhone and iPad Safari at about 384 MB together), and 40 live canvases are about 800 MB anywhere.
+  // Two pages at most are being drawn and converted at a time.
+  const release = await readerDrawSlot();
+  let pix;
+  try {
+    if (token !== _reader.token) return;
+    out *= _reader.pixShrink || 1;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(cssW * out); canvas.height = Math.round(cssH * out);
+    canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+    div.style.width = cssW + 'px'; div.style.height = cssH + 'px';
+    const sx = canvas.width / vp.width, sy = canvas.height / vp.height;
+    const renderTask = page.render({ canvasContext: canvas.getContext('2d', { alpha: false }), viewport: vp, transform: [sx, 0, 0, sy, 0, 0] });
+    if (isPrivate()) Private.renderTasks.add(renderTask);
+    try { await privateAwait(renderTask.promise, _authEpoch); } finally { Private.renderTasks.delete(renderTask); }
+    if (token !== _reader.token) { canvas.width = canvas.height = 0; return; }
+    pix = await canvasToPageImage(canvas, cssW, cssH) || canvas;
+  } finally { release(); }
+  if (token !== _reader.token) { readerPixFree(null, pix); return; }
+  const old = [...div.querySelectorAll(READER_PIX + ', .textLayer')];   // a restarted draw replaces what an unfinished one left
+  if (!old.some(c => c.matches(READER_PIX)) && !reduceMotion()) { pix.classList.add('page-in'); pix.addEventListener('animationend', () => pix.classList.remove('page-in'), { once: true }); }   // drawn off screen, then shown whole: a first draw fades in; a redraw just sharpens
+  div.appendChild(pix);
+  old.forEach(c => c.matches(READER_PIX) ? readerPixFree(null, c) : c.remove());   // the sharp page is ready
   const tl = document.createElement('div');
   tl.className = 'textLayer';
   div.style.setProperty('--scale-factor', _reader.scale);
@@ -19025,11 +19038,41 @@ function snapToWords(range) {
   }
   return r.collapsed || !r.toString().trim() ? range : r;
 }
-function releaseReaderPage(div) {
-  if (!div.dataset.drawn && !div.querySelector('canvas')) return;
-  div.querySelectorAll('canvas').forEach(c => { c.width = 0; c.height = 0; });
-  div.innerHTML = '';
-  delete div.dataset.drawn;
+const READER_PIX = 'canvas, img.page-img';
+/* A page keeps its drawing for as long as the paper is open, as a full-size PNG. Browsers hold a decoded image far
+   larger than its file, so the total of the files (ReaderPix.bytes) is no bound on memory; it only decides when
+   later pages are drawn smaller. Past 160 MB of files, later pages are drawn at 70% density as JPEG. */
+const READER_IMG_BUDGET = 160 * 1048576, READER_IMG_SHRINK = 0.7, READER_DRAWS = 2;
+const ReaderPix = { urls: new Map(), bytes: 0, busy: 0, queue: [] };
+function readerDrawSlot() {
+  return new Promise(res => {
+    const go = () => { ReaderPix.busy++; res(() => { ReaderPix.busy--; const n = ReaderPix.queue.shift(); if (n) n(); }); };
+    if (ReaderPix.busy < READER_DRAWS) go(); else ReaderPix.queue.push(go);
+  });
+}
+async function canvasToPageImage(canvas, cssW, cssH) {
+  const small = !!_reader.pixShrink;
+  const blob = await new Promise(res => { try { canvas.toBlob(res, small ? 'image/jpeg' : 'image/png', 0.85); } catch (e) { res(null); } });
+  if (!blob) return null;
+  const img = new Image(); img.className = 'page-img'; img.alt = ''; img.draggable = false;
+  img.style.width = cssW + 'px'; img.style.height = cssH + 'px';
+  const url = img.dataset.blob = URL.createObjectURL(blob);
+  ReaderPix.urls.set(url, blob.size); ReaderPix.bytes += blob.size;
+  img.src = url;
+  try { await img.decode(); } catch (e) { readerPixFree(null, img); return null; }
+  canvas.width = canvas.height = 0;
+  if (ReaderPix.bytes > READER_IMG_BUDGET) _reader.pixShrink = READER_IMG_SHRINK;
+  return img;
+}
+/* Give back one page drawing (a canvas's pixels, or an image's blob), or every image the reader made except those
+   in keep. It goes by the URLs made, not by what is on screen, so a body already replaced still frees its images. */
+function readerPixFree(keep, one) {
+  const drop = url => { if (ReaderPix.urls.has(url)) { ReaderPix.bytes -= ReaderPix.urls.get(url); ReaderPix.urls.delete(url); URL.revokeObjectURL(url); } };
+  if (one) { if (one.tagName === 'CANVAS') one.width = one.height = 0; else drop(one.dataset.blob); one.remove(); return; }
+  const kept = new Set([...(keep || [])].map(i => i.dataset && i.dataset.blob));
+  [...ReaderPix.urls.keys()].forEach(u => { if (!kept.has(u)) drop(u); });
+  document.querySelectorAll('#readerBody canvas').forEach(c => { if (!(keep && keep.has(c))) c.width = c.height = 0; });
+  if (!keep) _reader.pixShrink = 0;
 }
 /* Moving the window to another screen, or browser zoom, changes the pixel density: redraw sharp */
 let _readerDprMQ = null;
@@ -19353,6 +19396,7 @@ async function readerZoom(dir) { const _authEpoch = capturePrivateEpoch();
   } else {
     zoom = scale = (dir > 0 ? steps.find(z => z > cur + 0.01) : [...steps].reverse().find(z => z < cur - 0.01)) || cur;
   }
+  if (Math.abs(scale - cur) < 0.01 && (dir !== 0 || _reader.zoom === 'fit')) return;   // already at this zoom (the ends of the zoom steps): nothing to redraw
   const r = document.getElementById('readerBody').getBoundingClientRect();
   if (reduceMotion() || Math.abs(scale - cur) < 0.01 || !pinchStart(r.left + r.width / 2, r.top + r.height * 0.4)) { _reader.zoom = zoom; _reader.token++; layoutReader(false); return; }
   document.getElementById('readerZoomLabel').textContent = zoom === 'fit' ? 'Fit' : Math.round(scale * 100) + '%';
@@ -19422,7 +19466,7 @@ async function showPdfPicker(p, why, detail) { const _authEpoch = capturePrivate
   const inModal = why === 'change';
   if (!inModal) {
     if (_reader.obs) _reader.obs.disconnect();
-    if (_reader.far) _reader.far.disconnect();
+    readerPixFree();
     if (_reader.doc) { destroyPdfDocument(_reader.doc); _reader.doc = null; }
     document.getElementById('reader').classList.add('no-doc');
   }
@@ -20626,7 +20670,7 @@ function checkPdfFingerprint() {
 function renderAnnoLayer(pageDiv) {
   let layer = pageDiv.querySelector('.annoLayer');
   if (!layer) {
-    if (!pageDiv.querySelector('canvas')) return;
+    if (!pageDiv.querySelector(READER_PIX)) return;
     layer = document.createElement('div');
     layer.className = 'annoLayer';
     pageDiv.insertBefore(layer, pageDiv.querySelector('.textLayer'));
@@ -23065,10 +23109,10 @@ function startFigureSelect() {
     if (!valid() || !start) return;
     const r = pg.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
     const sel = { x: Math.min(x, start.x), y: Math.min(y, start.y), w: Math.abs(x - start.x), h: Math.abs(y - start.y) };
-    const canvas = pg.querySelector('canvas:not(.stale)'), page = +pg.dataset.page;
+    const canvas = pg.querySelector(READER_PIX + ':not(.stale)'), page = +pg.dataset.page;
     done();
     if (!canvas || sel.w < 12 || sel.h < 12) return;
-    const k = canvas.width / r.width, scale = Math.min(1, 1600 / (sel.w * k));
+    const k = (canvas.naturalWidth || canvas.width) / r.width, scale = Math.min(1, 1600 / (sel.w * k));
     const out = document.createElement('canvas'); out.width = Math.round(sel.w * k * scale); out.height = Math.round(sel.h * k * scale);
     const ctx = out.getContext('2d');
     if (document.getElementById('reader').classList.contains('dark')) ctx.filter = 'none';
