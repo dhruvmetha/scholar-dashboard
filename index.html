@@ -134,7 +134,7 @@ html.private-locked:has(#skeleton:not(.hidden)) #privateAccess[data-state="loadi
 .sk-daily-feed .feed-list{flex:1;min-height:0}
 .sk-daily-feed .feed-head{position:static}
 .sk-daily-picker{min-width:0;flex:none;display:flex;align-items:center;gap:10px;width:100%;height:46px;padding:0 20px;border:0;border-bottom:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit;font-size:14px;text-align:left;cursor:pointer}
-.lb-int .sk-daily-picker,.lib-int .sk-daily-picker{background:none}.lb-int .sk-daily-picker{flex:1;width:auto}
+.lib-int .sk-daily-picker{background:none}
 .sk-daily-picker-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .sk-daily-picker svg{flex:none;width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .sk-daily-area{flex:1;min-height:0;padding:16px 20px calc(var(--daily-footer-height) + 16px);overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scroll-padding-bottom:var(--daily-footer-height)}
@@ -231,7 +231,6 @@ html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(
 .skeleton-wrap .feed-head { position: static; }
 .skeleton-wrap .feed-tabs .tab { display: inline-flex; align-items: center; justify-content: center; }
 /* Use a class in place of #feedCtl, without duplicating a live id. */
-#skeleton .feed-ctl .sk-daily-picker { flex: 1; width: auto; padding: 0 10px; border-bottom: 0; background: none; }
 #skeleton .list-bar { display: block; }
 .skeleton-wrap .sk-back { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 44px; height: 44px; margin-left: -10px; }
 .skeleton-wrap .sk-back svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; }
@@ -270,8 +269,6 @@ html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(
 #skeleton .sk-search-sort { margin-left: auto; pointer-events: none; }
 #skeleton .sk-search-status { width: auto; height: 12px; min-width: 0; overflow: hidden; color: transparent; white-space: nowrap; line-height: 12px; }   /* the count's slot (design fixes round 2, G11) */
 @media (max-width: 600px) { #skeleton .sk-search-status { font-size: 12px; } }
-#skeleton .sk-search-filters { display: none; }
-#skeleton .sk-search-rail-row { min-height: 44px; padding: 12px; border-top: 1px solid var(--line); }
 #skeleton .sk-search-card { padding: 12px 0; border-bottom: 1px solid var(--line); }
 #skeleton .sk-search-title { font-size: 19px; line-height: 1.3; }
 #skeleton .sk-search-title .sk-line + .sk-line, #skeleton .lp-h .sk-line + .sk-line { display: none; }
@@ -331,10 +328,8 @@ html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(
   #skeleton .sk-library-buttons { display: contents; }
   #skeleton .sk-library-buttons .btn-new-list { order: 1; }
   #skeleton .sk-sync { order: 2; flex-basis: 100%; }
-  #skeleton .sk-search-filters { display: inline-flex; }
   #skeleton .sk-search-title .sk-line + .sk-line, #skeleton .lp-h .sk-line + .sk-line { display: flex; }
   #skeleton .lp-meta { min-height: 40px; }
-  #skeleton .search-results .rail { display: none; }
   #skeleton [data-shape="paper"] .pd-title .sk-line:last-child { display: flex; }
   #skeleton .sk-daily-card h2 .sk-line:last-child { display: flex; }
   #skeleton .sk-daily-headline .sk-line:last-child { display: flex; }
@@ -1068,10 +1063,11 @@ body.feed-mode #sec-papers .top-papers { max-width: none; padding: 0; }   /* the
 .ctl-btn { flex: none; display: inline-flex; align-items: center; min-width: 44px; min-height: 44px; padding: 0; border: none; background: none; color: #e7e9ea; font: inherit; font-size: 15px; font-weight: 700; line-height: 20px; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .ctl-pill { display: inline-flex; align-items: center; gap: 4px; min-width: 44px; min-height: 32px; box-sizing: border-box; padding: 5px 10px 5px 14px; border: 1px solid #536471; border-radius: 9999px; white-space: nowrap; }
 .ctl-btn svg { flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.ctl-int { flex: 0 1 auto; min-width: 0; }
-.ctl-int .ctl-pill { min-width: 0; max-width: 100%; }
 .ctl-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 html:not(.no-hover) .ctl-btn:hover .ctl-pill, .ctl-btn[aria-expanded="true"] .ctl-pill { background: rgba(231,233,234,0.1); }
+.ctl-filter .ctl-pill { justify-content: center; padding: 5px 11px; }
+.ctl-filter.on { color: var(--accent); }
+.ctl-filter.on .ctl-pill { border-color: var(--accent); }
 .ctl-btn:focus-visible { outline: none; }
 .ctl-btn:focus-visible .ctl-pill { outline: 2px solid var(--accent); outline-offset: 2px; }
 .ctl-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -1327,8 +1323,7 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 .pd-topics .group-add-dd { max-height: none; overflow: visible; }
 
 /* SEARCH PAGE: Scout's search box, folding rail and phone sheet. */
-.search-results { display: grid; grid-template-columns: 196px minmax(0,1fr); column-gap: 24px; max-width: 1080px; margin: 0 auto; padding: 24px 20px 32px; --text-muted: var(--text-muted-raised); }
-.search-results .search-box-wrap { grid-column: 2; }
+.search-results { display: grid; grid-template-columns: minmax(0,1fr); max-width: 1080px; margin: 0 auto; padding: 24px 20px 32px; --text-muted: var(--text-muted-raised); }
 .search-results [hidden] { display: none !important; }
 .search-results button, .search-results input, .search-results select { font: inherit; }
 .search-results button { cursor: pointer; }
@@ -1348,26 +1343,10 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 .search-results .seg button[aria-pressed="true"] { background: rgba(255,255,255,0.1); color: var(--text); }
 .search-results .help { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border: 0; background: none; font-size: 20px; color: var(--text-muted); }
 .search-results .res-bar { display: flex; align-items: center; gap: 10px; margin: 14px 0 0; min-height: 36px; font-size: 13px; color: var(--text-muted); }
-.search-results .cp { display: inline-flex; align-items: center; gap: 7px; flex: none; min-height: 36px; padding: 0 13px; border: 1px solid var(--pill-edge, #536471); border-radius: 999px; background: var(--bg); font-size: 14px; font-weight: 600; color: var(--text); }
-.search-results #searchSortSlot { display: contents; }
+.search-results #searchSortSlot, .search-results #searchFilterSlot { display: contents; }
 .search-results #searchSortBtn { margin-left: auto; }
-.search-results #searchFiltersBtn { display: none; }
-.search-results .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
 .search-results .sb-page { display: contents; }
-.search-results .rail { grid-column: 1; grid-row: 1 / 3; min-width: 0; display: flex; flex-direction: column; padding-top: 2px; }
-.search-results .rail .seg { margin: 0 0 10px 6px; }
-.search-results .sec { border-top: 1px solid rgba(255,255,255,0.06); }
-.search-results .sec.open { padding-bottom: 10px; }
-.search-results .sec-h { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 10px 12px; border: 0; background: none; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
-.search-results .sec-h>span:last-child { margin-left: auto; }
-.search-results .sec-h .sel { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--text-secondary); }
-.search-results .sub { display: flex; align-items: center; gap: 8px; padding: 4px 12px 3px; font-size: 11.5px; color: var(--text-muted); }
-.search-results .ri { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; padding: 6px 12px; border: 0; border-radius: 8px; background: none; text-align: left; font-size: 13px; line-height: 1.35; color: var(--text-secondary); }
-.search-results .ri.on { background: rgba(255,255,255,0.08); color: var(--text); }
-.search-results .sf-label { min-width: 0; overflow-wrap: anywhere; }
-.search-results .ri .n { margin-left: auto; color: var(--text-muted); }
-.search-results .tick { color: var(--accent); }
-.search-results .search-body { grid-column: 2; min-width: 0; margin-top: 10px; }
+.search-results .search-body { min-width: 0; margin-top: 10px; }
 .search-results #searchRows .top-row { display: flex; flex-direction: column; align-items: stretch; gap: 0; margin: 0; padding: 12px 0; border: 0; border-radius: 0; border-bottom: 1px solid var(--line); content-visibility: auto; contain-intrinsic-size: auto 160px; }
 .search-results #searchRows .top-row::before, .search-results #searchRows .tl-section::before { display: none; }
 .search-results .tr-main { display: contents; }
@@ -1402,20 +1381,13 @@ body:has(#saveBar.visible[data-state="push"]) .main-scroll, body:has(#saveBar.vi
 .search-results .tl-empty { line-height: 1.6; max-width: 560px; margin: 12px auto; padding: 16px 12px; }
 .search-results .search-empty strong { display: block; color: var(--text); margin-bottom: 6px; }
 .search-results .v-more, .search-results #searchMore .ui-btn { min-height: 44px; }
-.search-results #searchClear .v-more { margin: 0; font-size: 12px; }
 @media (max-width: 600px) {
   .search-results { display: block; padding: 16px 16px 24px; }
   .search-results .sb-page { display: block; padding-top: 10px; }
-  .search-results #searchRail { display: none; }
-  .search-results #searchFiltersBtn { display: inline-flex; }
   .search-results #searchStatus { font-size: 12px; }
-  .search-results #searchClear { display: none; }
   .search-results .res-bar { flex-wrap: wrap; }
   .search-results .bsheet { height: round(nearest, 62dvh, 1px); }
   .search-results .help-sheet { height: auto; }
-  .search-results .bs-body .seg button, .search-results .bs-body .ri { min-height: 44px; }
-  .search-results .bs-body .tc { display: inline-flex; align-items: center; width: auto; max-width: 100%; margin: 4px 6px 4px 0; padding: 0 14px; border: 1px solid transparent; border-radius: 999px; background: rgba(255,255,255,0.055); font-size: 13.5px; }
-  .search-results .bs-body .tc.on { background: var(--accent-dim); border-color: color-mix(in srgb,var(--accent) 70%,transparent); color: var(--accent); }
 }
 .chip-select { -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.055) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24'%3E%3Cpath fill='%239aa0a6' d='M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z'/%3E%3C/svg%3E") no-repeat right 9px center; border: 1px solid transparent; color: var(--text-secondary); font: inherit; font-size: 12px; padding: 3px 26px 3px 10px; border-radius: 999px; cursor: pointer; transition: border-color 0.15s, color 0.15s; max-width: 240px; }
 .chip-select:hover { border-color: var(--line); color: var(--text); }
@@ -3160,15 +3132,16 @@ body.daily-mode:has(#saveSheet.open) #toast{z-index:456}   /* walk fixes 5: a ti
 .daily-feed #feedAdd,.daily-feed #feedCtl,.daily-feed #feedMore,.daily-feed #feedEnd,.daily-feed #listBar{display:none!important}
 .daily-feed .feed-head{position:static}.daily-feed #tabsMsg:empty{display:none}
 .daily-picker{min-width:0;flex:none;display:flex;align-items:center;gap:10px;width:100%;height:46px;padding:0 20px;border:0;border-bottom:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit;font-size:14px;text-align:left;cursor:pointer}
-#feedCtl .daily-picker{flex:1;width:auto;padding:0 10px;border-bottom:0;background:none}.lb-int .daily-picker,.lib-int .daily-picker{background:none}.lb-int .daily-picker{flex:1;width:auto}
+.lib-int .daily-picker{background:none}
 .daily-picker-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .daily-picker-count{flex:none;color:var(--text-muted);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .daily-picker svg{flex:none;width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .daily-area{flex:1;min-height:0;padding:16px 20px calc(var(--daily-footer-height) + 16px);overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scroll-padding-bottom:var(--daily-footer-height)}
 .daily-interest-group{padding:10px 10px 4px;color:var(--text-muted);font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase}
 .daily-interest-row{min-height:48px;font-size:14.5px}
-.daily-interest-row[aria-current=true]{background:var(--accent-dim)}
-.daily-interest-row[aria-current=true] .sh-n{color:var(--accent);font-weight:600}
+.daily-interest-row[aria-current=true],.daily-interest-row[data-kind][aria-checked=true]{background:var(--accent-dim)}
+.daily-interest-row[aria-current=true] .sh-n,.daily-interest-row[data-kind][aria-checked=true] .sh-n{color:var(--accent);font-weight:600}
+.daily-interest-row[data-kind][aria-checked=true]::after{content:"\2713";flex:none;margin-left:12px;color:var(--accent);font-weight:700}
 .daily-interest-left{flex:none;white-space:nowrap;color:var(--text-muted);font-size:13px;font-variant-numeric:tabular-nums}
 .daily-interest-row.done .sh-n{color:var(--text-muted)}
 #dailyInterestTitle{overflow-wrap:anywhere}
@@ -3494,25 +3467,19 @@ body.feed-two:has(#feedPane:not([hidden]) .fp-acts):has(#saveSheet.open.pop) #to
     <span id="searchChips" class="wrap"></span>
     <input type="text" id="searchInput" aria-label="Search papers" placeholder="Search papers" autocomplete="off" oninput="debouncedSearch()">
     <span id="searchMode"></span>
-    <button type="button" id="searchHelpBtn" class="help" aria-label="Search help" aria-expanded="false" onclick="sfSheet(true,true)">ⓘ</button>
+    <button type="button" id="searchHelpBtn" class="help" aria-label="Search help" aria-expanded="false" onclick="sfHelp(true)">ⓘ</button>
   </div>
   <div class="res-bar">
-    <button type="button" id="searchFiltersBtn" class="cp" aria-controls="searchFilterSheet" aria-expanded="false" onclick="sfSheet(true)">Filters <i class="dot" hidden></i>⌄</button>
-    <span id="searchStatus" role="status" aria-live="polite" aria-atomic="true"></span><span id="searchClear"></span>
-    <span id="searchSortSlot"></span>
+    <span id="searchStatus" role="status" aria-live="polite" aria-atomic="true"></span>
+    <span id="searchSortSlot"></span><span id="searchFilterSlot"></span>
   </div>
 </div>
 <div class="sb-page">
-  <aside id="searchRail" class="rail" aria-label="Search filters"><div id="searchControls"></div></aside>
   <div class="search-body"><div id="searchRows"></div><div id="searchMore" class="feed-more"></div></div>
 </div>
-<div id="searchScrim" class="scrim" hidden onclick="sfSheet(false);sfSheet(false,true)"></div>
-<section id="searchFilterSheet" class="bsheet" hidden role="dialog" aria-modal="true" aria-label="Filters">
-  <div class="bs-head"><b>Filters</b><button type="button" class="sf-clear" onclick="clearSearchFilters()">Clear</button><button type="button" class="done" onclick="sfSheet(false)">Done</button></div>
-  <div id="searchFilterBody" class="bs-body"></div>
-</section>
+<div id="searchScrim" class="scrim" hidden onclick="sfHelp(false)"></div>
 <section id="searchHelpSheet" class="bsheet help-sheet" hidden role="dialog" aria-modal="true" aria-label="Search help">
-  <div class="bs-head"><b>Search help</b><button type="button" class="done" onclick="sfSheet(false,true)">Done</button></div>
+  <div class="bs-head"><b>Search help</b><button type="button" class="done" onclick="sfHelp(false)">Done</button></div>
   <div class="bs-body"><p>Type author: before a name to search authors only. title:, interest:, venue: and year: work the same way. Put quotes around words to keep them together.</p></div>
 </section>
   </div>
@@ -5195,6 +5162,7 @@ if (document.readyState === 'complete') swStart(); else window.addEventListener(
 function restorePreferences() {
   try { _listOrder = localStorage.getItem('scholar_list_order') || 'best'; _rnSort = localStorage.getItem('scholar_rn_sort') || 'page'; _panelTab = localStorage.getItem(PANEL_TAB_KEY) === 'chat' ? 'chat' : 'notes'; Object.assign(PanelLayout, JSON.parse(localStorage.getItem(PANEL_LAYOUT_KEY)) || {}); } catch (e) {}
   sortLoad();   // each screen's sort, anything unreadable its default
+  filterLoad();   // each screen's venues and years
 }
 function restoreOwnerState() {
   requireOwner(); restorePreferences();
@@ -6501,7 +6469,7 @@ function refreshPill(out) {
     : chip !== null && a ? `${v} new in ${esc(chip)}&nbsp;&middot; ${a} in all` : v ? `${v} new ${v === 1 ? 'paper' : 'papers'}` : 'Nothing new yet';
   if (!a || !feedActive() || !feedCtlOn() || SortBy.foryou !== 'best') { toast(msg, null, { pill: true }); return; }
   const gen = Feed.gen, view = feedViewKey(), keep = v > 0;
-  const go = () => { if (feedActive() && Feed.gen === gen && feedViewKey() === view) setFeedView('new', keep ? Feed.interest : null); };
+  const go = () => { if (feedActive() && Feed.gen === gen && feedViewKey() === view) setFeedView('new', keep ? Feed.interest : null, !keep); };
   toast(msg, go, { pill: true, actionLabel: keep ? 'See them in Recently added' : 'See all in Recently added', duration: 8000 });
 }
 /* A deferred result: offered as a toast with Show. The count is the papers file's growth, as before. */
@@ -6623,7 +6591,7 @@ function returnOfferHeld() {
   if (!r || r.offered !== false || !feedActive() || document.getElementById('reader').classList.contains('open')) return;
   const have = new Set(everyPaper().map(paperKey));
   const added = r.parsed && r.parsed.papers ? r.parsed.papers.filter(p => !have.has(paperKey(p))) : [];
-  r.adds = feedPool(added).some(p => followingShown() || Feed.interest === null || feedInChip(p, Feed.interest));
+  r.adds = feedPool(added).some(p => filterPass(p, feedScreen()));
   if (!r.adds) return;
   r.offered = true;
   toast('New papers available', refreshShow, { actionLabel: 'Show', duration: 12000 });
@@ -6716,7 +6684,7 @@ function returnReloadSafe() {
   const token = document.getElementById('signinToken');
   if (token && token.value) return false;
   if (document.getElementById('reader').classList.contains('open') || document.querySelector('#pdfModal.open, #genericOverlay.open, #vaultOverlay.open')) return false;
-  return feedActive() && Feed.interest === null && !ListView.interest.size && !document.body.classList.contains('search-open')
+  return feedActive() && Feed.interest === null && FilterBy.following.interest === null && !ListView.interest.size && !document.body.classList.contains('search-open')
     && document.getElementById('mainScroll').scrollTop <= 40 && feedIdle();
 }
 
@@ -6870,7 +6838,8 @@ function skeletonHTML(hash) {
     const backIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>';
     const back = `<span class="sk-back">${backIcon}</span>`;
     const picker = (label = 'All interests', key = 'picker') => `<div class="sk-daily-picker" data-sk="${key}"><span class="sk-daily-picker-name">${label}</span>${chevron}</div>`;
-    const tabs = active => `<div class="feed-head" data-sk="head"><div class="feed-tabs home" data-sk="tabs"><div class="ft-tabs">${['For you', 'Following', 'Daily'].map((t, i) => `<span class="tab${i === active ? ' on' : ''}">${t}</span>`).join('')}</div></div>${active < 2 ? `<div class="feed-ctl"><span class="ctl-btn ctl-sort" data-sk="sort"><span class="ctl-pill">${active === 0 ? 'Best' : 'Recently added'}${chevron}</span></span>${active === 0 ? picker() : ''}</div>` : ''}</div>`;
+    const filter = '<span class="ctl-btn ctl-filter" data-sk="filter"><span class="ctl-pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7.5V19l-4-2v-4.5z"/></svg></span></span>';
+    const tabs = active => `<div class="feed-head" data-sk="head"><div class="feed-tabs home" data-sk="tabs"><div class="ft-tabs">${['For you', 'Following', 'Daily'].map((t, i) => `<span class="tab${i === active ? ' on' : ''}">${t}</span>`).join('')}</div></div>${active < 2 ? `<div class="feed-ctl"><span class="ctl-btn ctl-sort" data-sk="sort"><span class="ctl-pill">${active === 0 ? 'Best' : 'Recently added'}${chevron}</span></span>${filter}</div>` : ''}</div>`;
     const posts = (list = false) => [84, 72, 90].map(w => `<div class="skpost" data-sk="card"><div class="sk-meta" data-sk="meta">${lines(1, 38)}</div><div class="sk-title" data-sk="title">${lines(2, w)}</div><div class="sk-dek" data-sk="dek">${lines(2, 62)}</div><div class="sk-by" data-sk="authors">${lines(1, 48)}</div>${list ? `<div class="sk-acts" data-sk="actions">${bar(24)}${bar(24)}${bar(30)}</div>` : `<div class="sk-why" data-sk="why">${lines(1, 40)}</div><div class="sk-icons" data-sk="actions">${['Pass', 'Save', 'Mark read', 'Read'].map(t => `<span class="sk-icon"><i class="sk"></i><b>${t}</b></span>`).join('')}</div>`}</div>`).join('');
     // Layout A: on a wide screen For you and Following are the list and the open paper, its row at the pane's foot
     const pane = () => `<aside class="sk-pane" data-sk="pane"><div class="sk-pane-body"><div class="pv-headline" data-sk="paneHeadline">${lines(2, 80)}</div><div class="pv-title">${lines(1, 72)}</div><div class="pv-by">${lines(1, 44)}</div><div class="pv-venue">${lines(1, 22)}</div><div class="pv-matches"><span class="pv-match sk-chip">${lines(1, 100)}</span></div><hr class="pv-rule"><div class="pv-summary">${lines(3, 70)}</div><div class="pv-abstract-label">Abstract</div><div class="pv-abstract">${lines(4, 76)}</div></div><div class="fp-acts" data-sk="paneActs">${['pass', 'save', 'mark', 'read'].map(k => `<span class="pact pact-${k}">${{ pass: 'Pass', save: 'Save', mark: 'Mark read', read: 'Read' }[k]}</span>`).join('')}</div></aside>`;
@@ -6934,7 +6903,7 @@ function skeletonHTML(hash) {
       // Best match to its own row exactly when the results do
       let q = ''; try { q = route.startsWith('search?q=') ? decodeURIComponent(route.slice(9)) : ''; } catch (e) {}
       const count = '00 results' + (q ? ` for "${q}"` : '');
-      return `<div class="search-results" data-shape="search"><div class="search-box-wrap"><div class="sf" data-sk="box"><div class="sk-search-input">${bar(60)}</div><span class="help">ⓘ</span></div><div class="res-bar" data-sk="bar"><span class="cp sk-search-filters">Filters ⌄</span><i class="sk sk-search-status">${esc(count)}</i><span class="ctl-btn sk-search-sort" aria-hidden="true"><span class="ctl-pill"><span class="ctl-t">Best</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></span></div></div><div class="sb-page"><aside class="rail" data-sk="rail"><div><div class="seg">${lines(1, 60)}</div>${[64, 75, 55, 70, 68].map(w => `<div class="sk-search-rail-row">${bar(w)}</div>`).join('')}</div></aside><div class="search-body" data-sk="body"><div class="paper-list">${[80, 65, 90].map(w => `<div class="sk-search-card" data-sk="card"><div class="sk-search-title">${lines(2, w)}</div><div class="sk-search-meta">${bar(40)}</div><div class="sk-search-by">${bar(36)}</div><div class="sk-search-actions">${bar(25)}${bar(25)}</div></div>`).join('')}</div></div></div></div>`;
+      return `<div class="search-results" data-shape="search"><div class="search-box-wrap"><div class="sf" data-sk="box"><div class="sk-search-input">${bar(60)}</div><span class="help">ⓘ</span></div><div class="res-bar" data-sk="bar"><i class="sk sk-search-status">${esc(count)}</i><span class="ctl-btn sk-search-sort" aria-hidden="true"><span class="ctl-pill"><span class="ctl-t">Best</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></span>${filter}</div></div><div class="sb-page"><div class="search-body" data-sk="body"><div class="paper-list">${[80, 65, 90].map(w => `<div class="sk-search-card" data-sk="card"><div class="sk-search-title">${lines(2, w)}</div><div class="sk-search-meta">${bar(40)}</div><div class="sk-search-by">${bar(36)}</div><div class="sk-search-actions">${bar(25)}${bar(25)}</div></div>`).join('')}</div></div></div></div>`;
     }
     if (/^(interest|venue)\//.test(route) || route === 'top') {
       let name = 'Top Papers'; try { if (route !== 'top') name = decodeURIComponent(route.split('/').slice(1).join('/')); } catch (e) {}
@@ -6943,7 +6912,7 @@ function skeletonHTML(hash) {
     let name = null;
     if (route.startsWith('list/')) { try { name = decodeURIComponent(route.slice(5)); } catch (e) {} }
     if (name !== null) {
-      return `<div class="feed" data-shape="list"><div class="sk-list-head"></div><div class="list-bar" data-sk="bar"><div class="lb-row">${back}<span class="lb-name">${esc(name === 'To read' ? 'Reading list' : name)}</span><span class="lb-more">⋯</span><span class="lb-grow"></span><span class="lb-add"><span class="lb-pill">+ Add a paper</span></span></div><div class="lb-int" data-sk="picker"><span class="ctl-btn ctl-sort" data-sk="sort"><span class="ctl-pill">Recently added${chevron}</span></span>${picker('All interests', 'list-picker')}</div></div><h3 class="list-sec mine" data-sk="section">In this list</h3>${posts(true)}</div>`;
+      return `<div class="feed" data-shape="list"><div class="sk-list-head"></div><div class="list-bar" data-sk="bar"><div class="lb-row">${back}<span class="lb-name">${esc(name === 'To read' ? 'Reading list' : name)}</span><span class="lb-more">⋯</span><span class="lb-grow"></span><span class="lb-add"><span class="lb-pill">+ Add a paper</span></span></div><div class="lb-int" data-sk="picker"><span class="ctl-btn ctl-sort" data-sk="sort"><span class="ctl-pill">Recently added${chevron}</span></span>${filter}</div></div><h3 class="list-sec mine" data-sk="section">In this list</h3>${posts(true)}</div>`;
     }
     if (route === 'daily') {
       // Layout A: the headline leads the card, the title under it; on a wide screen today's papers on the left
@@ -7294,7 +7263,7 @@ function hideGlobalSearch() {
 function sfEmpty() { return { text: '', any: false, show: 'all', interest: [], venue: [], year: [], list: [] }; }
 let SF = sfEmpty();
 const SF_MULTI = ['interest', 'venue', 'year', 'list'];
-let _sfChips = [], _sfOpts = [], _sfFold = {}, _sfMemo = null;
+let _sfChips = [], _sfMemo = null;
 // Kept for the existing one-paper repaint hook. Read and list changes also refresh the facet counts.
 let _searchFilters = { get unread() { return SF.show !== 'all'; } };
 let _lastSearchQ = '';
@@ -7371,42 +7340,23 @@ function sfChipRemove(i) {
   showGlobalSearch(sfQuery());
   document.getElementById('searchInput').focus({ preventScroll: true });
 }
-function setSearchFilter(key, value) {
-  if (key === 'unread') { SF.show = SF.show === 'unread' ? 'all' : 'unread'; }
-  else if (SF_MULTI.includes(key)) { value = String(value); SF[key] = SF[key].includes(value) ? SF[key].filter(v => v !== value) : [...SF[key], value]; }
-  else if (key === 'show' && ['all','read','unread'].includes(value)) SF.show = value;
-  else if (key === 'any') SF.any = !!value;
+function setSearchFilter(key, value) {   // the match mode, All or Any word; the other filters are Filters' (setFilters)
+  if (key === 'any') SF.any = !!value;
   searchFilterRender(true);
 }
 /* Search's sort: kept on this device as the feed's are, and the results drawn again from their top */
 function setSearchSort(v) { v = sortName(v, 'search'); if (v !== SortBy.search) sortSet('search', v); searchFilterRender(true); }
-function setSearchSelect(key, value) { if (SF_MULTI.includes(key)) SF[key] = value ? [String(value)] : []; searchFilterRender(true); }
-function sfOption(i) { const o = _sfOpts[i]; if (o) setSearchFilter(o[0], o[1]); }
-function clearSearchFilters() { SF.show = 'all'; SF_MULTI.forEach(f => { SF[f] = []; }); searchFilterRender(true); if (!document.getElementById('searchFilterSheet')?.hidden) sfSheet(false); }
+function clearSearchFilters() { SF.show = 'all'; SF_MULTI.forEach(f => { SF[f] = []; }); searchFilterRender(true); }
 function searchFilterRender(reset) {
   if (!_searchActive || _paperViewActive) return;
   const q = sfQuery();
   renderGlobalSearch(q, { typing: q !== Search.q || !!Search.entry, restore: !reset && Search.q === q });
 }
-function sfFold(id) { _sfFold[id] = !sfIsOpen(id); searchFilterRender(); }
-function sfPlaceControls() {
-  const controls = document.getElementById('searchControls');
-  if (!controls) return;
-  const phone = window.matchMedia('(max-width: 600px)').matches;
-  const parent = document.getElementById(phone ? 'searchFilterBody' : 'searchRail');
-  if (parent && controls.parentNode !== parent) parent.appendChild(controls);
-  if (!phone && !document.getElementById('searchFilterSheet')?.hidden) sfSheet(false);
-}
-window.addEventListener('resize',sfPlaceControls,{passive:true});
-function sfIsOpen(id) { return id in _sfFold ? _sfFold[id] : id === 'interest'; }
-function sfSheet(open, help) {
-  const sheet = document.getElementById(help ? 'searchHelpSheet' : 'searchFilterSheet');
-  const scrim = document.getElementById('searchScrim');
+function sfHelp(open) {
+  const sheet = document.getElementById('searchHelpSheet'), scrim = document.getElementById('searchScrim');
   if (!sheet || !scrim) return;
-  document.getElementById('searchFilterSheet').hidden = true;
-  document.getElementById('searchHelpSheet').hidden = true;
   sheet.hidden = !open; scrim.hidden = !open;
-  const btn = document.getElementById(help ? 'searchHelpBtn' : 'searchFiltersBtn');
+  const btn = document.getElementById('searchHelpBtn');
   if (btn) btn.setAttribute('aria-expanded', String(!!open));
   if (open) sheet.querySelector('button')?.focus({ preventScroll: true });
   else btn?.focus({ preventScroll: true });
@@ -7452,15 +7402,15 @@ function sfVals(p, memo, lists) {
   const sig = [p.venue,p.publishing_date,p.date_found,p.arxiv_id,p.url,p.matched_interests,p.machine_strengths,p.match_strengths,p.residual_score,p.relevance_tier,p.user_lists,_editGen,read].join('\u0000');
   let v = memo.vals.get(p);
   if (!v || v.sig !== sig) {
-    const date = pubKey(p), interests = effMatches(p), k = paperKey(p);
-    v = { sig, interest: interests, venue: [rowVenueLabel(p)].filter(Boolean), year: date ? [String(Math.floor(date/100))] : [],
+    const interests = effMatches(p), k = paperKey(p), year = paperFilterYear(p);
+    v = { sig, interest: interests, venue: [paperVenueName(p) || NO_VENUE], year: year === null ? [] : [String(year)],
       list: lists.filter(n => listHolds(n,k) || nameList(p.user_lists).includes(n)), read, rel: dynamicRelevance(p), score: scoreParts(p).score, latest: latestKey(p), found: p.date_found || '' };
     memo.vals.set(p,v);
   }
   return v;
 }
 function sfCompute(q, s) {
-  const keys = sfWords(q), records = [], counts = Object.fromEntries(SF_MULTI.map(f => [f,new Map()])), base = Object.fromEntries(SF_MULTI.map(f => [f,new Map()]));
+  const keys = sfWords(q), records = [], base = Object.fromEntries(SF_MULTI.map(f => [f,new Map()]));
   const memo = sfMemo(), lists = [TO_READ,...projectNames()];
   let total = 0;
   for (const p of allPapers) {
@@ -7474,51 +7424,25 @@ function sfCompute(q, s) {
       if (s[f].length && !s[f].some(x => v[f].includes(x))) failed.push(f);
     }
     if (!failed.length) records.push({ p, s: score ?? v.score, rel: v.rel, latest: v.latest, found: v.found });
-    if (failed.length < 2) for (const f of SF_MULTI) if (!failed.length || failed[0] === f) v[f].forEach(x => counts[f].set(x,(counts[f].get(x)||0)+1));
   }
   const rank = (a,b) => b.s-a.s || (REL_ORDER[a.rel]??9)-(REL_ORDER[b.rel]??9) || b.latest[0]-a.latest[0] || cmpStr(a.latest[2],b.latest[2]);   // the tie goes to the newer release, then the id, as bestOrder's
   const sort = SortBy.search;
   records.sort(sort === 'latest' ? (a,b) => latestCmp(a.latest,b.latest) : sort === 'new' ? (a,b) => cmpStr(b.found,a.found) || latestCmp(a.latest,b.latest) : rank);
-  return { keys, records, counts, base, total };
+  return { keys, records, base, total };
 }
 function sfControls(job) {
-  const s = job.sf, count = SF_MULTI.reduce((n,f) => n+s[f].length, s.show === 'all' ? 0 : 1);
-  const segment = (key,values) => `<div class="seg" role="group" aria-label="${key === 'show' ? 'Show' : 'Match words'}">${values.map(([v,label]) => `<button type="button" data-search-filter="${key}-${v}" aria-pressed="${s[key] === v}" onclick="setSearchFilter('${key}',${typeof v === 'boolean' ? v : `'${v}'`})">${label}</button>`).join('')}</div>`;
+  const s = job.sf;
+  const segment = (key,values) => `<div class="seg" role="group" aria-label="Match words">${values.map(([v,label]) => `<button type="button" data-search-filter="${key}-${v}" aria-pressed="${s[key] === v}" onclick="setSearchFilter('${key}',${v})">${label}</button>`).join('')}</div>`;
   document.getElementById('searchMode').innerHTML = segment('any',[[false,'All'],[true,'Any']]);
-  const option = (f,v) => {
-    const i = _sfOpts.push([f,v])-1, on = s[f].includes(v);
-    return `<button type="button" class="ri tc${on?' on':''}" data-sf-opt="${i}" data-search-filter="option-${i}" aria-pressed="${on}" onclick="sfOption(${i})"><span class="sf-label" data-sf-field="${f}">${esc(f === 'list' ? listLabel(v) : v)}</span><span class="n">${job.counts[f].get(v)||0}</span>${on ? '<span class="tick" aria-hidden="true">✓</span>' : ''}</button>`;
-  };
-  _sfOpts = [];
-  const section = f => {
-    const names = [...new Set([...job.base[f].keys(),...s[f]])];
-    names.sort(f === 'year' ? (a,b)=>Number(b)-Number(a) : (a,b)=>a.localeCompare(b));
-    let body;
-    if (f === 'interest') {
-      const levels = new Map(allInterests.filter(i=>i.status==='confirmed').map(i=>[i.interest_name,i.relevance_mapping]));
-      body = [['definitely','Core'],['probably','Related'],['mildly','Peripheral']].map(([level,label]) => {
-        const ns = names.filter(n=>levels.get(n)===level);
-        return ns.length ? `<div class="sub">${label}</div>${ns.map(n=>option(f,n)).join('')}` : '';
-      }).join('');
-    } else body = names.map(n=>option(f,n)).join('');
-    const open = sfIsOpen(f), label = {interest:'Interests',venue:'Venue',year:'Year',list:'Lists'}[f];
-    return `<section class="sec${open?' open':''}"><button type="button" class="sec-h" data-search-filter="fold-${f}" aria-expanded="${open}" onclick="sfFold('${f}')">${label}<span class="sel">${esc((f === 'list' ? s[f].map(listLabel) : s[f]).join(', '))}</span><span aria-hidden="true">${open?'⌃':'⌄'}</span></button><div${open?'':' hidden'}>${body}</div></section>`;
-  };
-  const html = segment('show',[['all','All'],['unread','Unread'],['read','Read']])+SF_MULTI.map(section).join('');
-  document.getElementById('searchControls').innerHTML = html;
-  // One set of facets moves into the phone sheet, retaining the same controls and focus targets.
-  const parent = document.getElementById(window.matchMedia('(max-width: 600px)').matches ? 'searchFilterBody' : 'searchRail');
-  if (document.getElementById('searchControls').parentNode !== parent) parent.appendChild(document.getElementById('searchControls'));
   sortBtnSync(document.getElementById('searchSortBtn'), 'search');
-  document.querySelector('#searchFiltersBtn .dot').hidden = !count;
-  document.getElementById('searchClear').innerHTML = count ? '<button type="button" class="v-more" data-search-filter="clear" onclick="clearSearchFilters()">Clear filters</button>' : '';
-  highlightTokens(document.getElementById('searchControls'),job.tokens);
+  filterBtnSync(document.getElementById('searchFilterBtn'), 'search');
+  filterMenuSync();
 }
 function highlightTokens(root, tokens) {
   if (!tokens.length) return;
   const keys = tokens.map(k => typeof k === 'string' ? {f:null,t:k} : k);
-  root.querySelectorAll('.tr-headline, .tr-title, .tr-authors, .tr-venue, .sf-label').forEach(el => {
-    const field = el.dataset.sfField || (el.matches('.tr-authors') ? 'author' : el.matches('.tr-venue') ? 'venue' : 'title');
+  root.querySelectorAll('.tr-headline, .tr-title, .tr-authors, .tr-venue').forEach(el => {
+    const field = (el.matches('.tr-authors') ? 'author' : el.matches('.tr-venue') ? 'venue' : 'title');
     const words = keys.filter(k=>!k.f || k.f === field).map(k=>k.t).filter(Boolean);
     if (!words.length) return;
     const escRe = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -7555,10 +7479,10 @@ function searchOff(drop) {
   const cleanup = fn => { try { fn(); } catch (e) { console.error(e); } };
   const obs = Search.obs, frame = Search.frame, timer = _searchTimer, scrollMode = Search.scrollMode;
   Search.gen++; Search.obs = null; Search.frame = 0; _searchTimer = null;
-  if (drop) { Search.scrollMode = null; Search.job = null; Search.records = []; Search.shown = 0; Search.q = ''; Search.origin = Search.back = Search.entry = null; Search.chips.clear(); Search.dirty = true; SF = sfEmpty(); _sfChips = []; _sfOpts = []; _sfFold = {}; _sfMemo = null; }
+  if (drop) { Search.scrollMode = null; Search.job = null; Search.records = []; Search.shown = 0; Search.q = ''; Search.origin = Search.back = Search.entry = null; Search.chips.clear(); Search.dirty = true; SF = sfEmpty(); _sfChips = []; _sfMemo = null; }
   cleanup(() => clearTimeout(timer)); cleanup(() => cancelAnimationFrame(frame));
   if (obs) cleanup(() => obs.disconnect());
-  if (drop) { if (scrollMode !== null) cleanup(() => { history.scrollRestoration = scrollMode; }); cleanup(() => sfSheet(false)); cleanup(() => sfSheet(false,true)); cleanup(() => sfChipRender()); }
+  if (drop) { if (scrollMode !== null) cleanup(() => { history.scrollRestoration = scrollMode; }); cleanup(() => sfHelp(false)); cleanup(() => sfChipRender()); }
 }
 function searchRestoreOrigin() {
   const back = Search.back;
@@ -7587,30 +7511,25 @@ function searchShell() {
     <span id="searchChips" class="wrap"></span>
     <input type="text" id="searchInput" aria-label="Search papers" placeholder="Search papers" autocomplete="off" oninput="debouncedSearch()">
     <span id="searchMode"></span>
-    <button type="button" id="searchHelpBtn" class="help" aria-label="Search help" aria-expanded="false" onclick="sfSheet(true,true)">ⓘ</button>
+    <button type="button" id="searchHelpBtn" class="help" aria-label="Search help" aria-expanded="false" onclick="sfHelp(true)">ⓘ</button>
   </div>
   <div class="res-bar">
-    <button type="button" id="searchFiltersBtn" class="cp" aria-controls="searchFilterSheet" aria-expanded="false" onclick="sfSheet(true)">Filters <i class="dot" hidden></i>⌄</button>
-    <span id="searchStatus" role="status" aria-live="polite" aria-atomic="true"></span><span id="searchClear"></span>
-    <span id="searchSortSlot"></span>
+    <span id="searchStatus" role="status" aria-live="polite" aria-atomic="true"></span>
+    <span id="searchSortSlot"></span><span id="searchFilterSlot"></span>
   </div>
 </div>
 <div class="sb-page">
-  <aside id="searchRail" class="rail" aria-label="Search filters"><div id="searchControls"></div></aside>
   <div class="search-body"><div id="searchRows"></div><div id="searchMore" class="feed-more"></div></div>
 </div>
-<div id="searchScrim" class="scrim" hidden onclick="sfSheet(false);sfSheet(false,true)"></div>
-<section id="searchFilterSheet" class="bsheet" hidden role="dialog" aria-modal="true" aria-label="Filters">
-  <div class="bs-head"><b>Filters</b><button type="button" class="sf-clear" onclick="clearSearchFilters()">Clear</button><button type="button" class="done" onclick="sfSheet(false)">Done</button></div>
-  <div id="searchFilterBody" class="bs-body"></div>
-</section>
+<div id="searchScrim" class="scrim" hidden onclick="sfHelp(false)"></div>
 <section id="searchHelpSheet" class="bsheet help-sheet" hidden role="dialog" aria-modal="true" aria-label="Search help">
-  <div class="bs-head"><b>Search help</b><button type="button" class="done" onclick="sfSheet(false,true)">Done</button></div>
+  <div class="bs-head"><b>Search help</b><button type="button" class="done" onclick="sfHelp(false)">Done</button></div>
   <div class="bs-body"><p>Type author: before a name to search authors only. title:, interest:, venue: and year: work the same way. Put quotes around words to keep them together.</p></div>
 </section>
 `;
-  const slot = document.getElementById('searchSortSlot');
+  const slot = document.getElementById('searchSortSlot'), fslot = document.getElementById('searchFilterSlot');
   if (slot && !slot.firstChild) slot.innerHTML = sortBtnHTML('search');   // the one sort button, drawn once
+  if (fslot && !fslot.firstChild) fslot.innerHTML = filterBtnHTML('search');
 }
 function renderGlobalSearch(q, opts) {
   opts = opts || {};
@@ -7619,10 +7538,10 @@ function renderGlobalSearch(q, opts) {
   searchOff();
   SF.text = q;
   _lastSearchQ = q;
-  const s = sfCopy(SF), computed = sfCompute(q,s), {keys,records,counts,base,total} = computed;
+  const s = sfCopy(SF), computed = sfCompute(q,s), {keys,records,base,total} = computed;
   const active = s.show !== 'all' || SF_MULTI.some(f=>s[f].length);
   const count = records.length === total ? `${total} result${total !== 1 ? 's' : ''}` : `${records.length} of ${total} results`;
-  const job = { gen: Search.gen, route: location.hash, epoch: Private.epoch, q, tokens: keys, records, sf: s, counts, base, active, committed: false,
+  const job = { gen: Search.gen, route: location.hash, epoch: Private.epoch, q, tokens: keys, records, sf: s, base, active, committed: false,
     status: q ? `${count} for "${q}"` : count, empty: !total, typing: opts.typing || Search.entry === location.hash,
     restore: opts.restore, y: opts.restore ? (opts.y !== undefined ? opts.y : document.getElementById('mainScroll').scrollTop) : 0, extent, focus };
   Search.job = job;
@@ -7668,7 +7587,7 @@ function searchCommit(job) {
     const html = job.records.slice(0, Search.shown).map(x => searchRowHTML(x.p));
     rows.innerHTML = job.records.length ? `<div class="paper-list flat"><section class="tl-section">${html.join('')}</section></div>`
       : job.empty ? `<div class="tl-empty search-empty"><strong>No papers match "${esc(job.q)}".</strong>Try fewer words, a name, or a different filter.</div>`
-      : `<div class="tl-empty">No results with these filters. <button class="v-more" data-search-filter="clear" onclick="clearSearchFilters()">Clear filters</button></div>`;
+      : `<div class="tl-empty">${filterEmptyHTML()}</div>`;
     highlightTokens(rows, job.tokens);
     rows.querySelectorAll('.top-row').forEach((el, i) => { el._html = html[i]; });
   } else {
@@ -7747,7 +7666,7 @@ function switchTab(tab, fromHash) {
     if (Feed.menu) closeFeedMenu();
     sfSetQuery('');
     document.getElementById('sec-search').classList.remove('active');
-    sfSheet(false); sfSheet(false,true);
+    sfHelp(false);
   }
   currentTab = tab;
   if (!fromHash) location.hash = tabHash(tab);
@@ -8195,6 +8114,15 @@ const FEED_SORT_KEY = 'scholar_feed_sort_v1';
 const SORT_KEYS = { foryou: FEED_SORT_KEY, following: 'scholar_following_sort_v1', list: 'scholar_listpage_sort_v1', search: 'scholar_search_sort_v1' };
 const SORT_DEFAULT = { foryou: 'best', following: 'new', list: 'new', search: 'best' };
 const SortBy = Object.assign({}, SORT_DEFAULT);
+/* The filters of every screen that lists papers (For you, Following, a list's page): one Filters button and one chooser
+   with Interest (one confirmed interest, or All), Venue and Year (several each). A paper shows when it matches every
+   section that has a choice. Venue and Year are kept per screen on this device (FILTER_KEY, a key no older page reads);
+   the interest is For you's Feed.interest, a list's own (ListView, saved with the list), and Following's here, in memory
+   like For you's. Search keeps its own filters. */
+const FILTER_KEY = 'scholar_filters_v1';
+const NO_VENUE = 'No venue yet';
+const FilterBy = { foryou: { venue: [], year: [] }, following: { interest: null, venue: [], year: [] }, list: { venue: [], year: [] } };
+const FILTER_BTN = { foryou: 'feedFilterBtn', following: 'feedFilterBtn', list: 'listFilterBtn', search: 'searchFilterBtn' };
 /* Phase 25: split, in a list's tab, is how many of keys are the list's own papers (the rest are suggestions); chips,
    in For you, the list each post's chip saves to (feedChipTargets); ladd, the list bar's + Add a paper field when open. */
 const Feed = { keys: [], shown: 0, project: null, ranked: null, near: null, switched: false, fresh: false, mounted: false,
@@ -8220,7 +8148,7 @@ function followingShown() { return Feed.mode === 'following' && !projectMode() &
 function followingPool(rows = allPapers) { return rows.filter(p => String(p.is_hidden || '').toLowerCase() !== 'true' && !p._goneRemote && !isPassed(p) && !!followMarks(p, true)); }
 function followingSort(arr) {
   const sort = SortBy.following;
-  return sort === 'best' ? bestOrder(arr) : sort === 'latest' ? latestOrder(arr) : followingOrder(arr);
+  return sort === 'best' ? bestOrder(arr, FilterBy.following.interest) : sort === 'latest' ? latestOrder(arr) : followingOrder(arr);
 }
 function followingOrder(arr) {
   const k = new Map(arr.map(p => [p, [p.date_found || '', releaseDay(p) ?? -1e9, paperKey(p)]]));
@@ -8229,6 +8157,7 @@ function followingOrder(arr) {
 /* Following's end, and its empty state: one plain line, and the way to People you follow */
 function followingEndHTML() {
   const people = '<a href="#people">People you follow</a>';
+  if (!Feed.keys.length && filtersOn('following') && followingPool().length) return filterEmptyHTML();
   if (Feed.keys.length) return `<p>That&rsquo;s every paper from the people you follow for now.</p>`;
   const anyone = !People.bad && peopleRows().some(r => String(r.status || '').trim() === 'confirmed');
   return anyone ? `<p>No papers from the people you follow yet. See ${people}.</p>` : `<p>You don&rsquo;t follow anyone yet. Find people to follow in ${people}.</p>`;
@@ -8424,9 +8353,9 @@ function feedTabStep(d) {
   homeGo(Feed.mode === 'following' ? '#all' : '#following', true);
 }
 /* ---- Phase 17: For you's sort and interest filter ----
-   A row under the feed tabs, on For you only (a project tab keeps its own order and shows none) with two menu buttons:
-   Sort (Best, New) and Interests (All interests, then every confirmed interest in the Interests page's order). One
-   interest at a time. An interest holds the papers that are about or partly about it (a match not rated yet counts as
+   A row under the feed tabs, on For you and Following (a list's page has its own bar) with two buttons: Sort (Best,
+   Latest, Recently added) and Filters (Interest, Venue, Year; see FilterBy). The interests are every confirmed interest in
+   the Interests page's order, one at a time. An interest holds the papers that are about or partly about it (a match not rated yet counts as
    partly, as scoring does); a paper that only touches it stays under All. A change rebuilds the feed from its top, as
    choosing a feed tab does, and adds no address or history entry. The sort is remembered on this device
    (FEED_SORT_KEY, for a signed-out viewer of a public library too); the interest lasts until the page reloads or
@@ -8471,6 +8400,12 @@ function feedInChip(p, name) {
    a project tab, where nothing shows the choice, it goes quietly. Never draws: its callers do. Returns whether For
    you's view changed. */
 function feedChipReconcile() {
+  const fi = FilterBy.following.interest;
+  if (fi !== null) {
+    const now = canonicalInterest(fi), kept = feedChipNames().includes(now);
+    FilterBy.following.interest = kept ? now : null;
+    if (!kept && followingShown()) Feed.switched = true;   // Following shows every paper again, from its top
+  }
   if (Feed.interest === null) return false;
   const now = canonicalInterest(Feed.interest);
   if (feedChipNames().includes(now)) { Feed.interest = now; return false; }
@@ -8484,28 +8419,138 @@ function feedChipReconcile() {
 /* A sort or an interest chosen (interest: a name, or null for All): the feed starts the new view from its top, as
    setProject does for a tab. What is on already goes back to the top. A write of the sort the browser refuses keeps
    the choice for this page and says nothing. */
-function setFeedView(sort, interest) {
+function setFeedView(sort, interest, clearAll) {   // clearAll: no venue and no year either (the refresh pill's "See all")
   const screen = feedScreen();
   if (Feed.mode === 'daily') return;
   sort = sortName(sort, screen);
   interest = screen === 'foryou' ? (typeof interest === 'string' && feedChipNames().includes(interest) ? interest : null) : Feed.interest;   // only For you has an interest here
-  if (sort === SortBy[screen] && interest === Feed.interest) { if (feedActive()) jumpScroll(document.getElementById('mainScroll'), 0); return; }
+  const f = FilterBy[screen], wide = !!clearAll && (f.venue.length > 0 || f.year.length > 0);
+  if (sort === SortBy[screen] && interest === Feed.interest && !wide) { if (feedActive()) jumpScroll(document.getElementById('mainScroll'), 0); return; }
   if (sort !== SortBy[screen]) sortSet(screen, sort);
+  if (wide) { f.venue = []; f.year = []; filterSave(); }
   Feed.interest = interest; Feed.switched = true;
   feedLeave();
   if (feedActive()) { renderFeed(); feedCtlSay(); }
 }
-function feedShowAll() { setFeedView(feedSort(), null); }
+/* ---- the filters ----
+   The venue a paper is filed under: "CoRL" for "CoRL 2025", "Findings of ACL" for "Findings of ACL 2024"; '' for a
+   preprint or a paper with no venue (NO_VENUE in the chooser). Its year: the venue label's, else the release year. */
+function paperVenueName(p) {
+  const f = String(p.venue || '').trim().match(/^(Findings of .+?)(?:\s+20\d{2})?$/i);
+  if (f) return f[1].trim();
+  const v = venueOf(p);
+  return v.name === 'Unknown venue' || v.kind === 'preprint' ? '' : v.name;
+}
+function paperFilterYear(p) {
+  const label = paperVenueName(p) && String(p.venue || '').match(/\b(20\d{2})\b/), day = releaseDay(p);
+  return label ? +label[1] : day === null ? null : new Date(day * 86400000).getUTCFullYear();
+}
+/* The chosen interest of a screen, and whether anything on it is filtered */
+function filterInterest(screen) { return screen === 'foryou' ? Feed.interest : screen === 'following' ? FilterBy.following.interest : listInterest(Feed.project); }
+function filtersOn(screen) {
+  if (screen === 'search') return SF.show !== 'all' || SF_MULTI.some(f => SF[f].length > 0);
+  const f = FilterBy[screen]; return filterInterest(screen) !== null || f.venue.length > 0 || f.year.length > 0; }
+/* A paper shows on a screen when it is about its interest (if one is chosen) and has a picked venue and a picked year (if any) */
+function filterPass(p, screen) {
+  const f = FilterBy[screen], interest = filterInterest(screen);
+  return (interest === null || feedInChip(p, interest))
+    && (!f.venue.length || f.venue.includes(paperVenueName(p) || NO_VENUE))
+    && (!f.year.length || f.year.includes(String(paperFilterYear(p))));
+}
+/* The chooser's venues (no venue last) and years (newest first) from a set of values */
+function venueList(set) { return [...set].sort((a, b) => a === NO_VENUE ? 1 : b === NO_VENUE ? -1 : a.localeCompare(b, undefined, { sensitivity: 'base' })); }
+function yearList(set) { return [...set].sort((a, b) => b - a); }
+/* What the chooser offers: every venue and year among the papers the screen can show (a list's own and its suggestions),
+   and what is picked, so it can be taken off */
+function filterOptions(screen) {
+  const pool = screen === 'list' ? listMembers(Feed.project).concat(listSuggestions(Feed.project, feedPool()).map(x => x.p)) : feedPool(), venues = new Set(FilterBy[screen].venue), years = new Set(FilterBy[screen].year);
+  pool.forEach(p => { venues.add(paperVenueName(p) || NO_VENUE); const y = paperFilterYear(p); if (y !== null) years.add(String(y)); });
+  return { venues: venueList(venues), years: yearList(years) };
+}
+/* One screen's chooser: its rows, what is marked, what a pick does to a draft, and how the draft applies. Feed screens:
+   one interest (radio), venues, years. Search keeps its own state (SF): Show, several interests, venues, years, lists. */
+function filterModel(screen) {
+  if (screen === 'search') {
+    const base = Search.job ? Search.job.base : null, confirmed = new Set(feedChipNames());   // only confirmed interests are offered; a stored one that is no longer confirmed reads as All interests
+    const names = f => new Set([...(base ? base[f].keys() : []), ...SF[f]].filter(n => f !== 'interest' || confirmed.has(n)));
+    const level = new Map(allInterests.filter(i => i.status === 'confirmed').map(i => [i.interest_name, LEVEL_RANK[i.relevance_mapping] ?? 3]));
+    const draft = { show: SF.show, interest: new Set(SF.interest.filter(n => confirmed.has(n))), venue: new Set(SF.venue), year: new Set(SF.year), list: new Set(SF.list) };
+    const interests = [...names('interest')].sort((a, b) => (level.get(a) ?? 3) - (level.get(b) ?? 3) || a.localeCompare(b));
+    return { sig: JSON.stringify(feedChipNames()),
+      rows: [...[['all', 'All'], ['unread', 'Unread'], ['read', 'Read']].map(([value, label]) => ({ group: 'Show', kind: 'show', radio: true, value, label })),
+        ...interests.map(value => ({ group: 'Interest', kind: 'interest', value })), ...venueList(names('venue')).map(value => ({ group: 'Venue', kind: 'venue', value })),
+        ...yearList(names('year')).map(value => ({ group: 'Year', kind: 'year', value })), ...[...names('list')].sort((a, b) => listLabel(a).localeCompare(listLabel(b))).map(value => ({ group: 'Lists', kind: 'list', value, label: listLabel(value) }))],
+      isOn: row => row.kind === 'show' ? draft.show === row.value : draft[row.kind].has(row.value),
+      toggle: row => { if (row.kind === 'show') draft.show = row.value; else if (!draft[row.kind].delete(row.value)) draft[row.kind].add(row.value); },
+      choose: () => {},
+      apply: () => setFilters({ show: draft.show, interest: [...draft.interest], venue: [...draft.venue], year: [...draft.year], list: [...draft.list] }) };
+  }
+  const names = feedChipNames(), { venues, years } = filterOptions(screen), now = FilterBy[screen];
+  const draft = { interest: filterInterest(screen), venue: new Set(now.venue), year: new Set(now.year) };
+  return { sig: JSON.stringify(names),
+    rows: [...(names.length ? [null, ...names].map(n => ({ group: 'Interest', interest: n || '' })) : []), ...venues.map(value => ({ group: 'Venue', kind: 'venue', value })), ...years.map(value => ({ group: 'Year', kind: 'year', value }))],
+    isOn: row => row.kind ? draft[row.kind].has(row.value) : row.interest === (draft.interest || ''),
+    toggle: row => { const set = draft[row.kind]; if (!set.delete(row.value)) set.add(row.value); },
+    choose: n => { draft.interest = n || null; },
+    apply: () => setFilters({ interest: draft.interest, venue: [...draft.venue], year: [...draft.year] }) };
+}
+function filterLoad() {
+  let o = null;
+  try { o = JSON.parse(localStorage.getItem(FILTER_KEY)); } catch (e) {}
+  for (const screen of Object.keys(FilterBy)) for (const k of ['venue', 'year']) {
+    const v = o && o[screen] && o[screen][k];
+    FilterBy[screen][k] = Array.isArray(v) ? v.filter(x => typeof x === 'string').slice(0, 200) : [];
+  }
+}
+function filterSave() {
+  const o = {}; for (const screen of Object.keys(FilterBy)) o[screen] = { venue: FilterBy[screen].venue, year: FilterBy[screen].year };
+  try { checkedStorageSet(FILTER_KEY, JSON.stringify(o)); } catch (e) {}   // a write the browser refuses keeps the choice for this page
+}
+/* Filters chosen (a patch: interest, venue, year; any of them): the screen starts the new view from its top, as a sort
+   does. A list's page draws again where it was (setListInterest saves its interest with the list). */
+function setFilters(patch) {
+  if (sortScreen() === 'search') {   // search keeps its own state (SF): Show (read, unread), several interests, venues, years and lists
+    if ('show' in patch) SF.show = patch.show;
+    for (const f of SF_MULTI) if (f in patch) SF[f] = [].concat(patch[f] || []).map(String);
+    searchFilterRender(true);
+    return;
+  }
+  if (!feedActive()) return;
+  const screen = feedScreen(), f = FilterBy[screen];
+  let changed = false;
+  for (const k of ['venue', 'year']) if (k in patch) {
+    const v = [...new Set(patch[k].map(String))];
+    if (v.join('\n') !== f[k].join('\n')) { f[k] = v; changed = true; }
+  }
+  if (changed) filterSave();
+  if ('interest' in patch) {
+    const want = typeof patch.interest === 'string' && feedChipNames().includes(patch.interest) ? patch.interest : null;
+    if (want !== filterInterest(screen)) {
+      if (screen === 'list') { setListInterest(Feed.project, want); return; }
+      if (screen === 'foryou') Feed.interest = want; else f.interest = want;
+      changed = true;
+    }
+  }
+  if (!changed) { jumpScroll(document.getElementById('mainScroll'), 0); return; }
+  if (screen === 'list') { listRelist(); listBarSync(); return; }
+  Feed.switched = true;
+  feedLeave();
+  if (feedActive()) { renderFeed(); feedCtlSay(); }
+}
+function filtersClear() { if (sortScreen() === 'search') clearSearchFilters(); else setFilters({ interest: null, venue: [], year: [] }); }
+/* Nothing on the screen passes: the one line and the way out */
+function filterEmptyHTML() { return `<p>Nothing here for these filters.</p><div class="feed-end-acts"><button type="button" class="ui-btn" onclick="filtersClear()">Clear filters</button></div>`; }
 /* After a change, for a screen reader: "World models, 12 papers, best first" */
 function feedCtlSay() {
   const el = document.getElementById('feedCtlStatus');
-  if (el) el.textContent = `${Feed.interest || 'All papers'}, ${Feed.keys.length} ${Feed.keys.length === 1 ? 'paper' : 'papers'}, ${{ best: 'best first', latest: 'latest first', new: 'recently added first' }[feedSort()]}`;
+  if (el) el.textContent = `${filterInterest(feedScreen()) || 'All papers'}, ${Feed.keys.length} ${Feed.keys.length === 1 ? 'paper' : 'papers'}, ${{ best: 'best first', latest: 'latest first', new: 'recently added first' }[feedSort()]}`;
 }
-/* Sort keeps its menu; Interests uses the shared sheet. */
-const FEED_MENUS = { sort: { menu: 'feedSortMenu', label: 'Sort' }, interest: { btn: 'feedInterestBtn', menu: 'dailyInterestSheet', label: 'Interests' } };
-/* The button a menu opens from: the sort button of the screen it was opened on, or the interest button */
-function feedMenuBtn(kind, screen) { return document.getElementById(kind === 'sort' ? SORT_BTN[screen || (Feed.menu && Feed.menu.screen) || sortScreen()] : FEED_MENUS[kind].btn); }
+/* Sort keeps its menu; Filters uses the shared chooser sheet. */
+const FEED_MENUS = { sort: { menu: 'feedSortMenu', label: 'Sort' }, filters: { menu: 'dailyInterestSheet', label: 'Filters' } };
+/* The button a menu opens from: the sort or the filters button of the screen it was opened on */
+function feedMenuBtn(kind, screen) { return document.getElementById((kind === 'sort' ? SORT_BTN : FILTER_BTN)[screen || (Feed.menu && Feed.menu.screen) || sortScreen()]); }
 const FEED_CHEVRON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+const FILTER_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7.5V19l-4-2v-4.5z"/></svg>';
 const FEED_TICK = '<svg class="sort-tick" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 /* The row: drawn once per mount (Feed.ctlGen: a press on an older row acts in none); the buttons' labels follow in
    place. An open interest menu closes when the names it lists change (an approval, a rename, a dismissal), and
@@ -8521,25 +8566,33 @@ function sortBtnSync(btn, screen) {
   btn.setAttribute('aria-label', 'Sort: ' + label); btn.setAttribute('aria-expanded', String(!!Feed.menu && Feed.menu.kind === 'sort' && Feed.menu.screen === screen));
   if (t && t.textContent !== label) t.textContent = label;
 }
+/* The Filters button: the funnel alone, in the accent colour while anything on its screen is filtered */
+function filterBtnHTML(screen) {
+  return `<button type="button" class="ctl-btn ctl-filter" id="${FILTER_BTN[screen]}" data-menu="filters" aria-label="Filters" aria-haspopup="dialog" aria-expanded="false" aria-controls="dailyInterestSheet" onclick="openFeedMenu('filters', this)"><span class="ctl-pill">${FILTER_ICON}</span></button>`;
+}
+/* The open chooser follows what it lists: other interests, or its button gone, and it closes (what was chosen is dropped) */
+function filterMenuSync() {
+  if (Feed.menu && Feed.menu.kind === 'filters' && (Feed.menu.sig !== JSON.stringify(feedChipNames()) || !feedMenuBtn('filters', Feed.menu.screen))) closeFeedMenu();
+}
+function filterBtnSync(btn, screen) {
+  if (!btn) return;
+  btn.classList.toggle('on', filtersOn(screen));
+  btn.setAttribute('aria-expanded', String(!!Feed.menu && Feed.menu.kind === 'filters' && Feed.menu.screen === screen));
+}
 function feedCtlHTML() {
-  return sortBtnHTML(followingShown() ? 'following' : 'foryou') + interestPickerHTML('All interests', `id="feedInterestBtn" data-menu="interest" onclick="openFeedMenu('interest', this)"`) + `<p class="ctl-status" id="feedCtlStatus" role="status" aria-live="polite"></p>`;
+  const screen = followingShown() ? 'following' : 'foryou';
+  return sortBtnHTML(screen) + filterBtnHTML(screen) + `<p class="ctl-status" id="feedCtlStatus" role="status" aria-live="polite"></p>`;
 }
 function feedCtlSync() {
   const box = document.getElementById('feedCtl');
   if (!box) return;
-  const on = feedCtlOn() || followingShown();   // For you's row has Sort and Interests, Following's Sort alone; a list's bar has its own
+  const on = feedCtlOn() || followingShown();   // For you's row and Following's have Sort and Filters; a list's bar has its own
   box.hidden = !on;
   if (!on) { if (Feed.menu && Feed.menu.screen !== 'list') closeFeedMenu(); return; }
   if (!box.querySelector('#feedSortBtn')) { Feed.ctlGen++; box.innerHTML = feedCtlHTML(); }
-  if (Feed.menu && Feed.menu.kind === 'interest' && Feed.menu.sig !== JSON.stringify(feedChipNames())) closeFeedMenu();
+  filterMenuSync();
   sortBtnSync(box.querySelector('#feedSortBtn'), feedScreen());
-  const name = Feed.interest || 'All interests', int = box.querySelector('#feedInterestBtn');
-  if (int) {
-    int.hidden = !feedCtlOn();
-    int.setAttribute('aria-label', 'Interests: ' + (Feed.interest || 'all')); int.setAttribute('aria-expanded', String(!!Feed.menu && Feed.menu.kind === 'interest'));
-    int.setAttribute('title', name);
-    const t = int.querySelector('.daily-picker-name'); if (t && t.textContent !== name) t.textContent = name;
-  }
+  filterBtnSync(box.querySelector('#feedFilterBtn'), feedScreen());
 }
 /* The menus: a popover under its button on every layout, in the body so the head's blur does not hold it. One open
    at a time, with each other and the other menus (POPOVERS): a tap outside only closes it, and its own button closes
@@ -8547,20 +8600,20 @@ function feedCtlSync() {
    Tab close, and focus goes back to its button. Each opening is an instance of its own (Feed.menu.id): a press that
    began in one never acts in another, nor after the menu closed. */
 function openFeedMenu(kind, btn) {
-  kind = kind === 'interest' ? 'interest' : 'sort';
+  kind = kind === 'filters' ? 'filters' : 'sort';
   const was = Feed.menu ? Feed.menu.kind : null;
   if (was) { closeFeedMenu(was === kind); if (was === kind) return; }   // its own button closes it; the other one's opens in its place
   const f = FEED_MENUS[kind], screen = sortScreen();
   btn = btn || feedMenuBtn(kind, screen);
-  if (!btn || (kind === 'interest' ? !feedActive() || !feedCtlOn() : !screen)) return;
+  if (!btn || !screen) return;
   closeSaveSheet();
-  const names = kind === 'interest' ? feedChipNames() : null;
-  Feed.menu = { id: ++Feed.seq, kind, screen: kind === 'sort' ? screen : null, sig: names ? JSON.stringify(names) : null };
-  if (kind === 'interest') {
+  const model = kind === 'filters' ? filterModel(screen) : null;
+  Feed.menu = { id: ++Feed.seq, kind, screen, sig: model ? model.sig : null };
+  if (model) {
     const opening = Feed.menu;
-    openInterestSheet({ button: btn, title: 'Interests', chosen: Feed.interest, rows: [null, ...names].map(n => ({ interest: n || '' })),
-      live: () => Feed.menu === opening && feedActive() && opening.sig === JSON.stringify(feedChipNames()),
-      close: () => closeFeedMenu(true), choose: n => { closeFeedMenu(true); setFeedView(feedSort(), n || null); } });
+    openInterestSheet({ button: btn, title: 'Filters', keep: true, rows: model.rows, isOn: model.isOn, toggle: model.toggle, choose: model.choose,   // a choice applies when the sheet closes
+      live: () => Feed.menu === opening && sortScreen() === screen && opening.sig === JSON.stringify(feedChipNames()),
+      close: () => { closeFeedMenu(true); model.apply(); const b = feedMenuBtn('filters', screen); if (b) b.focus({ preventScroll: true }); } });   // focus stays on the button through a redraw
     return;
   }
   const m = document.createElement('div');
@@ -8578,7 +8631,7 @@ function openFeedMenu(kind, btn) {
   if (m.scrollHeight > m.clientHeight + 1 && on.offsetTop + on.offsetHeight > m.scrollTop + m.clientHeight) m.scrollTop = on.offsetTop + on.offsetHeight - m.clientHeight;   // a checked row further down: in view
 }
 function placeFeedMenu() {
-  if (!Feed.menu || Feed.menu.kind === 'interest') return;
+  if (!Feed.menu || Feed.menu.kind === 'filters') return;
   const f = FEED_MENUS[Feed.menu.kind], m = document.getElementById(f.menu), btn = feedMenuBtn(Feed.menu.kind);
   if (!m) return;
   if (!btn || !btn.isConnected) { closeFeedMenu(); return; }
@@ -8591,12 +8644,12 @@ function closeFeedMenu(focusBack) {
   const f = Feed.menu ? FEED_MENUS[Feed.menu.kind] : null, m = f && document.getElementById(f.menu), btn = f && feedMenuBtn(Feed.menu.kind);
   const inside = !!m && !!document.activeElement && m.contains(document.activeElement);
   feedMenuDrop();
-  for (const id of [...new Set(Object.values(SORT_BTN)), FEED_MENUS.interest.btn]) { const b = document.getElementById(id); if (b) b.setAttribute('aria-expanded', 'false'); }
+  for (const id of [...new Set([...Object.values(SORT_BTN), ...Object.values(FILTER_BTN)])]) { const b = document.getElementById(id); if (b) b.setAttribute('aria-expanded', 'false'); }
   if (btn && btn.isConnected && (focusBack || inside)) btn.focus();
   pressReconcile();
 }
 function feedMenuDrop() {
-  if (Feed.menu?.kind === 'interest') closeInterestSheet();
+  if (Feed.menu?.kind === 'filters') closeInterestSheet();
   Feed.menu = null;
   for (const k of Object.keys(FEED_MENUS)) {
     const m = document.getElementById(FEED_MENUS[k].menu);
@@ -8618,10 +8671,9 @@ function feedMenuKey(e) {
   else return;
   e.preventDefault(); e.stopPropagation();
 }
-/* A row chosen in the opening it was drawn in: Sort's sets the sort and keeps the interest, Interests' sets the
-   interest (All is '') and keeps the sort */
+/* A row of the Sort menu chosen in the opening it was drawn in: it sets the sort and keeps the filters */
 function feedMenuChoose(item) {
-  const m = item && item.closest ? item.closest('#feedSortMenu, #feedInterestMenu') : null;
+  const m = item && item.closest ? item.closest('#feedSortMenu') : null;
   if (!m || !Feed.menu || Number(m.dataset.menu) !== Feed.menu.id) return;
   const screen = Feed.menu.screen, choice = item.dataset.sort;
   closeFeedMenu(true);
@@ -8650,7 +8702,7 @@ function feedHeadWatch() {
 }
 /* The view a refresh is asked from and compared with: a project tab by its project alone (it ignores For you's sort
    and interest), For you by its sort and interest. A JSON tuple, so no two views read alike whatever the names. */
-function feedViewKey() { return projectMode() ? JSON.stringify(['project', Feed.project, feedSort()]) : followingShown() ? JSON.stringify(['following', feedSort()]) : JSON.stringify(['foryou', feedSort(), Feed.interest]); }
+function feedViewKey() { return projectMode() ? JSON.stringify(['project', Feed.project, feedSort(), FilterBy.list]) : followingShown() ? JSON.stringify(['following', feedSort(), FilterBy.following]) : JSON.stringify(['foryou', feedSort(), Feed.interest, FilterBy.foryou]); }
 /* When Scout added the paper, on New's posts: "Added today", "Added yesterday", "Added Oct 12" (and the year when it is
    not this one). Plain text: postHTML escapes it. '' outside For you's New, and for a date_found it cannot read. */
 function feedAddedText(p) {
@@ -9026,12 +9078,12 @@ function feedEndHTML() {
   if (listTabShown()) return listEndHTML();
   if (followingShown()) return followingEndHTML();
   const chip = Feed.interest, toRead = (libraryLists[TO_READ] || []).length;
-  const msg = !allPapers.length ? 'No papers yet.' : chip !== null ? (Feed.keys.length ? `That&rsquo;s everything in ${esc(chip)} for now.` : `No unread papers match ${esc(chip)} yet.`)
+  if (!Feed.keys.length && allPapers.length && filtersOn('foryou')) return filterEmptyHTML();
+  const msg = !allPapers.length ? 'No papers yet.' : chip !== null && Feed.keys.length ? `That&rsquo;s everything in ${esc(chip)} for now.`
     : Feed.keys.length ? 'You&rsquo;re through For you for now.'
     : 'Nothing unread matches a confirmed interest. Papers that match none are in Lists, under All papers.';
-  const all = chip !== null && allPapers.length ? '<button type="button" class="ui-btn" onclick="feedShowAll()">Show all papers</button>' : '';
-  const open = !isOwner() || (chip !== null && !Feed.keys.length) ? '' : toRead ? `<button type="button" class="ui-btn" onclick="feedOpenToRead()">Open ${READING_LIST} (${toRead})</button>` : '';
-  return `<p>${msg}</p>${all || open ? `<div class="feed-end-acts">${all}${open}</div>` : ''}`;
+  const open = !isOwner() ? '' : toRead ? `<button type="button" class="ui-btn" onclick="feedOpenToRead()">Open ${READING_LIST} (${toRead})</button>` : '';
+  return `<p>${msg}</p>${open ? `<div class="feed-end-acts">${open}</div>` : ''}`;
 }
 function feedOpenToRead() { openListPage(TO_READ); }   // Phase 31: To read's own page
 /* One post drawn again from the paper as it is now, in place; a post that no longer belongs goes. An element is
@@ -9347,7 +9399,7 @@ document.addEventListener('keydown', e => {
 const Presses = new Map();
 function pressControl(t) {
   if (!t || !t.closest) return null;
-  return t.closest('.daily-action, .daily-picker, .daily-interest-row, .daily-interest-done, #dailyInterestSheet, button.daily-row') || t.closest('#feedPane .fp-act, #feedList .post .ic, #feedList .post .chip, #feedList .post .act, #feedList .post.gone button, #feedTabs .tab, #feedTabs .tab-add, #feedCtl button, #feedSortMenu button, #feedInterestMenu button, #listBar button, .list-menu button, #saveSheet [data-guard], #hideSheet [data-guard], #hideSheet .hide-own input')
+  return t.closest('.daily-action, .daily-picker, .daily-interest-row, .daily-interest-done, #dailyInterestSheet, button.daily-row') || t.closest('#feedPane .fp-act, #feedList .post .ic, #feedList .post .chip, #feedList .post .act, #feedList .post.gone button, #feedTabs .tab, #feedTabs .tab-add, #feedCtl button, #feedSortMenu button, #listBar button, .list-menu button, #saveSheet [data-guard], #hideSheet [data-guard], #hideSheet .hide-own input')
     || t.closest('.sh-panel') || t.closest('#saveSheet') || t.closest('.hide-box') || t.closest('#hideSheet') || t.closest('#feedList .post')
     || t.closest('.save-dd .save-dd-item, .copy-dd .copy-dd-item, #paperDetail .pd-bar .pd-act[data-act], #libraryContent .top-row .p-actions [data-act]')   // Phase 13e: the picker, the Copy menu, the paper page's bar and Library's row icons
     || t.closest('#paperDetail .pd-related .feed-item [data-act], #libraryContent [data-lib] .library-actions button[data-act]')   // and a page's related papers, and a Library group's header actions
@@ -9386,8 +9438,8 @@ function pressWhat(el) {
   if (el.closest('#feedTabs')) return el.classList.contains('tab-add') ? { kind: 'tabadd', ident: 'tabadd' } : el.classList.contains('add') ? { kind: 'tabnew', ident: 'tabnew' } : { kind: 'tab', n: el.dataset.n || '', ident: `tab:${el.dataset.n || ''}` };
   // Phase 17: Sort and Interests, bound to the row as drawn (Feed.ctlGen); a row of either menu, to that opening of it
   if (el.closest('#feedCtl')) return { kind: 'ctl', act: el.dataset.menu || '', ident: `ctl:${el.dataset.menu || ''}` };
-  const sm = el.closest('#feedSortMenu, #feedInterestMenu');
-  if (sm) { const v = sm.id === 'feedSortMenu' ? el.dataset.sort || '' : el.dataset.n || ''; return { kind: 'ctlmenu', menu: Number(sm.dataset.menu || 0), act: v, ident: `ctlmenu:${sm.dataset.menu || ''}:${v}` }; }
+  const sm = el.closest('#feedSortMenu');
+  if (sm) { const v = el.dataset.sort || ''; return { kind: 'ctlmenu', menu: Number(sm.dataset.menu || 0), act: v, ident: `ctlmenu:${sm.dataset.menu || ''}:${v}` }; }
   const hs = el.closest('#hideSheet');
   if (hs) { const g = el.tagName === 'INPUT' ? 'submit' : el.dataset.guard; return { kind: 'hide', ident: `hide:${hs.dataset.hs || ''}:${el === hs ? 'shade' : el.classList.contains('hide-box') ? 'box' : `${g}:${el.dataset.reason || ''}`}` }; }   // the field's Enter submits: Hide's press
   const s = el.closest('#saveSheet');
@@ -10126,8 +10178,8 @@ function tasteOrder(pool, interest = null) {
 function feedOrder(pool) {
   Feed.near = null; Feed.split = 0; Feed.chips = new Map();
   if (projectMode()) return listOrder(Feed.project, pool);
-  if (followingShown()) { const keys = followingSort(pool.slice()).map(paperKey); if (isOwner()) Feed.chips = feedChipTargets(keys); return keys; }   // Phase 31
-  const view = Feed.interest === null ? pool : pool.filter(p => feedInChip(p, Feed.interest));
+  if (followingShown()) { const keys = followingSort(pool.filter(p => filterPass(p, 'following'))).map(paperKey); if (isOwner()) Feed.chips = feedChipTargets(keys); return keys; }   // Phase 31
+  const view = pool.filter(p => filterPass(p, 'foryou'));
   const sort = SortBy.foryou, keys = (sort === 'new' ? byNew(view.slice()) : sort === 'latest' ? latestOrder(view.slice()) : tasteOrder(view, Feed.interest)).map(paperKey);
   if (isOwner()) Feed.chips = feedChipTargets(keys);
   return keys;
@@ -10300,7 +10352,10 @@ function dailyResume() {
   if (dailyView() && Refresh.staged?.texts.dailyCurrent !== undefined) refreshShow();
   dailyAdopt();
 }
-/* One picker for Daily, For you and each list; callers retain their own state and validity checks. */
+/* One chooser for Daily's interests and for every screen's Filters; callers retain their own state and validity checks.
+   A row is an interest (one at a time: radio) or, with row.kind, a pick (row.value, shown as row.label; a checkbox, or a
+   radio with row.radio; options.toggle takes it). Options.isOn(row) says what is marked (default: options.chosen); with options.keep a pick marks in place and
+   the sheet stays until Done. */
 const InterestPicker = { cur: null, seq: 0, back: false, afterClose: null };
 function interestPickerHTML(label, attrs = '', count = '') {
   return `<button type="button" class="daily-picker" aria-haspopup="dialog" aria-expanded="false" aria-controls="dailyInterestSheet" ${attrs}><span class="daily-picker-name">${esc(label)}</span>${count ? `<span class="daily-picker-count">${esc(count)}</span>` : ''}${FEED_CHEVRON}</button>`;
@@ -10311,16 +10366,29 @@ function openInterestSheet(options) {
   const live = () => InterestPicker.cur === opening && opening.live();
   const s = document.createElement('div'); s.id = 'dailyInterestSheet'; s.className = 'save-sheet'; s.dataset.picker = String(opening.id);
   let group = '';
+  const isOn = row => options.isOn ? options.isOn(row) : row.interest === (options.chosen || ''), several = options.rows.some(row => row.kind);
   s.innerHTML = `<div class="sh-panel" role="dialog" aria-modal="true" aria-labelledby="dailyInterestTitle">
     <div class="sh-head"><span class="sh-grip" aria-hidden="true"></span><div class="sh-what"><b id="dailyInterestTitle">${esc(options.title)}</b></div><button type="button" class="sh-done daily-interest-done">Done</button></div>
-    <div class="sh-list" role="radiogroup" aria-label="${dataAttr(options.title)}">${options.rows.map(row => {
+    <div class="sh-list" role="${several ? 'group' : 'radiogroup'}" aria-label="${dataAttr(options.title)}">${options.rows.map((row, i) => {
       const heading = row.group && row.group !== group ? `<h3 class="daily-interest-group">${esc(row.group)}</h3>` : ''; group = row.group;
-      return heading + `<button type="button" class="sh-row daily-interest-row${row.left === 0 ? ' done' : ''}" role="radio" data-interest="${dataAttr(row.interest)}" data-n="${dataAttr(row.interest)}" aria-checked="${row.interest === (options.chosen || '')}" aria-current="${row.interest === (options.chosen || '')}"><span class="sh-n">${esc(row.interest || 'All interests')}</span>${row.left === undefined ? '' : `<span class="daily-interest-left">${row.left ? row.left + ' left' : 'Done'}</span>`}</button>`;
+      const on = isOn(row);
+      return heading + (row.kind
+        ? `<button type="button" class="sh-row daily-interest-row" role="${row.radio ? 'radio' : 'checkbox'}" data-i="${i}" data-kind="${row.kind}" data-value="${dataAttr(row.value)}" aria-checked="${on}"><span class="sh-n">${esc(row.label ?? row.value)}</span></button>`
+        : `<button type="button" class="sh-row daily-interest-row${row.left === 0 ? ' done' : ''}" role="radio" data-i="${i}" data-interest="${dataAttr(row.interest)}" data-n="${dataAttr(row.interest)}" aria-checked="${on}" aria-current="${on}"><span class="sh-n">${esc(row.interest || 'All interests')}</span>${row.left === undefined ? '' : `<span class="daily-interest-left">${row.left ? row.left + ' left' : 'Done'}</span>`}</button>`);
     }).join('')}</div></div>`;
   const close = privateCallback(() => { checkPrivateEpoch(epoch); if (live()) opening.close(); });
   s.onclick = e => { if (e.target === s) close(); };
   s.querySelector('.sh-done').onclick = close;
-  s.querySelectorAll('.daily-interest-row').forEach(b => { b.onclick = privateCallback(() => { checkPrivateEpoch(epoch); if (live()) opening.choose(b.dataset.interest); }); });
+  const mark = () => s.querySelectorAll('.daily-interest-row').forEach(b => {
+    const on = isOn(options.rows[+b.dataset.i]);
+    b.setAttribute('aria-checked', String(on)); if (b.hasAttribute('aria-current')) b.setAttribute('aria-current', String(on));
+  });
+  s.querySelectorAll('.daily-interest-row').forEach(b => { b.onclick = privateCallback(() => {
+    checkPrivateEpoch(epoch); if (!live()) return;
+    const row = options.rows[+b.dataset.i];
+    if (row.kind) options.toggle(row); else options.choose(row.interest);
+    if (options.keep && live()) mark();
+  }); });
   opening.viewport = privateCallback(() => { const v = window.visualViewport; if (!v) return; Object.assign(s.style, { top: v.offsetTop + 'px', left: v.offsetLeft + 'px', width: v.width + 'px', height: v.height + 'px', right: 'auto', bottom: 'auto' }); s.querySelector('.sh-panel').style.maxHeight = (v.height * .9) + 'px'; });
   if (window.visualViewport) { window.visualViewport.addEventListener('resize', opening.viewport); window.visualViewport.addEventListener('scroll', opening.viewport); }
   document.body.appendChild(s); opening.viewport(); popIn(s);
@@ -10336,7 +10404,7 @@ function openInterestSheet(options) {
   });
   if (options.button) options.button.setAttribute('aria-expanded', 'true');
   if (!InterestPicker.back) interestSheetStep(opening);
-  const first = s.querySelector('[aria-current="true"]') || s.querySelector('.daily-interest-row');
+  const first = s.querySelector('[aria-current="true"]') || s.querySelector('[aria-checked="true"]') || s.querySelector('.daily-interest-row');
   if (first) { first.focus({ preventScroll: true }); const list = s.querySelector('.sh-list'); list.scrollTop = Math.max(0, first.offsetTop + first.offsetHeight - list.clientHeight); }
   return s;
 }
@@ -11088,24 +11156,28 @@ function chipList(k) {
    feedOrder puts the list's papers first (narrowed by the list's interest, if one is chosen) and its suggestions after
    them; Feed.split says where they meet. listSig is what the tab was drawn from: a change to it (a paper added or taken
    out here or on another device, its order, a dismissal) draws the tab again at once, where it was. */
-function listOrder(name, pool) {
-  const all = listMembers(name), chosen = listInterest(name);
-  const mine = chosen === null ? all.slice() : all.filter(p => feedInChip(p, chosen)), sort = SortBy.list;
-  const shown = sort === 'best' ? bestOrder(mine, chosen) : sort === 'latest' ? latestOrder(mine) : mine, keys = shown.map(paperKey);   // Recently added: the list's own order, newest added first
-  Feed.split = keys.length; Feed.near = new Map(); Feed.lsig = listSig(name);
-  if (!all.length) return keys;   // an empty list has no suggestions
-  const seeds = projectSeeds(name), members = new Set(seeds.map(paperKey)), near = projectNear(seeds), off = listNotFor(name), rank = new Map();
+/* The suggestions for a list, in their order: papers QuickRead found near a paper of the list, then those the related index
+   puts near it, before any filter. Each is { p, key, count } (count: how many of the list's papers have it near; 'found' for QuickRead's). */
+function listSuggestions(name, pool) {
+  if (!listMembers(name).length) return [];   // an empty list has no suggestions
+  const seeds = projectSeeds(name), members = new Set(seeds.map(paperKey)), near = projectNear(seeds), off = listNotFor(name), rank = [];
   forYouFeed(pool).forEach((p, i) => {
     const k = paperKey(p), o = quickreadOrigin(p), n = near.get(k);
     if (members.has(k) || off.has(k)) return;
-    if (o && (o.kind === 'near' || o.kind === 'star') && members.has(o.ref)) rank.set(k, [0, 0, 0, i]);
-    else if (n) rank.set(k, [1, -n.count, n.best, i]);
+    if (o && (o.kind === 'near' || o.kind === 'star') && members.has(o.ref)) rank.push({ p, key: k, count: 'found', at: [0, 0, 0, i] });
+    else if (n) rank.push({ p, key: k, count: n.count, at: [1, -n.count, n.best, i] });
   });
-  const sug = [...rank.keys()].sort((a, b) => { const x = rank.get(a), y = rank.get(b); return x[0] - y[0] || x[1] - y[1] || x[2] - y[2] || x[3] - y[3]; });
-  sug.forEach(k => Feed.near.set(k, rank.get(k)[0] === 0 ? 'found' : near.get(k).count));
-  return keys.concat(sug);
+  return rank.sort((x, y) => x.at[0] - y.at[0] || x.at[1] - y.at[1] || x.at[2] - y.at[2] || x.at[3] - y.at[3]);
 }
-function listSig(name) { return JSON.stringify([name, listMembers(name).map(paperKey), [...listNotFor(name)], listInterest(name)]); }
+function listOrder(name, pool) {
+  const chosen = listInterest(name), mine = listMembers(name).filter(p => filterPass(p, 'list')), sort = SortBy.list;
+  const shown = sort === 'best' ? bestOrder(mine, chosen) : sort === 'latest' ? latestOrder(mine) : mine, keys = shown.map(paperKey);   // Recently added: the list's own order, newest added first
+  Feed.split = keys.length; Feed.near = new Map(); Feed.lsig = listSig(name);
+  const sug = listSuggestions(name, pool).filter(x => filterPass(x.p, 'list'));   // the filters apply to the suggestions too
+  sug.forEach(x => Feed.near.set(x.key, x.count));
+  return keys.concat(sug.map(x => x.key));
+}
+function listSig(name) { return JSON.stringify([name, listMembers(name).map(paperKey), [...listNotFor(name)], listInterest(name), FilterBy.list.venue, FilterBy.list.year]); }
 function listStale() { return listTabShown() && Feed.lsig !== listSig(Feed.project); }
 /* A post in a list's tab: one of the list's papers (before Feed.split), still in it; or a suggestion, still one */
 function listPostView(k, p) {
@@ -11131,8 +11203,7 @@ function listActsHTML(k, p, member) {
 function listSections() {
   const list = document.getElementById('feedList'), n = Feed.project;
   if (!list || !listTabShown() || !listMembers(n).length) return;
-  const chosen = listInterest(n);
-  list.insertAdjacentHTML('beforeend', `<h3 class="list-sec mine">In this list</h3>${!Feed.split && chosen !== null ? `<div class="list-none"><p>None of your papers in ${esc(listLabel(n))} are about ${esc(chosen)}.</p><button type="button" class="ui-btn" onclick="setListInterest(Feed.project, null)">Show all papers</button></div>` : ''}`);
+  list.insertAdjacentHTML('beforeend', `<h3 class="list-sec mine">In this list</h3>${!Feed.split && filtersOn('list') ? `<div class="list-none">${filterEmptyHTML()}</div>` : ''}`);
 }
 function listSugHeadHTML() { return `<h3 class="list-sec sug">Suggested for ${esc(listLabel(Feed.project))}</h3>`; }
 /* The end of a list's tab: an empty list says how to fill it and offers no suggestions */
@@ -11219,21 +11290,18 @@ function listBarRender() {
 function listBarHTML() {
   const n = Feed.project;
   return `<div class="lb-row"><button type="button" class="lb-back" id="listBackBtn" aria-label="Back to lists" onclick="listPageBack()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><h2 class="lb-name" id="listName" title="${dataAttr(listLabel(n))}">${esc(listLabel(n))}</h2>${n === TO_READ ? '' : `<button type="button" class="lb-more" id="listMoreBtn" aria-haspopup="menu" aria-expanded="false" aria-label="More for ${dataAttr(n)}" onclick="openListMenu(this, Feed.project, 'more')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>`}<span class="lb-grow"></span><button type="button" class="lb-add" id="listAddBtn" aria-expanded="false" aria-controls="listAddBox" onclick="listAddOpen()"><span class="lb-pill">+ Add a paper</span></button></div>`
-    + `<div class="lb-addbox" id="listAddBox" hidden></div><div class="lb-int" id="listIntRow" hidden>${sortBtnHTML('list')}${interestPickerHTML('All interests', `id="listIntBtn" onclick="openListMenu(this, Feed.project, 'interest')"`)}</div>`;
+    + `<div class="lb-addbox" id="listAddBox" hidden></div><div class="lb-int" id="listIntRow" hidden>${sortBtnHTML('list')}${filterBtnHTML('list')}</div>`;
 }
 function listBarSync() {
   const bar = document.getElementById('listBar');
   if (!bar || bar.hidden || !listTabShown()) return;
-  const n = Feed.project, name = document.getElementById('listName'), more = document.getElementById('listMoreBtn'), row = document.getElementById('listIntRow'), int = document.getElementById('listIntBtn');
+  const n = Feed.project, name = document.getElementById('listName'), more = document.getElementById('listMoreBtn'), row = document.getElementById('listIntRow');
   if (name && name.textContent !== listLabel(n)) { name.textContent = listLabel(n); name.title = listLabel(n); }
   if (more) more.setAttribute('aria-label', `More for ${n}`);
   if (row) row.hidden = !listMembers(n).length;
+  filterMenuSync();
   sortBtnSync(document.getElementById('listSortBtn'), 'list');
-  if (int) {
-    const chosen = listInterest(n), t = int.querySelector('.daily-picker-name'), label = chosen || 'All interests';
-    if (t && t.textContent !== label) t.textContent = label;
-    int.setAttribute('aria-label', `Interests in ${listLabel(n)}: ${chosen || 'all'}`); int.setAttribute('title', label);
-  }
+  filterBtnSync(document.getElementById('listFilterBtn'), 'list');
 }
 /* + Add a paper: a field under the bar for a link, DOI or arXiv id. A paper already in the library goes straight into
    the list; any other is added through Add paper, and into this list once it is in. Escape closes it. */
@@ -11538,6 +11606,7 @@ function feedTeardown() {
       gen: Feed.gen + 1, tabsGen: Feed.tabsGen + 1, tabNames: null, recs: new Map(), focus: null, sheet: null, edit: null, noted: false, layout: null, obs: null, more: 0,
       interest: null, ctlGen: Feed.ctlGen + 1, menu: null, drawing: false, headObs: null, split: 0, chips: new Map(), ladd: null, lsig: null, pressDeferred: false, pane: null, paneGen: Feed.paneGen + 1, paneAt: 0 });   // the sort is read back at sign-in
     Object.assign(SortBy, SORT_DEFAULT);   // the sorts are read back from this device at sign-in
+    for (const f of Object.values(FilterBy)) { f.venue = []; f.year = []; if ('interest' in f) f.interest = null; }   // so are the venues and years
     _projectNear = { sig: null, rows: null, map: null }; _listEv = null; cleanup(() => rowIndexClear());
     _chipNear = { rows: null, gen: -1, map: new Map() }; _listAddAt = new Map(); ListAdd.pending = null; ListView.interest.clear(); ListView.ids.clear();   // Phase 25: each list's choice lasts the visit
   }
@@ -11702,7 +11771,7 @@ pullBind();
    button underneath (as on iOS). Scrolling outside still closes it and scrolls. Short-lived hints don't count: the venue
    tooltip, and the score breakdown while it's only hovered (counted, a mouse click on its (i) closed it instead of
    keeping it open). */
-const POPOVERS = '#dailyInterestSheet.open, #saveSheet.open, #feedSortMenu, #feedInterestMenu, .list-menu, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup[data-pinned], #chatHist, #keptPaperMenu, #paperMenu';
+const POPOVERS = '#dailyInterestSheet.open, #saveSheet.open, #feedSortMenu, .list-menu, #readerMenu.open, .save-dd, .copy-dd, .interest-dropdown, .abs-popup, .relevance-popup[data-pinned], #chatHist, #keptPaperMenu, #paperMenu';
 let _dismissTap = null;
 function closePopovers() {
   paperMenuClose();
@@ -15329,6 +15398,7 @@ function renameInterestRow(i, name) {
   if (was) { _loadedInterestFields.delete(old); _loadedInterestFields.set(name, was); }
   allInterests.forEach(x => { if (x !== i && x.related_to) x.related_to = renameInRelated(x.related_to, old, name); });
   aliasMap.cache = null;
+  if (FilterBy.following.interest === old) FilterBy.following.interest = name;
   if (Feed.interest === old) Feed.interest = name;   // For you's chosen interest follows: a row made here and not saved has no alias to find it by
 }
 /* Saves the card's edit: { name, notes, related_to }. Returns '' or what is wrong with the name. */
@@ -26846,11 +26916,11 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 // validate before reading state, and nested ownership checks stop the whole render.
 (function () {
   const views = ['renderCopySettings', 'syncReaderNotesVisibility', 'applyPapers', 'switchTab', 'applyHash', 'backFromList', 'refresh', 'applyFilters', 'toggleRel', 'setListSort',
-    'showGlobalSearch', 'hideGlobalSearch', 'renderGlobalSearch', 'setSearchFilter', 'setSearchSelect', 'clearSearchFilters',
+    'showGlobalSearch', 'hideGlobalSearch', 'renderGlobalSearch', 'setSearchFilter', 'clearSearchFilters',
     'renderFeed', 'feedRefresh', 'feedMountMore', 'feedPageOn', 'feedRepaintPost', 'feedTabsRender', 'openSaveSheet', 'relayout', 'repaintPaper', 'repaintShownPapers', 'feedCheckNew', 'refreshShow',
     // Phase 17: For you's sort and interest menus. Setters, drawing and opening only: closeFeedMenu and feedMenuDrop
     // stay callable after the sign-in went, so a lock can close a menu without locking again
-    'setFeedView', 'feedShowAll', 'feedMenuChoose', 'feedCtlSync', 'openFeedMenu', 'placeFeedMenu',
+    'setFeedView', 'setFilters', 'filtersClear', 'feedMenuChoose', 'feedCtlSync', 'openFeedMenu', 'placeFeedMenu',
     // Phase 25 (Sol's review #1): a list's interest menu, in its tab and in Library, and what it draws; closeListMenu stays
     // callable after the sign-in went, as closeFeedMenu does. Save to from the page and a row opens the sheet (fix round)
     'openListMenu', 'placeListMenu', 'listMenuChoose', 'setListInterest', 'listBarRender', 'listBarSync', 'listRelist', 'libGroupRedraw', 'openSaveTo',
