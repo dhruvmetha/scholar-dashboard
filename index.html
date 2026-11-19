@@ -914,8 +914,6 @@ html.no-hover .pd-topic-chip:hover:not(:active) { background: rgba(255,255,255,0
 .pd-q-item[open] > summary::after { transform: rotate(225deg); margin-top: 10px; border-color: var(--accent); }
 .pd-q-a { padding: 0 0 18px; }
 .pd-q-wait { color: var(--text-muted); font-size: 15px; }
-.pd-q .brief-pill { position: relative; }
-.pd-q .brief-pill::after { content: ''; position: absolute; left: 50%; top: 50%; width: calc(100% + 4px); min-width: 44px; height: 44px; transform: translate(-50%, -50%); }
 @media (prefers-reduced-motion: reduce) { .pd-q-item > summary::after { transition: none; } }
 /* Phase 24: the "Ten questions" chip under the authors (44 px tall, no icon), and the answers in a sheet: a bottom sheet
    on a phone, a centred dialog on a wide screen, under the reader (z 320) so a citation pill opens the PDF over it */
@@ -4494,7 +4492,7 @@ function privatePathCap(path) {
   if (path === PEOPLE_FILE) return PEOPLE_CAP;   // Phase 21 (B2)
   if (/^annotations\/(?:_vault|_index|[A-Za-z0-9][A-Za-z0-9._-]{0,199})\.json$/.test(path) && !path.includes('..')) return 4 * 1024 * 1024;
   if (path === 'briefs/_index.json') return 2 * 1024 * 1024;   // Phase 14: the answers' index
-  if (/^briefs\/[a-z0-9][a-z0-9-]{0,199}\.json$/.test(path) && !path.startsWith('briefs/up-')) return 64 * 1024;   // one paper's answers
+  if (/^briefs\/[a-z0-9][a-z0-9-]{0,199}\.json$/.test(path) && !path.startsWith('briefs/up-')) return Infinity;   // answers follow the model's own output limit
   if (path === 'taste.json') return 4 * 1024 * 1024;   // Phase 25b: private worker output, read only
   if (path === 'activity.json') return 64 * 1024;   // Phase 16: Claude's weekly note (ACTIVITY_FILE), read only
   if (path === 'seal/arrakis.json') return 4096;
@@ -13466,8 +13464,9 @@ function requestsTeardown() {
 function requestStart(what) {
   requireOwner();
   if (!isPrivate()) throw new Error('Requests need a private library');
+  if (what.kind !== 'add') throw new Error('Ten questions run on this device');
   const r = { id: requestNewId(), kind: what.kind, fromSimilar: !!what.fromSimilar, at: requestStamp(Date.now()), sent: false, stop: false, stopSent: false, status: null };
-  if (what.kind === 'brief') r.paper = what.paper; else { r.input = requestInputFit(what.input); r.star = !!what.star; }
+  r.input = requestInputFit(what.input); r.star = !!what.star;
   if (what.kind === 'add' && typeof what.list === 'string' && listDestOK(what.list)) {
     const def = listDefLive(what.list);
     r.destination = { job: r.id, input: r.input, list: what.list, listId: def ? def[0] : null };
@@ -13493,10 +13492,11 @@ async function requestPut(path, body, message, signal) { const _authEpoch = capt
 }
 async function requestSend(r) { const _authEpoch = capturePrivateEpoch();
   if (r.sending) return;
+  if (r.kind === 'brief') { r.status = { state: 'failed', reason: 'unavailable', at: requestStamp(Date.now()), added: [], existing: [] }; r.ended = Date.now(); requestsStore(); requestChanged(r); return; }
   r.sending = true;
   try {
     if (!r.sent) {
-      await privateAwait(requestPut(requestPath(r.id), requestBody(r), r.kind === 'brief' ? 'Ask Scout for the ten questions' : 'Ask Scout to add a paper'), _authEpoch);
+      await privateAwait(requestPut(requestPath(r.id), requestBody(r), 'Ask Scout to add a paper'), _authEpoch);
       r.sent = true; r.unsent = false; requestsStore();
     }
     if (r.stop && !r.stopSent) {
@@ -18656,7 +18656,6 @@ function hideReader() {
   endAdjust(true);
   finishNotesEdit();
   closeAnnoCard(); hideSelBar(); closeCiteDD(); endInk(); exitZen(true);
-  Brief.jump = null;   // a brief pill's jump belongs to the reader it opened
   const wasOpen = el.classList.contains('open');
   if (!wasOpen && _reader.leaveClear) return;   // already on its way out
   el.classList.remove('open');
@@ -18847,10 +18846,8 @@ async function loadIntoReader(p, source, isLocal, visit = _reader.visit) { const
     runPendingNotes();
     checkPdfFingerprint();
     if (_pendingJump) { const id = _pendingJump; _pendingJump = null; setTimeout(privateCallback(() => jumpToAnno(id)), 400); }
-    if (Brief.jump) briefJumpRun(p, _reader.token).catch(briefQuiet);
   } catch (e) { checkPrivateEpoch(_authEpoch);
     if (!live()) return;
-    Brief.jump = null;
     console.warn('PDF load failed', e);
     showPdfPicker(p, 'failed', pdfErrorText(e, isLocal ? 'reader' : false));
     ensureReaderNotes().then(privateCallback(() => { if (live()) runPendingNotes(); }));
@@ -23530,7 +23527,7 @@ const API_CLIENT_TOOLS = [
 const _apiTurns = new Map();   // paper id -> the API turn running on this page ({ stop })
 
 function apiKey() { if (!isOwner()) return ''; try { requireOwner(); return localStorage.getItem(API_KEY_NAME) || ''; } catch (e) { return ''; } }
-function saveApiKey(k) { requireOwner(); k ? privateSet(API_KEY_NAME, k) : privateRemove(API_KEY_NAME); Chat.route = ''; uploadBriefSoon(); }
+function saveApiKey(k) { requireOwner(); k ? privateSet(API_KEY_NAME, k) : privateRemove(API_KEY_NAME); Chat.route = ''; uploadBriefSoon(); const id = document.querySelector('#paperDetail [data-tq]')?.dataset.tq; if (id) briefChipSync(id); }
 /* 'api' while this device has a key, unless the API refused it and the bridge took over (until the key changes) */
 function chatRoute() { return apiKey() && Chat.route !== 'bridge' ? 'api' : 'bridge'; }
 function chatBaseStatus() { return chatRoute() === 'api' ? 'ready' : chatElsewhere() ? 'elsewhere' : Chat.token ? 'unknown' : 'setup'; }
@@ -25086,17 +25083,16 @@ function uploadListSet(id, name, on) {
 /* When an upload was put in a list, for the list's order */
 function uploadListAt(n, id) { return (n === TO_READ ? (_uploads[id] || {}).toReadAt : uploadListEntry(id, n)?.at) || ''; }
 
-/* ---- Ten questions for an upload (6 November 2026) ----
-   The same chip and sheet as a library paper's. Only a tap asks: once, from this page, on this device's Claude API
-   key, with the library's ten questions and instructions. brief_recipe.json beside the page holds them, written from
-   ingest/brief.py and ingest/brief_instructions.md by tools/export_brief_recipe.py; the message is built as
-   ingest/brief.py message() builds it. The answers are checked as the worker checks them and kept, with the
-   questions' version, in the upload's protected record (UPLOAD STATE), so every device shows them without asking
-   again. A lock, a sign-out or a removal while it runs saves nothing. */
-const UploadQuestions = { jobs: new Map(), serial: 0, recipe: null };
+/* ---- Ten questions on this device ----
+   One tap, one streamed call on this device's key, for library papers and uploads alike. The shared recipe comes
+   from ingest/brief.py and brief_instructions.md. Uploads keep encrypted answers; library answers use briefs/. */
+// Temporary: pages open before this release must have reloaded before plain upload answers are written. A later release deletes this gate.
+const UPLOAD_PLAIN_BRIEFS_FROM = Date.parse('2026-11-20T15:00:00Z');
+const UploadQuestions = { jobs: new Map(), pending: new Map(), serial: 0, recipe: null };
 const UPLOAD_QUESTIONS_SPACE = /(?:[^\S\ufeff]|[\x1c-\x1f\x85])+/;   // Python's str.split() whitespace
 function uploadQuestionsCancel(id) {
   if (!id) UploadQuestions.serial++;
+  if (id) UploadQuestions.pending.delete(id); else UploadQuestions.pending.clear();
   for (const [pid, job] of UploadQuestions.jobs) if (!id || id === pid) { job.stopped = true; try { job.ctl.abort(); } catch (e) {} }
   // Decrypted answers leave memory and the screen with the key (a lock, a reset) or with the paper (a removal)
   for (const pid of [...Brief.files.keys(), ...Brief.loading.keys()]) if (/^up-/.test(pid) && (!id || id === pid)) { Brief.files.delete(pid); Brief.loading.delete(pid); }
@@ -25106,24 +25102,21 @@ async function uploadQuestionsRecipe(epoch) {
   if (UploadQuestions.recipe) return UploadQuestions.recipe;
   const res = await privateAwait(fetch(APP_ROOT + 'brief_recipe.json', { credentials: 'same-origin', cache: 'no-cache' }), epoch);
   if (!res.ok) throw Error('The questions could not be read');
-  const r = await privateAwait(res.json(), epoch), int = v => Number.isSafeInteger(v) && v > 0;
+  const r = await privateAwait(res.json(), epoch);
   const ok = vaultObject(r) && r.schema === 1 && r.version === BRIEF_RECIPE && r.model === API_MODELS.opus && API_EFFORTS.includes(r.effort)
     && typeof r.instructions === 'string' && r.instructions.length > 0 && Array.isArray(r.questions) && r.questions.length === 10
     && r.questions.every((q, i) => vaultObject(q) && Object.keys(q).length === 3 && q.n === i + 1 && q.key === BRIEF_QUESTIONS[i].key && q.label === BRIEF_QUESTIONS[i].label)
-    && vaultObject(r.rules) && int(r.rules.answer_cap) && int(r.rules.long_answer_cap) && Array.isArray(r.rules.long_answers) && r.rules.long_answers.every(int)
-    && int(r.rules.quotes_max) && int(r.rules.max_chars) && int(r.rules.min_chars) && r.rules.sentinel_full === BRIEF_SENTINELS[0] && r.rules.sentinel_cut === BRIEF_SENTINELS[1]
-    && Array.isArray(r.rules.hype_words) && r.rules.hype_words.every(w => typeof w === 'string');
+    && vaultObject(r.rules) && r.rules.sentinel_full === BRIEF_SENTINELS[0] && r.rules.sentinel_cut === BRIEF_SENTINELS[1];
   if (!ok) throw Error('The questions could not be read');
   UploadQuestions.recipe = r; return r;
 }
-/* The public facts the worker sends (ingest/brief.py public_facts): an upload has its summary's title, authors and
-   abstract, and nothing else */
+/* Only public bibliographic facts, with whitespace flattened and no metadata clipping. */
 function uploadQuestionsFacts(p) {
-  const caps = { title: 1000, authors: 2000, venue: 300, publishing_date: 40, arxiv_id: 40, doi: 200, abstract: 6000 }, out = {};
-  for (const k of Object.keys(caps)) out[k] = [...String(p[k] || '').split(UPLOAD_QUESTIONS_SPACE).filter(Boolean).join(' ')].slice(0, caps[k]).join('');
+  const fields = ['title', 'authors', 'venue', 'publishing_date', 'arxiv_id', 'doi', 'abstract'], out = {};
+  for (const k of fields) out[k] = String(p[k] || '').split(UPLOAD_QUESTIONS_SPACE).filter(Boolean).join(' ');
   return out;
 }
-/* ingest/brief.py message(facts, text), character for character (tests/upregular/recipe.cjs compares them) */
+/* One message format for library papers and uploads. Facts and page blocks are data inside separate fences. */
 function uploadQuestionsMessage(facts, pages, total, fence, rules) {
   const blocks = pages.map((page, i) => `[p.${i + 1}]\n${page}\n\n`).join('');
   const note = pages.length < total ? `\nThe text was cut short at a page boundary: pages ${pages.length + 1} to ${total} of ${total} were left out. Answer from the pages given, and where they do not say, write exactly: ${rules.sentinel_cut}\n` : '';
@@ -25131,7 +25124,7 @@ function uploadQuestionsMessage(facts, pages, total, fence, rules) {
     + `<paper-text id="${fence}">\n${blocks}</paper-text id="${fence}">\n` + note
     + '\nAnswer the ten questions by the instructions and reply with the JSON block only.';
 }
-/* One page's text as ingest/fulltext.py _clean leaves it: stray controls a space, runs of spaces and tabs one space,
+/* One page's text cleaned for the prompt: stray controls a space, runs of spaces and tabs one space,
    line ends trimmed, blank lines at the edges gone */
 function uploadQuestionsPage(items) {
   const raw = items.map(t => (t.str || '') + (t.hasEOL ? '\n' : '')).join('').replace(/[\x00-\x08\x0b\x0d-\x1f\x7f-\x9f]/g, ' ');
@@ -25140,46 +25133,17 @@ function uploadQuestionsPage(items) {
   while (lines.length && !lines[lines.length - 1]) lines.pop();
   return lines.join('\n');
 }
-function uploadQuestionsTextLength(pages) { return pages.reduce((n, p) => n + p.split(/\s+/).filter(Boolean).join(' ').length, 0); }
-/* The ten answers checked as ingest/brief.py validate checks them: a string each, within its cap, exactly the
-   sentinel with no citation, or one to three citations found on their page (or repaired to the one other page that
-   has them). Throws on the first failure; the whole brief is then refused. */
-function uploadQuestionsCheck(answers, pages, truncated, rules) {
-  const layers = pages.map(t => { const d = document.createElement('div'); d.textContent = t; return briefPageText(d); });
-  const sentinel = truncated ? rules.sentinel_cut : rules.sentinel_full, hype = new Set(rules.hype_words), out = [];
-  const checks = { quotes_kept: 0, quotes_repaired: 0, em_dashes: 0, hype_words: 0, html_tags: 0 };
-  const typo = /\[\[p\. ?(\d+)(\s+)[\u201c\u201d"]([^"\]\n]*)[\u201c\u201d"]\]\]/g;
+/* Require ten nonempty answers in order. Citations and answer lengths never reject a response. */
+function uploadQuestionsCheck(answers) {
   if (!Array.isArray(answers) || answers.length !== 10) throw Error('Invalid answers');
-  answers.forEach((entry, i) => {
-    const n = i + 1, q = BRIEF_QUESTIONS[i];
-    if (!vaultObject(entry) || entry.n !== n || typeof entry.answer !== 'string' || BRIEF_CONTROLS.test(entry.answer)) throw Error('Invalid answer ' + n);
-    let value = entry.answer.trim().replace(typo, (m, page, sp, words) => `[[p.${page}${sp}"${words}"]]`);
-    const cap = rules.long_answers.includes(n) ? rules.long_answer_cap : rules.answer_cap;
-    if (!value || [...value].length > cap) throw Error('Invalid answer ' + n);
-    const found = [...value.matchAll(QUOTE_RE)];
-    if (value.split('[[').length - 1 !== found.length) throw Error('Invalid citation ' + n);
-    if (value === sentinel) { out.push({ n, key: q.key, label: q.label, answer: value, quotes: 0, says: false }); return; }
-    if (BRIEF_SENTINELS.some(s => value.startsWith(s)) || !found.length || found.length > rules.quotes_max) throw Error('Invalid answer ' + n);
-    let text = '', at = 0;
-    for (const m of found) {
-      const page = +m[1], words = m[2];
-      let to = page >= 1 && page <= layers.length && briefMatch(layers[page - 1], words) ? page : 0;
-      if (to) checks.quotes_kept++;
-      else {
-        const others = layers.map((l, j) => j + 1 !== page && briefMatch(l, words) ? j + 1 : 0).filter(Boolean);
-        if (others.length !== 1) throw Error('Passage not found ' + n);
-        to = others[0]; checks.quotes_repaired++;
-      }
-      text += value.slice(at, m.index) + (to === page ? m[0] : `[[p.${to} "${words}"]]`); at = m.index + m[0].length;
-    }
-    value = text + value.slice(at);
-    if ([...value].length > cap) throw Error('Invalid answer ' + n);
-    checks.em_dashes += value.split('\u2014').length - 1;
-    checks.hype_words += (value.match(/[A-Za-z][A-Za-z'-]*/g) || []).filter(w => hype.has(w.toLowerCase())).length;
-    checks.html_tags += (value.match(/<[A-Za-z/!?]/g) || []).length;
-    out.push({ n, key: q.key, label: q.label, answer: value, quotes: found.length, says: true });
+  const out = answers.map((entry, i) => {
+    const q = BRIEF_QUESTIONS[i];
+    if (!vaultObject(entry) || entry.n !== q.n || typeof entry.answer !== 'string' || BRIEF_CONTROLS.test(entry.answer)) throw Error('Invalid answer ' + q.n);
+    const answer = briefCleanText(entry.answer);
+    if (!answer) throw Error('Invalid answer ' + q.n);
+    return { ...q, answer, quotes: 0, says: !BRIEF_SENTINELS.includes(answer) };
   });
-  return { answers: out, checks };
+  return { answers: out, checks: { quotes_kept: 0, quotes_repaired: 0, em_dashes: 0, hype_words: 0, html_tags: 0 } };
 }
 /* This device's protected copy of the answers. Locked notes: nothing is decided (the chip still asks). */
 async function uploadQuestionsLoad(id) {
@@ -25202,75 +25166,135 @@ function uploadQuestionsSeen(id, q) {
   Brief.loading.delete(id);
   briefKeep(id, { state: 'answered', data: q.data, old: q.data.recipe === BRIEF_RECIPE ? null : 'recipe', md: new Map() }); briefRedraw(id);
 }
+/* The same PDF order as the reader: a supplied file, a kept library copy, then its link. */
+async function briefPdf(p, live, epoch) {
+  const wait = work => uploadBriefWait(work, live.ctl.signal, epoch);
+  let blob = await wait(localPdfGet(p.id));
+  if (blob instanceof Blob) return { blob, url: 'this device' };
+  if (p.uploaded) {
+    const bytes = await wait(upPdfGet(p.id));
+    if (!bytes) throw Error('No PDF here');
+    return { blob: new Blob([bytes], { type: 'application/pdf' }), url: 'this device' };
+  }
+  blob = await wait(keptCopy(p));
+  const url = pdfSourceOf(p);
+  if (!(blob instanceof Blob) && url) {
+    const res = await wait(fetch(url, { signal: live.ctl.signal, credentials: 'omit', referrerPolicy: 'no-referrer' }));
+    if (!res.ok) { res.body?.cancel().catch(() => {}); throw Error('No PDF here'); }
+    blob = await wait(res.blob());
+  }
+  if (!(blob instanceof Blob)) throw Error('No PDF here');
+  return { blob, url: url || 'this device' };
+}
 async function uploadQuestionsAsk(id) {
   requireOwner();
-  if (!uploadById(id) || UploadQuestions.jobs.has(id) || !navigator.locks) return;
+  const paper = findPaper(id), upload = !!paper?.uploaded;
+  if (!briefCanAsk(paper) || UploadQuestions.jobs.has(id) || !navigator.locks) return;
   const have = Brief.files.get(id);
   if (have && have.state === 'answered') { briefSheetOpen(id); return; }
   if (!apiKey()) { briefChipSync(id); return; }
   const epoch = capturePrivateEpoch(), serial = UploadQuestions.serial;
   const live = { ctl: new AbortController(), requests: new Set(), stopped: false };
   UploadQuestions.jobs.set(id, live); Private.controllers.add(live.ctl); briefChipSync(id);
-  let generation = vaultGeneration(), doc = null, timer = 0, result = null, opened = false;
+  let generation = upload ? vaultGeneration() : null, doc = null, result = null, opened = false, data = UploadQuestions.pending.get(id) || null;
   const wait = x => uploadBriefWait(x, live.ctl.signal, epoch);
-  const check = () => { checkPrivateEpoch(epoch); checkVaultGeneration(generation); if (serial !== UploadQuestions.serial || live.stopped || live.ctl.signal.aborted || !uploadById(id) || _reviewPendingRemovals.has(id)) throw briefStale(); };
+  const check = () => { checkPrivateEpoch(epoch); checkVaultGeneration(generation); if (serial !== UploadQuestions.serial || live.stopped || live.ctl.signal.aborted || !briefEligible(findPaper(id)) || (upload && _reviewPendingRemovals.has(id))) throw briefStale(); };
   try {
     await localWork((async () => {
-      if (!Vault.key && !await wait(vaultReady())) throw briefStale();
-      generation = vaultGeneration(); check();
-      timer = setTimeout(() => live.ctl.abort(), API_LIMIT.turnMs);
+      if (upload && !Vault.key && !await wait(vaultReady())) throw briefStale();
+      generation = upload ? vaultGeneration() : null; check();
       // One ask at a time for this paper across tabs. The protected record first, GitHub's copy too: answers made on
       // another device or tab open without a second call.
-      await wait(navigator.locks.request('scout-upload-questions:' + _acceptedTarget + ':' + id, { signal: live.ctl.signal }, async () => {
+      await wait(navigator.locks.request('scout-paper-questions:' + _acceptedTarget + ':' + id, { signal: live.ctl.signal }, async () => {
         check();
-        await wait(uploadStateSync(id, null, check)); check();
-        const prior = await wait(uploadQuestionsLoad(id)); check();
+        if (upload) await wait(uploadStateSync(id, null, check)); else Brief.index = null; check();
+        const prior = await wait(upload ? uploadQuestionsLoad(id) : briefLoad(id)); check();
         if (prior.state === 'answered') { result = prior; opened = true; return; }
-        const recipe = await wait(uploadQuestionsRecipe(epoch)); check();
-        const blob = await wait(localPdfGet(id)); check();
-        if (!(blob instanceof Blob)) throw Object.assign(Error('No PDF here'), { why: 'pdf' });
-        const bytes = new Uint8Array(await wait(blob.arrayBuffer())); check();
-        const sha = await wait(briefSha(bytes)), lib = await wait(loadPdfJs()); check();
-        doc = await wait(privatePdfDocument(lib, { data: bytes.slice(), isEvalSupported: false, verbosity: 0 }, live.ctl.signal)); check();
-        const all = [];
-        for (let i = 1; i <= doc.numPages; i++) { const pg = await wait(doc.getPage(i)), tc = await wait(pg.getTextContent()); check(); all.push(uploadQuestionsPage(tc.items)); }
-        // ingest/fulltext.py text_record: whole pages under the cap, and enough text to answer from
-        const pages = []; let chars = 0;
-        for (const page of all) { if (chars + page.length > recipe.rules.max_chars) break; pages.push(page); chars += page.length; }
-        if (uploadQuestionsTextLength(all) < recipe.rules.min_chars || !pages.length || uploadQuestionsTextLength(pages) < recipe.rules.min_chars) throw Object.assign(Error('Too little text'), { why: 'text' });
-        const truncated = pages.length < all.length, p = uploadById(id), facts = uploadQuestionsFacts(p);
-        const fence = [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
-        const message = uploadQuestionsMessage(facts, pages, all.length, fence, recipe.rules);
-        const payload = { model: recipe.model, max_tokens: 16000, stream: true, system: recipe.instructions, messages: [{ role: 'user', content: message }], output_config: { effort: recipe.effort } };
-        const { res, ctl } = await wait(apiFetch(payload, 'opus', false, apiKey(), live)); check();
-        if (!res.ok || !res.body) throw Error('The answers failed');
-        const reply = await wait(apiReadStream(res, ctl, { start() {}, text() {} })); check();
-        const raw = reply.content.filter(b => b && b.type === 'text').map(b => b.text || '').join('');
-        if (reply.stop_reason !== 'end_turn' || raw.length > 262144) throw Error('The answers were cut short');
-        const match = /```(?:json)?\s*(\{[\s\S]*\})\s*```/.exec(raw) || /(\{[\s\S]*\})/.exec(raw);
-        if (!match) throw Error('No answers');
-        const parsed = JSON.parse(match[1]), list = vaultObject(parsed) && Array.isArray(parsed.answers) ? parsed.answers : null;
-        if (!list || list.length !== 10 || list.map(a => vaultObject(a) ? a.n : null).sort((a, b) => a - b).join() !== '1,2,3,4,5,6,7,8,9,10') throw Error('Invalid answers');
-        const checked = uploadQuestionsCheck(list.slice().sort((a, b) => a.n - b.n), pages, truncated, recipe.rules);
-        const data = { schema: 1, paper: id, recipe: recipe.version, model: recipe.model, effort: recipe.effort, instructions_sha256: await wait(briefSha(recipe.instructions)),
-          answered_at: new Date().toISOString().slice(0, 19) + 'Z', title: facts.title,
-          source: { url: 'this device', sha256: sha, bytes: blob.size, pages_total: all.length, pages_supplied: pages.length, chars, truncated }, answers: checked.answers, checks: checked.checks };
-        check(); briefFileOK(data, id, true);
-        await wait(uploadStateSync(id, { questions: { v: 1, at: new Date().toISOString(), data } }, check)); check();
-        result = await wait(uploadQuestionsLoad(id)); check();
+        if (!['none', 'outcome'].includes(prior.state)) throw Error('The saved answers could not be read');
+        if (!data) {
+          const recipe = await wait(uploadQuestionsRecipe(epoch)); check();
+          const { blob, url } = await wait(briefPdf(paper, live, epoch)); check();
+          const bytes = new Uint8Array(await wait(blob.arrayBuffer())); check();
+          const sha = await wait(briefSha(bytes)), lib = await wait(loadPdfJs()); check();
+          doc = await wait(privatePdfDocument(lib, { data: bytes.slice(), isEvalSupported: false, verbosity: 0 }, live.ctl.signal)); check();
+          const all = [];
+          for (let i = 1; i <= doc.numPages; i++) { const pg = await wait(doc.getPage(i)), tc = await wait(pg.getTextContent()); check(); all.push(uploadQuestionsPage(tc.items)); }
+          const pages = all, chars = pages.reduce((n, page) => n + page.length, 0);
+          if (!chars || !pages.length) throw Object.assign(Error('Too little text'), { why: 'text' });
+          const truncated = false, p = findPaper(id), facts = uploadQuestionsFacts(p);
+          const fence = [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
+          const message = uploadQuestionsMessage(facts, pages, all.length, fence, recipe.rules);
+          const payload = { model: recipe.model, max_tokens: 128000, stream: true, system: recipe.instructions, messages: [{ role: 'user', content: message }], output_config: { effort: recipe.effort } };
+          const { res, ctl } = await wait(apiFetch(payload, 'opus', false, apiKey(), live)); check();
+          if (!res.ok || !res.body) throw Error('The answers failed');
+          const reply = await wait(apiReadStream(res, ctl, { start() {}, text() {} })); check();
+          const raw = reply.content.filter(b => b && b.type === 'text').map(b => b.text || '').join('');
+          if (reply.broken || reply.stop_reason !== 'end_turn') throw Error('The answers were cut short');
+          const match = /```(?:json)?\s*(\{[\s\S]*\})\s*```/.exec(raw) || /(\{[\s\S]*\})/.exec(raw);
+          if (!match) throw Error('No answers');
+          const parsed = JSON.parse(match[1]), list = vaultObject(parsed) && Array.isArray(parsed.answers) ? parsed.answers : null;
+          if (!list || list.length !== 10 || list.map(a => vaultObject(a) ? a.n : null).sort((a, b) => a - b).join() !== '1,2,3,4,5,6,7,8,9,10') throw Error('Invalid answers');
+          const checked = uploadQuestionsCheck(list.slice().sort((a, b) => a.n - b.n));
+          data = { schema: 1, paper: id, recipe: recipe.version, model: recipe.model, effort: recipe.effort, instructions_sha256: await wait(briefSha(recipe.instructions)),
+            answered_at: new Date().toISOString().slice(0, 19) + 'Z', title: facts.title,
+            source: { url, sha256: sha, bytes: blob.size, pages_total: all.length, pages_supplied: pages.length, chars, truncated }, answers: checked.answers, checks: checked.checks };
+        }
+        check(); briefFileOK(data, id, upload);
+        if (upload) {
+          if (!briefCanAsk(findPaper(id))) throw briefStale();
+          await wait(uploadStateSync(id, { questions: { v: 1, at: new Date().toISOString(), data } }, check)); check();
+          result = await wait(uploadQuestionsLoad(id));
+        } else result = await wait(briefSave(data, check));
+        check();
         if (result.state !== 'answered') throw Error('The answers were not kept');
       }));
     })());
     check();
     if (result) { briefKeep(id, result); briefRedraw(id); if (opened) briefSheetOpen(id); }
   } catch (e) {
-    try { check(); if (!(e && e.briefStale)) briefKeep(id, { state: 'none', failed: e && e.why === 'pdf' ? 'pdf' : e && e.why === 'text' ? 'text' : 'ask' }); } catch (stale) {}   // a lock, a sign-out or a removal: nothing kept
+    try {
+      check();
+      if (!(e && e.briefStale)) {
+        if (data) UploadQuestions.pending.set(id, data);   // a pull can clear the view, never an answer waiting to save
+        briefKeep(id, { state: 'none', failed: 'ask' });
+      }
+    } catch (stale) {}   // a lock, a sign-out or a removal: nothing kept
   } finally {
-    clearTimeout(timer); if (doc) destroyPdfDocument(doc);
+    if (doc) destroyPdfDocument(doc);
     for (const ctl of live.requests) { try { ctl.abort(); } catch (e) {} Private.controllers.delete(ctl); }
     Private.controllers.delete(live.ctl);
     if (UploadQuestions.jobs.get(id) === live) UploadQuestions.jobs.delete(id);
     try { checkPrivateEpoch(epoch); briefChipSync(id); } catch (e) {}
+  }
+}
+
+/* Publish the library answer and its index together. Each attempt merges the index at its parent commit. */
+async function briefSave(data, check) {
+  const epoch = capturePrivateEpoch(), path = briefPath(data.paper), text = JSON.stringify(data);
+  const file = { recipe: data.recipe, sha256: await privateAwait(briefSha(text), epoch), bytes: new TextEncoder().encode(text).length,
+    at: data.answered_at, model: data.model, effort: data.effort, source_url: data.source.url, source_sha256: data.source.sha256,
+    truncated: data.source.truncated, pages_supplied: data.source.pages_supplied, pages_total: data.source.pages_total, current: true };
+  for (let attempt = 0; attempt < 3; attempt++) {
+    check();
+    const parent = await privateAwait(privateHeadCommit(), epoch); check();
+    const remote = await privateAwait(privateReadFile('briefs/_index.json', true, null, null, parent), epoch); check();
+    const index = remote ? briefIndexOK(JSON.parse(remote.text)) : { schema: 1, papers: {} };
+    if (remote) {
+      const existing = briefEntry(index, data.paper);
+      if (existing && existing.file) {
+        const saved = await privateAwait(privateReadFile(path, true, null, null, parent), epoch); check();
+        if (!saved || await privateAwait(briefSha(saved.text), epoch) !== existing.file.sha256) throw Error('The saved answers could not be read');
+        check(); return briefAnswered(saved.text, data.paper, existing, index);
+      }
+    }
+    Object.assign(index, { recipe: data.recipe, questions: BRIEF_QUESTIONS, built_at: data.answered_at,
+      papers: { ...index.papers, [data.paper]: { outcome: 'answered', at: data.answered_at, file } } });
+    const indexText = JSON.stringify(index); briefIndexOK(index);
+    try {
+      await privateAwait(ghCommitFiles([{ path, content: text }, { path: 'briefs/_index.json', content: indexText }], 'Answer ten questions', parent), epoch); check();
+      Brief.index = Promise.resolve(index); Brief.questions = index.questions;
+      return { state: 'answered', data, old: null, md: new Map() };
+    } catch (e) { check(); if (!e.conflict || attempt === 2) throw e; }
   }
 }
 
@@ -25457,23 +25481,16 @@ function repaintShownPapers() {
   const page = document.querySelector('#paperDetail .pd-article[data-pid]');
   if (page) { const p = feedRow(page.dataset.pid) || uploadById(page.dataset.pid); if (p) renderPaperDetail(p); }
 }
-/* ===== TEN QUESTIONS (Phase 14) =====
-   The briefs worker answers ten fixed questions about a paper from its open PDF and publishes briefs/<id>.json and
-   briefs/_index.json to the data repository. Phase 24: a chip under the authors opens them in a sheet, or asks for
-   them (below). Nothing here writes but the request. The index
-   is read once a session; a paper's file is read when the index names it, or by its id when there is no index at all.
-   A file counts only when its sha256 is the one its index entry gives (a mismatch reads the index again, once). Each
-   await checks the authorization epoch and Brief.gen: a lock, a pull or a Retry moves the generation, so an answer
-   that arrives late neither fills a cache nor touches the page. Uploaded papers never get the section or a read. */
-const BRIEF_RECIPE = 'brief-v2';
-/* The ten labels, word for word as ingest/brief.py QUESTIONS has them (tests/phase14/test_page_brief.cjs checks they
-   are equal). The index carries the worker's own list; this one labels the section before any index exists. */
+/* ===== Ten questions: shared reading and rendering =====
+   The page calls the API and publishes library answers to briefs/. Existing files retain schema 1. */
+const BRIEF_RECIPE = 'brief-v3';
+/* Labels from ingest/brief.py, checked against brief_recipe.json by tests/upregular/recipe.cjs. */
 const BRIEF_QUESTIONS = [{ n: 1, key: 'problem', label: 'What problem does this paper solve? (The answer to this question should not include the solution—just the problem. Why should I care about this paper?)' }, { n: 2, key: 'audience', label: 'Who is the target audience? What sub-community will be interested in this work?' }, { n: 3, key: 'contributions', label: 'What are the core technical and conceptual contributions?' }, { n: 4, key: 'justification', label: 'What are the technical justifications for taking this approach?' }, { n: 5, key: 'benefits', label: "What can we now do that wasn't possible before? What are the benefits of this method?" }, { n: 6, key: 'prior', label: "What are some previous methods and why couldn't they do the same things?" }, { n: 7, key: 'experiments', label: 'For each contribution / benefit of the method(s), describe the experiment(s) that will showcase this benefit clearly.' }, { n: 8, key: 'reuse', label: 'Why would somebody else use this work or build on it?' }, { n: 9, key: 'limitations', label: 'What are the limitations of the work, and for each limitation, how will it be addressed?' }, { n: 10, key: 'takeaway', label: 'What is the single most important point that you want a reader to take away from this' }];
 const BRIEF_ID = /^[a-z0-9][a-z0-9-]{0,199}$/;
-const BRIEF_FILE_CAP = 64 * 1024;
+const BRIEF_FILE_CAP = Infinity;
 const BRIEF_INDEX_CAP = 2 * 1024 * 1024;
 const BRIEF_CACHE = 50;
-/* the index's outcomes (brief_run.OUTCOMES); every one but answered is a settled reason there are no answers */
+/* Legacy index outcomes stay readable. A tap can retry any paper without answers. */
 const BRIEF_OUTCOMES = ['answered', 'no_open_text', 'host_not_allowed', 'pdf_missing', 'not_a_pdf', 'too_large', 'no_text_layer', 'no_usable_text', 'gave_up_fetch', 'rejected'];
 const BRIEF_OUTCOME_TEXT = {
   no_open_text: 'This paper has no open PDF, so it has no answers.',
@@ -25491,16 +25508,11 @@ const BRIEF_CONTROLS = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]|[\
 /* what the sanitizer lets through from an answer's Markdown: text formatting, lists, tables and plain links. No
    images, media, styles, classes or data attributes, so model text cannot load anything or pass for a control. */
 const BRIEF_PURIFY = { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'del', 's', 'code', 'pre', 'ul', 'ol', 'li', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'a', 'sup', 'sub'], ALLOWED_ATTR: ['href', 'title', 'start', 'align'], ALLOW_DATA_ATTR: false, ALLOW_ARIA_ATTR: false, ALLOWED_URI_REGEXP: /^https?:\/\//i };
-/* the worker's quote folding (ingest/brief.py fold): known ligatures, curly quote marks, minus signs and the
-   non-breaking hyphen, the non-breaking space; a soft hyphen goes. Case, signs, operators and decimal points stay. */
-const BRIEF_FOLDS = { 'ﬀ': 'ff', 'ﬁ': 'fi', 'ﬂ': 'fl', 'ﬃ': 'ffi', 'ﬄ': 'ffl', 'ﬅ': 'st', 'ﬆ': 'st', '‘': "'", '’': "'", '“': '"', '”': '"', '−': '-', '‐': '-', '‑': '-', ' ': ' ', '­': '' };
-const BRIEF_JOINERS = "-'.,";
-const BRIEF_SIGNS = '+-±~<>=≤≥';
+
 /* gen: moved by a lock, a pull or a new target. index: the index read (a promise, null when absent). files: one
    result per paper, at most BRIEF_CACHE. loading: the reads in flight. visit: the items open on the paper shown,
-   kept for this visit across redraws and the reader's Back. focus: what had the keyboard in the section. jump: a
-   pill pressed, waiting for the reader to load that paper's PDF. sheet: { pid, from } while the sheet shows. */
-const Brief = { gen: 0, index: null, questions: null, files: new Map(), loading: new Map(), visit: { pid: null, open: new Set() }, focus: null, jump: null, sheet: null, pushed: null, lostFocus: null };
+   kept for this visit across redraws and the reader's Back. focus: what had the keyboard in the section. sheet: { pid, from } while the sheet shows. */
+const Brief = { gen: 0, index: null, questions: null, files: new Map(), loading: new Map(), visit: { pid: null, open: new Set() }, focus: null, sheet: null, pushed: null, lostFocus: null };
 
 function briefEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function briefEligible(p) { return !!p && typeof p.id === 'string' && (p.uploaded ? /^up-[0-9a-f]{12}$/.test(p.id) && !!uploadById(p.id) : BRIEF_ID.test(p.id) && !p.id.startsWith('up-')); }
@@ -25508,13 +25520,13 @@ function briefPath(pid) {
   if (typeof pid !== 'string' || !BRIEF_ID.test(pid) || pid.startsWith('up-')) throw new Error('Not a library paper id');
   return 'briefs/' + pid + '.json';
 }
-function briefFold(s) { return [...String(s).normalize('NFC')].map(c => hasOwn(BRIEF_FOLDS, c) ? BRIEF_FOLDS[c] : c).join('').replace(/\s+/g, ' ').trim(); }
-function briefStamp(s) {   // a real UTC time to the second, as the worker writes it
+
+function briefStamp(s) {   // a real UTC time to the second
   if (typeof s !== 'string' || !/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$/.test(s) || s.startsWith('0000')) return false;
   const t = new Date(s);
   return !isNaN(t.getTime()) && t.toISOString().slice(0, 19) + 'Z' === s;
 }
-function briefTokens(text) { return [...String(text).matchAll(QUOTE_RE)].map(m => ({ page: +m[1], quote: m[2] })); }
+
 function briefHost(url) { const m = /^https?:\/\/(?:[^/?#@]*@)?([^/?#:]+)/i.exec(String(url || '')); return m ? m[1].toLowerCase().replace(/^www\./, '') : ''; }
 function briefDate(at) { try { return new Date(at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }); } catch (e) { return String(at).slice(0, 10); } }
 async function briefSha(data) {
@@ -25610,14 +25622,11 @@ async function briefFile(pid, gen) { const _authEpoch = capturePrivateEpoch();
   const got = await privateAwait(briefRead(briefPath(pid), BRIEF_FILE_CAP, gen), _authEpoch);
   if (!got) return null;
   const bytes = new TextEncoder().encode(got.text);
-  if (bytes.byteLength > BRIEF_FILE_CAP) throw new Error('The brief file exceeds 64 KiB');
   return { text: got.text, sha: await privateAwait(briefSha(bytes), _authEpoch) };
 }
-/* A brief file checked as the worker's validate_file checks it (no PDF needed): schema, paper id, recipe, the source
-   and its coverage, ten answers in order with their caps, well-formed citations to supplied pages, `quotes` and `says`
-   agreeing with them, and the citation counts. */
+/* Check file structure and source binding. Citation markup never decides validity. */
 function briefFileOK(d, pid, upload = false) {   // upload: an upload's own answers (UPLOAD STATE)
-  const int = v => Number.isSafeInteger(v) && v >= 0, hex = v => typeof v === 'string' && /^[0-9a-f]{64}$/.test(v), len = s => [...s].length;
+  const int = v => Number.isSafeInteger(v) && v >= 0, hex = v => typeof v === 'string' && /^[0-9a-f]{64}$/.test(v);
   const bad = why => { const e = new Error('The brief file is malformed: ' + why); e.briefWhy = 'invalid'; throw e; };
   if (!d || typeof d !== 'object' || Array.isArray(d) || d.schema !== 1) bad('schema');
   if (d.paper !== pid || (upload ? !/^up-[0-9a-f]{12}$/.test(pid) : !BRIEF_ID.test(pid) || pid.startsWith('up-'))) bad('paper');
@@ -25627,25 +25636,13 @@ function briefFileOK(d, pid, upload = false) {   // upload: an upload's own answ
   const s = d.source;
   if (!s || typeof s !== 'object' || typeof s.url !== 'string' || !s.url || !hex(s.sha256) || !['bytes', 'pages_total', 'pages_supplied', 'chars'].every(k => int(s[k])) || typeof s.truncated !== 'boolean') bad('source');
   if (s.pages_supplied < 1 || s.pages_total < s.pages_supplied || s.truncated !== (s.pages_supplied < s.pages_total) || s.chars < 1 || s.bytes < 1) bad('coverage');
-  const sentinel = BRIEF_SENTINELS[s.truncated ? 1 : 0];
   if (!Array.isArray(d.answers) || d.answers.length !== 10) bad('answers');
-  let cites = 0;
   d.answers.forEach((a, i) => {
-    const n = i + 1;
-    if (!a || typeof a !== 'object' || a.n !== n || typeof a.answer !== 'string' || !a.answer.trim() || typeof a.label !== 'string' || !a.label.trim()
-      || typeof a.key !== 'string' || !int(a.quotes) || typeof a.says !== 'boolean') bad('answer ' + n);
-    if (d.recipe === BRIEF_RECIPE && (a.label !== BRIEF_QUESTIONS[i].label || a.key !== BRIEF_QUESTIONS[i].key)) bad('label ' + n);
-    if (BRIEF_CONTROLS.test(a.answer) || BRIEF_CONTROLS.test(a.label)) bad('control characters in ' + n);
-    if (len(a.answer) > ([3, 7, 9].includes(n) ? 2000 : 1200)) bad('length of ' + n);
-    const toks = briefTokens(a.answer);
-    if (a.answer.split('[[').length - 1 !== toks.length) bad('citation in ' + n);
-    for (const t of toks) { const q = len(briefFold(t.quote)); if (t.page < 1 || t.page > s.pages_supplied || q < 12 || q > 300) bad('citation in ' + n); }
-    if (a.quotes !== toks.length) bad('quotes of ' + n);
-    if (a.says ? BRIEF_SENTINELS.some(x => a.answer.startsWith(x)) || toks.length < 1 || toks.length > 3 : a.answer !== sentinel) bad('says of ' + n);
-    cites += toks.length;
+    if (!a || typeof a !== 'object' || a.n !== i + 1 || typeof a.answer !== 'string' || !a.answer.trim()
+      || typeof a.label !== 'string' || !a.label.trim() || typeof a.key !== 'string') bad('answer ' + (i + 1));
+    if (d.recipe === BRIEF_RECIPE && (a.label !== BRIEF_QUESTIONS[i].label || a.key !== BRIEF_QUESTIONS[i].key)) bad('label ' + (i + 1));
+    if (BRIEF_CONTROLS.test(a.answer) || BRIEF_CONTROLS.test(a.label)) bad('control characters in ' + (i + 1));
   });
-  const c = d.checks;
-  if (!c || typeof c !== 'object' || !['quotes_kept', 'quotes_repaired', 'em_dashes', 'hype_words', 'html_tags'].every(k => int(c[k])) || c.quotes_kept + c.quotes_repaired !== cites) bad('checks');
   return d;
 }
 function briefAnswered(text, pid, entry, idx) {
@@ -25683,6 +25680,7 @@ async function briefLoad(pid) { const _authEpoch = capturePrivateEpoch();
   }
 }
 function briefKeep(pid, r) {   // the newest BRIEF_CACHE results, the oldest out first
+  if (r.state === 'answered') UploadQuestions.pending.delete(pid);
   Brief.files.delete(pid); Brief.files.set(pid, r);
   while (Brief.files.size > BRIEF_CACHE) Brief.files.delete(Brief.files.keys().next().value);
 }
@@ -25721,17 +25719,11 @@ function briefMetaHTML(pid) {
   else if (r.old === 'source') line += ' These answers come from an earlier PDF of this paper.';
   return line;
 }
-/* A citation pill. Only the renderer makes one, from a [[p.N "words"]] token of a validated file; its data-bp is the
-   answer and the token's place in it, so a click reads the page and quote from the file, never from the element. */
-function briefPillHTML(n, i, page, quote) {
-  return `<button type="button" class="cite-chip brief-pill" data-bp="${n}.${i}" onclick="briefPillClick(this)" title="Open the reader at this passage"><span class="cp-page">p. ${briefEsc(String(page))}</span><span class="cp-q">${briefEsc(shortQuote(quote, 48))}</span></button>`;
+/* Strip earlier citation markup before either plain or Markdown rendering. */
+function briefCleanText(text) {
+  return String(text).replace(/[ \t]*\[\[\s*p\.\s*\d+\s+[\s\S]*?\]\](?:[ \t]+(?=[.,;:!?]))?/g, '').trim();
 }
-/* An answer readable at once: its text escaped, line breaks kept, its citations as pills. */
-function briefPlainHTML(text, n) {
-  let out = '', last = 0, i = 0;
-  for (const m of String(text).matchAll(QUOTE_RE)) { out += briefEsc(text.slice(last, m.index)) + briefPillHTML(n, i++, m[1], m[2]); last = m.index + m[0].length; }
-  return (out + briefEsc(text.slice(last))).replace(/\n/g, '<br>');
-}
+function briefPlainHTML(text) { return briefEsc(briefCleanText(text)).replace(/\n/g, '<br>'); }
 function briefAnswerInner(pid, n) {
   const r = Brief.files.get(pid);
   if (!r) return '<p class="pd-q-wait">Loading…</p>';
@@ -25764,6 +25756,8 @@ function briefWire(sec, pid) {
    labels and the answers, change in place. The items keep their open state and a focused summary keeps the focus. */
 function briefRedraw(pid) {
   briefChipSync(pid);
+  const p = findPaper(pid);
+  if (p?.uploaded && !briefCanAsk(p) && location.hash === '#paper/' + encodeURIComponent(pid) + '/questions') briefSheetShow(pid);
   const box = document.getElementById('briefSheet');
   for (const sec of box && Brief.sheet && Brief.sheet.pid === pid ? box.querySelectorAll('[data-brief]') : []) {
     if (sec.dataset.brief !== pid) continue;
@@ -25802,32 +25796,21 @@ async function renderBriefMarkdown(el, text, ctx) { const _authEpoch = capturePr
   if (key) briefFocusTo(el, key);
   briefSheetContain();
 }
-/* An answer as Markdown HTML, or null without the libraries. Raw HTML shows as text, images as their alt text, and the
-   sanitizer keeps only formatting and plain links. Pills and KaTeX go in after the sanitizer, through placeholders made
-   of a fresh nonce the answer does not contain, and only where the sanitized HTML has them as text. A placeholder the
-   sanitizer met in an attribute (a link's address or title, a code block's language), one inside math, or one lost or
-   doubled on the way gives the plain answer with its pills instead. A link around a citation is dropped for its text,
-   so a pill is never inside a link. */
+/* Safe Markdown with math inserted after sanitizing. HTML stays text and images stay alt text. */
 function briefMarkdownHTML(text, n) {
   if (typeof marked === 'undefined' || !marked || typeof marked.Marked !== 'function' || typeof DOMPurify === 'undefined' || !DOMPurify
     || typeof DOMPurify.sanitize !== 'function' || typeof DOMPurify.addHook !== 'function' || typeof DOMPurify.removeHook !== 'function') return null;
-  text = String(text);
+  text = briefCleanText(text);
   let nonce;
   do nonce = 'bq' + Math.random().toString(36).slice(2, 10) + 'x'; while (text.includes(nonce));
-  const slots = [], slot = (html, pill) => nonce + (slots.push({ html, pill }) - 1) + 'x';
-  const pillIn = s => slots.some((x, k) => x.pill && String(s).includes(nonce + k + 'x'));
-  let i = 0;
-  let src = text.replace(QUOTE_RE, (m, page, q) => slot(briefPillHTML(n, i++, page, q), true));
+  const slots = [], slot = html => nonce + (slots.push({ html }) - 1) + 'x';
+  let src = text;
   if (typeof katex !== 'undefined' && katex && typeof katex.renderToString === 'function') src = src
     .replace(/\$\$([\s\S]+?)\$\$/g, (m, tex) => slot(katex.renderToString(tex, { displayMode: true, throwOnError: false, trust: false, strict: 'ignore', maxExpand: 500 }), false))
     .replace(/(^|[^\\$])\$([^\s$](?:[^$\n]*?[^\s$])?)\$/g, (m, pre, tex) => pre + slot(katex.renderToString(tex, { throwOnError: false, trust: false, strict: 'ignore', maxExpand: 500 }), false));
   const md = new marked.Marked({ gfm: true, breaks: true, renderer: {
     html: t => briefEsc(typeof t === 'string' ? t : (t && (t.raw || t.text)) || ''),
     image: (t, title, alt) => briefEsc(t && typeof t === 'object' ? t.text || '' : alt || ''),
-    link(t, title, inner) {   // marked 12 passes (href, title, text); later versions pass the token
-      if (t && typeof t === 'object') inner = this.parser.parseInline(t.tokens);
-      return pillIn(inner) ? inner : false;   // false: marked's own link
-    },
   } });
   let inAttribute = false, clean;
   DOMPurify.addHook('uponSanitizeAttribute', (node, data) => { if (data && String(data.attrValue).includes(nonce)) inAttribute = true; });
@@ -25844,69 +25827,31 @@ function briefLinks(el) {
 }
 
 /* ---- the items, Expand all, the focus ---- */
-/* ---- the chip and the sheet (Phase 24) ----
-   The page no longer lists the questions at the bottom. A "Ten questions" chip sits under the authors: with answers,
-   it opens them in a sheet (the route #paper/<id>/questions, so Back closes it); without, on a private library's
-   signed-in page and for a paper with an open PDF from an allowed site, it asks Scout for them (a request, above) and
-   then says what is happening in words true to the request's state. It never asks while answers exist or while it is
-   still finding out, and it is not shown for uploads, for papers without such a PDF, or to a viewer who cannot ask
-   (who still opens answers that exist). */
-const BRIEF_PDF_HOSTS = ['arxiv.org', 'export.arxiv.org', 'proceedings.mlr.press', 'roboticsproceedings.org', 'openaccess.thecvf.com'];   // ingest/fulltext.py PDF_PROVIDERS
-const BRIEF_CHIP_WORDS = { sending: 'Asking…', waiting: 'Waiting to start…', working: 'Reading the paper', retry: 'Trying again soon', saving: 'Saving the answers', limit: 'Try again tomorrow', refused: 'Couldn’t answer for this paper' };
-function briefPdfOK(p) {   // the paper's effective PDF (never one kept only in this browser), on an allowed site
-  const m = /^https:\/\/([^/?#@:]+)(?::443)?\//i.exec(String(effPdf(p) || ''));
-  return !!m && BRIEF_PDF_HOSTS.includes(m[1].toLowerCase());
-}
-function briefCanAsk(p) { return isPrivate() && isOwner() && briefEligible(p) && briefPdfOK(p); }
+/* ---- the chip and the sheet ---- */
+function briefCanAsk(p) { return isPrivate() && isOwner() && briefEligible(p) && (!p.uploaded || Date.now() >= UPLOAD_PLAIN_BRIEFS_FROM); }
 /* What the chip is now: answered, ask, loading, the request's phase (sending, waiting, working, retry, saving), again
    (a request that could not start), limit, refused, error, or '' (nothing to show) */
 function briefChipState(p) {
   if (!briefEligible(p)) return '';
-  if (p.uploaded) {   // an upload: answers kept privately, asked on a tap on this device's key
-    const r = Brief.files.get(p.id);
-    if (r && r.state === 'answered') return 'answered';
-    if (UploadQuestions.jobs.has(p.id)) return 'working';
-    if (r && (r.state === 'error' || r.state === 'offline')) return 'error';
-    if (Vault.key && !r) return 'loading';
-    if (!apiKey()) return 'key';
-    if (r && r.failed === 'pdf') return 'pdf';
-    if (r && r.failed === 'text') return 'text';
-    return r && r.failed ? 'again' : 'ask';
-  }
-  const pid = p.id, r = Brief.files.get(pid);
+  const r = Brief.files.get(p.id);
   if (r && r.state === 'answered') return 'answered';
+  if (!briefCanAsk(p)) return '';
+  if (UploadQuestions.jobs.has(p.id)) return 'working';
   if (r && (r.state === 'error' || r.state === 'offline')) return 'error';
-  if (!briefCanAsk(p)) return '';   // a viewer who cannot ask, or a paper without an open PDF from an allowed site: answers only
-  const q = requestFor('brief', pid);
-  if (q && requestLive(q)) {
-    const s = q.status;
-    if (!q.sent) return q.unsent ? 'again' : 'sending';
-    return !s || s.state === 'waiting' ? 'waiting' : s.state === 'working' ? 'working' : s.reason === 'publishing' ? 'saving' : 'retry';
-  }
-  if (q && q.status && q.status.state === 'done' && !(r && r.state === 'none')) return 'loading';   // answered: being read; a read that found none is never stuck here, a tap asks again
-  if (q && q.status && q.status.state === 'failed') {
-    const why = q.status.reason;
-    if (why === 'limit' && localDay(Date.parse(q.status.at)) === localDay(Date.now())) return 'limit';   // "tomorrow" only on the day the worker said so (Sol's review 9)
-    if (['no_pdf', 'unreadable', 'rejected', 'not_in_library'].includes(why)) return 'refused';
-    if (why !== 'limit') return 'again';
-  }
-  if (!r) return 'loading';
-  if (r.state === 'outcome') return r.outcome === 'no_open_text' ? 'ask' : 'refused';
-  return 'ask';
+  if (!r && (!p.uploaded || Vault.key)) return 'loading';
+  if (!apiKey()) return 'key';
+  return (r && r.failed) || UploadQuestions.pending.has(p.id) ? 'again' : 'ask';
 }
 function briefChipHTML(p) {
   const st = briefChipState(p), pid = escAttr(p.id);
   if (!st) return '';
   if (st === 'answered') return `<button type="button" class="pd-tq-chip done" aria-haspopup="dialog" onclick="briefSheetOpen('${pid}')">Ten questions</button>`;
   if (st === 'key') return '<span class="pd-tq-note">Add your Claude API key on this device to get the ten questions.</span>';
-  if (st === 'pdf') return `<span class="pd-tq-note">Add this paper's PDF on this device to get the ten questions.</span>`;
-  if (st === 'text') return `<span class="pd-tq-note">There isn't enough text in this PDF to answer the ten questions.</span>`;
   if (st === 'ask') return `<button type="button" class="pd-tq-chip" aria-label="Get answers to the ten questions" onclick="briefAsk('${pid}')">Ten questions</button>`;
-  if (st === 'again') return `<button type="button" class="pd-tq-chip" aria-label="Try the ten questions again" onclick="briefAsk('${pid}')">Couldn’t ask. Try again</button>`;
+  if (st === 'again') return `<button type="button" class="pd-tq-chip" aria-label="Try the ten questions again" onclick="briefAsk('${pid}')">Couldn’t answer. Retry</button>`;
   if (st === 'loading') return `<button type="button" class="pd-tq-chip" disabled aria-busy="true">Ten questions</button>`;
   if (st === 'error') return `<button type="button" class="pd-tq-chip" aria-label="Couldn’t load the ten questions. Retry" onclick="briefRetryChip('${pid}')">Couldn’t load. Retry</button>`;
-  if (st === 'limit' || st === 'refused') return `<span class="pd-tq-note">${BRIEF_CHIP_WORDS[st]}</span>`;
-  return `<span class="pd-tq-chip busy">${BRIEF_CHIP_WORDS[st]}${st === 'working' ? '<span class="tq-dots" aria-hidden="true"><i></i><i></i><i></i></span>' : ''}</span>`;
+  return '<span class="pd-tq-chip busy">Reading the paper<span class="tq-dots" aria-hidden="true"><i></i><i></i><i></i></span></span>';
 }
 /* The chip's place under the authors: polite, so a screen reader hears each change of state */
 function briefChipBoxHTML(p) { return briefEligible(p) ? `<div class="pd-tq" data-tq="${dataAttr(p.id)}" aria-live="polite" tabindex="-1">${briefChipHTML(p)}</div>` : ''; }
@@ -25920,15 +25865,11 @@ function briefChipSync(pid) {
 /* Tapping a chip with no answers: one request, never while answers exist, while it is still finding out, or while one
    is already under way */
 function briefAsk(pid) {
-  const p = findPaper(pid);
-  if (p && p.uploaded) { uploadQuestionsAsk(pid).catch(briefQuiet); return; }   // an upload: on this device's key
-  if (!p || !briefCanAsk(p)) return;
-  const r = Brief.files.get(pid), q = requestFor('brief', pid);
+  const p = findPaper(pid), r = Brief.files.get(pid);
+  if (!briefCanAsk(p)) return;
   if (r && r.state === 'answered') { briefSheetOpen(pid); return; }
-  if (q && requestLive(q) && !q.sent && q.unsent && !q.sending) { requestSend(q); briefChipSync(pid); return; }   // "Try again" tries now
-  if (!r || r.state === 'error' || r.state === 'offline' || (q && requestLive(q))) return;
-  requestStart({ kind: 'brief', paper: pid });
-  briefChipSync(pid);
+  if (!r && !p.uploaded || r && (r.state === 'error' || r.state === 'offline')) return;
+  uploadQuestionsAsk(pid).catch(briefQuiet);
 }
 function briefRetryChip(pid) {
   const r = Brief.files.get(pid);
@@ -25945,7 +25886,7 @@ function briefAnsweredNow(pid) {
 }
 
 /* The sheet: a modal dialog over the paper's page, the ten questions folded, Expand all, the answers through the safe
-   renderer, citation pills into the reader and back. Brief.sheet: { pid, from } while it shows. */
+   renderer. Brief.sheet: { pid, from } while it shows. */
 function briefSheetOpen(pid) {
   if (!findPaper(pid)) return;
   Brief.pushed = '#paper/' + encodeURIComponent(pid) + '/questions';   // this step is Scout's own
@@ -25971,6 +25912,17 @@ function briefSheetHTML(pid) {
 function briefSheetShow(pid) {
   const p = findPaper(pid), s = document.getElementById('briefSheet');
   if (!p || !s || !briefEligible(p)) { briefSheetHide(); return; }
+  const r = Brief.files.get(pid);
+  if (p.uploaded && !briefCanAsk(p) && r?.state !== 'answered') {
+    briefSheetHide();
+    if (!r) { briefStart(pid); return; }   // a cold link may still have saved answers; show no sheet while reading
+    if (location.hash === '#paper/' + encodeURIComponent(pid) + '/questions') {
+      Brief.pushed = null;
+      history.replaceState(null, '', APP_ROOT + location.search + '#paper/' + encodeURIComponent(pid));
+      applyHash();
+    }
+    return;
+  }
   if (Brief.visit.pid !== pid) Brief.visit = { pid, open: new Set() };
   if (Brief.sheet && Brief.sheet.pid === pid && s.classList.contains('open')) return;
   const from = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
@@ -26046,7 +25998,6 @@ function briefFocusKey(el) {
   if (!el || !el.classList) return null;
   if (el.classList.contains('pd-q-all')) return 'all';
   if (el.classList.contains('pd-q-retry')) return 'retry';
-  if (el.dataset && el.dataset.bp) return 'p' + el.dataset.bp;
   const d = el.tagName === 'SUMMARY' && el.closest('.pd-q-item');
   return d ? 'q' + d.dataset.n : null;
 }
@@ -26061,7 +26012,7 @@ function briefFocusTo(box, key) {
   const reader = document.getElementById('reader');
   if (reader && reader.classList.contains('open')) return;
   const el = key === 'all' ? box.querySelector('.pd-q-all') : key === 'retry' ? box.querySelector('.pd-q-retry')
-    : key[0] === 'q' ? box.querySelector(`.pd-q-item[data-n="${key.slice(1)}"] summary`) : box.querySelector(`[data-bp="${key.slice(1)}"]`);
+    : key[0] === 'q' ? box.querySelector(`.pd-q-item[data-n="${key.slice(1)}"] summary`) : null;
   if (el) el.focus({ preventScroll: true });
 }
 /* Retry clears the layer that failed, and the index too after a mismatch, then reads the paper again. */
@@ -26074,119 +26025,10 @@ function briefRetry(btn) {
   briefRedraw(pid); briefStart(pid);
 }
 
-/* ---- the pills and the reader ---- */
-/* A pill pressed in the sheet opens the reader for that paper over it. The jump waits for the PDF, bound to the paper,
-   the hash of the PDF the answers were made from, the authorization epoch, Brief.gen and the reader's generation. */
-function briefPillClick(btn) {
-  const sec = btn.closest('[data-brief]'), page = btn.closest('.tq-panel[data-pid]'), pid = sec && sec.dataset.brief, r = pid && Brief.files.get(pid);
-  if (!r || r.state !== 'answered' || !page || page.dataset.pid !== pid) return;
-  const m = /^(\d+)\.(\d+)$/.exec(btn.dataset.bp || ''), a = m && r.data.answers[+m[1] - 1], tok = a && briefTokens(a.answer)[+m[2]];
-  if (!tok) return;
-  Brief.jump = { pid, page: tok.page, quote: tok.quote, sha: r.data.source.sha256, epoch: capturePrivateEpoch(), gen: Brief.gen, reader: _reader.token };
-  Brief.focus = { pid, key: 'p' + btn.dataset.bp };
-  openReader(pid);
-}
-/* Run by loadIntoReader once a PDF is laid out (token: that load's reader generation). The jump is used once. The PDF
-   open now must have the bytes the answers were made from; then the quote must be found on its page by the strict
-   matcher. Each step checks again that the reader, the epoch and the generation are still the ones it began with. */
-async function briefJumpRun(p, token) { const _authEpoch = capturePrivateEpoch();
-  const j = Brief.jump, doc = _reader.doc;
-  if (!j) return;
-  Brief.jump = null;
-  if (j.pid !== p.id || j.epoch !== _authEpoch || j.gen !== Brief.gen || !(token > j.reader) || !doc) return;
-  const live = () => token === _reader.token && _reader.doc === doc && _reader.paper === p && j.gen === Brief.gen;
-  let sha;
-  try { sha = await privateAwait(briefSha(await privateAwait(doc.getData(), _authEpoch)), _authEpoch); }
-  catch (e) { checkPrivateEpoch(_authEpoch); if (live()) toast("Couldn't read the open PDF, so the passage isn't shown."); return; }
-  if (!live()) return;
-  if (sha !== j.sha) { toast("The open PDF isn't the one these answers were made from, so the passage can't be shown."); return; }
-  const wait = revealPaper();
-  if (wait) await privateAwait(isPrivate() ? waitFor(() => false, wait) : new Promise(r => setTimeout(privateCallback(r), wait)), _authEpoch);
-  if (!live()) return;
-  const found = await privateAwait(briefLocate(j.page, j.quote), _authEpoch);
-  if (!live()) return;
-  if (!found) { toast("Couldn't find that passage in the open PDF."); return; }
-  flashQuote(found, _authEpoch, live);
-}
-async function briefLocate(page, quote) { const _authEpoch = capturePrivateEpoch();
-  const body = document.getElementById('readerBody'), pg = body.querySelector(`.reader-page[data-page="${page}"]`);
-  if (!pg) return null;
-  if (!pg.querySelector('.textLayer span')) { body.scrollTo({ top: pg.offsetTop - 12 }); await privateAwait(waitFor(() => pg.querySelector('.textLayer span'), 4000), _authEpoch); }
-  const r = briefFindRange(pg, quote);
-  if (!r) return null;
-  const pr = pg.getBoundingClientRect();
-  const rects = mergeLineRects([...r.getClientRects()].filter(x => x.width > 1 && x.height > 1).map(x => [(x.left - pr.left) / pr.width, (x.top - pr.top) / pr.height, x.width / pr.width, x.height / pr.height]));
-  return rects.length ? { pg, rects } : null;
-}
-/* ---- the strict matcher for brief quotes (correction 10) ----
-   The worker's rule (ingest/brief.py verify_quote) on the reader's text layer: the folding above and whitespace are the
-   only allowances. Each character carries the gap before it: 0 none, 1 a span boundary (pdf.js splits a word where
-   the font changes), 2 whitespace, 3 a line end. A space in the quote needs whitespace or a line end on the page, never
-   a span boundary alone, so '12 5' cannot match '125' set in two fonts. No space in the quote allows none or a span
-   boundary, so a word split across spans still matches. The edges must not cut a word, a number or an identifier, nor
-   start just after a sign written against a number. A hyphen at a line end matches joined or kept. */
-function briefPageText(layer) {
-  const K = [], at = [], G = []; let gap = 2, last = null;
-  const walk = node => {
-    for (const n of node.childNodes || []) {
-      if (n.nodeType === 1) { if (n.tagName === 'BR') gap = 3; else walk(n); continue; }
-      if (n.nodeType !== 3) continue;
-      const t = n.data;
-      for (let i = 0; i < t.length;) {
-        const c = String.fromCodePoint(t.codePointAt(i)), w = c.length, nf = c.normalize('NFC'), f = hasOwn(BRIEF_FOLDS, nf) ? BRIEF_FOLDS[nf] : nf;
-        for (const ch of f) {
-          if (/\s/.test(ch)) { gap = Math.max(gap, ch === '\n' ? 3 : 2); continue; }
-          G.push(K.length ? Math.max(gap, n === last ? 0 : 1) : 2); K.push(ch); at.push([n, i, w]); last = n; gap = 0;
-        }
-        i += w;
-      }
-    }
-  };
-  walk(layer);
-  return { K, at, G };
-}
-function briefForms(P) {   // the line-end hyphen kept ('state-of'), then joined away ('robot')
-  const letter = c => /\p{L}/u.test(c || ''), A = { K: P.K, at: P.at, G: P.G.slice() }, B = { K: [], at: [], G: [] };
-  let join = false;
-  for (let k = 0; k < P.K.length; k++) {
-    if (P.K[k] === '-' && k > 0 && letter(P.K[k - 1]) && P.G[k] <= 1 && P.G[k + 1] === 3 && letter(P.K[k + 1])) { A.G[k + 1] = 0; join = true; continue; }
-    B.K.push(P.K[k]); B.at.push(P.at[k]); B.G.push(join ? 0 : P.G[k]); join = false;
-  }
-  return [A, B];
-}
-function briefMatch(P, quote) {   // [form, start, end] of the first place the quote stands on word boundaries, or null
-  const Q = [], QG = []; let sp = false;
-  for (const ch of briefFold(quote)) { if (ch === ' ') { sp = true; continue; } Q.push(ch); QG.push(sp ? 2 : 0); sp = false; }
-  if (!Q.length) return null;
-  const word = c => !!c && /[\p{L}\p{N}_]/u.test(c), joiner = c => !!c && BRIEF_JOINERS.includes(c);
-  for (const F of briefForms(P)) {
-    const n = F.K.length, joined = i => i > 0 && i < n && F.G[i] <= 1;
-    const cut = i => (joined(i) && word(F.K[i - 1]) && word(F.K[i]))
-      || (joiner(F.K[i]) && joined(i) && word(F.K[i - 1]) && joined(i + 1) && word(F.K[i + 1]))
-      || (joiner(F.K[i - 1]) && joined(i) && word(F.K[i]) && joined(i - 1) && word(F.K[i - 2]));
-    for (let k = 0; k + Q.length <= n; k++) {
-      let j = 0;
-      for (; j < Q.length; j++) if (F.K[k + j] !== Q[j] || (j && (QG[j] ? F.G[k + j] < 2 : F.G[k + j] > 1))) break;
-      if (j < Q.length || cut(k) || cut(k + Q.length)) continue;
-      if (/[0-9]/.test(Q[0]) && joined(k) && BRIEF_SIGNS.includes(F.K[k - 1])) continue;
-      return [F, k, k + Q.length];
-    }
-  }
-  return null;
-}
-function briefFindRange(pg, quote) {
-  const layer = pg.querySelector('.textLayer');
-  const hit = layer && briefMatch(briefPageText(layer), quote);
-  if (!hit) return null;
-  const [F, s, e] = hit, a = F.at[s], b = F.at[e - 1], r = document.createRange();
-  r.setStart(a[0], a[1]); r.setEnd(b[0], b[1] + b[2]);
-  return r;
-}
-
 /* ---- the lifecycle ---- */
 /* A pull or a lock drops every read in flight and empties every cache. */
 function briefInvalidate() {
-  Brief.gen++; Brief.index = null; Brief.questions = null; Brief.files.clear(); Brief.loading.clear(); Brief.jump = null;
+  Brief.gen++; Brief.index = null; Brief.questions = null; Brief.files.clear(); Brief.loading.clear();
 }
 /* A pull took a newer library, so a section on the paper page that shows reads again. A page left behind under
    another view reads nothing now. It is drawn and read afresh when it shows again. */
@@ -26197,7 +26039,7 @@ function briefRefresh() {
   if (Brief.sheet && ![...document.querySelectorAll('#paperDetail [data-tq]')].some(b => b.dataset.tq === Brief.sheet.pid)) { briefRedraw(Brief.sheet.pid); briefStart(Brief.sheet.pid); }
 }
 /* Run by lockPrivate. Nothing of the session's briefs outlives the authorization. */
-function briefTeardown() { briefInvalidate(); Brief.visit = { pid: null, open: new Set() }; Brief.focus = null; Brief.pushed = null; briefSheetHide(); }
+function briefTeardown() { uploadQuestionsCancel(); briefInvalidate(); Brief.visit = { pid: null, open: new Set() }; Brief.focus = null; Brief.pushed = null; briefSheetHide(); }
 
 /* ===== the paper page follows the paper (Phase 13e) =====
    paperBarSync, on every change (viewsSync): the bar's ★, ✓ and ☰ patched from the row's marks as they are now, so a
