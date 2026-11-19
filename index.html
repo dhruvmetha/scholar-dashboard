@@ -351,7 +351,7 @@ html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(
 
 /* NAV */
 .navbar { background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); flex-shrink: 0; z-index: 100; box-shadow: 0 0.2rem 0.8rem rgba(255,255,255,0.03); }
-.nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; height: 56px; gap: 24px; }
+.nav-inner { padding: 0 24px; display: flex; align-items: center; height: 56px; gap: 24px; }   /* walk fixes 9: edge to edge on every page and width, the menu at the screen's left edge, where its drawer opens, search at the right (the loader's bar shares this class) */
 .nav-brand { font-size: 20px; font-weight: 500; display: flex; align-items: center; gap: 8px; flex-shrink: 0; transition: color 0.15s; }
 .nav-brand:hover { color: var(--text); }
 .nav-brand svg { width: 24px; height: 24px; fill: var(--accent); transition: fill 0.15s; }   /* the spyglass of the icon (icon.svg): its four paths, all in the accent */
@@ -817,6 +817,9 @@ html.ro #vaultOverlay { display: none !important; }
   .nav-tabs::-webkit-scrollbar { display: none; }
   .nav-tab { padding: 0 12px; flex-shrink: 0; }
 }
+/* Walk fixes 4: since Phase 31 the row holds only the two tabs kept off by their flags; with none showing it takes no
+   room at any width (a flag turned on brings it back) */
+.navbar .nav-tabs:not(:has(> .nav-tab:not([hidden]))) { display: none; }
 @media (max-width: 600px) {   /* a phone: the search toggle and the key share the brand's line */
   .navbar .nav-inner { column-gap: 8px; }
   .nav-search-toggle { width: 36px; height: 36px; }
@@ -1254,6 +1257,9 @@ html:not(.no-hover) .act.add:hover .act-pill { background: var(--accent-hover); 
 .sh-msg:empty { display: none; }
 .save-sheet.pop.open { inset: auto; width: 320px; display: flex; flex-direction: column; background: none; }
 .save-sheet.pop .sh-panel { position: static; flex: 1 1 auto; min-height: 0; max-width: none; max-height: none; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.55); padding: 0; }
+/* Walk fixes 2: the panel fills the popover's 320 px (the sheet's centring margins would size it to the paper's title
+   line, wider than the popover); the title under "Save to" shortens with an ellipsis inside it */
+.save-sheet.pop.open > .sh-panel { margin: 0; align-self: stretch; width: auto; min-width: 0; }
 .save-sheet.pop .sh-grip { display: none; }
 .save-sheet.pop .sh-head { padding-top: 8px; }
 /* The save pill over the page: while it only says what is happening (Saving…, Offline) a tap goes through it to what
@@ -3003,7 +3009,7 @@ html.no-hover .sel-icon:not(.on):active, html.no-hover .ink-bar .ink-size:not(.o
   .pd-topic-chip { min-height: 36px; padding: 0 12px; }
   .pd-topic-chip::after { inset: -4px -3px; }   /* 44 tall; the 8 px gap between rows of chips holds both halves */
   .pd-kicker .v-link { display: inline-block; padding: 12px 0; margin: -12px 0; }   /* the kicker's own row: nothing above or below it within reach */
-  .pd-facts .v-link { display: inline-flex; align-items: center; min-height: 44px; }
+  .pd-facts .v-link { display: inline-block; padding: calc((44px - 1lh) / 2) 0; margin: calc((1lh - 44px) / 2) 0; }   /* walk fixes 10: a 44 px target reaching into the rows' 12 px gaps, its text on its label's line (as the kicker's) */
   .pd-info { min-width: 44px; min-height: 44px; }
   .pd-match-list { gap: 8px; }
   .pd-match, .pd-strength { min-height: 44px; }
@@ -3150,6 +3156,7 @@ body.daily-mode .save-bar{bottom:calc(var(--daily-footer-height) + 12px)}
 body.daily-mode #toast{bottom:calc(var(--daily-footer-height) + 12px)}
 body.daily-mode:has(.save-bar.visible) #toast{bottom:calc(var(--daily-footer-height) + 96px)}
 body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.auth-overlay.open) #toast{top:calc(8px + env(safe-area-inset-top, 0px));bottom:auto}
+body.daily-mode:has(#saveSheet.open) #toast{z-index:456}   /* walk fixes 5: a tick's notice stays above the open lists, as For you's does */
 .daily-feed #feedAdd,.daily-feed #feedCtl,.daily-feed #feedMore,.daily-feed #feedEnd,.daily-feed #listBar{display:none!important}
 .daily-feed .feed-head{position:static}.daily-feed #tabsMsg:empty{display:none}
 .daily-picker{min-width:0;flex:none;display:flex;align-items:center;gap:10px;width:100%;height:46px;padding:0 20px;border:0;border-bottom:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit;font-size:14px;text-align:left;cursor:pointer}
@@ -3180,6 +3187,7 @@ body.daily-mode:has(#saveSheet.open,#dailyInterestSheet.open,#hideSheet.open,.au
 .daily-action.pact-save .pact-i{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line));background:var(--accent-dim)}html:not(.no-hover) .daily-action:hover .pact-i{color:var(--accent);border-color:var(--accent)}
 .daily-action .pact-l{font-weight:400;overflow-wrap:anywhere}.daily-action svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .daily-action .pact-chev{display:none}
+.daily-actions .daily-action.pact-save.on svg:not(.pact-chev){fill:currentColor}   /* walk fixes 5: Saved, as the pane's row shows it (one class more than the two panes' row icons) */
 .daily-empty{display:flex;flex-direction:column;gap:15px;min-height:355px;align-items:center;justify-content:center;padding:40px;border:1px solid var(--line);border-radius:18px;text-align:center;font-size:14px;line-height:1.8;color:var(--text-muted)}
 .daily-empty button{border:0;background:none;color:var(--accent);cursor:pointer;min-height:44px}
 @media(max-width:600px){.daily-picker{padding:0 16px}.daily-area{padding:16px 16px calc(var(--daily-footer-height) + 16px)}.daily-card{padding:20px 20px 19px}.daily-actions{gap:clamp(8px,5vw,32px)}.daily-action .pact-i{width:48px;height:48px}}
@@ -3275,6 +3283,15 @@ html:not(.no-hover) .daily-row:hover{background:var(--bg-surface)}
 body.feed-two:has(#feedPane:not([hidden]) .fp-acts) { --fp-acts-height: calc(73px + env(safe-area-inset-bottom, 0px)); }
 body.feed-two:has(#feedPane:not([hidden]) .fp-acts) #toast { bottom: calc(var(--fp-acts-height) + 12px); }
 body.feed-two:has(#feedPane:not([hidden]) .fp-acts) #toast:not(.show) { transform: translateX(round(nearest, -50%, 1px)) translateY(round(nearest, calc(100% + var(--fp-acts-height) + 20px), 1px)); }
+/* Walk fixes 3: "Saving…" and "Offline" sit above that row too, at its right, so Read shows; the notice then rises above
+   the pill by its 36 px and a 12 px gap, as Daily's does, so the two never overlap. While the pill asks for a tap
+   (Retry, Save now) the scroll area ends 76 px higher and the row with it (walk fixes 1): the notice rises by as much.
+   Both add to the place above the row (the rule before), as a margin under the notice. */
+body.feed-two:has(#feedPane:not([hidden]) .fp-acts) .save-bar:is([data-state="saving"], [data-state="offline"]) { bottom: calc(var(--fp-acts-height) + 12px); }
+body.feed-two:has(#feedPane:not([hidden]) .fp-acts):has(#saveBar.visible:is([data-state="saving"], [data-state="offline"])) #toast { margin-bottom: 48px; }
+body.feed-two:has(#feedPane:not([hidden]) .fp-acts):has(#saveBar.visible:is([data-state="saving"], [data-state="offline"])) #toast:not(.show) { transform: translateX(round(nearest, -50%, 1px)) translateY(round(nearest, calc(100% + var(--fp-acts-height) + 68px), 1px)); }
+body.feed-two:has(#feedPane:not([hidden]) .fp-acts):has(#saveBar.visible:is([data-state="push"], [data-state="error"])) #toast { margin-bottom: 76px; }
+body.feed-two:has(#feedPane:not([hidden]) .fp-acts):has(#saveBar.visible:is([data-state="push"], [data-state="error"])) #toast:not(.show) { transform: translateX(round(nearest, -50%, 1px)) translateY(round(nearest, calc(100% + var(--fp-acts-height) + 96px), 1px)); }
 /* ...and while the lists open from that row (the popover over it), the notice that carries their Undo shows at the top,
    clear of both, as a phone's does over its sheet */
 body.feed-two:has(#feedPane:not([hidden]) .fp-acts):has(#saveSheet.open.pop) #toast { top: calc(8px + env(safe-area-inset-top, 0px)); bottom: auto; z-index: 456; }
@@ -7802,6 +7819,7 @@ function openAppMenu() {
   appMenuSync();
   markNavTabs(currentTab);
   AppMenu.open = true;
+  if (typeof toastHold === 'function') toastHold();   // walk fixes 6: the notice under the drawer waits for the menu to close
   try { history.pushState({ scoutMenu: 1 }, '', location.href); AppMenu.pushed = true; } catch (e) { AppMenu.pushed = false; }
   menu.hidden = false; scrim.hidden = false;
   for (const el of [document.querySelector('.navbar'), document.getElementById('mainScroll')]) if (el) el.inert = true;
@@ -7817,6 +7835,7 @@ function closeAppMenu(back = true, focusBack = true) {
   AppMenu.open = false;
   AppMenu.edge = null;
   if (menu) menu.hidden = true;
+  if (typeof toastResume === 'function') toastResume();   // walk fixes 6: the notice's time runs again, at least 2 seconds of it
   appMenuSwipeClear();
   if (scrim) scrim.hidden = true;
   for (const el of [document.querySelector('.navbar'), document.getElementById('mainScroll')]) if (el) el.inert = false;
@@ -8585,6 +8604,9 @@ function feedHeadWatch() {
   if (!head || typeof ResizeObserver !== 'function') return;
   Feed.headObs = new ResizeObserver(privateCallback(() => feedHeadMeasure()));
   Feed.headObs.observe(head);
+  // Walk fixes 1: the right pane is as tall as the scroll area, which shrinks when the save pill asks for a tap (its
+  // margin-bottom) and grows back: the same observer measures it again whenever its size changes
+  const ms = document.getElementById('mainScroll'); if (ms) Feed.headObs.observe(ms);
 }
 /* The view a refresh is asked from and compared with: a project tab by its project alone (it ignores For you's sort
    and interest), For you by its sort and interest. A JSON tuple, so no two views read alike whatever the names. */
@@ -9610,6 +9632,7 @@ function saveSheetSync() {
   });
   const save = sheetBtn(sh);
   if (save) { if (!sh.btn) save.classList.toggle('on', paperInAnyList(sh.key)); save.setAttribute('aria-expanded', 'true'); }
+  if (save && typeof dailySaveShow === 'function') dailySaveShow(save, sh.key);   // walk fixes 5: Daily's Save fills as a tick lands
   placeSheet();
 }
 /* Design fixes round 2 (G10): the sheet's membership adapter. listHolds reads a paper that shows from the lists, an
@@ -9655,6 +9678,7 @@ function sheetToggle(n, sid) {
   else feedRepaintPost(k);   // Save and Pass say whether the paper is in a list now
   saveSheetSync();
   if (!dailyDelta) listToast(n, k, on, at);   // Layout A: every add and remove has its Undo; Daily's sheet is one decision, with its Undo when it closes
+  if (dailyDelta && typeof dailyTickToast === 'function') dailyTickToast(n, k, on, sh);   // walk fixes 5: and each tick says so at once
   return true;
 }
 /* + New list: the row becomes a field in place, below the sheet's scrolling list, so it and its message stay in reach
@@ -9715,6 +9739,7 @@ function sheetNewSubmit() {
   if (own) listSet(name, sh.key, true);
   saveSheetSync();
   if (!dailyDelta) listToast(name, sh.key, true);   // Layout A: the new list's add has its Undo too
+  if (dailyDelta && typeof dailyTickToast === 'function') dailyTickToast(name, sh.key, true, sh);   // walk fixes 5: Daily's too
   const row = [...s.querySelectorAll('.sh-row')].find(b => b.dataset.n === name);
   if (row) { row.focus({ preventScroll: true }); sheetReveal(row); }
   return true;
@@ -10437,8 +10462,9 @@ function dailyUndo(id) {
   Daily.edits = edits; Daily.handled = handled; if (Daily.undo === id) Daily.undo = null;
   _stateDirty = true; _editGen++; scheduleBackup(); showSaveBar(); tasteSupersede();
   if (Daily.sheet) closeSaveSheet(); dailyCancelPress();
-  if (dailyCards().some(c => c.day === o.card.day && c.interest === o.card.interest && c.paper === o.paper && c.pool === o.pool && c.slot === o.card.slot) && Daily.interest !== o.card.interest) { Daily.interest = o.card.interest; Daily.generation++; }
-  if (Daily.interest === o.card.interest) { Daily.sel = { slot: o.card.slot, paper: o.paper }; Daily.selPos = o.card.position; }   // Layout A: the paper put back opens again
+  const offered = dailyCards().some(c => c.day === o.card.day && c.interest === o.card.interest && c.paper === o.paper && c.pool === o.pool && c.slot === o.card.slot);
+  if (offered && Daily.interest !== o.card.interest) { Daily.interest = o.card.interest; Daily.generation++; }
+  if (offered && Daily.interest === o.card.interest) { Daily.sel = { slot: o.card.slot, paper: o.paper }; Daily.selPos = o.card.position; }   // Layout A: the paper put back opens again; walk fixes (review): one a newer manifest left out leaves the open card where it is
   if (typeof dailyRender === 'function' && dailyView()) dailyRender(true);
   return true;
 }
@@ -10651,7 +10677,33 @@ function dailySheetClosed() {
   if (!sh) return;
   dailyCancelPress(); dailyAdopt();
   if (dailyView() && typeof dailyRender === 'function') dailyRender(true);
-  if (sh.operation) { scheduleAutoPush(); const id = sh.operation; toast('Saved', privateCallback(() => dailyUndo(id)), { duration: 8000 }); dailyFocusUndo(); }
+  if (sh.operation) {
+    scheduleAutoPush(); const id = sh.operation, o = Daily.handled.operations[id];
+    // walk fixes 5: the decision's notice names the lists it changed; ticked and unticked again, it changed nothing to undo
+    const lists = o ? o.delta.lists.filter(l => l.after !== l.before) : null;
+    if (lists && !lists.length) { hideToast(); return; }
+    const named = on => (lists || []).filter(l => l.after === on).map(l => dailyListName(l)).filter(Boolean).map(n => esc(listLabel(n)));
+    const and = a => a.length > 1 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : a[0], added = named(true), removed = named(false);
+    toast(added.length ? 'Saved to ' + and(added) : removed.length ? 'Removed from ' + and(removed) : 'Saved', privateCallback(() => dailyUndo(id)), { duration: 8000 }); dailyFocusUndo();
+  }
+}
+/* Walk fixes 5: Daily's lists answer each tick as For you's do: the tick, Save filled ("Saved"), and "Saved to LIST" or
+   "Removed from LIST" with Undo. The ledger keeps one operation per decision (Undo names one operation), so the open
+   sheet's ticks still extend that one operation and are sent together when it closes; a tick's Undo unticks it again
+   in the same sheet, as a second tap would, and closing the sheet gives the notice for the whole decision. */
+function dailyTickToast(n, k, on, sh) {
+  const opened = Daily.sheet;
+  toast(on ? `Saved to ${esc(listLabel(n))}` : `Removed from ${esc(listLabel(n))}`, privateCallback(() => {
+    if (!opened || Daily.sheet !== opened || Feed.sheet !== sh || listHolds(n, k) !== on) return false;   // that sheet closed, or the list changed since
+    return sheetToggle(n, sh.id);   // as a second tap; the notice it raises goes with this one (_doToastUndo)
+  }), { duration: 5000, fullTarget: true });
+}
+/* Daily's Save, while its lists are open over it: filled and "Saved" once the paper is in a list, as the pane's row */
+function dailySaveShow(btn, k) {
+  if (!Daily.sheet || !btn.closest || !btn.closest('.daily-actions')) return;
+  const on = paperInAnyList(k), label = btn.querySelector('.pact-l');
+  btn.classList.toggle('on', on);
+  if (label) label.textContent = pactLabel('save', { listed: on });
 }
 
 function dailyTick() {
@@ -10697,12 +10749,37 @@ function dailyRowWord(k, p) {
   if (p.is_passed === 'true') return 'Passed';
   return readSet.has(k) ? 'Read' : '';
 }
+/* Walk fixes 8: today's papers for an interest are the ones Daily offers there now (dailyCards) and the ones already
+   handled (saved, passed, read or hidden). A card Daily no longer offers there and nobody handled (the paper's strongest
+   match is another interest now, or its pool is blocked) is not one of today's papers: it is neither listed nor
+   counted, as the phone never shows it. The worker's next pass leaves handled papers out of the manifest and fills
+   their places: today's decisions for this interest that it left out, not undone and still showing in the paper's
+   state, come first from the ledger (once a pool, once a paper, in their places), then the manifest's cards. A card
+   Daily does not offer here counts as handled here only if it belongs here (dailyRowMatches) or was decided here today:
+   a paper passed under another interest is not one of this interest's papers. Each row is { paper, pool, slot,
+   position, live }: live is the card Daily offers, else null. The count is these rows. */
+function dailyListed(section, available) {
+  if (!section) return [];
+  const rows = [], papers = new Set(), pools = new Set(section.cards.map(c => c.pool)), undone = new Set(Daily.handled.undone);
+  const today = Object.entries(Daily.handled.operations).filter(([id, o]) => !undone.has(id) && o.card.day === Daily.active?.day && o.card.interest === section.interest), here = new Set(today.map(([, o]) => o.paper));
+  today.filter(([, o]) => !pools.has(o.pool))
+    .sort(([, a], [, b]) => a.card.position - b.card.position || (a.at < b.at ? -1 : a.at > b.at ? 1 : 0)).forEach(([, o]) => {
+      const p = feedRow(o.paper);
+      if (!p || p._goneRemote || papers.has(o.paper) || !dailyRowWord(o.paper, p)) return;
+      papers.add(o.paper); rows.push({ paper: o.paper, pool: o.pool, slot: o.card.slot, position: o.card.position, live: null });
+    });
+  section.cards.forEach(c => {
+    const p = feedRow(c.paper); if (!p || p._goneRemote || papers.has(c.paper)) return;
+    const live = available.find(a => a.interest === section.interest && a.slot === c.slot && a.paper === c.paper) || null;
+    if (live || (dailyRowWord(c.paper, p) && (here.has(c.paper) || dailyRowMatches(p, section.interest)))) { papers.add(c.paper); rows.push({ paper: c.paper, pool: c.pool, slot: c.slot, position: c.position, live }); }
+  });
+  return rows;
+}
 /* Two panes: today's papers for the chosen interest, in their order. One still to decide is a button that opens it on
    the right; one handled is muted, with what happened to it, and opens its page. */
 function dailyListHTML(section, available, card) {
-  return `<div class="daily-list" role="list" aria-label="${dataAttr(`Today's papers in ${section.interest}`)}">${section.cards.map(c => {
-    const p = feedRow(c.paper); if (!p || p._goneRemote) return '';
-    const live = available.find(a => a.interest === section.interest && a.slot === c.slot && a.paper === c.paper), on = !!(live && card && live.slot === card.slot && live.paper === card.paper);
+  return `<div class="daily-list" role="list" aria-label="${dataAttr(`Today's papers in ${section.interest}`)}">${dailyListed(section, available).map(c => {
+    const p = feedRow(c.paper), live = c.live, on = !!(live && card && live.slot === card.slot && live.paper === card.paper);
     const head = esc(hasText(p.headline) ? p.headline : p.title || '');
     if (!live) { const word = dailyRowWord(c.paper, p); return `<div role="listitem"><a class="daily-row done" href="#paper/${encodeURIComponent(c.paper)}"><span class="dr-h">${head}</span>${word ? `<span class="dr-s">${esc(word)}</span>` : ''}</a></div>`; }
     return `<div role="listitem"><button type="button" class="daily-row${on ? ' on' : ''}" data-daily-action="row" data-daily-row="${dataAttr(c.slot)}" data-row-paper="${dataAttr(c.paper)}"${on ? ' aria-current="true"' : ''}><span class="dr-h">${head}</span>${hasText(p.authors) ? `<span class="dr-s">${esc(p.authors)}</span>` : ''}</button></div>`;
@@ -10744,10 +10821,8 @@ function dailyRender(focus, keepInterest) {
   const card = chosen || (Daily.selPos !== null && Daily.selPos !== undefined && here.find(c => c.position > Daily.selPos)) || here[0], row = card && feedRow(card.paper), root = box.querySelector('#dailyBody');
   if (card) { Daily.sel = { slot: card.slot, paper: card.paper }; Daily.selPos = card.position; } else Daily.sel = null;
   const section = sections.find(s => s.interest === Daily.interest);
-  const pools = new Set((section?.cards || []).map(c => c.pool)), undone = new Set(Daily.handled.undone);
-  const handled = new Set(Object.entries(Daily.handled.operations).filter(([id, o]) => !undone.has(id) && o.card.day === Daily.active?.day && o.card.interest === section?.interest).map(([, o]) => o.pool));
-  const removed = [...handled].filter(pool => !pools.has(pool)).length, total = pools.size + removed;
-  const position = card ? removed + card.position + 1 : total;
+  const listed = dailyListed(section, available), total = listed.length;   // walk fixes 8: "N of M" counts the rows the list shows
+  const position = card ? listed.findIndex(c => c.live && c.slot === card.slot && c.paper === card.paper) + 1 : total;
   const empty = Daily.status === 'retry' ? `Couldn't load your picks. <button type="button" data-daily-retry>Try again</button>` : !Daily.active || !section || Daily.status === 'waiting' || !sections.some(s => s.cards.length) ? 'Your next picks are on the way.' : "That's all for today. More tomorrow.";
   root.innerHTML = `${section ? interestPickerHTML(section.interest, '', `${position} of ${total}`) : ''}${two && section ? dailyListHTML(section, available, card) : ''}
     <section class="daily-area">${card && row ? dailyCardHTML(card, row) + `</section><footer class="daily-actions pacts" aria-label="Paper actions">${dailyActsHTML()}</footer>` : `<div class="daily-empty" role="status">${empty}</div></section>`}`;
@@ -11384,7 +11459,8 @@ function placePopover(m, anchor) {
   if (room < 132) { room = last - first; y = first; }
   m.style.maxHeight = Math.max(0, room) + 'px';
   m.style.top = y + 'px';
-  m.style.left = Math.max(left + pad, Math.min(r.left, left + w - pad - m.offsetWidth)) + 'px';
+  const mw = Math.max(m.offsetWidth || 0, m.scrollWidth || 0);   // walk fixes 2: what shows, content that runs past the box included
+  m.style.left = Math.max(left + pad, Math.min(r.left, left + w - pad - mw)) + 'px';
 }
 /* The laptop's save popover sits under its 🔖. Someone scrolling the page outside it (the wheel, a finger, the keys that
    scroll) closes it, as a tap outside does. A scroll the page makes itself (a post above removed and the browser keeping
@@ -11393,6 +11469,7 @@ function placePopover(m, anchor) {
 function sheetScrollIntent(e) {
   const s = document.getElementById('saveSheet');
   if (!s || !s.classList.contains('pop') || !Feed.sheet || (e.target && s.contains(e.target))) return;
+  if (e.target && e.target.closest && e.target.closest('#toast')) return;   // walk fixes (review): a finger moving on the notice's Undo is a tap on it, as the tap-outside rule treats it
   if (e.type === 'wheel' && e.ctrlKey) return;   // a pinch on a trackpad zooms: the popover is placed again
   if (e.type === 'keydown' && !['PageUp', 'PageDown', 'Home', 'End', ' ', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
   closeSaveSheet();
@@ -15530,7 +15607,29 @@ function toast(msg, undoFn, opts) {
     t.innerHTML = `<span class="toast-msg">${msg}</span>`;
   }
   t.classList.add('show');
-  _toastTimer = setTimeout(privateCallback(() => { t.classList.remove('show'); _toastUndo = null; }), duration);
+  toastClock(t, duration);
+}
+/* Walk fixes 6: a notice's time runs only while the side menu is closed. The menu's drawer and its shade lie over the
+   notice, so opening the menu holds what time it has left (toastHold) and closing it gives that time back, at least
+   2 seconds (toastResume): an Undo never runs out unseen behind the menu, and a tap while the menu is open closes the
+   menu, never reaches a menu item through the notice. A notice raised while the menu is open waits the same way. */
+function toastClock(t, ms) {
+  if (_toastTimer) { clearTimeout(_toastTimer); _toastTimer = null; }
+  t._left = ms;
+  if (typeof AppMenu !== 'undefined' && AppMenu.open) return;
+  t._ends = Date.now() + ms;
+  _toastTimer = setTimeout(privateCallback(() => { _toastTimer = null; t.classList.remove('show'); _toastUndo = null; }), ms);
+}
+function toastHold() {
+  const t = document.getElementById('toast');
+  if (!t || !_toastTimer) return;
+  clearTimeout(_toastTimer); _toastTimer = null;
+  t._left = Math.max(0, (t._ends || 0) - Date.now());
+}
+function toastResume() {
+  const t = document.getElementById('toast');
+  if (!t || _toastTimer || !t.classList.contains('show')) return;
+  toastClock(t, Math.max(t._left || 0, 2000));
 }
 function toastError(msg) { toast(msg, null, { error: true }); }
 /* Phase 24 (Sol's correction 11): what a failure says on screen. Only words this page wrote for the person (an error
@@ -22640,7 +22739,11 @@ function renderChatPanel(force) {
   const panel = document.getElementById('chatPane');
   if (!panel || !document.getElementById('reader').classList.contains('panel-open') || !chatShown()) return;
   applyPanelLayout();
-  if (!chatAvailable()) { panel.innerHTML = `<div class="rp-head">${paneHeadStart('chat')}<span class="grow"></span>${paneClose('chat')}</div><div class="chat-setup">Unlock your notes to open your chats.<br><button class="ui-btn ui-btn-primary" onclick="unlockFromPanel()">Unlock notes</button></div>`; return; }
+  if (!chatAvailable()) {   // walk fixes 7: no notes password yet asks for one, as the Notes tab does; a locked one asks to unlock
+    const none = Vault.meta === null;
+    panel.innerHTML = `<div class="rp-head">${paneHeadStart('chat')}<span class="grow"></span>${paneClose('chat')}</div><div class="chat-setup">${none ? 'Set a notes password to keep your chats private.' : 'Unlock your notes to open your chats.'}<br><button class="ui-btn ui-btn-primary" onclick="unlockFromPanel()">${none ? 'Set a notes password' : 'Unlock notes'}</button></div>`;
+    return;
+  }
   if (chatOfflineShown(panel)) return;
   if (chatRoute() === 'api' && !API_STATES.has(Chat.status)) Chat.status = 'ready';   // a key on this device: nothing to connect to
   const pid = (_reader.paper && _reader.paper.id) || '';
