@@ -7248,20 +7248,20 @@ function toggleMobileSearch(force) { if (force !== false) { showGlobalSearch(_se
 function sfRoute(hash) { return hash === '#search' || hash.startsWith('#search?q='); }
 function showGlobalSearch(q, fromHash) {
   q = (q || '').trim();
+  if (!fromHash) navLeave();   // the page typing began on, before the results take its place
   searchShell();
   const freshEntry = !fromHash && !sfRoute(location.hash) && (Search.entry !== location.hash || !_searchActive || _paperViewActive);
   if (fromHash) Search.entry = null;
   else if (!sfRoute(location.hash)) Search.entry = location.hash;
   if (_searchActive && !_paperViewActive && sfRoute(location.hash) && document.getElementById('sec-search').classList.contains('active')) {
     if (fromHash || sfQuery() !== q) sfSetQuery(q);
-    renderGlobalSearch(q, { typing: !fromHash, restore: fromHash && Search.q === q });
+    renderGlobalSearch(q, { typing: !fromHash, restore: fromHash && Search.q === q, y: navY() });
     return;
   }
   const ms = document.getElementById('mainScroll');
   const returning = fromHash && Search.q === q && !!Search.job;
   if (freshEntry) Search.origin = { hash: location.hash, scroll: ms.scrollTop };
   if (!_searchActive && !_paperViewActive) {
-    _tabScroll[currentTab] = ms.scrollTop;
     if (!returning && currentTab === 'all' && Feed.mode === 'foryou' && Feed.interest) SF.interest = [Feed.interest];
   }
   leaveListView();
@@ -7273,7 +7273,7 @@ function showGlobalSearch(q, fromHash) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   markAppSearch();
   if (fromHash || sfQuery() !== q) sfSetQuery(q);
-  renderGlobalSearch(q, { typing: !fromHash, restore: returning });
+  renderGlobalSearch(q, { typing: !fromHash, restore: returning, y: navY() });
 }
 function hideGlobalSearch() {
   searchOff();
@@ -7535,7 +7535,7 @@ function highlightTokens(root, tokens) {
 }
 /* The ranked order is complete; only its drawn rows are paged. Every delayed step belongs to one input, route
    and sign-in. Leaving search keeps its rows for Back, but stops both paging and a pending query. */
-const Search = { gen: 0, frame: 0, obs: null, job: null, q: '', records: [], shown: 0, origin: null, back: null, dirty: false, scroll: 0, entry: null, scrollMode: null, chips: new Map() };
+const Search = { gen: 0, frame: 0, obs: null, job: null, q: '', records: [], shown: 0, origin: null, back: null, dirty: false, entry: null, scrollMode: null, chips: new Map() };
 // Follow the existing state-change notification, including Undo and papers with no mounted row.
 const _sfViewsSync = viewsSync;
 viewsSync = function () {
@@ -7551,18 +7551,11 @@ function searchScrollMode(active) {
   }
   history.scrollRestoration = active ? 'manual' : Search.scrollMode;
 }
-function searchSaveScroll() {
-  const job = Search.job;
-  if (job && job.committed && job.gen === Search.gen && job.q === Search.q && job.route === location.hash && _searchActive && !_paperViewActive
-      && document.getElementById('sec-search').classList.contains('active')) Search.scroll = document.getElementById('mainScroll').scrollTop;
-}
-document.getElementById('mainScroll').addEventListener('scroll', searchSaveScroll, { passive: true });
 function searchOff(drop) {
   const cleanup = fn => { try { fn(); } catch (e) { console.error(e); } };
   const obs = Search.obs, frame = Search.frame, timer = _searchTimer, scrollMode = Search.scrollMode;
-  if (!drop) cleanup(() => searchSaveScroll());
   Search.gen++; Search.obs = null; Search.frame = 0; _searchTimer = null;
-  if (drop) { Search.scrollMode = null; Search.job = null; Search.records = []; Search.shown = 0; Search.q = ''; Search.origin = Search.back = Search.entry = null; Search.scroll = 0; Search.chips.clear(); Search.dirty = true; SF = sfEmpty(); _sfChips = []; _sfOpts = []; _sfFold = {}; _sfMemo = null; }
+  if (drop) { Search.scrollMode = null; Search.job = null; Search.records = []; Search.shown = 0; Search.q = ''; Search.origin = Search.back = Search.entry = null; Search.chips.clear(); Search.dirty = true; SF = sfEmpty(); _sfChips = []; _sfOpts = []; _sfFold = {}; _sfMemo = null; }
   cleanup(() => clearTimeout(timer)); cleanup(() => cancelAnimationFrame(frame));
   if (obs) cleanup(() => obs.disconnect());
   if (drop) { if (scrollMode !== null) cleanup(() => { history.scrollRestoration = scrollMode; }); cleanup(() => sfSheet(false)); cleanup(() => sfSheet(false,true)); cleanup(() => sfChipRender()); }
@@ -7631,7 +7624,7 @@ function renderGlobalSearch(q, opts) {
   const count = records.length === total ? `${total} result${total !== 1 ? 's' : ''}` : `${records.length} of ${total} results`;
   const job = { gen: Search.gen, route: location.hash, epoch: Private.epoch, q, tokens: keys, records, sf: s, counts, base, active, committed: false,
     status: q ? `${count} for "${q}"` : count, empty: !total, typing: opts.typing || Search.entry === location.hash,
-    restore: opts.restore, extent, focus };
+    restore: opts.restore, y: opts.restore ? (opts.y !== undefined ? opts.y : document.getElementById('mainScroll').scrollTop) : 0, extent, focus };
   Search.job = job;
   Search.frame = requestAnimationFrame(() => searchCommit(job));
 }
@@ -7651,6 +7644,7 @@ function searchCommit(job) {
     const url = APP_ROOT + location.search + (job.q ? '#search?q=' + encodeURIComponent(job.q) : '#search');
     if (sfRoute(location.hash)) history.replaceState(history.state, '', url);
     else history.pushState(history.state, '', url);
+    navTag();   // the router's own bookkeeping: this entry is known on Back and Forward
     _appliedHash = job.route = location.hash;
     Search.entry = null;
   }
@@ -7662,7 +7656,7 @@ function searchCommit(job) {
     && Search.records.slice(0,extent).every((x,i)=>paperKey(x.p)===paperKey(job.records[i].p));
   if (!job.restore) {
     if (!same) rows.hidden = true;
-    Search.scroll = 0; jumpScroll(document.getElementById('mainScroll'), 0);
+    jumpScroll(document.getElementById('mainScroll'), 0);
   }
   Search.q = job.q; Search.records = job.records; Search.dirty = false;
   if (!same) Search.chips = feedChipTargets(job.records.map(x => paperKey(x.p)));
@@ -7687,7 +7681,7 @@ function searchCommit(job) {
     highlightTokens(rows,job.tokens);
   }
   rows.hidden = false;
-  if (job.restore) jumpScroll(document.getElementById('mainScroll'), Search.scroll);
+  if (job.restore) jumpScroll(document.getElementById('mainScroll'), job.y);
   searchMoreRender();
   if (job.focus) {
     const control = [...document.querySelectorAll('#sec-search [data-search-filter]')].find(el => el.dataset.searchFilter === job.focus)
@@ -7740,13 +7734,12 @@ function searchObserveMore(job) {
 
 /* [6] TAB SWITCHING — crossfade */
 /* Each tab keeps its own place; a tab you haven't visited opens at the top */
-const _tabScroll = {};
 function switchTab(tab, fromHash) {
+  if (!fromHash) navLeave();   // (this renders before the address changes)
   closeListMenu();   // Phase 25: a list's menu goes with the view it was opened in
   searchOff();
   const ms = document.getElementById('mainScroll');
   const prevTab = currentTab, fromSearch = _searchActive, moved = prevTab !== tab || fromSearch;
-  if (prevTab !== tab && !fromSearch && !_paperViewActive && !_listViewActive) _tabScroll[prevTab] = ms.scrollTop;
   const fromList = leaveListView();
   // Clear search when switching tabs
   if (_searchActive) {
@@ -7775,7 +7768,7 @@ function switchTab(tab, fromHash) {
   else if (tab === 'venues') renderVenues();
   else if (tab === 'interests') { renderInterests(); activityEnter(); }   // Phase 16: the weekly note is read here, never at start-up
   else if (tab === 'people') { renderPeoplePage(); activityEnter(); }   // Phase 31: Who to follow comes from the weekly note
-  if (moved || fromList) jumpScroll(ms, _tabScroll[tab] || 0);
+  if (moved || fromList) jumpScroll(ms, navY());
   searchRestoreOrigin();
 }
 function interestsHash() { return SHOW_TOPICS ? '#interests/' + currentIGTab : '#interests'; }
@@ -12952,11 +12945,8 @@ function listFamily(key) {
 /* A list opened from a tab, search, a paper page, or another list's sidebar */
 function showList(key) {
   const ms = document.getElementById('mainScroll');
-  const entering = !_listViewActive, returning = entering && _leftPaper && _paperFromList === key;
+  const entering = !_listViewActive, returning = entering && _leftPaper && _paperFromList === key && !_navForward;
   if (entering && !returning) {
-    if (!_leftPaper) {   // from a tab or search: remember its place for Back
-      if (!_searchActive) _tabScroll[currentTab] = ms.scrollTop;
-    }
     _listBackLabel = _leftPaper ? 'Back' : _searchActive ? 'Search results' : (TAB_NAMES[currentTab] || 'Back');
   }
   const changed = _listKey !== key;
@@ -18660,7 +18650,6 @@ function readerDark() { try { return localStorage.getItem(READER_DARK_KEY) === '
    The reader is the one place notes are written; the paper page's note buttons come here. */
 function openReader(key, notes) {
   requireTarget(); if (!_ownerDecisionDone) return;
-  if (_searchActive && !_paperViewActive) searchSaveScroll();
   _reader.under = location.hash.slice(1);   // Back returns to this view, which stays rendered underneath
   _reader.pendingNotes = notes ? { key, action: notes } : null;
   location.hash = '#read/' + encodeURIComponent(key) + (notes ? '/notes' : '');
@@ -22842,6 +22831,9 @@ function renderChatPanel(force) {
   const root = document.getElementById('chatRoot');
   if (!force && root && root.dataset.paper === pid && root.dataset.status === Chat.status) return;
   const input = document.getElementById('chatInput'); if (input) Chat.draftText = input.value;
+  // the same chat redrawn keeps its place; another paper, or another conversation of this one (chatNew, chatSwitch), opens at its end
+  const oldBox = root && root.dataset.paper === pid && !root.hasAttribute('aria-busy') && !root.dataset.offline && !_chatNewView ? document.getElementById('chatScroll') : null;
+  const keepTop = oldBox && oldBox.childElementCount ? chatReaderPlace(oldBox).top : null;
   const ready = Chat.status === 'ready';
   const loading = pid && Chat.loadedFor !== pid;
   if (loading) chatOpen();   // another paper: load its chat first
@@ -22872,8 +22864,9 @@ function renderChatPanel(force) {
            <div class="chat-box-row"><button class="rp-icon-btn sm" onclick="startFigureSelect()" title="Ask about a figure: drag a box on the page" aria-label="Ask about a figure">${ICON_FIGURE}</button><button class="rp-icon-btn sm" onmousedown="event.preventDefault()" onclick="chatAddPaper()" title="Bring in another paper (or type @ and its name in your message)" aria-label="Bring in another paper">${ICON_PAPER}</button><span class="grow"></span>${chatSelectsHTML()}<button class="chat-send" id="chatSend" onclick="chatSendOrStop()" aria-label="Send">${ICON_SEND}</button></div></div></div>`
     : `<div class="chat-setup">${setup[Chat.status] || setup.setup}</div>`);
   panel.innerHTML = head + `<div class="chat-root" id="chatRoot" data-paper="${dataAttr(pid)}" data-status="${Chat.status}">${body}</div>`;
+  _chatNewView = false;
   if (Chat.status === 'unknown') chatOpen();   // shown before anything asked the laptop (the reader opened on Chat): ask now
-  if (Chat.pid===pid && (ready || Chat.messages.length)) renderChatMessages('bottom');
+  if (Chat.pid===pid && (ready || Chat.messages.length)) renderChatMessages(keepTop === null ? 'bottom' : { top: keepTop });
   if (ready) {
      renderChatAttach(); updateChatSend();
     const i = document.getElementById('chatInput'); i.value = Chat.draftText; chatGrow(i);
@@ -22902,7 +22895,7 @@ async function chatNew() { const _authEpoch = capturePrivateEpoch();
   if (!chatAvailable() || Chat.running || _chatPending.has(Chat.pid)) return;
   await privateAwait(apiChatArchive(_reader.paper.id), _authEpoch);
   Chat.selected = null; Chat.draftText = ''; Chat.draft = { quotes: [], images: [], mentions: [] };
-  Chat.loadedFor = null; await privateAwait(chatOpen(true), _authEpoch);
+  Chat.loadedFor = null; _chatNewView = true; await privateAwait(chatOpen(true), _authEpoch);
 }
 /* Earlier chats about this paper: pick one to continue it (Claude remembers it); the current one is kept */
 function toggleChatHistory(e) {
@@ -22937,7 +22930,7 @@ async function chatSwitch(id) { const _authEpoch = capturePrivateEpoch();
     await privateAwait(apiChatLock(_reader.paper.id, () => chatSelect(_reader.paper.id, chatId, anchor || null)), _authEpoch);
     Chat.selected = null;
   } catch (e) { checkPrivateEpoch(_authEpoch); toastError('Couldn\u2019t open that chat'); return; }
-  Chat.loadedFor = null; chatOpen(true);
+  Chat.loadedFor = null; _chatNewView = true; chatOpen(true);
 }
 
 const CHAT_STARTERS = [
@@ -22947,18 +22940,41 @@ const CHAT_STARTERS = [
   ['My research', 'How does this paper relate to my research? Be specific about what I could use or build on.'],
   ['Summarise my highlights', 'Summarise my highlights and comments on this paper into one structured note (key idea, method, results, open questions), and add it to my notes.'],
 ];
-/* Scrolling while Claude writes: if the bottom is in view, stay at the bottom as text arrives; if you've
-   scrolled up to read, the view stays exactly where it is. Sending a message or opening a chat goes to the end. */
+/* Scrolling while Claude writes: the chat follows the bottom only while the reader is at the bottom; once they scroll
+   up it stays exactly where it is, through the end of the answer, the save, the reload and every redraw, until they come
+   back down themselves. Sending a message or opening a chat goes to the end (8 November 2026, his words "just let me
+   read what I'm reading in peace"). chatFollow is the reader's own position, taken from scroll events; a redraw never
+   decides it. A redraw also yields to a wheel, touch, key or press in the chat that arrives while it works. */
 const chatAtBottom = box => box.scrollHeight - box.scrollTop - box.clientHeight <= 8;
+let chatFollow = true, _chatMoves = 0, _chatSettling = null, _chatNewView = false;   // _chatSettling: a redraw's intended place until its formatted text has its height
+document.addEventListener('scroll', e => {
+  if (!e.target || e.target.id !== 'chatScroll') return;
+  if (_chatSettling && _chatSettling.box === e.target && _chatSettling.moves === _chatMoves) return;   // the redraw's own clamping is not the reader
+  chatFollow = chatAtBottom(e.target);
+}, true);
+['wheel', 'touchstart', 'touchmove', 'pointerdown', 'keydown'].forEach(t => document.addEventListener(t, e => { if (e.target && e.target.closest && e.target.closest('#chatScroll')) _chatMoves++; }, { capture: true, passive: true }));
+/* One capture for every redraw: where the reader is, or where an unfinished redraw of this box already meant to put them
+   (the clamped scrollTop while formatting is pending is not the reader's). mode: 'bottom' (sending, opening a chat), {top}
+   (the same chat redrawn in a new box), else leave it where it is. */
+function chatReaderPlace(box, mode) {
+  if (mode === 'bottom') chatFollow = true;
+  const kept = mode && typeof mode === 'object', pending = _chatSettling && _chatSettling.box === box && _chatSettling.moves === _chatMoves ? _chatSettling : null;
+  return { stick: mode === 'bottom' || (!kept && !box.childElementCount) || chatFollow, top: kept ? mode.top : pending ? pending.top : box.scrollTop };
+}
+function chatPlacer(box, mode) {
+  const { stick, top } = chatReaderPlace(box, mode), moves = _chatMoves, record = _chatSettling = { box, top, moves };
+  const place = () => { if (moves === _chatMoves) box.scrollTop = stick ? box.scrollHeight : top; };
+  place.done = () => { if (_chatSettling === record) _chatSettling = null; };   // an older redraw finishing leaves a newer one's record alone
+  return place;
+}
 async function renderChatMessages(mode) { const _authEpoch = capturePrivateEpoch();
   const box = document.getElementById('chatScroll');
   if (!box) return;
-  const stick = mode === 'bottom' || !box.childElementCount || chatAtBottom(box), top = box.scrollTop;
-  const place = () => { box.scrollTop = stick ? box.scrollHeight : top; };
+  const place = chatPlacer(box, mode);
   const retry = (_chatDrafts.get(Chat.pid) || {}).turn;
   if (!Chat.messages.length && !Chat.running && !Chat.error && !retry) {
     box.innerHTML = `<div class="chat-empty"><p>Ask anything about this paper.</p><div class="chat-chips">${CHAT_STARTERS.map(([l, q]) => `<button class="rp-chip" onclick="chatSend(${dataAttr(JSON.stringify(q))})">${esc(l)}</button>`).join('')}</div></div>`;
-    return;
+    place.done(); return;
   }
   box.innerHTML = Chat.messages.map((m, i) => chatMsgHTML(m, i)).join('')
     + (Chat.running ? `<div class="chat-msg claude" id="chatLive"><div class="md chat-md" id="chatLiveMd"></div><div class="chat-status" id="chatTool">${esc(chatToolLabel(Chat.tool) || 'Thinking…')}</div></div>` : '')
@@ -22968,7 +22984,7 @@ async function renderChatMessages(mode) { const _authEpoch = capturePrivateEpoch
   const live = Chat.running && document.getElementById('chatLiveMd');
   if (live) jobs.push(renderChatMarkdown(live, Chat.streaming, null));
   place();                          // right away (plain text)...
-  await privateAwait(Promise.all(jobs), _authEpoch); place(); // ...and once formatted, since the heights change
+  await privateAwait(Promise.all(jobs), _authEpoch); place(); place.done(); // ...and once formatted, since the heights change
 }
 function chatStoppedHTML(m) { return m.interrupted&&!String(m.text||'').includes('The answer stopped here.')?'<p class="chat-dim">The answer stopped here.</p>':''; }
 function chatMsgHTML(m, i) {
@@ -23069,11 +23085,10 @@ let _liveTimer = 0;
 async function renderChatLive() { const _authEpoch = capturePrivateEpoch();
   const el = document.getElementById('chatLiveMd'), box = document.getElementById('chatScroll');
   if (!el || !box) return;
-  const stick = chatAtBottom(box), top = box.scrollTop;   // decided before the new text changes the height
-  const place = () => { box.scrollTop = stick ? box.scrollHeight : top; };
+  const place = chatPlacer(box);   // decided before the new text changes the height
   const job = renderChatMarkdown(el, Chat.streaming, null);
   const t = document.getElementById('chatTool'); if (t) t.textContent = Chat.tool ? chatToolLabel(Chat.tool) : (Chat.streaming ? '' : 'Thinking…');
-  place(); await privateAwait(job, _authEpoch); place();
+  place(); await privateAwait(job, _authEpoch); place(); place.done();
 }
 function scheduleLive() { if (!_liveTimer) _liveTimer = setTimeout(privateCallback(() => { _liveTimer = 0; renderChatLive(); }), 70); }
 
@@ -24886,7 +24901,6 @@ function captureNavList(fromEl) {
   if (!scope) return;
   const feed = !!fromEl.closest('#feedList') && Feed.mounted;
   const search = !!fromEl.closest('#sec-search');
-  if (search) searchSaveScroll();
   const keys = search ? Search.records.map(x => paperKey(x.p)) : feed ? Feed.keys.filter(k => postView(k)) : [...new Set([...scope.querySelectorAll('[data-key]')].map(e => e.dataset.key))];
   let label;
   if (fromEl.closest('#sec-list')) label = document.getElementById('lpTitle').textContent;
@@ -24934,15 +24948,13 @@ function openPaper(id, event) {
   location.hash = '#paper/' + paperId;
 }
 
-let _savedScrollTop = 0;
-
 function showPaperDetail(id) {
   searchOff();
   const p = findPaper(id);
   if (!p) { history.replaceState(null, '', APP_ROOT + location.search + '#all'); applyHash(); return; }
   // Save the list's scroll position, but not when stepping from one paper to the next; opened from a list page,
   // Back returns to that page at the same place
-  if (!_paperViewActive) { _savedScrollTop = document.getElementById('mainScroll').scrollTop; _paperFromList = _listViewActive ? _listKey : null; }
+  if (!_paperViewActive) { _paperFromList = _listViewActive ? _listKey : null; }
   _paperViewActive = true;
   if (_navList && _navList.feed) _navList.at = paperKey(p);   // Phase 22: Back lands on it (feedLand)
   leaveListView();
@@ -26341,15 +26353,42 @@ function retiredHash(hash) {
   if (hash === '#following' && !followingOn()) return '#all';
   return null;
 }
+/* Forward and back (8 November 2026, his words "unnecessary scroll retention in forward pages", then "Back returns you
+   to the spot you left"). A page reached by a new history entry (a tap, a link, the menu, a typed address, a search)
+   starts at its top; Back and Forward return to the place that entry was left at. Every route comes through applyHash
+   and a search through searchCommit, and both use navLeave and navTag here. Each entry carries an id in its state
+   (scoutNav); an entry without one is new. history.pushState never copies an id into the entry it makes. The place of
+   each entry is saved before another page shows and restored after it renders. Every place that restores reads navY. */
+let _navForward = false, _navPlace = 0, _navCur = null, _navLeft = null;   // _navLeft: the entry whose place was saved as it left
+const _navPlaces = new Map();
+const navMarked = () => !!(history.state && typeof history.state === 'object' && history.state.scoutNav);
+const navY = () => _navPlace;   // 0 for a forward page
+function navLeave() {   // the entry on screen, before it goes: once, since a page that renders before its address changes must not save the next page's place
+  if (!_navCur || _navLeft === _navCur) return;
+  _navPlaces.set(_navCur, document.getElementById('mainScroll').scrollTop); _navLeft = _navCur;
+}
+// Back and Forward: the place is taken at popstate, before anything else on the page can move it (the hashchange follows at once)
+window.addEventListener('popstate', () => { navLeave(); setTimeout(() => { _navLeft = null; }, 0); });
+function navTag() {   // the entry now current gets an id if it has none, and is the one on screen
+  if (!navMarked()) history.replaceState({ ...(history.state && typeof history.state === 'object' ? history.state : {}), scoutNav: Date.now().toString(36) + Math.random().toString(36).slice(2, 8) }, '');
+  _navCur = history.state.scoutNav; _navLeft = null;
+}
+const _pushState = history.pushState.bind(history);
+history.pushState = (state, title, url) => _pushState(state && typeof state === 'object' && 'scoutNav' in state ? (({ scoutNav, ...rest }) => rest)(state) : state, title, url);
 function applyHash() {
+  const fwd = !navMarked();
+  if (!(_searchActive && !sfRoute(_appliedHash || ''))) navLeave();   // (a search shown over its origin has no entry of its own: the origin's place was saved when it began)
+  const place = fwd ? 0 : _navPlaces.get(history.state.scoutNav) || 0;
+  _navForward = fwd; _navPlace = place; queueMicrotask(() => { _navForward = false; _navPlace = 0; });   // read by this route's own restores, all in this call
   if (!configReady() || !_ownerDecisionDone) return;
   try { requireTarget(); } catch (e) { return; }
   interestSheetRoute();
   const retired = retiredHash(location.hash);   // replaced in place, without a new Back step
   if (retired) history.replaceState(null, '', location.pathname + location.search + retired);
+  navTag();
   searchOff();
   searchScrollMode(sfRoute(location.hash));
-  if (_searchActive && Search.origin && Search.origin.hash === location.hash) Search.back = Search.origin;
+  if (_searchActive && Search.origin && Search.origin.hash === location.hash && !_navForward) Search.back = Search.origin;
   syncAddress();
   _appliedHash = location.hash;
   const hash = location.hash.slice(1); // remove '#'
@@ -26418,7 +26457,7 @@ function applyHash() {
     requestAnimationFrame(privateCallback(() => {
       const ms = document.getElementById('mainScroll');
       ms.style.scrollBehavior = 'auto';
-      if (!feedLand()) ms.scrollTop = _savedScrollTop;
+      if (fwd || !feedLand()) ms.scrollTop = place;
       ms.style.scrollBehavior = '';
       pageIn(document.querySelector('.tab-section.active'));
     }));
@@ -26514,7 +26553,7 @@ function applyHash() {
   if (wasInList) backFromList();
 }
 function backFromList() {
-  jumpScroll(document.getElementById('mainScroll'), _tabScroll[currentTab] || 0);
+  jumpScroll(document.getElementById('mainScroll'), navY());
   pageIn(document.querySelector('.tab-section.active'));
 }
 window.addEventListener('hashchange', () => applyHash());
