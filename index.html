@@ -4322,6 +4322,12 @@ function lockPrivate(state = 'required', detail) {
   _backupTimer = _autoPushTimer = _searchTimer = _listQueryTimer = _readerSaveTimer = _acTimer = _liveTimer = Vault.pushTimer = Ink.saveTimer = _toastTimer = null;
   _readerPendingPosition = null;
   _toastUndo = null; _stateDirty = _interestsDirty = _groupsDirty = _readingDirty = false;
+  const notice = document.getElementById('toast');
+  if (notice) {
+    notice._deferred = null;
+    notice._notice = null;
+    if (notice._undoing) { for (const operation of notice._undoing) clearTimeout(operation.timer); notice._undoing.clear(); }
+  }
   if (Ink.cancelGesture) cleanup(() => Ink.cancelGesture());
   _pushing = _pushAgain = Vault.pushing = Vault.pushAgain = false;
   allPapers = []; _hiddenPapers = []; allInterests = []; allGroups = []; GROUP_ORDER = []; cleanup(() => rowIndexClear()); _listsRead = false;
@@ -6913,7 +6919,10 @@ function skeletonHTML(hash) {
     const tabs = active => `<div class="feed-head" data-sk="head"><div class="feed-tabs home" data-sk="tabs"><div class="ft-tabs">${['For you', 'Following', 'Daily'].map((t, i) => `<span class="tab${i === active ? ' on' : ''}">${t}</span>`).join('')}</div></div>${active < 2 ? `<div class="feed-ctl"><span class="ctl-btn ctl-sort" data-sk="sort"><span class="ctl-pill">${active === 0 ? 'Best' : 'Recently added'}${chevron}</span></span>${filter}</div>` : ''}</div>`;
     const posts = (list = false) => [84, 72, 90].map(w => `<div class="skpost" data-sk="card"><div class="sk-meta" data-sk="meta">${lines(1, 38)}</div><div class="sk-title" data-sk="title">${lines(2, w)}</div><div class="sk-dek" data-sk="dek">${lines(2, 62)}</div><div class="sk-by" data-sk="authors">${lines(1, 48)}</div>${list ? `<div class="sk-acts" data-sk="actions">${bar(24)}${bar(24)}${bar(30)}</div>` : `<div class="sk-why" data-sk="why">${lines(1, 40)}</div><div class="sk-icons" data-sk="actions">${['Pass', 'Save', 'Mark read', 'Read'].map(t => `<span class="sk-icon"><i class="sk"></i><b>${t}</b></span>`).join('')}</div>`}</div>`).join('');
     // Layout A: on a wide screen For you and Following are the list and the open paper, its row at the pane's foot
-    const paperBody = (daily = false) => `<article class="pd-article" data-sk="article"><header class="pd-head"><div class="pd-kicker" data-sk="venue">${lines(1, 32)}</div><div class="pd-title pv-headline" data-sk="${daily ? 'headline' : 'paneHeadline'}">${lines(2, 80)}</div><div class="pd-dek pv-title" data-sk="title">${lines(1, 72)}</div><div class="pd-authors pv-by" data-sk="authors">${lines(1, 44)}</div><div class="pd-tq"><span class="pd-tq-chip">Ten questions</span></div></header><div class="pd-body"><div class="pd-main"><section class="pd-section"><h2>Summary</h2><div class="pd-prose pv-summary" data-sk="summary">${lines(3, 70)}</div></section><section class="pd-section"><h2>Abstract</h2><div class="pd-prose pv-abstract" data-sk="abstract">${lines(4, 76)}</div></section></div><aside class="pd-aside"><div class="pd-card">${lines(4,68)}</div><div class="pd-card" data-sk="matches"><h3>Relevance</h3>${lines(3, 68)}</div></aside></div></article>`;
+    const paperBody = (view = 'pane') => {
+      const standalone = view === 'paper';
+      return `<article class="pd-article" data-sk="article"><header class="pd-head"><div class="pd-kicker" data-sk="${standalone ? 'kicker' : 'venue'}">${lines(1, 32)}</div><div class="pd-title pv-headline" data-sk="${standalone ? 'title' : view === 'daily' ? 'headline' : 'paneHeadline'}">${lines(standalone ? 3 : 2, 80)}</div><div class="pd-dek pv-title" data-sk="${standalone ? 'dek' : 'title'}">${lines(standalone ? 2 : 1, 72)}</div><div class="pd-authors pv-by" data-sk="authors">${lines(1, 44)}</div><div class="pd-tq"><span class="pd-tq-chip">Ten questions</span></div>${standalone ? `<div class="pd-why"><span class="pd-why-label">${bar(14)}</span><div class="why">${lines(1, 38)}</div></div>` : ''}</header><div class="pd-body" data-sk="body"><div class="pd-main"><section class="pd-section"><h2>Summary</h2><div class="pd-prose pv-summary" data-sk="summary">${lines(standalone ? 4 : 3, 70)}</div></section><section class="pd-section"><h2>Abstract</h2><div class="pd-prose pv-abstract" data-sk="abstract">${lines(standalone ? 7 : 4, 76)}</div></section></div><aside class="pd-aside"><div class="pd-card">${lines(4,68)}</div><div class="pd-card" data-sk="matches"><h3>Relevance</h3>${lines(3, 68)}</div></aside></div></article>`;
+    };
     const pane = () => `<aside class="sk-pane" data-sk="pane"><div class="sk-pane-body">${paperBody()}</div><div class="fp-acts" data-sk="paneActs">${['Pass', 'Save', 'Mark read', '↓', '⋯', 'Read'].map((t,i) => `<span class="${i===3||i===4?'pd-act':'pact'}${i===5?' pact-read':''}">${t}</span>`).join('')}</div></aside>`;
 
     if (route.startsWith('read/')) {
@@ -6953,7 +6962,7 @@ function skeletonHTML(hash) {
     if (route.startsWith('paper/')) {
       const act = (label, icon = '✓', extra = '', key = '') => `<span class="pd-act sk-owner ${extra}"${key ? ` data-sk="${key}"` : ''}>${icon}<span class="pd-act-label"><span>${label}</span></span></span>`;
       const icon = '<svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-6-4-6 4z"/></svg>';
-      return `<div class="pd" data-shape="paper"><div class="pd-bar" data-sk="bar"><div class="pd-bar-inner"><span class="pd-back" data-sk="back">${backIcon}<span class="pd-back-label">Back</span></span><div class="pd-bar-title"></div><div class="pd-actions has-dl" data-sk="actions">${act('Pass', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>')}${act('Save', icon)}${act('Mark read', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>')}${act('', '<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>', 'pd-dl', 'download')}${act('', '&#8943;', 'pd-more', 'more')}<span class="pd-read" data-sk="read"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Read</span><span class="pd-open" data-sk="open"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span></div></div></div><div class="pd-article" data-sk="article"><header class="pd-head"><div class="pd-kicker" data-sk="kicker">${bar(100)}</div><div class="pd-title" data-sk="title">${lines(3, 76)}</div><div class="pd-dek" data-sk="dek">${lines(2, 80)}</div><div class="pd-authors" data-sk="authors">${lines(1, 52)}</div><div class="pd-why"><span class="pd-why-label">${bar(14)}</span><div class="why">${lines(1, 38)}</div></div></header><div class="pd-body" data-sk="body"><div><h2>Summary</h2>${lines(4, 70)}<br><h2>Abstract</h2>${lines(7, 80)}</div><aside>${lines(5, 68)}</aside></div></div></div>`;
+      return `<div class="pd" data-shape="paper"><div class="pd-bar" data-sk="bar"><div class="pd-bar-inner"><span class="pd-back" data-sk="back">${backIcon}<span class="pd-back-label">Back</span></span><div class="pd-bar-title"></div><div class="pd-actions has-dl" data-sk="actions">${act('Pass', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>')}${act('Save', icon)}${act('Mark read', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>')}${act('', '<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>', 'pd-dl', 'download')}${act('', '&#8943;', 'pd-more', 'more')}<span class="pd-read" data-sk="read"><svg viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Read</span><span class="pd-open" data-sk="open"><span class="pd-open-full">Open paper</span><span class="pd-open-short">Open</span><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span></div></div></div>${paperBody('paper')}</div>`;
     }
     if (route === 'settings') {
       const row = (label, sub = '', control = '') => `<div class="copy-item" data-sk="row"><div class="copy-label">${label}${sub ? `<small>${sub}</small>` : ''}</div>${control}</div>`;
@@ -6989,7 +6998,7 @@ function skeletonHTML(hash) {
     }
     if (route === 'daily') {
       // Layout A: the headline leads the card, the title under it; on a wide screen today's papers on the left
-      return `<div class="feed sk-daily-feed sk-daily" data-shape="daily">${tabs(2)}<div class="sk-daily-body">${picker(bar(48))}<div class="sk-daily-list" data-sk="list">${[82, 64, 76, 58].map(w => `<div class="sk-daily-row"><div class="dr-h">${lines(2, w)}</div><div class="dr-s">${lines(1, 40)}</div></div>`).join('')}</div><div class="sk-daily-area" data-sk="area"><article class="sk-daily-card" data-sk="card">${paperBody(true)}</article></div><footer class="sk-daily-actions" data-sk="actions">${['Pass', 'Save', 'Mark read', '↓', '⋯', 'Read'].map((t, i) => `<div class="${i===3||i===4?'sk-pane-extra ':''}sk-daily-action${i === 1 ? ' save' : ''}${i === 5 ? ' read' : ''}"><span>${bar(35)}</span><b>${t}</b></div>`).join('')}</footer></div></div>`;
+      return `<div class="feed sk-daily-feed sk-daily" data-shape="daily">${tabs(2)}<div class="sk-daily-body">${picker(bar(48))}<div class="sk-daily-list" data-sk="list">${[82, 64, 76, 58].map(w => `<div class="sk-daily-row"><div class="dr-h">${lines(2, w)}</div><div class="dr-s">${lines(1, 40)}</div></div>`).join('')}</div><div class="sk-daily-area" data-sk="area"><article class="sk-daily-card" data-sk="card">${paperBody('daily')}</article></div><footer class="sk-daily-actions" data-sk="actions">${['Pass', 'Save', 'Mark read', '↓', '⋯', 'Read'].map((t, i) => `<div class="${i===3||i===4?'sk-pane-extra ':''}sk-daily-action${i === 1 ? ' save' : ''}${i === 5 ? ' read' : ''}"><span>${bar(35)}</span><b>${t}</b></div>`).join('')}</footer></div></div>`;
     }
     return `<div class="feed sk-feed${route === 'following' ? ' sk-following' : ''}" data-shape="feed">${tabs(route === 'following' ? 1 : 0)}<div class="sk-list">${posts()}</div>${pane()}</div>`;
   })();
@@ -10089,9 +10098,10 @@ function hideSheetSync() {
 }
 function hideToast() {
   const t = document.getElementById('toast');
-  if (t) t.classList.remove('show');
+  if (t) { t.classList.remove('show'); t._notice = null; }
   if (_toastTimer) { clearTimeout(_toastTimer); _toastTimer = null; }
   _toastUndo = null;
+  toastDeferred();
 }
 /* ---- projects: a list of yours, and a feed tab ----
    A project is any list but the four in NOT_PROJECTS, by its exact name; it has no other record. On screen it is "a
@@ -15711,7 +15721,20 @@ let _toastTimer = null;
 let _toastUndo = null;
 function toast(msg, undoFn, opts) {
   const t = document.getElementById('toast');
+  // A passive warning waits for the action's whole Undo window, including time held behind the drawer.
+  // Its callback checks the current paper again when that window ends.
+  if (opts && opts.defer) {
+    if (_toastUndo || t._undoing?.size) {
+      if (!t._deferred) t._deferred = new Map();
+      const next = privateCallback(opts.defer);
+      next.operation = _toastUndo ? t._notice?.operation : [...t._undoing].at(-1);
+      t._deferred.set(opts.defer, next);
+      return;
+    }
+    t._deferred?.delete(opts.defer);
+  }
   if (_toastTimer) clearTimeout(_toastTimer);
+  t._notice = { id: opts?.defer, applies: opts?.applies, operation: undoFn ? { timer: null } : null };
   _toastUndo = undoFn || null;
   t.classList.toggle('error', !!(opts && opts.error));
   t.classList.toggle('pill', !!(opts && opts.pill));
@@ -15727,6 +15750,19 @@ function toast(msg, undoFn, opts) {
   t.classList.add('show');
   toastClock(t, duration);
 }
+/* Pending notices keep their identity. Recheck them one at a time, after the visible notice and Undo work end. */
+function toastDeferred() {
+  const t = document.getElementById('toast');
+  if (!t || _toastUndo || t._undoing?.size || t.classList.contains('show')) return;
+  while (t._deferred?.size) {
+    const [id, next] = t._deferred.entries().next().value;
+    t._deferred.delete(id);
+    const before = t._notice;
+    next();
+    if (t._notice !== before && t._notice?.id === id && !t._notice.operation) t._notice.operation = next.operation;
+    if (_toastUndo || t._undoing?.size || t.classList.contains('show')) return;
+  }
+}
 /* Walk fixes 6: a notice's time runs only while the side menu is closed. The menu's drawer and its shade lie over the
    notice, so opening the menu holds what time it has left (toastHold) and closing it gives that time back, at least
    2 seconds (toastResume): an Undo never runs out unseen behind the menu, and a tap while the menu is open closes the
@@ -15736,7 +15772,7 @@ function toastClock(t, ms) {
   t._left = ms;
   if (typeof AppMenu !== 'undefined' && AppMenu.open) return;
   t._ends = Date.now() + ms;
-  _toastTimer = setTimeout(privateCallback(() => { _toastTimer = null; t.classList.remove('show'); _toastUndo = null; }), ms);
+  _toastTimer = setTimeout(privateCallback(hideToast), ms);
 }
 function toastHold() {
   const t = document.getElementById('toast');
@@ -15756,10 +15792,27 @@ function toastError(msg) { toast(msg, null, { error: true }); }
 function plainError(message) { return Object.assign(new Error(message), { plain: message }); }
 function plainFailure(e, words) { return e && typeof e.plain === 'string' ? e.plain : words; }
 function _doToastUndo() {
-  if (_toastUndo) { _toastUndo(); _toastUndo = null; }
   const t = document.getElementById('toast');
-  t.classList.remove('show');
-  if (_toastTimer) { clearTimeout(_toastTimer); _toastTimer = null; }
+  const operations = t._undoing || (t._undoing = new Set());
+  const operation = _toastUndo && t._notice?.operation || { timer: null };
+  operations.add(operation);
+  const settled = privateCallback((completed = false) => {
+    if (!operations.delete(operation)) {
+      // Expiry released the hold; late success may only invalidate the notice that operation displayed.
+      if (completed === true && t._notice?.operation === operation && t._notice.applies && !t._notice.applies()) hideToast();
+      return;
+    }
+    clearTimeout(operation.timer);
+    toastDeferred();
+  });
+  // A stalled storage write or reader reload cannot own passive notices indefinitely.
+  operation.timer = setTimeout(settled, 15000);
+  let undone;
+  try { if (_toastUndo) undone = _toastUndo(); }
+  finally {
+    hideToast();
+    Promise.resolve(undone).then(() => settled(true), settled);
+  }
 }
 
 function showSaveBar() {
@@ -16512,7 +16565,9 @@ function keptDB(stores, mode, fn) { requireOwner(); const epoch = capturePrivate
 function keptLoad() {
   const epoch = isPrivate() ? Private.epoch : 0;
   if (Kept.epoch !== epoch || !Kept.loading) {
-    keptReset(); Kept.epoch = epoch;
+    // A first read starts with empty state. Resetting it would cancel the ready library's pending keptSoon timer.
+    if (Kept.epoch !== null) keptReset();
+    Kept.epoch = epoch;
     if (isPrivate()) privateTeardown(keptReset);
     Kept.loading = Promise.all([keptDB('meta', 'readonly', st => st.getAll()), keptDB('fails', 'readonly', st => st.getAll())]).then(([meta, fails]) => {
       if (Kept.epoch !== epoch) return;
@@ -19701,7 +19756,7 @@ function clearPdfLink() {
     if (!q || q._goneRemote || q.uploaded || q.pdf_url !== set.url || q.pdf_removed !== set.removed) return;
     q.pdf_url = was.url; if (q.pdf_removed !== undefined) q.pdf_removed = was.removed === undefined ? '' : was.removed;
     _stateDirty = true; showSaveBar();
-    readerUndoShow(id);
+    return readerUndoShow(id);
   }), { duration: 6000, fullTarget: true });
   if (pdfModalOpen()) closePdfModal();
   showReader(p.id);
@@ -19716,7 +19771,7 @@ async function removeLocalPdf() { const _authEpoch = capturePrivateEpoch();
     const q = findPaper(id);
     if (!q || q._goneRemote || q.pdf_url !== link || q.pdf_removed !== removed || await privateAwait(localPdfGet(id), _authEpoch)) return;
     await privateAwait(localPdfPut(id, blob), _authEpoch); requireOwner();
-    readerUndoShow(id);
+    return readerUndoShow(id);
   })().catch(e => { try { capturePrivateEpoch(); } catch (x) { return; } toastError('Couldn’t undo that. Try again.'); })) : null, { duration: 6000, fullTarget: true });
   if (pdfModalOpen()) closePdfModal();
   showReader(_reader.paper.id);
@@ -19724,8 +19779,8 @@ async function removeLocalPdf() { const _authEpoch = capturePrivateEpoch();
 /* After a PDF Undo (design fixes round 2, G7): the reader draws the paper again only while it is open on that paper;
    closed (its paper is kept after it closes), the link or file is back quietly and only the download dot follows */
 function readerUndoShow(id) {
-  if (document.getElementById('reader').classList.contains('open') && _reader.paper && _reader.paper.id === id) showReader(id);
-  else paperDownloadDot().catch(() => {});
+  if (document.getElementById('reader').classList.contains('open') && _reader.paper && _reader.paper.id === id) return showReader(id);
+  return paperDownloadDot().catch(() => {});
 }
 /* "Change PDF" is a dialog over the open PDF, with its own history step, so Back just closes it */
 function pdfModalOpen() { return document.getElementById('pdfModal').classList.contains('open'); }
@@ -20784,9 +20839,11 @@ function startReaderNotes() {
 }
 function ensureReaderNotes() { return _rnLoadP || startReaderNotes(); }
 /* warn when the PDF isn't the one these highlights were made on */
-function checkPdfFingerprint() {
-  if (_rn && _rn.pdf && _rn.pdf.fp && _reader.doc && _reader.doc.fingerprints && _rn.pdf.fp !== _reader.doc.fingerprints[0] && (_rn.annos || []).length)
-    toast('This PDF differs from the one you annotated, so some highlights may sit slightly off.', null, { duration: 7000 });
+function checkPdfFingerprint(checkOnly = false) {
+  const differs = !!(_rn && _rn.pdf && _rn.pdf.fp && _reader.doc && _reader.doc.fingerprints && _rn.pdf.fp !== _reader.doc.fingerprints[0] && (_rn.annos || []).length);
+  if (differs && checkOnly !== true)
+    toast('This PDF differs from the one you annotated, so some highlights may sit slightly off.', null, { duration: 7000, defer: checkPdfFingerprint, applies: () => checkPdfFingerprint(true) });
+  return differs;
 }
 /* highlights are stored as fractions of the page, so they sit right at any zoom */
 function renderAnnoLayer(pageDiv) {
@@ -25251,7 +25308,7 @@ function uploadQuestionsCancel(id) {
     const pid = el.querySelector('[data-brief]')?.dataset.brief;
     if (/^up-/.test(pid || '') && (!id || id === pid)) el.remove();
   });
-  if (/^up-/.test(Brief.inline || '') && (!id || id === Brief.inline)) Brief.inline = null;
+  if (/^up-/.test(Brief.inline || '') && (!id || id === Brief.inline)) { Brief.inline = null; Brief.inlineFrom = null; }
 }
 async function uploadQuestionsRecipe(epoch) {
   if (UploadQuestions.recipe) return UploadQuestions.recipe;
@@ -25692,7 +25749,7 @@ const BRIEF_PURIFY = { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'del'
 /* gen: moved by a lock, a pull or a new target. index: the index read (a promise, null when absent). files: one
    result per paper, at most BRIEF_CACHE. loading: the reads in flight. visit: the items open on the paper shown,
    kept for this visit across redraws and the reader's Back. focus: what had the keyboard in the section. sheet: { pid, from } while the sheet shows. */
-const Brief = { gen: 0, index: null, questions: null, files: new Map(), loading: new Map(), visit: { pid: null, open: new Set() }, focus: null, sheet: null, pushed: null, lostFocus: null, inline: null };
+const Brief = { gen: 0, index: null, questions: null, files: new Map(), loading: new Map(), visit: { pid: null, open: new Set() }, focus: null, sheet: null, pushed: null, lostFocus: null, inline: null, inlineFrom: null };
 
 function briefEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function briefEligible(p) { return !!p && typeof p.id === 'string' && (p.uploaded ? /^up-[0-9a-f]{12}$/.test(p.id) && !!uploadById(p.id) : BRIEF_ID.test(p.id) && !p.id.startsWith('up-')); }
@@ -26076,6 +26133,7 @@ function briefSheetOpen(pid) {
     let inline = article.querySelector('.pane-questions');
     if (!inline) { inline = document.createElement('section'); inline.className = 'pane-questions'; article.querySelector('.pd-head').appendChild(inline); }
     if (Brief.visit.pid !== pid) Brief.visit = { pid, open: new Set() };
+    if (Brief.inline !== pid) Brief.inlineFrom = document.activeElement;
     Brief.inline = pid;
     inline.innerHTML = briefSheetHTML(pid, true);
     const panel = inline.querySelector('[data-brief]'); briefWire(panel, pid);
@@ -26094,7 +26152,12 @@ function briefSheetClose() {
   history.replaceState(null, '', APP_ROOT + location.search + '#paper/' + encodeURIComponent(Brief.sheet.pid));
   applyHash();
 }
-function briefInlineClose(btn) { Brief.inline = null; btn.closest('.pane-questions')?.remove(); }
+function briefInlineClose(btn) {
+  const was = { pid: Brief.inline, from: Brief.inlineFrom };
+  Brief.inline = null; Brief.inlineFrom = null;
+  btn.closest('.pane-questions')?.remove();
+  briefReturnFocus(was);
+}
 function briefSheetHTML(pid, inline = false) {
   const all = Brief.visit.pid === pid && Brief.visit.open.size === 10;
   return `<div class="tq-panel pd-q" role="${inline ? 'region' : 'dialog'}"${inline ? '' : ' aria-modal="true"'} aria-labelledby="${inline ? 'tqInlineTitle' : 'tqTitle'}" data-brief="${briefEsc(pid)}" data-pid="${briefEsc(pid)}" tabindex="-1">
@@ -26138,11 +26201,17 @@ function briefSheetHide() {
   if (!s || !s.classList.contains('open')) return;
   const inside = s.contains(document.activeElement);
   s.classList.remove('open'); s.hidden = true; s.innerHTML = '';
-  if (was && inside) {   // back to the chip that opened it, found again by the paper's id
-    const box = [...document.querySelectorAll('[data-tq]')].find(b => b.dataset.tq === was.pid);
-    const to = box && box.querySelector('button:not(:disabled)');
-    if (to) to.focus({ preventScroll: true }); else if (was.from && was.from.isConnected) was.from.focus({ preventScroll: true });
-  }
+  if (was && inside) briefReturnFocus(was);
+}
+/* Route rendering may replace or hide the opener. Both close paths look for the visible chip after it finishes. */
+function briefReturnFocus(was) {
+  requestAnimationFrame(privateCallback(() => {
+    if (Brief.sheet || document.activeElement?.closest('.pane-questions')?.isConnected) return;
+    const buttons = [...document.querySelectorAll('[data-tq]')].filter(b => b.dataset.tq === was.pid).map(b => b.querySelector('button:not(:disabled)'));
+    const visible = button => button && button.isConnected && !button.disabled && button.offsetParent !== null && button.closest('[data-tq]')?.dataset.tq === was.pid;
+    const to = [was.from, ...buttons].find(visible);
+    if (to) to.focus({ preventScroll: true });
+  }));
 }
 /* The reader's Back onto the sheet: the focus goes back to the pill that opened the reader */
 function briefSheetFocusBack() {
@@ -26233,7 +26302,7 @@ function briefRefresh() {
   if (Brief.sheet && ![...document.querySelectorAll('[data-tq]')].some(b => b.dataset.tq === Brief.sheet.pid)) { briefRedraw(Brief.sheet.pid); briefStart(Brief.sheet.pid); }
 }
 /* Run by lockPrivate. Nothing of the session's briefs outlives the authorization. */
-function briefTeardown() { uploadQuestionsCancel(); document.querySelectorAll('.pane-questions').forEach(el => el.remove()); briefInvalidate(); Brief.visit = { pid: null, open: new Set() }; Brief.focus = null; Brief.pushed = null; Brief.inline = null; briefSheetHide(); }
+function briefTeardown() { uploadQuestionsCancel(); document.querySelectorAll('.pane-questions').forEach(el => el.remove()); briefInvalidate(); Brief.visit = { pid: null, open: new Set() }; Brief.focus = null; Brief.pushed = null; Brief.inline = null; Brief.inlineFrom = null; briefSheetHide(); }
 
 /* ===== the paper page follows the paper (Phase 13e) =====
    paperBarSync, on every change (viewsSync): the bar's ★, ✓ and ☰ patched from the row's marks as they are now, so a
