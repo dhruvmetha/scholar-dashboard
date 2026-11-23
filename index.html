@@ -194,7 +194,6 @@ html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(
   #skeleton .sk-feed > .sk-pane { grid-area: pane; position: sticky; top: 0; display: flex; flex-direction: column; min-width: 0; height: calc(100dvh - 57px); border-left: 1px solid var(--line); }
   #skeleton .sk-pane-body { flex: 1; min-height: 0; overflow: hidden; padding: 36px 56px 28px; }
   #skeleton .sk-pane-body > * { max-width: 760px; }
-  #skeleton .sk-pane .sk-chip { width: 200px; }
   #skeleton .sk-pane .fp-acts .pact { color: var(--text-muted); }
   #skeleton .sk-daily-feed { max-width: none; margin: 0; border-inline: none; display: grid; grid-template-columns: clamp(300px, 34vw, 400px) minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto; grid-template-areas: "head area" "picker area" "list area" "list foot"; }
   #skeleton .sk-daily-feed .sk-daily-body { display: contents; }
@@ -220,7 +219,6 @@ html.private-locked:has(#privateAccess[data-state="loading"]:not([hidden])):has(
   #skeleton .sk-pane .fp-acts .pact-read, #skeleton .sk-daily-action.read { padding: 0 18px; }
 }
 @media (min-width: 820px) and (max-width: 900px) { #skeleton .sk-pane .fp-acts .pact, #skeleton .sk-daily-action { padding: 0 12px; } }
-#skeleton .sk-chip { width: 200px; display: block; }
 @media (max-width: 600px) { #skeleton .sk-daily-card .pv-headline { font-size: 22px; line-height: 1.3; } #skeleton .sk-daily-card .pv-title { font-size: 15px; } #skeleton .sk-daily-card .pv-by, #skeleton .sk-daily-card .pv-venue { font-size: 13px; } #skeleton .sk-daily-card .pv-summary, #skeleton .sk-daily-card .pv-abstract { font-size: 15px; line-height: 1.55; } }
 .skeleton-wrap .sk-acts { display: flex; align-items: center; gap: 12px; height: 44px; margin: 4px 0; }
 .skeleton-wrap .sk-acts .sk { width: 72px; height: 16px; }
@@ -888,54 +886,33 @@ html.no-hover .pd-topic-chip:hover:not(:active) { background: rgba(255,255,255,0
 .pd-edit { background: none; border: 1px solid var(--border); color: var(--text-muted); font: inherit; font-size: 12px; font-weight: 400; padding: 2px 10px; border-radius: 999px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
 .pd-edit:hover { color: var(--accent); border-color: var(--accent); }
 .pd-empty { color: var(--text-muted); font-size: 15px; }
-/* Ten questions (Phase 14): ten native details, closed by default, the line under the heading muted, an answer at the
-   page's prose size. The button is not .pd-edit, which a signed-out page hides. Every layout gets 44 px summaries, and each
-   citation pill a 44 px tall target around it. */
-.pd-q h2 { flex-wrap: wrap; }
-.pd-q-all { margin-left: auto; background: none; border: 1px solid var(--line); color: var(--text-muted); font: inherit; font-size: 13px; font-weight: 500; min-height: 36px; padding: 6px 14px; border-radius: 999px; cursor: pointer; }
-.pd-q-all:hover, .pd-q-all[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
-.pd-q-meta { color: var(--text-muted); font-size: 13px; line-height: 1.5; margin: 0 0 10px; }
-.pd-q-retry { background: none; border: none; color: var(--accent); font: inherit; min-width: 44px; min-height: 44px; padding: 0 2px; cursor: pointer; text-decoration: underline; }
-.pd-q-list { border-top: 1px solid var(--line); }
-.pd-q-item { border-bottom: 1px solid var(--line); }
-.pd-q-item > summary { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 11px 0; font-size: 15px; line-height: 1.45; color: var(--text); cursor: pointer; list-style: none; }
-.pd-q-item > summary::-webkit-details-marker { display: none; }
-.pd-q-item > summary::after { content: ''; flex: none; width: 7px; height: 7px; margin: 6px 4px 0 auto; border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted); transform: rotate(45deg); transition: transform 0.15s; }
-.pd-q-item[open] > summary { color: var(--accent); }
-.pd-q-item[open] > summary::after { transform: rotate(225deg); margin-top: 10px; border-color: var(--accent); }
+/* Ten questions shares the paper's section and prose styles at every width. Folding stays in memory. */
+.pd-questions-slot:empty { display: none; }
+.pd-questions-slot:not(:empty):not(:first-child), .pd-questions-slot + .pd-section { margin-top: 36px; }
+.pd-questions-slot:empty:first-child + .pd-section { margin-top: 0; }
+.pd-questions h2, .sk-questions h2 { flex-wrap: wrap; margin-bottom: 12px; }
+.pd-q-fold, .sk-q-heading { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; text-align: left; }
+.pd-q-fold::before, .pd-q-question::before, .sk-q-question::before, .sk-q-heading::before { content: ''; flex: none; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); }
+.sk-q-heading::before, .pd-q-fold[aria-expanded="true"]::before, .pd-q-question[aria-expanded="true"]::before { transform: rotate(45deg); }
+.pd-q-ask, .pd-q-retry, .pd-q-all, .sk-q-all { min-height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--accent); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+.pd-q-ask, .pd-q-retry { margin-left: auto; }
+.pd-q-all, .sk-q-all { display: block; margin: 0 0 0 auto; color: var(--text-muted); }
+.pd-q-ask:hover, .pd-q-retry:hover, .pd-q-all:hover { border-color: var(--accent); color: var(--accent); }
+.pd-questions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pd-q-note { font-size: 14px; line-height: 1.4; color: var(--text-secondary); }
+.pd-q-key-loading { position: relative; }
+.pd-q-key-loading > span { visibility: hidden; }
+.pd-q-key-loading .sk { position: absolute; top: 5px; left: 0; width: 80%; height: 10px; }
+
+.pd-q-list, .sk-q-list { border-top: 1px solid var(--line); }
+.pd-q-item, .sk-q-item { border-bottom: 1px solid var(--line); }
+.pd-q-question, .sk-q-question { display: flex; align-items: baseline; gap: 10px; width: 100%; min-height: 44px; padding: 11px 0; border: 0; background: none; color: var(--text); font: inherit; font-size: 15px; line-height: 1.45; text-align: left; cursor: pointer; }
+.pd-q-question::before, .sk-q-question::before { align-self: flex-start; margin: 7px 2px 0; }
+.pd-q-item[open] > .pd-q-question { color: var(--accent); }
+.sk-q-all { display: flex; align-items: center; justify-content: center; width: max-content; }
+.sk-questions, .sk-questions * { cursor: default; }
 .pd-q-a { padding: 0 0 18px; }
-.pd-q-wait { color: var(--text-muted); font-size: 15px; }
-@media (prefers-reduced-motion: reduce) { .pd-q-item > summary::after { transition: none; } }
-/* Phase 24: the "Ten questions" chip under the authors (44 px tall, no icon), and the answers in a sheet: a bottom sheet
-   on a phone, a centred dialog on a wide screen, under the reader (z 320) so a citation pill opens the PDF over it */
-.pd-tq { margin-top: 14px; display: flex; align-items: center; min-height: 44px; }
-.pd-tq:empty { display: none; }
-.pd-tq-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--line); background: none; color: var(--text); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
-.pd-tq-chip.done { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 60%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
-button.pd-tq-chip:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
-.pd-tq-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.pd-tq-chip:disabled { opacity: 0.55; cursor: default; }
-.pd-tq-chip.busy { cursor: default; font-weight: 500; color: var(--text-secondary); }
-.pd-tq-note { font-size: 14px; line-height: 1.4; color: var(--text-secondary); }
-.tq-dots { display: inline-flex; gap: 3px; margin-left: 2px; }
-.tq-dots i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; animation: tq-dot 1.2s ease-in-out infinite; }
-.tq-dots i:nth-child(2) { animation-delay: 0.2s; } .tq-dots i:nth-child(3) { animation-delay: 0.4s; }
-@keyframes tq-dot { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
-.tq-sheet { position: fixed; inset: 0; z-index: 300; display: none; background: rgba(0,0,0,0.55); }
-.tq-sheet.open { display: flex; align-items: flex-end; justify-content: center; }
-.tq-panel { box-sizing: border-box; width: 100%; max-width: 760px; max-height: calc(100% - 24px); display: flex; flex-direction: column; background: var(--bg-raise); border: 1px solid var(--line); border-bottom: none; border-radius: 16px 16px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); outline: none; }
-.tq-head { position: relative; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 16px 8px 8px 20px; border-bottom: 1px solid var(--line); }
-.tq-grip { position: absolute; top: 6px; left: 50%; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: rgba(255,255,255,0.25); }
-.tq-head h2 { flex: 1; min-width: 0; margin: 0; font-size: 16px; font-weight: 600; color: var(--text); }
-.tq-head .pd-q-all { margin-left: 0; min-height: 44px; }
-.tq-done { flex-shrink: 0; min-width: 44px; min-height: 44px; padding: 0 14px; border: none; border-radius: 10px; background: none; color: var(--accent); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
-.tq-done:focus-visible, .tq-head .pd-q-all:focus-visible, .tq-panel .pd-q-item > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.tq-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 20px 24px; }
-.tq-body .pd-prose { font-size: 17px; }
-@media (min-width: 900px) { .tq-sheet.open { align-items: center; padding: 32px; } .tq-panel { max-height: calc(100vh - 64px); border-bottom: 1px solid var(--line); border-radius: 16px; } .tq-grip { display: none; } .tq-head { padding-top: 12px; } }
-@media (max-height: 500px) { .tq-panel { max-height: 100%; border-radius: 0; } .tq-grip { display: none; } .tq-head { padding-top: 8px; } }
-@media (max-width: 380px) { .tq-head { padding-left: 14px; } .tq-body { padding: 12px 14px 20px; } .tq-head .pd-q-all { padding: 6px 10px; } }
-@media (prefers-reduced-motion: reduce) { .tq-dots i { animation: none; opacity: 0.7; } }
+.pd-q-all[hidden], .pd-q-content[hidden], .pd-q-a[hidden] { display: none; }
 .pd-gone { margin: 0 0 14px; padding: 10px 14px; border-radius: 10px; background: rgba(242,139,130,0.1); border: 1px solid rgba(242,139,130,0.35); color: #f2b5ae; font-size: 14px; line-height: 1.4; }   /* Phase 13e: deleted on GitHub, kept here for an unsaved edit */
 
 .pd-aside { position: sticky; top: 76px; display: flex; flex-direction: column; gap: 16px; }
@@ -2853,7 +2830,7 @@ body.feed-laptop .feed-check { display: none; }
 /* X's grey for muted text is 4.6:1 on black and under 4.5:1 on a surface: inside cards, sheets, panels, popovers,
    bars and chips it takes the raised grey. So does text over a topic glow (the paper page, a list page, the lead
    card) and the count badge in the navbar. The list is what the contrast scan (tests/phase13c/chrome_feed.cjs) found. */
-.pd, .lp, .top-lead, .tab-badge, .top-card, .topic-card, .top-side, .sh-panel, .tq-panel, .hide-box, .reader-bar, .ink-bar, .reader-panel, .reader-menu, .pop .sh-panel, .copy-dd, .interest-dropdown,
+.pd, .lp, .top-lead, .tab-badge, .top-card, .topic-card, .top-side, .sh-panel, .hide-box, .reader-bar, .ink-bar, .reader-panel, .reader-menu, .pop .sh-panel, .copy-dd, .interest-dropdown,
 .auth-modal, .pd-next, .pd-card, .pd-rel-grid, .interest-group-inner, .interest-group-header, .ig-toggle, .pull-hint, .feed-check, .save-bar, .toast, .lib-add, .search-list,
 .keys-help-box, .vault-box, .pdf-modal-box, .relevance-breakdown, .group-add-dd, .abs-popup, .venue-tooltip, .sel-bar, .anno-card, .cite-dd, .chat-hist, .chat-box, .badge-venue,
 .cr-card, .cr-phone, .la-result, .rp-card, .rp-gnote, .chat-msg.you, .md-table tr, .f-topic, .tr-group, .pd-topic-chip, .pd-match, .pd-strength, .pd-topics .badge-group, .tl-chip, .why-pill,
@@ -3374,11 +3351,6 @@ body.feed-two:has(#feedPane:not([hidden]) .fp-acts):has(#saveSheet.open.pop) #to
 .daily-card .pd-article{width:100%}
 .daily-card .pd-title{cursor:pointer}
 .daily-feed.two .daily-card .pd-title{cursor:default}
-.pane-questions{margin-top:20px}
-.pane-questions .tq-panel{position:static;display:block;width:100%;max-width:none;max-height:none;margin:0;border:1px solid var(--line);border-radius:12px;box-shadow:none;transform:none}
-.pane-questions .tq-head{flex-wrap:wrap;padding:12px}
-.pane-questions .tq-body{overflow:visible;padding:12px}
-.pane-questions .tq-grip{display:none}
 @media(min-width:820px) and (max-width:1100px){
  .fp-acts,.daily-feed.two .daily-actions{gap:6px;padding-left:12px;padding-right:12px}
  .fp-acts .pact,.daily-feed.two .daily-actions .pact{padding:0 10px;font-size:13px}
@@ -3608,7 +3580,6 @@ body.feed-two:has(#feedPane:not([hidden]) .fp-acts):has(#saveSheet.open.pop) #to
 
 <!-- GENERIC PROMPT / CONFIRM MODAL -->
 <!-- PDF READER -->
-<div class="tq-sheet" id="briefSheet" hidden onclick="if (event.target === this) briefSheetClose()" onkeydown="briefSheetKey(event)"></div>
 <div class="reader" id="reader" role="dialog" aria-modal="true" aria-labelledby="readerTitle">
   <div class="reader-bar">
     <button class="reader-btn reader-back" onclick="closeReader()" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg><span>Back</span></button>
@@ -5252,6 +5223,7 @@ function restoreOwnerState() {
   Chat.status = chatBaseStatus();
   _lastSeen = localStorage.getItem(LAST_SEEN_KEY); migrateReading(); restorePencil();
   document.documentElement.classList.remove('ro');
+  if (!_dataLoaded) skeletonShow();
 }
 /* The three files, read as one batch. The request's number and the save generation are taken before the reads. The
    first load to complete draws the library. A load that completes once the library is on the page is a later result
@@ -6904,6 +6876,12 @@ function buildGroupOrder() {
 }
 
 /* The first view comes from the address alone, before any library request. */
+function skeletonPaperHTML(route, view = 'pane', waiting = null) {
+  const bar = (width = 70) => `<i class="sk" style="width:${width}%"></i>`;
+  const lines = (count, width = 96) => Array.from({ length: count }, (_, i) => `<span class="sk-line">${bar(i === count - 1 ? width : 100)}</span>`).join('');
+  const standalone = view === 'paper';
+  return `<article class="pd-article${waiting ? ' skeleton-wrap' : ''}" data-sk="article"${waiting ? ` data-brief-wait="${dataAttr(waiting)}" aria-busy="true"` : ''}><header class="pd-head"><div class="pd-kicker" data-sk="${standalone ? 'kicker' : 'venue'}">${lines(1, 32)}</div><div class="pd-title pv-headline" data-sk="${standalone ? 'title' : view === 'daily' ? 'headline' : 'paneHeadline'}">${lines(standalone ? 3 : 2, 80)}</div><div class="pd-dek pv-title" data-sk="${standalone ? 'dek' : 'title'}">${lines(standalone ? 2 : 1, 72)}</div><div class="pd-authors pv-by" data-sk="authors">${lines(1, 44)}</div>${standalone ? `<div class="pd-why"><span class="pd-why-label">${bar(14)}</span><div class="why">${lines(1, 38)}</div></div>` : ''}</header><div class="pd-body" data-sk="body"><div class="pd-main"><section class="pd-section"><h2>Summary</h2><div class="pd-prose pv-summary" data-sk="summary">${lines(standalone ? 4 : 3, 70)}</div></section><section class="pd-section"><h2>Abstract</h2><div class="pd-prose pv-abstract" data-sk="abstract">${lines(standalone ? 7 : 4, 76)}</div></section>${briefSkeletonHTML(route)}<section class="pd-section pd-relevance"><div class="pd-card" data-sk="matches"><h3>Relevance</h3>${lines(3, 68)}</div></section></div><aside class="pd-aside"><div class="pd-card">${lines(4,68)}</div></aside></div></article>`;
+}
 function skeletonHTML(hash) {
   let route = String(hash || '').replace(/^#/, '');
   // These disabled/obsolete addresses return to For you, just as applyHash does.
@@ -6919,10 +6897,7 @@ function skeletonHTML(hash) {
     const tabs = active => `<div class="feed-head" data-sk="head"><div class="feed-tabs home" data-sk="tabs"><div class="ft-tabs">${['For you', 'Following', 'Daily'].map((t, i) => `<span class="tab${i === active ? ' on' : ''}">${t}</span>`).join('')}</div></div>${active < 2 ? `<div class="feed-ctl"><span class="ctl-btn ctl-sort" data-sk="sort"><span class="ctl-pill">${active === 0 ? 'Best' : 'Recently added'}${chevron}</span></span>${filter}</div>` : ''}</div>`;
     const posts = (list = false) => [84, 72, 90].map(w => `<div class="skpost" data-sk="card"><div class="sk-meta" data-sk="meta">${lines(1, 38)}</div><div class="sk-title" data-sk="title">${lines(2, w)}</div><div class="sk-dek" data-sk="dek">${lines(2, 62)}</div><div class="sk-by" data-sk="authors">${lines(1, 48)}</div>${list ? `<div class="sk-acts" data-sk="actions">${bar(24)}${bar(24)}${bar(30)}</div>` : `<div class="sk-why" data-sk="why">${lines(1, 40)}</div><div class="sk-icons" data-sk="actions">${['Pass', 'Save', 'Mark read', 'Read'].map(t => `<span class="sk-icon"><i class="sk"></i><b>${t}</b></span>`).join('')}</div>`}</div>`).join('');
     // Layout A: on a wide screen For you and Following are the list and the open paper, its row at the pane's foot
-    const paperBody = (view = 'pane') => {
-      const standalone = view === 'paper';
-      return `<article class="pd-article" data-sk="article"><header class="pd-head"><div class="pd-kicker" data-sk="${standalone ? 'kicker' : 'venue'}">${lines(1, 32)}</div><div class="pd-title pv-headline" data-sk="${standalone ? 'title' : view === 'daily' ? 'headline' : 'paneHeadline'}">${lines(standalone ? 3 : 2, 80)}</div><div class="pd-dek pv-title" data-sk="${standalone ? 'dek' : 'title'}">${lines(standalone ? 2 : 1, 72)}</div><div class="pd-authors pv-by" data-sk="authors">${lines(1, 44)}</div><div class="pd-tq"><span class="pd-tq-chip">Ten questions</span></div>${standalone ? `<div class="pd-why"><span class="pd-why-label">${bar(14)}</span><div class="why">${lines(1, 38)}</div></div>` : ''}</header><div class="pd-body" data-sk="body"><div class="pd-main"><section class="pd-section"><h2>Summary</h2><div class="pd-prose pv-summary" data-sk="summary">${lines(standalone ? 4 : 3, 70)}</div></section><section class="pd-section"><h2>Abstract</h2><div class="pd-prose pv-abstract" data-sk="abstract">${lines(standalone ? 7 : 4, 76)}</div></section></div><aside class="pd-aside"><div class="pd-card">${lines(4,68)}</div><div class="pd-card" data-sk="matches"><h3>Relevance</h3>${lines(3, 68)}</div></aside></div></article>`;
-    };
+    const paperBody = (view = 'pane') => skeletonPaperHTML(route, view);
     const pane = () => `<aside class="sk-pane" data-sk="pane"><div class="sk-pane-body">${paperBody()}</div><div class="fp-acts" data-sk="paneActs">${['Pass', 'Save', 'Mark read', '↓', '⋯', 'Read'].map((t,i) => `<span class="${i===3||i===4?'pd-act':'pact'}${i===5?' pact-read':''}">${t}</span>`).join('')}</div></aside>`;
 
     if (route.startsWith('read/')) {
@@ -7021,9 +6996,10 @@ function revealContent() {
   setTimeout(privateCallback(tasteRefresh), 0);   // input-bound scores stay in memory for this authorization
   setTimeout(privateCallback(requestsLoad), 0);   // Phase 24: the requests this device was following, carried over a reload
   const skel = document.getElementById('skeleton');
+  if (skel.dataset.paperPending) return;   // the paper's saved-answer decision still owns this shape
   skel.classList.add('hidden');
   pageIn(document.querySelector('.tab-section.active'));
-  setTimeout(privateCallback(() => { skel.style.display = 'none'; fitTopPapers(); }), 200);   // the loader held the page's place: fit Top Papers now it's gone
+  setTimeout(privateCallback(() => { if (!skel.dataset.paperPending) skel.style.display = 'none'; fitTopPapers(); }), 200);   // the loader held the page's place: fit Top Papers now it's gone
 }
 
 /* ===== NEW SINCE LAST VISIT =====
@@ -7852,7 +7828,7 @@ function appMenuEdgeAllowed() {
   const a = document.activeElement;
   if (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return false;
   const surfaces = POPOVERS + ', dialog[open], [role="dialog"], [role="menu"], [popover]:popover-open, '
-    + '.auth-overlay.open, .hide-sheet.open, .keys-help.open, #briefSheet:not([hidden])';
+    + '.auth-overlay.open, .hide-sheet.open, .keys-help.open';
   return ![...document.querySelectorAll(surfaces)].some(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden');
 }
 /* A fine mouse resting at the left edge opens the same drawer. A click inside keeps it open; otherwise leaving
@@ -11110,6 +11086,7 @@ function dailyRender(focus, keepInterest) {
   const previousArea = box.querySelector('.daily-area'), previousPaper = box.querySelector('.daily-card .pd-article')?.dataset.pid, previousScroll = previousArea?.scrollTop || 0;
   const previousInterest = box.querySelector('#dailyBody .daily-picker-name')?.textContent, previousList = box.querySelector('.daily-list')?.scrollTop || 0;
   const old = box.querySelector('.daily-card'), hadFocus = !!focus || old && old.contains(document.activeElement);
+  const briefKey = old?.contains(document.activeElement) && document.activeElement?.closest('[data-brief]') ? briefFocusKey(document.activeElement) : null;
   if (!box.querySelector('#dailyBody')) {
     box.innerHTML = `<div class="feed daily-feed" id="feed"><div class="feed-head" id="feedHead"><div class="feed-tabs home" id="feedTabs" role="tablist" aria-label="Feeds"><div class="ft-tabs" id="feedTabsIn"></div><div class="ft-add" id="feedAdd"></div></div><div id="feedCtl" hidden></div><p id="tabsMsg" role="status"></p></div><div id="listBar" hidden></div><div class="feed-list" id="feedList"><div id="dailyBody" role="tabpanel" aria-label="Daily"></div></div><div id="feedMore"></div><div id="feedEnd"></div></div>`;
   }
@@ -11149,10 +11126,13 @@ function dailyRender(focus, keepInterest) {
   if (row) {
     const generation = Daily.generation, el = root.querySelector('.daily-card'); if (!preview) dailyBindGestures(el, card, generation);
     paperPostRender(el, row); paperDownloadDot().catch(() => {});
-    if (!two) el.querySelector('.pd-title').onclick = e => openPaper(row.id, e);
     const abstract = el.querySelector('[data-abs-tex]'); if (abstract) renderAbstractText(abstract, row.abstract);
     root.querySelectorAll('.daily-action').forEach(b => { b.onclick = privateCallback(e => { const a = b.dataset.dailyAction; if (a === 'save') dailyOpenSaveSheet(e, b, card); else if (a === 'open') { if (generation === Daily.generation && dailyValidCard(card, generation)) feedOpen(card.paper); } else dailyAct(a, card, generation); }); });
-    if (hadFocus) el.focus({ preventScroll: true });
+    if (hadFocus) {
+      const sec = previousPaper === row.id && briefKey && el.querySelector('[data-brief]');
+      if (sec) { Brief.focus = { pid: row.id, key: briefKey }; briefFocusTo(sec, briefKey); }
+      else el.focus({ preventScroll: true });
+    }
   } else { paperControlsMount(root); if (hadFocus) { const undo = document.querySelector('#toast button'); if (undo) undo.focus({ preventScroll: true }); } }
 }
 function dailyBindGestures(el, card, generation) {
@@ -18808,16 +18788,14 @@ function closeReader() {
 }
 function readerTakeFocus() {
   if (_reader.focusUnder) return;
-  const sheet = document.getElementById('briefSheet');
   _reader.focusFrom = document.activeElement;
-  _reader.focusUnder = [document.getElementById('mainScroll'), document.getElementById('appBar'), document.querySelector('.navbar'), sheet].filter(Boolean).map(el => ({ el, inert: el.inert, brief: !!(sheet && !sheet.hidden) }));
+  _reader.focusUnder = [document.getElementById('mainScroll'), document.getElementById('appBar'), document.querySelector('.navbar')].filter(Boolean).map(el => ({ el, inert: el.inert }));
   _reader.focusUnder.forEach(({ el }) => { el.inert = true; });
 }
 function readerReleaseFocus() {
   const under = _reader.focusUnder, from = _reader.focusFrom;
   _reader.focusUnder = _reader.focusFrom = null;
-  const sheet = document.getElementById('briefSheet'), brief = !!(sheet && !sheet.hidden);
-  (under || []).forEach(({ el, inert, brief: wasBrief }) => { el.inert = el === sheet ? inert : brief || inert && !wasBrief; });
+  (under || []).forEach(({ el, inert }) => { el.inert = inert; });
   if (from && from.isConnected && !from.closest('[inert]')) from.focus({ preventScroll: true });
 }
 document.addEventListener('keydown', e => {
@@ -23735,7 +23713,7 @@ const API_CLIENT_TOOLS = [
 const _apiTurns = new Map();   // paper id -> the API turn running on this page ({ stop })
 
 function apiKey() { if (!isOwner()) return ''; try { requireOwner(); return localStorage.getItem(API_KEY_NAME) || ''; } catch (e) { return ''; } }
-function saveApiKey(k) { requireOwner(); k ? privateSet(API_KEY_NAME, k) : privateRemove(API_KEY_NAME); Chat.route = ''; uploadBriefSoon(); const id = document.querySelector('#paperDetail [data-tq]')?.dataset.tq; if (id) briefChipSync(id); }
+function saveApiKey(k) { requireOwner(); k ? privateSet(API_KEY_NAME, k) : privateRemove(API_KEY_NAME); Chat.route = ''; uploadBriefSoon(); for (const box of document.querySelectorAll('[data-brief-slot]')) briefRedraw(box.dataset.briefSlot); }
 /* 'api' while this device has a key, unless the API refused it and the bridge took over (until the key changes) */
 function chatRoute() { return apiKey() && Chat.route !== 'bridge' ? 'api' : 'bridge'; }
 function chatBaseStatus() { return chatRoute() === 'api' ? 'ready' : chatElsewhere() ? 'elsewhere' : Chat.token ? 'unknown' : 'setup'; }
@@ -25303,12 +25281,10 @@ function uploadQuestionsCancel(id) {
   for (const [pid, job] of UploadQuestions.jobs) if (!id || id === pid) { job.stopped = true; try { job.ctl.abort(); } catch (e) {} }
   // Decrypted answers leave memory and the screen with the key (a lock, a reset) or with the paper (a removal)
   for (const pid of [...Brief.files.keys(), ...Brief.loading.keys()]) if (/^up-/.test(pid) && (!id || id === pid)) { Brief.files.delete(pid); Brief.loading.delete(pid); }
-  if (Brief.sheet && /^up-/.test(Brief.sheet.pid) && (!id || id === Brief.sheet.pid)) briefSheetHide();
-  document.querySelectorAll('.pane-questions').forEach(el => {
-    const pid = el.querySelector('[data-brief]')?.dataset.brief;
-    if (/^up-/.test(pid || '') && (!id || id === pid)) el.remove();
+  document.querySelectorAll('[data-brief-slot]').forEach(box => {
+    const pid = box.dataset.briefSlot;
+    if (/^up-/.test(pid) && (!id || id === pid)) box.replaceChildren();
   });
-  if (/^up-/.test(Brief.inline || '') && (!id || id === Brief.inline)) { Brief.inline = null; Brief.inlineFrom = null; }
 }
 async function uploadQuestionsRecipe(epoch) {
   if (UploadQuestions.recipe) return UploadQuestions.recipe;
@@ -25357,7 +25333,7 @@ function uploadQuestionsCheck(answers) {
   });
   return { answers: out, checks: { quotes_kept: 0, quotes_repaired: 0, em_dashes: 0, hype_words: 0, html_tags: 0 } };
 }
-/* This device's protected copy of the answers. Locked notes: nothing is decided (the chip still asks). */
+/* This device's protected copy of the answers. Locked notes: nothing is decided (the section still offers Ask). */
 async function uploadQuestionsLoad(id) {
   const epoch = capturePrivateEpoch(), gen = Brief.gen, generation = vaultGeneration(), name = uploadStateName(id);
   if (!Vault.key || !uploadById(id)) throw briefStale();
@@ -25369,7 +25345,7 @@ async function uploadQuestionsLoad(id) {
   const q = st.state && st.state.questions;
   return q ? { state: 'answered', data: q.data, old: q.data.recipe === BRIEF_RECIPE ? null : 'recipe', md: new Map() } : { state: 'none' };
 }
-/* Answers that arrived in a sync, from another device or tab: the chip and an open sheet show them */
+/* Answers that arrived in a sync, from another device or tab: the section shows them */
 function uploadQuestionsSeen(id, q) {
   if (!q) return;
   const r = Brief.files.get(id);
@@ -25403,12 +25379,12 @@ async function uploadQuestionsAsk(id) {
   const paper = findPaper(id), upload = !!paper?.uploaded;
   if (!briefCanAsk(paper) || UploadQuestions.jobs.has(id) || !navigator.locks) return;
   const have = Brief.files.get(id);
-  if (have && have.state === 'answered') { briefSheetOpen(id); return; }
-  if (!apiKey()) { briefChipSync(id); return; }
+  if (have && have.state === 'answered') return;
+  if (!apiKey()) { briefRedraw(id); return; }
   const epoch = capturePrivateEpoch(), serial = UploadQuestions.serial;
   const live = { ctl: new AbortController(), requests: new Set(), stopped: false };
-  UploadQuestions.jobs.set(id, live); Private.controllers.add(live.ctl); briefChipSync(id);
-  let generation = upload ? vaultGeneration() : null, doc = null, result = null, opened = false, data = UploadQuestions.pending.get(id) || null;
+  UploadQuestions.jobs.set(id, live); Private.controllers.add(live.ctl); briefRedraw(id);
+  let generation = upload ? vaultGeneration() : null, doc = null, result = null, data = UploadQuestions.pending.get(id) || null;
   const wait = x => uploadBriefWait(x, live.ctl.signal, epoch);
   const check = () => { checkPrivateEpoch(epoch); checkVaultGeneration(generation); if (serial !== UploadQuestions.serial || live.stopped || live.ctl.signal.aborted || !briefEligible(findPaper(id)) || (upload && _reviewPendingRemovals.has(id))) throw briefStale(); };
   try {
@@ -25421,7 +25397,7 @@ async function uploadQuestionsAsk(id) {
         check();
         if (upload) await wait(uploadStateSync(id, null, check)); else Brief.index = null; check();
         const prior = await wait(upload ? uploadQuestionsLoad(id) : briefLoad(id)); check();
-        if (prior.state === 'answered') { result = prior; opened = true; return; }
+        if (prior.state === 'answered') { result = prior; return; }
         if (!['none', 'outcome'].includes(prior.state)) throw Error('The saved answers could not be read');
         if (!data) {
           const recipe = await wait(uploadQuestionsRecipe(epoch)); check();
@@ -25439,7 +25415,7 @@ async function uploadQuestionsAsk(id) {
           const payload = { model: recipe.model, max_tokens: 128000, stream: true, system: recipe.instructions, messages: [{ role: 'user', content: message }], output_config: { effort: recipe.effort } };
           const { res, ctl } = await wait(apiFetch(payload, 'opus', false, apiKey(), live)); check();
           if (!res.ok || !res.body) throw Error('The answers failed');
-          const reply = await wait(apiReadStream(res, ctl, { start() {}, text() {} })); check();
+          const reply = await wait(apiReadStream(res, ctl, { start() {}, text(delta) { check(); briefPreview(id, live, delta); } })); check();
           const raw = reply.content.filter(b => b && b.type === 'text').map(b => b.text || '').join('');
           if (reply.broken || reply.stop_reason !== 'end_turn') throw Error('The answers were cut short');
           const match = /```(?:json)?\s*(\{[\s\S]*\})\s*```/.exec(raw) || /(\{[\s\S]*\})/.exec(raw);
@@ -25462,7 +25438,7 @@ async function uploadQuestionsAsk(id) {
       }));
     })());
     check();
-    if (result) { briefKeep(id, result); briefRedraw(id); if (opened && shownPaperArticle(id) && !document.getElementById('reader').classList.contains('open')) briefSheetOpen(id); }
+    if (result) { briefKeep(id, result); briefRedraw(id); }
   } catch (e) {
     try {
       check();
@@ -25476,7 +25452,7 @@ async function uploadQuestionsAsk(id) {
     for (const ctl of live.requests) { try { ctl.abort(); } catch (e) {} Private.controllers.delete(ctl); }
     Private.controllers.delete(live.ctl);
     if (UploadQuestions.jobs.get(id) === live) UploadQuestions.jobs.delete(id);
-    try { checkPrivateEpoch(epoch); briefChipSync(id); } catch (e) {}
+    try { checkPrivateEpoch(epoch); briefRedraw(id); } catch (e) {}
   }
 }
 
@@ -25594,10 +25570,8 @@ function paperViewHTML(p, opts) {
     ${dek}
     ${hasText(p.authors) ? `<div class="pd-authors pv-by">${opts.pane ? authorLinksHTML(p.authors, p.uploaded ? null : followMarks(p, true)) : esc(p.authors)}</div>` : ''}
     ${p.uploaded ? `<div class="upload-brief-state" data-upload-state="${dataAttr(p.id)}">${uploadBriefStateHTML(p.id)}</div>` : ''}
-    ${briefChipBoxHTML(p)}
     ${p.uploaded ? reviewChipsHTML(p.id) : ''}
     ${parseWhy(p) ? `<div class="pd-why"><span class="pd-why-label">Why it's here</span>${whyHTML(p)}</div>` : ''}
-    ${opts.pane && twoPane() && Brief.inline === p.id ? `<section class="pane-questions">${briefSheetHTML(p.id, true)}</section>` : ''}
   </header>`;
 
   // Reading column
@@ -25605,6 +25579,8 @@ function paperViewHTML(p, opts) {
   if (hasText(p.summary)) main += `<section class="pd-section"><h2>Summary</h2><p class="pd-prose pv-summary">${esc(p.summary)}</p></section>`;
   else if (!hasText(p.abstract) && !(hasNotes || (ix && ix.h + ix.c))) main = `<p class="pd-empty">${p.uploaded ? 'No summary or abstract yet.' : 'No summary or abstract yet. Open the paper to read it at the source.'}</p>`;
   if (hasText(p.abstract)) main += `<section class="pd-section"><h2>Abstract</h2><p class="pd-prose pv-abstract" data-abs-tex>${esc(p.abstract)}</p>${p.uploaded ? '' : '<p class="pd-attribution">Some abstracts are provided by Semantic Scholar and OpenAlex.</p>'}</section>`;
+  if (briefEligible(p)) main += `<div class="pd-questions-slot" data-brief-slot="${dataAttr(p.id)}">${briefSectionHTML(p)}</div>`;
+  if (!p.uploaded) main += `<section class="pd-section pd-relevance">${relevanceCardHTML(p, ka)}</section>`;
   if (hasNotes || (ix && ix.h + ix.c)) main += `<section class="pd-section pd-notes"><h2>Your notes ${pencilDevice() ? `<button class="pd-edit" onclick="openReader('${ka}', 'new')">+ Type</button><button class="pd-edit" onclick="openReader('${ka}', 'write')" title="Write or draw a note with the Pencil">+ Write</button>` : `<button class="pd-edit" onclick="openReader('${ka}', 'new')">+ Add note</button>`}</h2>${hasNotes ? vn.entries.map(e => `<div class="pd-note"><div class="pd-note-top"><span>${esc(noteDate(e))}</span>${e.hand && !e.text.trim() && !(pencilDevice() || !matchMedia('(pointer: coarse)').matches) ? '' : `<button class="rp-icon-btn sm" onclick="openReader('${ka}', '${escAttr(e.id)}')" title="Edit note" aria-label="Edit note">${ICON_EDIT}</button>`}</div>${e.hand ? hwViewHTML(e) : ''}${e.text.trim() || !e.hand ? `<div class="pd-prose md" data-pdnote="${dataAttr(e.id)}"></div>` : ''}</div>`).join('') : ''}${ix && ix.h + ix.c ? `<div class="pd-notes-meta">${[ix.h && `${ix.h} highlight${ix.h === 1 ? '' : 's'}`, ix.c && `${ix.c} comment${ix.c === 1 ? '' : 's'}`].filter(Boolean).join(', ')} · <button onclick="openReader('${ka}', 'panel')">Open in the reader</button></div>` : ''}</section>`;
 
   // Side panel: facts + editable topics
@@ -25625,7 +25601,6 @@ function paperViewHTML(p, opts) {
 
   const aside = `<aside class="pd-aside">
     <div class="pd-card"><dl class="pd-facts">${facts.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join('')}</dl></div>
-    ${p.uploaded ? '' : relevanceCardHTML(p, ka)}
     ${SHOW_TOPICS && !p.uploaded ? `<div class="pd-card"><h3>Topics</h3><div class="pd-topics paper-detail-tags">${topics}${addBtn}</div></div>` : ''}
   </aside>`;
 
@@ -25641,16 +25616,27 @@ function paperViewHTML(p, opts) {
   }).join('');
   if (SHOW_TOPICS && topicLinks) related += `<div class="pd-rel-more"><span>More in</span>${topicLinks}</div>`;
 
-  return { bar, glow: glowGroups.length ? topicGlow(glowGroups) : 'transparent', article: `<article class="pd-article" data-pid="${dataAttr(p.id)}" data-gone="${gone}" data-hidden="${isHiddenRow(p)}" data-passed="${isPassed(p)}">
+  return { bar, glow: glowGroups.length ? topicGlow(glowGroups) : 'transparent', article: briefPending(p) ? skeletonPaperHTML('paper/' + encodeURIComponent(p.id), opts.pane ? 'pane' : 'paper', p.id) : `<article class="pd-article" data-pid="${dataAttr(p.id)}" data-gone="${gone}" data-hidden="${isHiddenRow(p)}" data-passed="${isPassed(p)}">
       ${head}
       <div class="pd-body"><div class="pd-main">${main}</div>${aside}</div>
       ${opts.pane ? '' : nextCard}
       ${related ? `<section class="pd-related"><h2>Related papers</h2>${related}</section>` : ''}
     </article>` };
 }
+function paperLoading(p) {
+  const skel = document.getElementById('skeleton'), box = document.getElementById('paperDetail');
+  if (p) {
+    skel.dataset.paperPending = p.id; skel.innerHTML = skeletonHTML('#paper/' + encodeURIComponent(p.id));
+    skel.style.display = ''; skel.classList.remove('hidden'); box.hidden = true;
+  } else if (skel.dataset.paperPending) {
+    delete skel.dataset.paperPending; box.hidden = false;
+    if (_dataLoaded) { skel.classList.add('hidden'); skel.style.display = 'none'; }
+  }
+}
 function renderPaperDetail(p) {
   if (p.uploaded) requireOwner();
   const page = paperViewHTML(p), box = document.getElementById('paperDetail');
+  paperLoading(briefPending(p) ? p : null);
   const sh = Feed.sheet, held = !!(sh && sh.btn && box.contains(sh.btn));   // the Save sheet opened from this page's Save
   box.innerHTML = `<div class="pd" style="--gbg:${page.glow}">${page.bar}
     ${page.article}
@@ -25674,6 +25660,8 @@ function paperPostRender(root, p) {
   paperControlsMount(root.closest('.paper-pane, #feedPane, .daily-feed, #paperDetail') || root);
   root.querySelectorAll('[data-brief]').forEach(sec => { if (sec.dataset.brief === p.id) briefWire(sec, p.id); });
   briefMount(root, p);   // before the notes' early return: the answers do not wait on notes
+  const daily = root.closest('.daily-card');
+  if (daily && !twoPane()) { const title = daily.querySelector('.pd-article[data-pid] .pd-title'); if (title) title.onclick = e => openPaper(p.id, e); }
   const vn = Vault.key && Vault.cache.get(p.id), ix = Vault.index && Vault.index.papers && Vault.index.papers[p.id];
   if (Vault.key && !Vault.cache.has(p.id) && ix) paperNotes(p.id).then(privateCallback(() => repaintPaper(p)));
   if (!vn || !(vn.entries || []).length) return;
@@ -25729,17 +25717,6 @@ const BRIEF_INDEX_CAP = 2 * 1024 * 1024;
 const BRIEF_CACHE = 50;
 /* Legacy index outcomes stay readable. A tap can retry any paper without answers. */
 const BRIEF_OUTCOMES = ['answered', 'no_open_text', 'host_not_allowed', 'pdf_missing', 'not_a_pdf', 'too_large', 'no_text_layer', 'no_usable_text', 'gave_up_fetch', 'rejected'];
-const BRIEF_OUTCOME_TEXT = {
-  no_open_text: 'This paper has no open PDF, so it has no answers.',
-  host_not_allowed: "The answers are made only from PDFs on arXiv, PMLR, RSS and CVF, and this paper's PDF is on another site.",
-  pdf_missing: 'The PDF link could not be accessed.',   // a 404, a 403, any other 4xx
-  not_a_pdf: 'The linked file could not be read as a PDF.',   // not PDF bytes, or pdftotext failed on them
-  too_large: 'The PDF is over 30 MB, too large to answer from.',
-  no_text_layer: "Couldn't get enough usable text from the PDF to answer the questions.",   // under 2,000 characters, or extraction ran out
-  no_usable_text: 'The pages that could be read hold too little text to answer from.',
-  gave_up_fetch: 'The PDF could not be fetched, so this paper has no answers.',
-  rejected: 'The answers made from this PDF failed their checks, so none are shown.',
-};
 const BRIEF_SENTINELS = ['The paper does not say.', 'The pages read do not say.'];
 const BRIEF_CONTROLS = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/;
 /* what the sanitizer lets through from an answer's Markdown: text formatting, lists, tables and plain links. No
@@ -25748,8 +25725,8 @@ const BRIEF_PURIFY = { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'del'
 
 /* gen: moved by a lock, a pull or a new target. index: the index read (a promise, null when absent). files: one
    result per paper, at most BRIEF_CACHE. loading: the reads in flight. visit: the items open on the paper shown,
-   kept for this visit across redraws and the reader's Back. focus: what had the keyboard in the section. sheet: { pid, from } while the sheet shows. */
-const Brief = { gen: 0, index: null, questions: null, files: new Map(), loading: new Map(), visit: { pid: null, open: new Set() }, focus: null, sheet: null, pushed: null, lostFocus: null, inline: null, inlineFrom: null };
+   kept for this visit across redraws and the reader's Back. focus: what had the keyboard in the section. */
+const Brief = { gen: 0, index: null, questions: null, files: new Map(), loading: new Map(), visit: { pid: null, open: new Set(), collapsed: false }, focus: null };
 
 function briefEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function briefEligible(p) { return !!p && typeof p.id === 'string' && (p.uploaded ? /^up-[0-9a-f]{12}$/.test(p.id) && !!uploadById(p.id) : BRIEF_ID.test(p.id) && !p.id.startsWith('up-')); }
@@ -25764,8 +25741,6 @@ function briefStamp(s) {   // a real UTC time to the second
   return !isNaN(t.getTime()) && t.toISOString().slice(0, 19) + 'Z' === s;
 }
 
-function briefHost(url) { const m = /^https?:\/\/(?:[^/?#@]*@)?([^/?#:]+)/i.exec(String(url || '')); return m ? m[1].toLowerCase().replace(/^www\./, '') : ''; }
-function briefDate(at) { try { return new Date(at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }); } catch (e) { return String(at).slice(0, 10); } }
 async function briefSha(data) {
   const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data;
   return [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(b => b.toString(16).padStart(2, '0')).join('');
@@ -25935,53 +25910,53 @@ function briefStart(pid) {
 }
 
 /* ---- drawing ---- */
+/* A first paper paint waits for saved answers; asking and streaming keep the paper in place. */
+function briefPending(p) {
+  return briefEligible(p) && !Brief.files.has(p.id) && !UploadQuestions.jobs.has(p.id) && (!p.uploaded || !!Vault.key);
+}
+const BRIEF_TITLES = {
+  problem: 'What problem does it solve?', audience: 'Who is it for?', contributions: 'What is new?',
+  justification: 'Why this approach?', benefits: 'What can we do now?', prior: 'What came before?',
+  experiments: 'How is it tested?', reuse: 'Why build on it?', limitations: 'What are the limits?',
+  takeaway: 'The one takeaway'
+};
 function briefLabels(pid) {
   const r = Brief.files.get(pid);
-  if (r && r.state === 'answered') return r.data.answers.map(a => a.label);   // an older file keeps its own labels
-  return (Brief.questions || BRIEF_QUESTIONS).map(q => q.label);
-}
-function briefRetryHTML() { return ' <button type="button" class="pd-q-retry" onclick="briefRetry(this)">Retry</button>'; }
-function briefMetaHTML(pid) {
-  const r = Brief.files.get(pid);
-  if (!r) return 'Loading the answers…';
-  if (r.state === 'none') return 'Not answered yet.';
-  if (r.state === 'outcome') return briefEsc(BRIEF_OUTCOME_TEXT[r.outcome] || 'There are no answers for this paper.');
-  if (r.state === 'offline') return "You're offline, so the answers can't load." + briefRetryHTML();
-  if (r.state === 'error') return "Couldn't load the answers." + briefRetryHTML();   // Phase 24: one plain line, whatever failed
-  const d = r.data, s = d.source, host = briefHost(s.url);
-  const from = (s.truncated ? `the first ${s.pages_supplied} of ${s.pages_total} pages of ` : '') + 'the PDF' + (host ? ' on ' + briefEsc(host) : '');
-  let line = `Answered ${briefEsc(briefDate(d.answered_at))} from ${from}.`;
-  if (s.truncated) line += ` Pages after ${s.pages_supplied} were not read.`;
-  if (r.old === 'recipe') line += ' These answers follow an earlier version of the questions.';
-  else if (r.old === 'source') line += ' These answers come from an earlier PDF of this paper.';
-  return line;
+  const questions = r?.state === 'answered' ? r.data.answers : Brief.questions || BRIEF_QUESTIONS;
+  return questions.map(q => Object.hasOwn(BRIEF_TITLES, q.key) ? BRIEF_TITLES[q.key] : q.label);
 }
 /* Strip earlier citation markup before either plain or Markdown rendering. */
 function briefCleanText(text) {
   return String(text).replace(/[ \t]*\[\[\s*p\.\s*\d+\s+[\s\S]*?\]\](?:[ \t]+(?=[.,;:!?]))?/g, '').trim();
 }
 function briefPlainHTML(text) { return briefEsc(briefCleanText(text)).replace(/\n/g, '<br>'); }
+/* Saved answers and a request's temporary preview use the same prose renderer. */
+function briefDisplay(pid) {
+  const saved = Brief.files.get(pid);
+  if (saved?.state === 'answered') return saved;
+  const job = UploadQuestions.jobs.get(pid);
+  return job && !job.stopped && !job.ctl?.signal.aborted ? job.preview : null;
+}
 function briefAnswerInner(pid, n) {
-  const r = Brief.files.get(pid);
-  if (!r) return '<p class="pd-q-wait">Loading…</p>';
-  if (r.state === 'none') return '<p class="pd-q-wait">Not answered yet.</p>';
-  if (r.state !== 'answered') return '<p class="pd-q-wait">No answer to show.</p>';
-  return `<div class="pd-prose md pd-q-md">${r.md.has(n) ? r.md.get(n) : briefPlainHTML(r.data.answers[n - 1].answer, n)}</div>`;
+  const r = briefDisplay(pid), text = r?.data.answers[n - 1]?.answer;
+  return text ? `<div class="pd-prose md pd-q-md">${r.md.has(n) ? r.md.get(n) : briefPlainHTML(text)}</div>` : '';
 }
 function briefItemsHTML(pid) {
   const open = Brief.visit.pid === pid ? Brief.visit.open : new Set();
-  return briefLabels(pid).map((label, i) => `<details class="pd-q-item" data-n="${i + 1}"${open.has(i + 1) ? ' open' : ''}><summary>${i + 1}. ${briefEsc(label)}</summary><div class="pd-q-a" data-q="${i + 1}">${briefAnswerInner(pid, i + 1)}</div></details>`).join('');
+  return briefLabels(pid).map((label, i) => `<div class="pd-q-item" data-n="${i + 1}"${open.has(i + 1) ? ' open' : ''}><button type="button" class="pd-q-question" aria-expanded="${open.has(i + 1)}" onclick="briefToggleAnswer(this)">${i + 1}. ${briefEsc(label)}</button><div class="pd-q-a" data-q="${i + 1}"${open.has(i + 1) ? '' : ' hidden'}>${briefAnswerInner(pid, i + 1)}</div></div>`).join('');
 }
-/* Once the page is drawn: the answers are read when nothing is cached, for every library paper, so the chip can say
-   what there is. Independent of the notes and of Summary or Abstract. */
+/* Load saved answers independently of notes, for every eligible paper and every full paper view. */
 function briefMount(root, p) {
   if (!root || !briefEligible(p)) return;
   if (!Brief.files.has(p.id)) briefStart(p.id);
 }
 function briefWire(sec, pid) {
-  sec.querySelectorAll('.pd-q-item').forEach(d => { if (!d._briefWired) { d._briefWired = true; d.addEventListener('toggle', () => briefToggled(d)); } });
-  const r = Brief.files.get(pid);
-  if (r && r.state === 'answered') sec.querySelectorAll('.pd-q-md').forEach(el => {
+  if (!sec._briefWired) {
+    sec._briefWired = true;
+    sec.addEventListener('focusin', e => { const key = briefFocusKey(e.target); if (key) Brief.focus = { pid, key }; });
+  }
+  const r = briefDisplay(pid);
+  if (r) sec.querySelectorAll('.pd-q-md').forEach(el => {
     const n = +el.closest('[data-q]').dataset.q;
     if (r.md.has(n)) { mdTables(el); briefLinks(el); }
     else renderBriefMarkdown(el, r.data.answers[n - 1].answer, { pid, n, r }).catch(briefQuiet);
@@ -25989,41 +25964,33 @@ function briefWire(sec, pid) {
   briefSync(sec);
   briefFocusRestore(sec, pid);
 }
-/* When a result arrives, a request moves on, or a Retry or a pull begins: the chip, and in the sheet the meta line, the
-   labels and the answers, change in place. The items keep their open state and a focused summary keeps the focus. */
+/* Redraw the section, or reveal its waiting article. Folding and focus survive streams and received answers. */
 function briefRedraw(pid) {
-  briefChipSync(pid);
-  const p = findPaper(pid);
-  if (p?.uploaded && !briefCanAsk(p) && location.hash === '#paper/' + encodeURIComponent(pid) + '/questions') briefSheetShow(pid);
-  const box = document.getElementById('briefSheet');
-  for (const sec of document.querySelectorAll('[data-brief]')) {
-    if (sec.dataset.brief !== pid) continue;
-    const a = document.activeElement, held = a && a !== sec && sec.contains(a) ? briefFocusKey(a) : null;   // before its control is replaced
-    const key = held || (a === sec ? Brief.lostFocus : null);   // a control an earlier redraw took away, back when it is
-    const meta = sec.querySelector('.pd-q-meta'), labels = briefLabels(pid);
-    if (meta) meta.innerHTML = briefMetaHTML(pid);
-    sec.querySelectorAll('.pd-q-item').forEach(d => {
-      const n = +d.dataset.n, s = d.querySelector('summary'), body = d.querySelector('.pd-q-a');
-      if (s) s.textContent = n + '. ' + labels[n - 1];
-      if (body) body.innerHTML = briefAnswerInner(pid, n);
-    });
-    briefWire(sec, pid);
-    if (key) { briefFocusTo(sec, key); Brief.lostFocus = sec.contains(document.activeElement) && document.activeElement !== sec ? null : key; }
-    briefSheetContain();
+  const p = findPaper(pid); if (!p) return;
+  for (const box of document.querySelectorAll('[data-brief-slot]')) {
+    if (box.dataset.briefSlot !== pid) continue;
+    const a = document.activeElement, key = box.contains(a) ? briefFocusKey(a) : null;
+    box.innerHTML = briefSectionHTML(p);
+    const sec = box.querySelector('[data-brief]');
+    if (sec) { briefWire(sec, pid); if (key) briefFocusTo(sec, key); }
   }
-}
-/* The focus stays in the open sheet (Sol's review 10): when a redraw took the focused control away, the dialog takes it */
-function briefSheetContain() {
-  const s = document.getElementById('briefSheet'), panel = s && s.querySelector('.tq-panel'), reader = document.getElementById('reader');
-  if (!panel || !s.classList.contains('open') || (reader && reader.classList.contains('open'))) return;
-  const a = document.activeElement;
-  if (!a || a === document.body || !a.isConnected) panel.focus({ preventScroll: true });
+  // Reveal only this pending article. The pane's footer and Daily's chooser keep their place.
+  if (!briefPending(p)) for (const waiting of document.querySelectorAll('[data-brief-wait]')) {
+    if (waiting.dataset.briefWait !== pid) continue;
+    const standalone = !!waiting.closest('#paperDetail'), parent = waiting.parentElement;
+    const article = paperViewHTML(p, { pane: !standalone }).article;
+    waiting.outerHTML = article;
+    const pane = parent.closest('.paper-pane, #feedPane'); if (pane) pane._html = article;
+    paperPostRender(parent, p);
+    parent.querySelectorAll('[data-abs-tex]').forEach(el => renderAbstractText(el, p.abstract));
+    if (standalone && document.getElementById('skeleton').dataset.paperPending === pid) paperLoading(null);
+  }
 }
 /* An answer's Markdown, once the libraries arrive; the plain form stays when they never do. */
 async function renderBriefMarkdown(el, text, ctx) { const _authEpoch = capturePrivateEpoch();
   const gen = Brief.gen;
   try { await privateAwait(loadMdLibs(), _authEpoch); } catch (e) { checkPrivateEpoch(_authEpoch); return; }
-  if (gen !== Brief.gen || Brief.files.get(ctx.pid) !== ctx.r) return;   // a lock, a pull or a newer result since
+  if (gen !== Brief.gen || briefDisplay(ctx.pid) !== ctx.r || ctx.r.data.answers[ctx.n - 1]?.answer !== text) return;   // a lock, a pull or a newer answer since
   const html = briefMarkdownHTML(text, ctx.n);
   if (html === null) return;
   ctx.r.md.set(ctx.n, html);
@@ -26031,7 +25998,7 @@ async function renderBriefMarkdown(el, text, ctx) { const _authEpoch = capturePr
   const a = document.activeElement, key = a && a !== el && el.contains(a) ? briefFocusKey(a) : null;   // the focus inside, just before the answer is replaced
   el.innerHTML = html; mdTables(el); briefLinks(el);
   if (key) briefFocusTo(el, key);
-  briefSheetContain();
+  const sec = el.closest('[data-brief]'); if (sec) briefFocusRestore(sec, ctx.pid);
 }
 /* Safe Markdown with math inserted after sanitizing. HTML stays text and images stay alt text. */
 function briefMarkdownHTML(text, n) {
@@ -26063,228 +26030,169 @@ function briefLinks(el) {
   });
 }
 
-/* ---- the items, Expand all, the focus ---- */
-/* ---- the chip and the sheet ---- */
+/* ---- the section, its buttons and display state ---- */
 function briefCanAsk(p) { return isPrivate() && isOwner() && briefEligible(p) && (!p.uploaded || Date.now() >= UPLOAD_PLAIN_BRIEFS_FROM); }
-/* What the chip is now: answered, ask, loading, the request's phase (sending, waiting, working, retry, saving), again
-   (a request that could not start), limit, refused, error, or '' (nothing to show) */
-function briefChipState(p) {
+function briefSectionState(p) {
   if (!briefEligible(p)) return '';
   const r = Brief.files.get(p.id);
-  if (r && r.state === 'answered') return 'answered';
+  if (r?.state === 'answered') return 'answered';
   if (!briefCanAsk(p)) return '';
   if (UploadQuestions.jobs.has(p.id)) return 'working';
   if (r && (r.state === 'error' || r.state === 'offline')) return 'error';
   if (!r && (!p.uploaded || Vault.key)) return 'loading';
   if (!apiKey()) return 'key';
-  return (r && r.failed) || UploadQuestions.pending.has(p.id) ? 'again' : 'ask';
+  return r?.failed || UploadQuestions.pending.has(p.id) ? 'again' : 'ask';
 }
-function briefChipHTML(p) {
-  const st = briefChipState(p), pid = escAttr(p.id);
+function briefKeyHTML(loading = false) {
+  const text = 'Add your Claude API key on this device to get the ten questions.';
+  return loading ? `<p class="pd-q-note pd-q-key-loading skeleton-wrap" aria-hidden="true"><span>${text}</span><i class="sk"></i></p>` : `<p class="pd-q-note">${text}</p>`;
+}
+function briefSectionHTML(p) {
+  const st = briefSectionState(p);
   if (!st) return '';
-  if (st === 'answered') return `<button type="button" class="pd-tq-chip done" aria-haspopup="dialog" onclick="briefSheetOpen('${pid}')">Ten questions</button>`;
-  if (st === 'key') return '<span class="pd-tq-note">Add your Claude API key on this device to get the ten questions.</span>';
-  if (st === 'ask') return `<button type="button" class="pd-tq-chip" aria-label="Get answers to the ten questions" onclick="briefAsk('${pid}')">Ten questions</button>`;
-  if (st === 'again') return `<button type="button" class="pd-tq-chip" aria-label="Try the ten questions again" onclick="briefAsk('${pid}')">Couldn’t answer. Retry</button>`;
-  if (st === 'loading') return `<button type="button" class="pd-tq-chip" disabled aria-busy="true">Ten questions</button>`;
-  if (st === 'error') return `<button type="button" class="pd-tq-chip" aria-label="Couldn’t load the ten questions. Retry" onclick="briefRetryChip('${pid}')">Couldn’t load. Retry</button>`;
-  return '<span class="pd-tq-chip busy">Reading the paper<span class="tq-dots" aria-hidden="true"><i></i><i></i><i></i></span></span>';
+  const pid = escAttr(p.id), collapsed = Brief.visit.pid === p.id && Brief.visit.collapsed;
+  const answers = st === 'answered' || st === 'working';
+  const all = Brief.visit.pid === p.id && Brief.visit.open.size === 10;
+  const action = st === 'ask' ? `<button type="button" class="pd-q-ask" onclick="briefAsk('${pid}')">Ask</button>`
+    : st === 'again' ? `<button type="button" class="pd-q-retry" onclick="briefAsk('${pid}')">Retry</button>`
+    : st === 'error' ? '<button type="button" class="pd-q-retry" onclick="briefRetry(this)">Retry</button>' : '';
+  return `<section class="pd-section pd-questions" data-brief="${dataAttr(p.id)}"${st === 'loading' || st === 'working' ? ' aria-busy="true"' : ''}>
+    <h2><button type="button" class="pd-q-fold" aria-expanded="${!collapsed}" onclick="briefToggleSection(this)">Ten questions</button>${action}${answers ? `<button type="button" class="pd-q-all"${collapsed ? ' hidden' : ''} aria-pressed="${all}" onclick="briefExpandAll(this)">${all ? 'Collapse all' : 'Expand all'}</button>` : ''}</h2>
+    <div class="pd-q-content"${collapsed ? ' hidden' : ''}>${st === 'key' || st === 'loading' && !apiKey() ? briefKeyHTML(st === 'loading') : ''}${answers ? `<div class="pd-q-list">${briefItemsHTML(p.id)}</div>` : ''}</div>
+  </section>`;
 }
-/* The chip's place under the authors: polite, so a screen reader hears each change of state */
-function briefChipBoxHTML(p) { return briefEligible(p) ? `<div class="pd-tq" data-tq="${dataAttr(p.id)}" aria-live="polite" tabindex="-1">${briefChipHTML(p)}</div>` : ''; }
-function briefChipSync(pid) {
-  const p = findPaper(pid); if (!p) return;
-  document.querySelectorAll('[data-tq]').forEach(box => {
-    if (box.dataset.tq !== pid) return;
-    const a = document.activeElement, had = a && box.contains(a);
-    box.innerHTML = briefChipHTML(p);
-    if (had) (box.querySelector('button:not(:disabled)') || box).focus({ preventScroll: true });
-  });
+/* The shared loader reserves a section only for saved answers or an owner who can ask. At the first paint,
+   authorization and the library may still be unknown; it is drawn again once owner mode is accepted. */
+function briefSkeletonHTML(route) {
+  try {
+    let p = null;
+    if (route.startsWith('paper/')) p = findPaper(decodeURIComponent(route.slice(6)).replace(/\/questions$/, ''));
+    const st = p ? briefSectionState(p) : isPrivate() && isOwner() && !/^paper\/up-/.test(route) ? (apiKey() ? 'ask' : 'key') : '';
+    if (!st) return '';
+    const answers = p && (st === 'answered' || st === 'working');
+    return `<div class="pd-questions-slot" data-sk="questions"><section class="pd-section sk-questions"><h2><span class="sk-q-heading">Ten questions</span>${answers ? '<span class="sk-q-all">Expand all</span>' : ''}</h2>${st === 'key' || st === 'loading' && !apiKey() ? briefKeyHTML(st === 'loading') : ''}${answers ? `<div class="sk-q-list">${briefLabels(p.id).map((label, i) => `<div class="sk-q-item"><span class="sk-q-question">${i + 1}. ${briefEsc(label)}</span></div>`).join('')}</div>` : ''}</section></div>`;
+  } catch (e) { return ''; }   // the first loading shape precedes the library and its display state
 }
-/* Tapping a chip with no answers: one request, never while answers exist, while it is still finding out, or while one
-   is already under way */
+/* One explicit Ask, with the existing preflight, API and save path. Never ask while saved answers are being read. */
 function briefAsk(pid) {
   const p = findPaper(pid), r = Brief.files.get(pid);
-  if (!briefCanAsk(p)) return;
-  if (r && r.state === 'answered') { briefSheetOpen(pid); return; }
+  if (!briefCanAsk(p) || r?.state === 'answered') return;
   if (!r && !p.uploaded || r && (r.state === 'error' || r.state === 'offline')) return;
   uploadQuestionsAsk(pid).catch(briefQuiet);
 }
-function briefRetryChip(pid) {
-  const r = Brief.files.get(pid);
-  if (!r || (r.state !== 'error' && r.state !== 'offline')) return;
-  if (r.why === 'mismatch' || r.why === 'index') Brief.index = null;
-  Brief.files.delete(pid); Brief.loading.delete(pid);
-  briefRedraw(pid); briefStart(pid);
-}
-/* A request answered: the index and the paper's file are read again, and the chip shows the answers */
+/* A request answered: reread its index and paper file. */
 function briefAnsweredNow(pid) {
   Brief.index = null; Brief.files.delete(pid); Brief.loading.delete(pid);
-  briefRedraw(pid);
-  briefStart(pid);
+  briefRedraw(pid); briefStart(pid);
 }
-
-/* The sheet: a modal dialog over the paper's page, the ten questions folded, Expand all, the answers through the safe
-   renderer. Brief.sheet: { pid, from } while it shows. */
-function briefSheetOpen(pid) {
-  if (!findPaper(pid)) return;
-  const article = shownPaperArticle(pid);
-  if (twoPane() && article && article.closest('.paper-pane, #feedPane, .daily-feed.two')) {
-    let inline = article.querySelector('.pane-questions');
-    if (!inline) { inline = document.createElement('section'); inline.className = 'pane-questions'; article.querySelector('.pd-head').appendChild(inline); }
-    if (Brief.visit.pid !== pid) Brief.visit = { pid, open: new Set() };
-    if (Brief.inline !== pid) Brief.inlineFrom = document.activeElement;
-    Brief.inline = pid;
-    inline.innerHTML = briefSheetHTML(pid, true);
-    const panel = inline.querySelector('[data-brief]'); briefWire(panel, pid);
-    panel.focus({ preventScroll: true });
-    return;
+/* A completed JSON answer may be displayed before the full reply is checked and saved. Nothing here persists it. */
+function briefPreview(pid, live, delta) {
+  live.text = (live.text || '') + delta;
+  if (live.parseAt === undefined) {
+    const start = /"answers"\s*:\s*\[/.exec(live.text);
+    if (!start) return;
+    live.parseAt = start.index + start[0].length; live.depth = 0; live.quoted = false; live.escape = false;
+    live.answers = []; live.preview = { data: { answers: [] }, md: new Map() };
   }
-  Brief.pushed = '#paper/' + encodeURIComponent(pid) + '/questions';   // this step is Scout's own
-  location.hash = Brief.pushed;
-}
-/* Done and Escape (Sol's review 11): Back drops the sheet's step only when Scout made it; a sheet opened from a link
-   becomes the paper's page in place, so closing it never leaves Scout */
-function briefSheetClose() {
-  if (!Brief.sheet) return;
-  if (!/\/questions$/.test(location.hash)) { briefSheetHide(); return; }
-  if (Brief.pushed === location.hash) { Brief.pushed = null; history.back(); return; }
-  history.replaceState(null, '', APP_ROOT + location.search + '#paper/' + encodeURIComponent(Brief.sheet.pid));
-  applyHash();
-}
-function briefInlineClose(btn) {
-  const was = { pid: Brief.inline, from: Brief.inlineFrom };
-  Brief.inline = null; Brief.inlineFrom = null;
-  btn.closest('.pane-questions')?.remove();
-  briefReturnFocus(was);
-}
-function briefSheetHTML(pid, inline = false) {
-  const all = Brief.visit.pid === pid && Brief.visit.open.size === 10;
-  return `<div class="tq-panel pd-q" role="${inline ? 'region' : 'dialog'}"${inline ? '' : ' aria-modal="true"'} aria-labelledby="${inline ? 'tqInlineTitle' : 'tqTitle'}" data-brief="${briefEsc(pid)}" data-pid="${briefEsc(pid)}" tabindex="-1">
-    <div class="tq-head"><span class="tq-grip" aria-hidden="true"></span><h2 id="${inline ? 'tqInlineTitle' : 'tqTitle'}">Ten questions</h2><button type="button" class="pd-q-all" aria-pressed="${all}" onclick="briefExpandAll(this)">${all ? 'Collapse all' : 'Expand all'}</button><button type="button" class="tq-done" onclick="${inline ? 'briefInlineClose(this)' : 'briefSheetClose()'}">Done</button></div>
-    <div class="tq-body"><p class="pd-q-meta" aria-live="polite">${briefMetaHTML(pid)}</p><div class="pd-q-list">${briefItemsHTML(pid)}</div></div>
-  </div>`;
-}
-/* Shown by the route. The page under it goes inert; the focus moves into the sheet and comes back to the chip. */
-function briefSheetShow(pid) {
-  const p = findPaper(pid), s = document.getElementById('briefSheet');
-  if (!p || !s || !briefEligible(p)) { briefSheetHide(); return; }
-  const r = Brief.files.get(pid);
-  if (p.uploaded && !briefCanAsk(p) && r?.state !== 'answered') {
-    briefSheetHide();
-    if (!r) { briefStart(pid); return; }   // a cold link may still have saved answers; show no sheet while reading
-    if (location.hash === '#paper/' + encodeURIComponent(pid) + '/questions') {
-      Brief.pushed = null;
-      history.replaceState(null, '', APP_ROOT + location.search + '#paper/' + encodeURIComponent(pid));
-      applyHash();
+  let changed = false;
+  for (; live.parseAt < live.text.length; live.parseAt++) {
+    const ch = live.text[live.parseAt];
+    if (live.quoted) {
+      if (live.escape) live.escape = false;
+      else if (ch === '\\') live.escape = true;
+      else if (ch === '"') live.quoted = false;
+      continue;
     }
-    return;
-  }
-  if (Brief.visit.pid !== pid) Brief.visit = { pid, open: new Set() };
-  if (Brief.sheet && Brief.sheet.pid === pid && s.classList.contains('open')) return;
-  const from = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
-  Brief.sheet = { pid, from };
-  s.innerHTML = briefSheetHTML(pid);
-  s.hidden = false; s.classList.add('open');
-  for (const id of ['mainScroll', 'appBar']) { const el = document.getElementById(id); if (el) el.inert = true; }
-  const nav = document.querySelector('.navbar'); if (nav) nav.inert = true;
-  const panel = s.querySelector('.tq-panel');
-  briefWire(panel, pid);
-  if (!Brief.files.has(pid)) briefStart(pid);
-  panel.focus({ preventScroll: true });
-}
-function briefSheetHide() {
-  const s = document.getElementById('briefSheet'), was = Brief.sheet;
-  Brief.sheet = null; Brief.lostFocus = null;
-  for (const id of ['mainScroll', 'appBar']) { const el = document.getElementById(id); if (el) el.inert = document.getElementById('reader').classList.contains('open'); }
-  const nav = document.querySelector('.navbar'); if (nav) nav.inert = document.getElementById('reader').classList.contains('open');
-  if (!s || !s.classList.contains('open')) return;
-  const inside = s.contains(document.activeElement);
-  s.classList.remove('open'); s.hidden = true; s.innerHTML = '';
-  if (was && inside) briefReturnFocus(was);
-}
-/* Route rendering may replace or hide the opener. Both close paths look for the visible chip after it finishes. */
-function briefReturnFocus(was) {
-  requestAnimationFrame(privateCallback(() => {
-    if (Brief.sheet || document.activeElement?.closest('.pane-questions')?.isConnected) return;
-    const buttons = [...document.querySelectorAll('[data-tq]')].filter(b => b.dataset.tq === was.pid).map(b => b.querySelector('button:not(:disabled)'));
-    const visible = button => button && button.isConnected && !button.disabled && button.offsetParent !== null && button.closest('[data-tq]')?.dataset.tq === was.pid;
-    const to = [was.from, ...buttons].find(visible);
-    if (to) to.focus({ preventScroll: true });
-  }));
-}
-/* The reader's Back onto the sheet: the focus goes back to the pill that opened the reader */
-function briefSheetFocusBack() {
-  const s = document.getElementById('briefSheet'), panel = s && s.querySelector('.tq-panel');
-  if (!panel || !Brief.sheet || !Brief.focus || Brief.focus.pid !== Brief.sheet.pid) return;
-  briefFocusTo(panel, Brief.focus.key);
-}
-/* Escape closes; Tab stays inside; the page's own keys wait while it shows */
-function briefSheetKey(e) {
-  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); briefSheetClose(); return; }
-  if (e.key === 'Tab') {
-    const s = document.getElementById('briefSheet');
-    const items = [...s.querySelectorAll('button, summary, a[href], [tabindex="0"]')].filter(el => !el.disabled && el.offsetParent !== null);
-    if (items.length) {
-      const i = items.indexOf(document.activeElement), next = e.shiftKey ? (i <= 0 ? items.length - 1 : i - 1) : (i === -1 || i === items.length - 1 ? 0 : i + 1);
-      e.preventDefault(); items[next].focus();
+    if (ch === '"') { live.quoted = true; continue; }
+    if (ch === '{') { if (!live.depth) live.objectAt = live.parseAt; live.depth++; }
+    else if (ch === '}' && live.depth && !--live.depth) {
+      try {
+        const a = JSON.parse(live.text.slice(live.objectAt, live.parseAt + 1));
+        if (Number.isInteger(a.n) && a.n >= 1 && a.n <= 10 && typeof a.answer === 'string' && !BRIEF_CONTROLS.test(a.answer)) {
+          const text = briefCleanText(a.answer);
+          if (text && live.answers[a.n - 1] !== text) {
+            live.answers[a.n - 1] = text; live.preview.data.answers[a.n - 1] = { answer: text };
+            live.preview.md.delete(a.n); changed = true;
+          }
+        }
+      } catch (e) {}   // validation of the complete reply remains authoritative
     }
   }
-  e.stopPropagation();
+  if (changed) briefRedraw(pid);
 }
 function briefOpenItems(sec) { return [...sec.querySelectorAll('.pd-q-item')]; }
-function briefSync(sec) {   // "Collapse all" only when all ten are open
+function briefSync(sec) {
   const items = briefOpenItems(sec), all = items.length > 0 && items.every(d => d.hasAttribute('open')), btn = sec.querySelector('.pd-q-all');
-  if (!btn) return;
-  btn.textContent = all ? 'Collapse all' : 'Expand all'; btn.setAttribute('aria-pressed', String(all));
+  if (btn) { btn.textContent = all ? 'Collapse all' : 'Expand all'; btn.setAttribute('aria-pressed', String(all)); }
 }
 function briefKeepOpen(sec) {
   const pid = sec.dataset.brief;
-  if (Brief.visit.pid !== pid) Brief.visit = { pid, open: new Set() };
+  if (Brief.visit.pid !== pid) Brief.visit = { pid, open: new Set(), collapsed: false };
   Brief.visit.open = new Set(briefOpenItems(sec).filter(d => d.hasAttribute('open')).map(d => +d.dataset.n));
 }
-function briefToggled(d) { const sec = d.closest('[data-brief]'); if (sec) { briefKeepOpen(sec); briefSync(sec); } }
+function briefToggleSection(btn) {
+  const sec = btn.closest('[data-brief]');
+  if (!sec) return;
+  briefKeepOpen(sec);
+  Brief.visit.collapsed = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', String(!Brief.visit.collapsed));
+  sec.querySelector('.pd-q-content').hidden = Brief.visit.collapsed;
+  const all = sec.querySelector('.pd-q-all'); if (all) all.hidden = Brief.visit.collapsed;
+}
+function briefToggleAnswer(btn) {
+  const item = btn.closest('.pd-q-item'), sec = btn.closest('[data-brief]');
+  if (!item || !sec) return;
+  const open = !item.hasAttribute('open');
+  item.toggleAttribute('open', open); btn.setAttribute('aria-expanded', String(open));
+  item.querySelector('.pd-q-a').hidden = !open;
+  briefKeepOpen(sec); briefSync(sec);
+}
 function briefExpandAll(btn) {
   const sec = btn.closest('[data-brief]');
   if (!sec) return;
   const items = briefOpenItems(sec), all = items.length > 0 && items.every(d => d.hasAttribute('open'));
-  items.forEach(d => { if (all) d.removeAttribute('open'); else d.setAttribute('open', ''); });
+  items.forEach(d => { d.toggleAttribute('open', !all); d.querySelector('.pd-q-question').setAttribute('aria-expanded', String(!all)); d.querySelector('.pd-q-a').hidden = all; });
   briefKeepOpen(sec); briefSync(sec);
 }
-/* A new visit to a paper's page starts with every item closed and tries a failed load again. */
+/* Each new paper starts open, with its answers folded. A failed read may be tried on a new visit, never an ask. */
 function briefVisit(pid) {
-  Brief.visit = { pid, open: new Set() }; Brief.focus = null;
+  Brief.visit = { pid, open: new Set(), collapsed: false }; Brief.focus = null;
   const r = Brief.files.get(pid);
-  if (r && (r.state === 'error' || r.state === 'offline' || r.failed)) Brief.files.delete(pid);   // r.failed: an upload's ask that could not finish
+  if (r && (r.state === 'error' || r.state === 'offline' || r.failed)) Brief.files.delete(pid);
 }
 function briefFocusKey(el) {
-  if (!el || !el.classList) return null;
-  if (el.classList.contains('pd-q-all')) return 'all';
-  if (el.classList.contains('pd-q-retry')) return 'retry';
-  const d = el.tagName === 'SUMMARY' && el.closest('.pd-q-item');
-  return d ? 'q' + d.dataset.n : null;
+  if (!el?.classList) return null;
+  for (const key of ['fold', 'all', 'ask', 'retry']) if (el.classList.contains('pd-q-' + key)) return key;
+  if (el.classList.contains('pd-q-question')) return 'q' + el.closest('.pd-q-item').dataset.n;
+  const answer = el.closest('[data-q]');
+  if (el.matches?.('a[href]') && answer) {
+    const href = el.getAttribute('href'), links = [...answer.querySelectorAll('a[href]')].filter(a => a.getAttribute('href') === href);
+    return { kind: 'link', n: +answer.dataset.q, href, at: links.indexOf(el) };
+  }
+  return null;
 }
-function briefFocusRestore(sec, pid) {   // after it: back on the same control, unless the focus went somewhere that still shows
+function briefFocusRestore(sec, pid) {
   const f = Brief.focus, a = document.activeElement;
   if (!f || f.pid !== pid || !f.key) return;
-  if (a && a !== document.body && a.isConnected && !(a.closest && a.closest('#reader'))) return;
+  if (a && a !== document.body && a.isConnected && !a.closest('#reader')) return;
   briefFocusTo(sec, f.key);
 }
-/* The control a focus key names, inside box, focused without scrolling. Never while the reader is open over the page. */
 function briefFocusTo(box, key) {
-  const reader = document.getElementById('reader');
-  if (reader && reader.classList.contains('open')) return;
-  const el = key === 'all' ? box.querySelector('.pd-q-all') : key === 'retry' ? box.querySelector('.pd-q-retry')
-    : key[0] === 'q' ? box.querySelector(`.pd-q-item[data-n="${key.slice(1)}"] summary`) : null;
-  if (el) el.focus({ preventScroll: true });
+  if (document.getElementById('reader')?.classList.contains('open')) return;
+  let el;
+  if (key.kind === 'link') {
+    el = [...box.querySelectorAll('a[href]')].filter(a => +a.closest('[data-q]')?.dataset.q === key.n && a.getAttribute('href') === key.href)[key.at];
+    const pid = box.dataset.brief || box.closest('[data-brief]')?.dataset.brief, r = briefDisplay(pid);
+    if (!el && r && !r.md.has(key.n)) return;   // keep the link's key until its Markdown has rendered
+  } else el = key[0] === 'q' ? box.querySelector(`.pd-q-item[data-n="${key.slice(1)}"] .pd-q-question`) : box.querySelector('.pd-q-' + key);
+  (el || box.querySelector('.pd-q-fold'))?.focus({ preventScroll: true });
 }
-/* Retry clears the layer that failed, and the index too after a mismatch, then reads the paper again. */
+/* Retry a failed read, clearing the index too only when it disagreed. Failed asks use briefAsk. */
 function briefRetry(btn) {
-  const sec = btn.closest('[data-brief]'), pid = sec && sec.dataset.brief, r = pid && Brief.files.get(pid);
+  const sec = btn.closest('[data-brief]'), pid = sec?.dataset.brief, r = pid && Brief.files.get(pid);
   if (!r || (r.state !== 'error' && r.state !== 'offline')) return;
   if (r.why === 'mismatch' || r.why === 'index') Brief.index = null;
   Brief.files.delete(pid); Brief.loading.delete(pid);
-  Brief.focus = { pid, key: 'all' };
   briefRedraw(pid); briefStart(pid);
 }
 
@@ -26297,12 +26205,15 @@ function briefInvalidate() {
    another view reads nothing now. It is drawn and read afresh when it shows again. */
 function briefRefresh() {
   briefInvalidate();
-  const boxes = [...document.querySelectorAll('[data-tq]')].filter(box => box.closest('.tab-section.active') || (_paperViewActive && box.closest('#paperDetail')));
-  for (const box of boxes) { briefRedraw(box.dataset.tq); briefStart(box.dataset.tq); }
-  if (Brief.sheet && ![...document.querySelectorAll('[data-tq]')].some(b => b.dataset.tq === Brief.sheet.pid)) { briefRedraw(Brief.sheet.pid); briefStart(Brief.sheet.pid); }
+  const boxes = [...document.querySelectorAll('[data-brief-slot], [data-brief-wait]')].filter(box => box.closest('.tab-section.active') || (_paperViewActive && box.closest('#paperDetail')));
+  for (const box of boxes) { const pid = box.dataset.briefSlot || box.dataset.briefWait; briefRedraw(pid); briefStart(pid); }
 }
-/* Run by lockPrivate. Nothing of the session's briefs outlives the authorization. */
-function briefTeardown() { uploadQuestionsCancel(); document.querySelectorAll('.pane-questions').forEach(el => el.remove()); briefInvalidate(); Brief.visit = { pid: null, open: new Set() }; Brief.focus = null; Brief.pushed = null; Brief.inline = null; Brief.inlineFrom = null; briefSheetHide(); }
+/* Run by lockPrivate. Nothing of this session's answers stays on the screen or in memory. */
+function briefTeardown() {
+  uploadQuestionsCancel(); briefInvalidate();
+  Brief.visit = { pid: null, open: new Set(), collapsed: false }; Brief.focus = null;
+  document.querySelectorAll('[data-brief-slot]').forEach(box => box.replaceChildren());
+}
 
 /* ===== the paper page follows the paper (Phase 13e) =====
    paperBarSync, on every change (viewsSync): the bar's ★, ✓ and ☰ patched from the row's marks as they are now, so a
@@ -26576,6 +26487,7 @@ function navTag() {   // the entry now current gets an id if it has none, and is
 const _pushState = history.pushState.bind(history);
 history.pushState = (state, title, url) => _pushState(state && typeof state === 'object' && 'scoutNav' in state ? (({ scoutNav, ...rest }) => rest)(state) : state, title, url);
 function applyHash() {
+  paperLoading(null);   // leaving a pending paper releases its route loader
   const fwd = !navMarked();
   if (!(_searchActive && !sfRoute(_appliedHash || ''))) navLeave();   // (a search shown over its origin has no entry of its own: the origin's place was saved when it began)
   const place = fwd ? 0 : _navPlaces.get(history.state.scoutNav) || 0;
@@ -26622,7 +26534,6 @@ function applyHash() {
       if (hash.startsWith('paper/')) {
         const pp = findPaper(decodeURIComponent(hash.slice(6)).replace(/\/questions$/, ''));
         if (pp) renderPaperDetail(pp);   // notes may have changed
-        if (/\/questions$/.test(hash)) briefSheetFocusBack();   // Phase 24: the sheet a pill left, back on that pill
       }
       else if ((hash === 'search' || hash.startsWith('search?q=')) && _searchActive) {
         sfSetQuery(Search.q);
@@ -26635,7 +26546,7 @@ function applyHash() {
     }
   }
 
-  // Paper detail route; Phase 24: /questions is the ten questions' sheet over the page, so Back closes it
+  // Older links to /questions open the same full paper page, with its Ten questions section.
   if (hash.startsWith('paper/')) {
     let id = decodeURIComponent(hash.slice(6));
     const questions = /\/questions$/.test(id);
@@ -26643,12 +26554,11 @@ function applyHash() {
 
     if (id) {
       const page = _paperViewActive && document.querySelector('#paperDetail .pd-article[data-pid]');
-      if (!page || page.dataset.pid !== id) { briefSheetHide(); showPaperDetail(id); }   // another paper: its page, from the top
-      if (questions) briefSheetShow(id); else briefSheetHide();   // the same paper: only the sheet comes or goes
+      if (questions) history.replaceState(null, '', APP_ROOT + location.search + '#paper/' + encodeURIComponent(id));
+      if (!page || page.dataset.pid !== id) showPaperDetail(id);
       return;
     }
   }
-  briefSheetHide();
 
   // Clear paper view state if navigating away; restore scroll position
   const wasInPaper = _paperViewActive;
